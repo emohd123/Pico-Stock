@@ -15,6 +15,28 @@ if (revealElements.length > 0) {
   });
 }
 
+const productImages = document.querySelectorAll('img[data-product-image="true"]');
+productImages.forEach((image) => {
+  const fallbackSrc = image.getAttribute('data-fallback-src');
+  if (!fallbackSrc) {
+    return;
+  }
+
+  const applyFallback = () => {
+    if (image.dataset.fallbackApplied === '1') {
+      return;
+    }
+
+    image.dataset.fallbackApplied = '1';
+    image.src = fallbackSrc;
+  };
+
+  image.addEventListener('error', applyFallback);
+  if (image.complete && image.naturalWidth === 0) {
+    applyFallback();
+  }
+});
+
 const editorRoot = document.getElementById('admin-order-form');
 if (editorRoot && window.picoOrderEditor) {
   const catalogMap = new Map(window.picoOrderEditor.catalogItems.map((item) => [String(item.id), item]));

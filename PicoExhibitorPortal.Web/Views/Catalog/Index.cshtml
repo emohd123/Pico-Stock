@@ -2,6 +2,7 @@
 @inject PicoExhibitorPortal.Web.Infrastructure.Localization.IUiTextService T
 @{
     ViewData["Title"] = T.Get("Catalog");
+    const string fallbackImage = "/brand/product-placeholder.svg";
 }
 
 <section class="section-head">
@@ -30,7 +31,7 @@ else
         {
             <article class="catalog-card reveal">
                 <a class="catalog-card-media" asp-action="Item" asp-route-slug="@item.Slug">
-                    <img src="@item.PrimaryImagePath" alt="@item.NameEn" />
+                    <img src="@(string.IsNullOrWhiteSpace(item.PrimaryImagePath) ? fallbackImage : item.PrimaryImagePath)" alt="@item.NameEn" data-product-image="true" data-fallback-src="@fallbackImage" />
                 </a>
                 <div class="catalog-card-body">
                     <span class="pill">@T.Localize(item.CategoryEn, item.CategoryAr)</span>

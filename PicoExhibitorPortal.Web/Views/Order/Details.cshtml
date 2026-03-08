@@ -2,6 +2,7 @@
 @inject PicoExhibitorPortal.Web.Infrastructure.Localization.IUiTextService T
 @{
     ViewData["Title"] = T.Get("OrderPlaced");
+    const string fallbackImage = "/brand/product-placeholder.svg";
 }
 
 <div class="form-card reveal">
@@ -29,7 +30,7 @@
         @foreach (var line in Model.Order.Lines)
         {
             <div class="checkout-summary-item checkout-summary-item-strong">
-                <img src="@line.ItemImagePath" alt="@line.ItemNameEn" />
+                <img src="@(string.IsNullOrWhiteSpace(line.ItemImagePath) ? fallbackImage : line.ItemImagePath)" alt="@line.ItemNameEn" data-product-image="true" data-fallback-src="@fallbackImage" />
                 <div class="checkout-summary-copy">
                     <strong>@T.Localize(line.ItemNameEn, line.ItemNameAr)</strong>
                     <span>@line.ItemCode</span>

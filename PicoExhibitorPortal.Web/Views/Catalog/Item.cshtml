@@ -2,12 +2,14 @@
 @inject PicoExhibitorPortal.Web.Infrastructure.Localization.IUiTextService T
 @{
     ViewData["Title"] = T.Localize(Model.Item.NameEn, Model.Item.NameAr);
+    const string fallbackImage = "/brand/product-placeholder.svg";
+    var detailImage = string.IsNullOrWhiteSpace(Model.Item.DetailImagePath) ? Model.Item.PrimaryImagePath : Model.Item.DetailImagePath;
 }
 
 <div class="detail-grid detail-grid-polished">
     <div class="detail-media">
         <div class="detail-media-stage">
-            <img src="@(string.IsNullOrWhiteSpace(Model.Item.DetailImagePath) ? Model.Item.PrimaryImagePath : Model.Item.DetailImagePath)" alt="@Model.Item.NameEn" />
+            <img src="@(string.IsNullOrWhiteSpace(detailImage) ? fallbackImage : detailImage)" alt="@Model.Item.NameEn" data-product-image="true" data-fallback-src="@fallbackImage" />
         </div>
     </div>
     <div class="detail-copy">
