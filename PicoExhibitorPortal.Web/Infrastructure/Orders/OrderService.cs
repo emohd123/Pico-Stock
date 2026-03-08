@@ -56,55 +56,77 @@ public sealed class OrderService(
         dbContext.Orders.Add(order);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        var document = await RegeneratePdfAsync(order, cancellationToken);
-
-        var settings = await settingsService.GetAsync(cancellationToken);
-        var internalRecipients = settings.InternalRecipients.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).ToList();
-        var ccRecipients = settings.CcRecipients.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).ToList();
-        var body = BuildEmailBody(order, document.FileName);
-        var emailAttachment = new EmailAttachment
-        {
-            FilePath = document.PhysicalPath,
-            FileName = document.FileName,
-            MediaType = "application/pdf"
-        };
+        OrderDocumentResult? document = null;
         var deliveryErrors = new List<string>();
 
         try
         {
-            await emailService.SendAsync(new EmailMessage
-            {
-                To = internalRecipients,
-                Cc = ccRecipients,
-                Subject = $"Pico order request {order.PublicReference}",
-                Body = body,
-                Attachments = [emailAttachment]
-            }, cancellationToken);
-
-            order.StaffNotifiedAtUtc = DateTime.UtcNow;
+            document = await RegeneratePdfAsync(order, cancellationToken);
         }
         catch (Exception ex)
         {
-            deliveryErrors.Add($"Staff email failed: {ex.Message}");
-            logger.LogError(ex, "Failed to send staff order email for {PublicReference}.", order.PublicReference);
+            deliveryErrors.Add($"PDF generation failed: {ex.Message}");
+            logger.LogError(ex, "Failed to generate order PDF for {PublicReference}.", order.PublicReference);
         }
 
-        try
-        {
-            await emailService.SendAsync(new EmailMessage
+        var settings = await settingsService.GetAsync(cancellationToken);
+        var internalRecipients = (settings.InternalRecipients ?? string.Empty).Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).ToList();
+        var ccRecipients = (settings.CcRecipients ?? string.Empty).Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).ToList();
+        var body = BuildEmailBody(order, document?.FileName);
+        var attachments = document is null
+            ? new List<EmailAttachment>()
+            : new List<EmailAttachment>
             {
-                To = [order.Email],
-                Subject = $"Pico order confirmation {order.PublicReference}",
-                Body = body,
-                Attachments = [emailAttachment]
-            }, cancellationToken);
+                new()
+                {
+                    FilePath = document.PhysicalPath,
+                    FileName = document.FileName,
+                    MediaType = "application/pdf"
+                }
+            };
 
-            order.CustomerNotifiedAtUtc = DateTime.UtcNow;
-        }
-        catch (Exception ex)
+        if (document is not null)
         {
-            deliveryErrors.Add($"Customer email failed: {ex.Message}");
-            logger.LogError(ex, "Failed to send customer order email for {PublicReference}.", order.PublicReference);
+            try
+            {
+                await emailService.SendAsync(new EmailMessage
+                {
+                    To = internalRecipients,
+                    Cc = ccRecipients,
+                    Subject = $"Pico order request {order.PublicReference}",
+                    Body = body,
+                    Attachments = attachments
+                }, cancellationToken);
+
+                order.StaffNotifiedAtUtc = DateTime.UtcNow;
+            }
+            catch (Exception ex)
+            {
+                deliveryErrors.Add($"Staff email failed: {ex.Message}");
+                logger.LogError(ex, "Failed to send staff order email for {PublicReference}.", order.PublicReference);
+            }
+
+            try
+            {
+                await emailService.SendAsync(new EmailMessage
+                {
+                    To = [order.Email],
+                    Subject = $"Pico order confirmation {order.PublicReference}",
+                    Body = body,
+                    Attachments = attachments
+                }, cancellationToken);
+
+                order.CustomerNotifiedAtUtc = DateTime.UtcNow;
+            }
+            catch (Exception ex)
+            {
+                deliveryErrors.Add($"Customer email failed: {ex.Message}");
+                logger.LogError(ex, "Failed to send customer order email for {PublicReference}.", order.PublicReference);
+            }
+        }
+        else
+        {
+            deliveryErrors.Add("Order email skipped because the PDF could not be generated.");
         }
 
         order.EmailDeliveryStatus = deliveryErrors.Count == 0
@@ -201,7 +223,22 @@ public sealed class OrderService(
 
         order.GrandTotal = decimal.Round(order.Lines.Sum(x => x.LineTotal), 3, MidpointRounding.AwayFromZero);
         await dbContext.SaveChangesAsync(cancellationToken);
-        await RegeneratePdfAsync(order, cancellationToken);
+        try
+        {
+            await RegeneratePdfAsync(order, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to regenerate order PDF for admin update on {PublicReference}.", order.PublicReference);
+            order.EmailDeliveryStatus = OrderEmailDeliveryStatuses.PendingRetry;
+            order.EmailDeliveryError = string.Join(Environment.NewLine,
+                new[]
+                {
+                    order.EmailDeliveryError,
+                    $"PDF regeneration failed after admin update: {ex.Message}"
+                }.Where(x => !string.IsNullOrWhiteSpace(x)));
+        }
+
         await dbContext.SaveChangesAsync(cancellationToken);
         return true;
     }
@@ -237,12 +274,12 @@ public sealed class OrderService(
         return document;
     }
 
-    private static string BuildEmailBody(Order order, string pdfFileName)
+    private static string BuildEmailBody(Order order, string? pdfFileName)
     {
         var bodyLines = new List<string>
         {
             "Pico International order request",
-            "Attached PDF: " + pdfFileName,
+            string.IsNullOrWhiteSpace(pdfFileName) ? "PDF attachment is pending regeneration." : "Attached PDF: " + pdfFileName,
             string.Empty,
             $"Reference: {order.PublicReference}",
             $"Exhibition: {order.ExhibitionName}",

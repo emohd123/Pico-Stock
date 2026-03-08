@@ -121,6 +121,58 @@ public sealed class OrderServiceTests
     }
 
     [Fact]
+    public async Task PlaceOrderStillSucceedsWhenPdfGenerationFails()
+    {
+        await using var db = BuildDb();
+        var email = new FakeEmailService();
+        var cart = new FakeCartService(new CartViewModel
+        {
+            Currency = "BHD",
+            Total = 25.000m,
+            Lines =
+            [
+                new CartLineViewModel
+                {
+                    CatalogItemId = 1,
+                    NameEn = "Blue Chair",
+                    NameAr = "Blue Chair",
+                    Code = "FVCHBLU1",
+                    ImagePath = "/uploads/blue.jpg",
+                    Quantity = 2,
+                    UnitPrice = 12.500m,
+                    LineTotal = 25.000m,
+                    Currency = "BHD",
+                    IsOrderable = true
+                }
+            ]
+        });
+
+        var service = new OrderService(db, cart, new FakeSettingsService(), new ThrowingOrderDocumentService(), email, NullLogger<OrderService>.Instance);
+
+        var result = await service.PlaceOrderAsync(new OrderPlacementRequest
+        {
+            Checkout = new CheckoutViewModel
+            {
+                ExhibitionName = "Jewellery Arabia",
+                ExhibitorCompany = "Acme Exhibits",
+                BoothNumber = "A12",
+                ContactPerson = "Sara",
+                Email = "sara@example.com",
+                Phone = "+973 12345678",
+                Notes = "Need delivery before opening"
+            }
+        }, CancellationToken.None);
+
+        var order = await db.Orders.Include(x => x.Lines).SingleAsync();
+        Assert.Equal(result.PublicReference, order.PublicReference);
+        Assert.Equal(PicoExhibitorPortal.Web.Domain.OrderEmailDeliveryStatuses.PendingRetry, order.EmailDeliveryStatus);
+        Assert.Contains("PDF generation failed", order.EmailDeliveryError);
+        Assert.Empty(email.Messages);
+        Assert.True(string.IsNullOrWhiteSpace(order.PdfPath));
+        Assert.Equal(1, cart.ClearCalls);
+    }
+
+    [Fact]
     public async Task UpdateOrderRecalculatesTotalsAndRegeneratesPdf()
     {
         await using var db = BuildDb();
@@ -282,6 +334,12 @@ public sealed class OrderServiceTests
     {
         public Task SendAsync(EmailMessage message, CancellationToken cancellationToken) =>
             throw new InvalidOperationException("Resend 403 domain not verified");
+    }
+
+    private sealed class ThrowingOrderDocumentService : IOrderDocumentService
+    {
+        public Task<OrderDocumentResult> GenerateAsync(PicoExhibitorPortal.Web.Domain.Order order, CancellationToken cancellationToken) =>
+            throw new InvalidOperationException("Font resolver is unavailable");
     }
 
     private sealed class FakeCartService(CartViewModel cart) : ICartService
