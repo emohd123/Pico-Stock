@@ -3,5 +3,5 @@ startCommand = "dotnet PicoExhibitorPortal.Web.dll"
 healthcheckPath = "/"
 healthcheckTimeout = 60
 
-[[volumes]]
+[[mounts]]
 mountPath = "/app/wwwroot/uploads"
