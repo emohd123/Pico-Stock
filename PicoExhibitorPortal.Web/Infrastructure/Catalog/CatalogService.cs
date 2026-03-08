@@ -101,24 +101,24 @@ public sealed class CatalogService(PortalDbContext dbContext) : ICatalogService
 
     private static void NormalizeItem(CatalogItem item)
     {
-        item.NameEn = item.NameEn.Trim();
-        item.NameAr = item.NameAr.Trim();
-        item.CategoryEn = item.CategoryEn.Trim();
-        item.CategoryAr = item.CategoryAr.Trim();
-        item.DescriptionEn = item.DescriptionEn.Trim();
-        item.DescriptionAr = item.DescriptionAr.Trim();
-        item.DimensionsAndSpecsEn = item.DimensionsAndSpecsEn.Trim();
-        item.DimensionsAndSpecsAr = item.DimensionsAndSpecsAr.Trim();
-        item.PrimaryImagePath = item.PrimaryImagePath.Trim();
+        item.NameEn = (item.NameEn ?? string.Empty).Trim();
+        item.NameAr = (item.NameAr ?? string.Empty).Trim();
+        item.CategoryEn = (item.CategoryEn ?? string.Empty).Trim();
+        item.CategoryAr = (item.CategoryAr ?? string.Empty).Trim();
+        item.DescriptionEn = (item.DescriptionEn ?? string.Empty).Trim();
+        item.DescriptionAr = (item.DescriptionAr ?? string.Empty).Trim();
+        item.DimensionsAndSpecsEn = (item.DimensionsAndSpecsEn ?? string.Empty).Trim();
+        item.DimensionsAndSpecsAr = (item.DimensionsAndSpecsAr ?? string.Empty).Trim();
+        item.PrimaryImagePath = (item.PrimaryImagePath ?? string.Empty).Trim();
         item.OriginalImagePath = string.IsNullOrWhiteSpace(item.OriginalImagePath) ? item.PrimaryImagePath : item.OriginalImagePath.Trim();
         item.CardImagePath = string.IsNullOrWhiteSpace(item.CardImagePath) ? item.PrimaryImagePath : item.CardImagePath.Trim();
         item.DetailImagePath = string.IsNullOrWhiteSpace(item.DetailImagePath) ? item.PrimaryImagePath : item.DetailImagePath.Trim();
         item.ThumbnailImagePath = string.IsNullOrWhiteSpace(item.ThumbnailImagePath) ? item.PrimaryImagePath : item.ThumbnailImagePath.Trim();
         item.Currency = string.IsNullOrWhiteSpace(item.Currency) ? "BHD" : item.Currency.Trim().ToUpperInvariant();
-        item.PicoCode = item.PicoCode.Trim();
-        item.SourceItemId = item.SourceItemId.Trim();
-        item.SourceDocumentReference = item.SourceDocumentReference.Trim();
-        item.PriceSourceReference = item.PriceSourceReference.Trim();
+        item.PicoCode = (item.PicoCode ?? string.Empty).Trim();
+        item.SourceItemId = (item.SourceItemId ?? string.Empty).Trim();
+        item.SourceDocumentReference = (item.SourceDocumentReference ?? string.Empty).Trim();
+        item.PriceSourceReference = (item.PriceSourceReference ?? string.Empty).Trim();
     }
 
     private async Task<string> BuildUniqueSlugAsync(string name, string code, CancellationToken cancellationToken, int? currentId = null)

@@ -115,10 +115,25 @@ public sealed class CatalogController(ICatalogService catalogService, IWebHostEn
 
     private async Task<string> SaveUploadedImageAsync(IFormFile file, CancellationToken cancellationToken)
     {
-        var extension = Path.GetExtension(file.FileName);
+        var extension = Path.GetExtension(Path.GetFileName(file.FileName));
         if (string.IsNullOrWhiteSpace(extension))
         {
             extension = ".png";
+        }
+
+        var allowedExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ".png",
+            ".jpg",
+            ".jpeg",
+            ".webp",
+            ".gif",
+            ".svg"
+        };
+
+        if (!allowedExtensions.Contains(extension))
+        {
+            throw new InvalidOperationException("Unsupported image file type.");
         }
 
         var folder = Path.Combine(environment.WebRootPath, "uploads", "manual-catalog");

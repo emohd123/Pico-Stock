@@ -212,14 +212,16 @@ public sealed partial class CatalogImportService(
         var uploadRoot = Path.Combine(environment.WebRootPath, "uploads", "source");
         Directory.CreateDirectory(uploadRoot);
 
-        var pptxPath = Path.Combine(uploadRoot, pptxFileName);
+        var safePptxFileName = SanitizeUploadFileName(pptxFileName, ".pptx");
+        var pptxPath = Path.Combine(uploadRoot, safePptxFileName);
         await using (var file = File.Create(pptxPath))
             await pptxStream.CopyToAsync(file, cancellationToken);
 
         string? pdfPath = null;
         if (pdfStream is not null && !string.IsNullOrWhiteSpace(pdfFileName))
         {
-            pdfPath = Path.Combine(uploadRoot, pdfFileName);
+            var safePdfFileName = SanitizeUploadFileName(pdfFileName, ".pdf");
+            pdfPath = Path.Combine(uploadRoot, safePdfFileName);
             await using var file = File.Create(pdfPath);
             await pdfStream.CopyToAsync(file, cancellationToken);
         }
@@ -234,6 +236,28 @@ public sealed partial class CatalogImportService(
         }, cancellationToken);
 
         return await RunConfiguredImportAsync(cancellationToken);
+    }
+
+    private static string SanitizeUploadFileName(string fileName, string fallbackExtension)
+    {
+        var safeName = Path.GetFileName(fileName ?? string.Empty);
+        var extension = Path.GetExtension(safeName);
+        if (string.IsNullOrWhiteSpace(extension))
+        {
+            extension = fallbackExtension;
+        }
+
+        var baseName = Path.GetFileNameWithoutExtension(safeName);
+        baseName = string.IsNullOrWhiteSpace(baseName)
+            ? "upload"
+            : Regex.Replace(baseName, @"[^A-Za-z0-9._-]+", "-").Trim('-');
+
+        if (string.IsNullOrWhiteSpace(baseName))
+        {
+            baseName = "upload";
+        }
+
+        return $"{baseName}{extension.ToLowerInvariant()}";
     }
 
     public async Task<IReadOnlyList<ImportBatch>> GetBatchesAsync(CancellationToken cancellationToken) =>

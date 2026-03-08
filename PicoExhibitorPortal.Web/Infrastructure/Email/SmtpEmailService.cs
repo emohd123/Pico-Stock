@@ -17,19 +17,34 @@ public sealed class SmtpEmailService(IOptions<EmailOptions> options, ILogger<Smt
             return;
         }
 
+        var fromAddress = ResolveFromAddress(config);
+        if (string.IsNullOrWhiteSpace(fromAddress))
+        {
+            logger.LogWarning("SMTP sender email is not configured. Email skipped for {Subject}.", message.Subject);
+            return;
+        }
+
+        var toRecipients = message.To.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        var ccRecipients = message.Cc.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        if (toRecipients.Count == 0 && ccRecipients.Count == 0)
+        {
+            logger.LogInformation("Email skipped for {Subject} because no recipients were supplied.", message.Subject);
+            return;
+        }
+
         using var mail = new MailMessage
         {
-            From = new MailAddress(config.FromEmail, config.FromName),
+            From = new MailAddress(fromAddress, string.IsNullOrWhiteSpace(config.FromName) ? fromAddress : config.FromName),
             Subject = message.Subject,
             Body = message.Body
         };
 
-        foreach (var recipient in message.To.Where(x => !string.IsNullOrWhiteSpace(x)))
+        foreach (var recipient in toRecipients)
         {
             mail.To.Add(recipient);
         }
 
-        foreach (var recipient in message.Cc.Where(x => !string.IsNullOrWhiteSpace(x)))
+        foreach (var recipient in ccRecipients)
         {
             mail.CC.Add(recipient);
         }
@@ -57,5 +72,17 @@ public sealed class SmtpEmailService(IOptions<EmailOptions> options, ILogger<Smt
         }
 
         await client.SendMailAsync(mail, cancellationToken);
+    }
+
+    private static string ResolveFromAddress(EmailOptions config)
+    {
+        if (!string.IsNullOrWhiteSpace(config.FromEmail))
+        {
+            return config.FromEmail;
+        }
+
+        return !string.IsNullOrWhiteSpace(config.Username) && config.Username.Contains('@', StringComparison.Ordinal)
+            ? config.Username
+            : string.Empty;
     }
 }
