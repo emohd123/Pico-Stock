@@ -72,6 +72,16 @@ public static class PortalDatabaseBootstrapper
                 $"ALTER TABLE {tableName} ADD {columnName} NVARCHAR(512) NULL",
                 cancellationToken);
 #pragma warning restore EF1002
+            return;
+        }
+
+        if (dbContext.Database.IsNpgsql())
+        {
+#pragma warning disable EF1002
+            await dbContext.Database.ExecuteSqlRawAsync(
+                $"ALTER TABLE \"{tableName}\" ADD COLUMN \"{columnName}\" TEXT NULL",
+                cancellationToken);
+#pragma warning restore EF1002
         }
     }
 
@@ -141,6 +151,16 @@ public static class PortalDatabaseBootstrapper
 #pragma warning disable EF1002
             await dbContext.Database.ExecuteSqlRawAsync(
                 $"UPDATE {tableName} SET {columnName} = N'' WHERE {columnName} IS NULL",
+                cancellationToken);
+#pragma warning restore EF1002
+            return;
+        }
+
+        if (dbContext.Database.IsNpgsql())
+        {
+#pragma warning disable EF1002
+            await dbContext.Database.ExecuteSqlRawAsync(
+                $"UPDATE \"{tableName}\" SET \"{columnName}\" = '' WHERE \"{columnName}\" IS NULL",
                 cancellationToken);
 #pragma warning restore EF1002
         }

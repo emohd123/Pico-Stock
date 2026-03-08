@@ -18,14 +18,28 @@ builder.Services.Configure<SeedSourceOptions>(builder.Configuration.GetSection(S
 builder.Services.Configure<AdminAccessOptions>(builder.Configuration.GetSection(AdminAccessOptions.SectionName));
 
 var databaseProvider = builder.Configuration["DatabaseProvider"] ?? "Sqlite";
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? "Data Source=pico-portal.db";
+var connectionString = string.Equals(databaseProvider, "Postgres", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(databaseProvider, "PostgreSql", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(databaseProvider, "Supabase", StringComparison.OrdinalIgnoreCase)
+    ? builder.Configuration.GetConnectionString("SupabaseConnection")
+        ?? builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? "Data Source=pico-portal.db"
+    : builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? "Data Source=pico-portal.db";
 
 builder.Services.AddDbContext<PortalDbContext>(options =>
 {
     if (string.Equals(databaseProvider, "SqlServer", StringComparison.OrdinalIgnoreCase))
     {
         options.UseSqlServer(connectionString);
+        return;
+    }
+
+    if (string.Equals(databaseProvider, "Postgres", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(databaseProvider, "PostgreSql", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(databaseProvider, "Supabase", StringComparison.OrdinalIgnoreCase))
+    {
+        options.UseNpgsql(connectionString);
         return;
     }
 
