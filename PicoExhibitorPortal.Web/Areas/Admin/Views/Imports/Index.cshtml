@@ -6,7 +6,7 @@
 <section class="section-head">
     <div>
         <h1>Imports</h1>
-        <p>Upload your PPTX inventory file and optional PDF price sheet, or re-run the last configured import.</p>
+        <p>Upload a fresh PPTX inventory file and optional PDF price sheet, then push the new catalog into the portal from one place.</p>
     </div>
 </section>
 
@@ -15,8 +15,18 @@
     <div class="pill error">@error</div>
 }
 
+@if (TempData["Success"] is string success)
+{
+    <div class="pill success">@success</div>
+}
+
 <div class="form-card">
-    <h3>Upload source files</h3>
+    <div class="section-head" style="margin-bottom:1rem">
+        <div>
+            <h3 style="margin-bottom:.35rem">Upload source files</h3>
+            <p style="margin:0;color:var(--muted)">Use this when you receive a new exhibition inventory or updated rate sheet.</p>
+        </div>
+    </div>
     <form asp-action="Upload" method="post" enctype="multipart/form-data" class="form-grid">
         @Html.AntiForgeryToken()
         <label>
@@ -43,9 +53,14 @@
 @foreach (var batch in Model)
 {
     <div class="form-card">
-        <h3>@batch.SourceFileName</h3>
-        <p>@batch.ImportedAtUtc.ToLocalTime()</p>
-        <p>@batch.Summary</p>
+        <div class="section-head" style="margin-bottom:.75rem">
+            <div>
+                <h3 style="margin-bottom:.25rem">@batch.SourceFileName</h3>
+                <p style="margin:0;color:var(--muted)">@batch.ImportedAtUtc.ToLocalTime()</p>
+            </div>
+            <span class="pill success">Imported</span>
+        </div>
+        <p style="margin-bottom:0">@batch.Summary</p>
         @if (!string.IsNullOrWhiteSpace(batch.Warnings))
         {
             <pre class="warning-box">@batch.Warnings</pre>

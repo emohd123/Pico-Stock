@@ -30,6 +30,7 @@
                 <a asp-area="Admin" asp-controller="Catalog" asp-action="Index">@T.Get("Admin")</a>
                 @if (Context.Session.GetString("AdminAccessGranted") == "1")
                 {
+                    <a asp-area="Admin" asp-controller="Imports" asp-action="Index">@T.Get("Imports")</a>
                     <a asp-area="Admin" asp-controller="Orders" asp-action="Index">@T.Get("Orders")</a>
                     <form asp-area="Admin" asp-controller="Auth" asp-action="Logout" method="post" class="nav-logout-form">
                         @Html.AntiForgeryToken()

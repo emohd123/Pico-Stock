@@ -16,13 +16,21 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection(EmailOptions.SectionName));
 builder.Services.Configure<SeedSourceOptions>(builder.Configuration.GetSection(SeedSourceOptions.SectionName));
 builder.Services.Configure<AdminAccessOptions>(builder.Configuration.GetSection(AdminAccessOptions.SectionName));
+builder.Services.Configure<SupabaseOptions>(builder.Configuration.GetSection(SupabaseOptions.SectionName));
 
 var databaseProvider = builder.Configuration["DatabaseProvider"] ?? "Sqlite";
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? "Data Source=pico-portal.db";
+var connectionString = ResolveConnectionString(builder.Configuration, databaseProvider);
 
 builder.Services.AddDbContext<PortalDbContext>(options =>
 {
+    if (string.Equals(databaseProvider, "Supabase", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(databaseProvider, "Postgres", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(databaseProvider, "PostgreSql", StringComparison.OrdinalIgnoreCase))
+    {
+        options.UseNpgsql(connectionString);
+        return;
+    }
+
     if (string.Equals(databaseProvider, "SqlServer", StringComparison.OrdinalIgnoreCase))
     {
         options.UseSqlServer(connectionString);
@@ -125,6 +133,29 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
+
+static string ResolveConnectionString(IConfiguration configuration, string databaseProvider)
+{
+    if (string.Equals(databaseProvider, "Supabase", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(databaseProvider, "Postgres", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(databaseProvider, "PostgreSql", StringComparison.OrdinalIgnoreCase))
+    {
+        return configuration.GetConnectionString("SupabaseConnection")
+            ?? configuration[$"{SupabaseOptions.SectionName}:DbConnection"]
+            ?? configuration["SUPABASE_DB_CONNECTION"]
+            ?? throw new InvalidOperationException("Supabase/Postgres provider selected but no connection string was configured.");
+    }
+
+    if (string.Equals(databaseProvider, "SqlServer", StringComparison.OrdinalIgnoreCase))
+    {
+        return configuration.GetConnectionString("SqlServerConnection")
+            ?? configuration.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException("SqlServer provider selected but no connection string was configured.");
+    }
+
+    return configuration.GetConnectionString("DefaultConnection")
+        ?? "Data Source=pico-portal.db";
+}
 
 app.Run();
 

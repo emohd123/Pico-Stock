@@ -14,6 +14,7 @@ public sealed class ImportsController(ICatalogImportService importService) : Con
     public async Task<IActionResult> Run(CancellationToken cancellationToken)
     {
         await importService.RunConfiguredImportAsync(cancellationToken);
+        TempData["Success"] = "Import completed successfully.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -25,6 +26,18 @@ public sealed class ImportsController(ICatalogImportService importService) : Con
         if (pptxFile is null || pptxFile.Length == 0)
         {
             TempData["Error"] = "Please select a PPTX file to upload.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        if (!Path.GetExtension(pptxFile.FileName).Equals(".pptx", StringComparison.OrdinalIgnoreCase))
+        {
+            TempData["Error"] = "The inventory source must be a .pptx file.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        if (pdfFile is { Length: > 0 } && !Path.GetExtension(pdfFile.FileName).Equals(".pdf", StringComparison.OrdinalIgnoreCase))
+        {
+            TempData["Error"] = "The optional rate sheet must be a .pdf file.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -41,6 +54,7 @@ public sealed class ImportsController(ICatalogImportService importService) : Con
         if (pdfStream is not null)
             await pdfStream.DisposeAsync();
 
+        TempData["Success"] = "Files uploaded and import started successfully.";
         return RedirectToAction(nameof(Index));
     }
 }
