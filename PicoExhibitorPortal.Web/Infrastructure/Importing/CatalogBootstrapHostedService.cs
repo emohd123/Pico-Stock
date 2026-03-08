@@ -1,9 +1,13 @@
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using PicoExhibitorPortal.Web.Data;
 
 namespace PicoExhibitorPortal.Web.Infrastructure.Importing;
 
-public sealed class CatalogBootstrapHostedService(IServiceProvider serviceProvider, ILogger<CatalogBootstrapHostedService> logger) : BackgroundService
+public sealed class CatalogBootstrapHostedService(
+    IServiceProvider serviceProvider,
+    IWebHostEnvironment environment,
+    ILogger<CatalogBootstrapHostedService> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -27,6 +31,30 @@ public sealed class CatalogBootstrapHostedService(IServiceProvider serviceProvid
                       || AuthoritativeRateSheetOverrides.OverrideSourceIds.Contains(x.SourceItemId))
                   && !EF.Functions.Like(x.PriceSourceReference, $"%{AuthoritativeRateSheetOverrides.SourceTag}%"),
                 stoppingToken);
+
+        // Detect ephemeral filesystem reset: image paths exist in DB but files are gone on disk.
+        // This happens on Railway/Docker when the container restarts without a persistent volume.
+        if (!shouldRunImport)
+        {
+            var sampleImagePath = await dbContext.CatalogItems
+                .Where(x => !string.IsNullOrWhiteSpace(x.CardImagePath))
+                .Select(x => x.CardImagePath)
+                .FirstOrDefaultAsync(stoppingToken);
+
+            if (sampleImagePath is not null)
+            {
+                var physicalPath = Path.Combine(
+                    environment.WebRootPath,
+                    sampleImagePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+
+                if (!File.Exists(physicalPath))
+                {
+                    logger.LogInformation(
+                        "Image files missing from filesystem (ephemeral storage reset detected). Re-running import to restore images.");
+                    shouldRunImport = true;
+                }
+            }
+        }
 
         if (!shouldRunImport)
         {
