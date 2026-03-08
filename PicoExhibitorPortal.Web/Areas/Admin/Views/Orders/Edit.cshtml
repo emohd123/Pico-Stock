@@ -1,0 +1,132 @@
+@using System.Text.Json
+@model PicoExhibitorPortal.Web.Models.Order.AdminOrderEditViewModel
+@{
+    ViewData["Title"] = $"Edit {Model.PublicReference}";
+    var catalogJson = JsonSerializer.Serialize(Model.CatalogItems, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+}
+
+<section class="section-head section-head-tight">
+    <div>
+        <h1>Edit order</h1>
+        <p>Update customer details, line items, and totals. Saving rebuilds the order PDF.</p>
+    </div>
+    <div class="hero-actions">
+        <a class="btn btn-outline-dark" asp-action="Details" asp-route-id="@Model.Id">Order details</a>
+        <a class="btn btn-outline-dark" asp-action="Index">Back to orders</a>
+    </div>
+</section>
+
+<form method="post" class="admin-order-form" id="admin-order-form">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="PublicReference" />
+    <input type="hidden" asp-for="Currency" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="admin-order-shell">
+        <section class="form-card reveal">
+            <div class="admin-panel-heading">
+                <div>
+                    <span class="eyebrow">Order profile</span>
+                    <h2>@Model.PublicReference</h2>
+                </div>
+                <span class="pill">@Model.EmailDeliveryStatus</span>
+            </div>
+
+            <div class="admin-edit-grid">
+                <label>Exhibition name<input asp-for="ExhibitionName" /></label>
+                <label>Exhibitor company<input asp-for="ExhibitorCompany" /></label>
+                <label>Booth number<input asp-for="BoothNumber" /></label>
+                <label>Contact person<input asp-for="ContactPerson" /></label>
+                <label>Email<input asp-for="Email" /></label>
+                <label>Phone<input asp-for="Phone" /></label>
+                <label>Status<select asp-for="Status" asp-items="Model.StatusOptions"></select></label>
+                <label>Submitted (UTC)<input value="@Model.SubmittedAtUtc.ToString("yyyy-MM-dd HH:mm")" readonly /></label>
+            </div>
+            <label>Notes<textarea asp-for="Notes"></textarea></label>
+        </section>
+
+        <aside class="form-card reveal order-side-panel">
+            <span class="eyebrow">Live total</span>
+            <div class="price-line"><span id="order-grand-total">@Model.GrandTotal.ToString("0.000")</span> @Model.Currency</div>
+            <p class="muted">Update quantities or prices here before saving the refreshed operational PDF.</p>
+            @if (!string.IsNullOrWhiteSpace(Model.PdfPath))
+            {
+                <a class="btn btn-outline-dark" asp-action="Document" asp-route-publicReference="@Model.PublicReference">Download current PDF</a>
+            }
+            <button type="submit" class="btn btn-teal">Save changes</button>
+        </aside>
+    </div>
+
+    <section class="form-card reveal admin-lines-panel">
+        <div class="admin-panel-heading">
+            <div>
+                <span class="eyebrow">Line items</span>
+                <h2>Order items</h2>
+            </div>
+            <button type="button" class="btn btn-outline-dark" id="add-order-line">Add item</button>
+        </div>
+
+        <div id="order-lines">
+            @for (var i = 0; i < Model.Lines.Count; i++)
+            {
+                <div class="admin-line-editor" data-line-index="@i">
+                    <input type="hidden" asp-for="Lines[i].Id" />
+                    <div class="admin-line-media">
+                        <img src="@Model.Lines[i].ItemImagePath" alt="@Model.Lines[i].ItemNameEn" class="admin-line-preview" />
+                    </div>
+                    <div class="admin-line-fields">
+                        <label>Catalog item
+                            <select asp-for="Lines[i].CatalogItemId" asp-items="Model.CatalogItemOptions" class="line-catalog-select"></select>
+                        </label>
+                        <label>Quantity<input asp-for="Lines[i].Quantity" min="1" class="line-quantity-input" /></label>
+                        <label>Unit price<input asp-for="Lines[i].UnitPrice" min="0" step="0.001" class="line-price-input" /></label>
+                        <div class="line-meta">
+                            <strong class="line-item-name">@Model.Lines[i].ItemNameEn</strong>
+                            <span class="line-item-code">@Model.Lines[i].ItemCode</span>
+                            <span>Line total: <strong class="line-total">@Model.Lines[i].LineTotal.ToString("0.000") @Model.Currency</strong></span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-outline-danger remove-order-line">Remove</button>
+                </div>
+            }
+        </div>
+    </section>
+</form>
+
+<template id="order-line-template">
+    <div class="admin-line-editor" data-line-index="__INDEX__">
+        <input type="hidden" name="Lines[__INDEX__].Id" value="" />
+        <div class="admin-line-media">
+            <img src="" alt="" class="admin-line-preview" />
+        </div>
+        <div class="admin-line-fields">
+            <label>Catalog item
+                <select name="Lines[__INDEX__].CatalogItemId" class="line-catalog-select">
+                    @foreach (var option in Model.CatalogItemOptions)
+                    {
+                        <option value="@option.Value">@option.Text</option>
+                    }
+                </select>
+            </label>
+            <label>Quantity<input name="Lines[__INDEX__].Quantity" value="1" min="1" class="line-quantity-input" /></label>
+            <label>Unit price<input name="Lines[__INDEX__].UnitPrice" value="0.000" min="0" step="0.001" class="line-price-input" /></label>
+            <div class="line-meta">
+                <strong class="line-item-name"></strong>
+                <span class="line-item-code"></span>
+                <span>Line total: <strong class="line-total">0.000 @Model.Currency</strong></span>
+            </div>
+        </div>
+        <button type="button" class="btn btn-outline-danger remove-order-line">Remove</button>
+    </div>
+</template>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        window.picoOrderEditor = {
+            catalogItems: @Html.Raw(catalogJson),
+            currency: "@Model.Currency"
+        };
+    </script>
+}

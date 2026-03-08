@@ -1,0 +1,51 @@
+@model CheckoutViewModel
+@inject PicoExhibitorPortal.Web.Infrastructure.Localization.IUiTextService T
+@{
+    ViewData["Title"] = T.Get("Checkout");
+}
+
+<section class="section-head">
+    <div>
+        <h1>@T.Get("Checkout")</h1>
+        <p>@T.Get("OrderSummary")</p>
+    </div>
+</section>
+
+<div class="checkout-grid checkout-grid-premium">
+    <form method="post" class="form-card reveal">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <label>@T.Get("ExhibitionName")<input asp-for="ExhibitionName" /></label>
+        <label>@T.Get("CompanyName")<input asp-for="ExhibitorCompany" /></label>
+        <label>@T.Get("BoothNumber")<input asp-for="BoothNumber" /></label>
+        <label>@T.Get("ContactPerson")<input asp-for="ContactPerson" /></label>
+        <label>@T.Get("Email")<input asp-for="Email" /></label>
+        <label>@T.Get("Phone")<input asp-for="Phone" /></label>
+        <label>@T.Get("Notes")<textarea asp-for="Notes"></textarea></label>
+        <button type="submit" class="btn btn-teal">@T.Get("SubmitOrder")</button>
+    </form>
+    <aside class="form-card reveal checkout-summary-panel">
+        <h2>@T.Get("OrderSummary")</h2>
+        @foreach (var line in Model.Cart.Lines)
+        {
+            <div class="checkout-summary-item">
+                <img src="@line.ImagePath" alt="@line.NameEn" />
+                <div class="checkout-summary-copy">
+                    <strong>@T.Localize(line.NameEn, line.NameAr)</strong>
+                    <span>@line.Code</span>
+                    <small>Qty @line.Quantity</small>
+                </div>
+                <strong class="checkout-summary-price">@line.LineTotal.ToString("0.000") @line.Currency</strong>
+            </div>
+        }
+        <hr />
+        <div class="summary-line summary-line-strong">
+            <span>Total</span>
+            <strong>@Model.Cart.Total.ToString("0.000") @Model.Cart.Currency</strong>
+        </div>
+    </aside>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

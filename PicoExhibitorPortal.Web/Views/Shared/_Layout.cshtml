@@ -1,0 +1,67 @@
+@inject PicoExhibitorPortal.Web.Infrastructure.Localization.IUiTextService T
+<!DOCTYPE html>
+<html lang="@T.CurrentCulture.TwoLetterISOLanguageName" dir="@T.Direction">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"] ?? T.Get("PortalName"))</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="site-backdrop site-backdrop-a"></div>
+    <div class="site-backdrop site-backdrop-b"></div>
+    <header class="site-header">
+        <div class="container d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <a class="brand" asp-area="" asp-controller="Home" asp-action="Index">
+                <img src="~/brand/pico-mark.svg" alt="Pico" />
+                <span>
+                    <strong>@T.Get("PortalName")</strong>
+                    <small>@T.Get("PortalTagline")</small>
+                </span>
+            </a>
+            <nav class="nav-links">
+                <a asp-area="" asp-controller="Home" asp-action="Index">@T.Get("Home")</a>
+                <a asp-area="" asp-controller="Catalog" asp-action="Index">@T.Get("Catalog")</a>
+                <a asp-area="" asp-controller="Cart" asp-action="Index">@T.Get("Cart")</a>
+                <a asp-area="Admin" asp-controller="Catalog" asp-action="Index">@T.Get("Admin")</a>
+                @if (Context.Session.GetString("AdminAccessGranted") == "1")
+                {
+                    <a asp-area="Admin" asp-controller="Orders" asp-action="Index">@T.Get("Orders")</a>
+                    <form asp-area="Admin" asp-controller="Auth" asp-action="Logout" method="post" class="nav-logout-form">
+                        @Html.AntiForgeryToken()
+                        <button type="submit">Logout</button>
+                    </form>
+                }
+            </nav>
+            <form asp-area="" asp-controller="Culture" asp-action="Set" method="post" class="language-form">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                <button type="submit" name="culture" value="en" class="@(T.IsArabic ? string.Empty : "active")">@T.Get("English")</button>
+                <button type="submit" name="culture" value="ar" class="@(T.IsArabic ? "active" : string.Empty)">@T.Get("Arabic")</button>
+            </form>
+        </div>
+    </header>
+    <main class="container page-shell">
+        <section role="main" class="pb-3 page-content">
+            @RenderBody()
+        </section>
+    </main>
+    <footer class="site-footer">
+        <div class="container site-footer-row">
+            <div>
+                <strong>@T.Get("PortalName")</strong>
+                <p>@T.Get("PortalTagline")</p>
+            </div>
+            <a asp-area="" asp-controller="Catalog" asp-action="Index" class="btn btn-teal">@T.Get("BrowseCatalog")</a>
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

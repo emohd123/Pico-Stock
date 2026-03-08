@@ -1,0 +1,90 @@
+@model CatalogIndexViewModel
+@inject PicoExhibitorPortal.Web.Infrastructure.Localization.IUiTextService T
+@{
+    ViewData["Title"] = T.Get("PortalName");
+}
+
+<section class="hero">
+    <div class="hero-copy">
+        <span class="eyebrow">@T.Get("VerifiedCatalog")</span>
+        <span class="hero-orbit hero-orbit-a"></span>
+        <span class="hero-orbit hero-orbit-b"></span>
+        <h1>@T.Get("HomeHeadline")</h1>
+        <p class="hero-lede">@T.Get("HomeBlurb")</p>
+        <div class="hero-actions">
+            <a class="btn btn-teal" asp-area="" asp-controller="Catalog" asp-action="Index">@T.Get("BrowseCatalog")</a>
+            <a class="btn btn-outline-dark" asp-area="Admin" asp-controller="Catalog" asp-action="Index">@T.Get("Admin")</a>
+        </div>
+        <div class="hero-stat-row">
+            <div class="hero-stat">
+                <strong>@Model.Categories.Count</strong>
+                <span>priced categories</span>
+            </div>
+            <div class="hero-stat">
+                <strong>BHD</strong>
+                <span>verified public rates</span>
+            </div>
+        </div>
+    </div>
+    <div class="hero-panel">
+        <div class="hero-panel-topline">
+            <p class="muted">@T.Get("PortalTagline")</p>
+            <span class="pill">Premium exhibitor ordering</span>
+        </div>
+        <div class="hero-preview-grid">
+            @foreach (var item in Model.Items.Take(2))
+            {
+                <a class="hero-mini-card reveal" asp-area="" asp-controller="Catalog" asp-action="Item" asp-route-slug="@item.Slug">
+                    <img src="@item.PrimaryImagePath" alt="@item.NameEn" />
+                <div>
+                        <strong>@T.Localize(item.NameEn, item.NameAr)</strong>
+                        <span>
+                            @(item.Price.HasValue
+                                ? $"{item.Price?.ToString("0.000")} {item.Currency}"
+                                : T.Get("RequestPrice"))
+                        </span>
+                </div>
+            </a>
+            }
+        </div>
+    </div>
+</section>
+
+<section class="section-head">
+    <div>
+        <h2>@T.Get("Catalog")</h2>
+        <p>@T.Get("VerifiedCatalog")</p>
+    </div>
+    <a asp-area="" asp-controller="Catalog" asp-action="Index">@T.Get("ContinueShopping")</a>
+</section>
+
+@if (Model.Items.Count == 0)
+{
+    <div class="empty-state">@T.Get("NoItems")</div>
+}
+else
+{
+    <div class="catalog-grid">
+        @foreach (var item in Model.Items)
+        {
+            <article class="catalog-card reveal">
+                <a class="catalog-card-media" asp-area="" asp-controller="Catalog" asp-action="Item" asp-route-slug="@item.Slug">
+                    <img src="@item.PrimaryImagePath" alt="@item.NameEn" />
+                </a>
+                <div class="catalog-card-body">
+                    <span class="pill">@T.Localize(item.CategoryEn, item.CategoryAr)</span>
+                    <h3 class="catalog-card-title">@T.Localize(item.NameEn, item.NameAr)</h3>
+                    <p class="catalog-card-code">@item.Code</p>
+                    @if (item.Price.HasValue)
+                    {
+                        <strong class="catalog-card-price">@item.Price?.ToString("0.000") @item.Currency</strong>
+                    }
+                    else
+                    {
+                        <strong class="catalog-card-price pending-price">@T.Get("RequestPrice")</strong>
+                    }
+                </div>
+            </article>
+        }
+    </div>
+}

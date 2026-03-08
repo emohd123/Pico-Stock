@@ -1,0 +1,18 @@
+@model AdminSettingsViewModel
+@{
+    ViewData["Title"] = "Settings";
+}
+
+<form method="post" class="form-card form-grid">
+    @Html.AntiForgeryToken()
+    @if ((bool?)ViewData["Saved"] == true)
+    {
+        <div class="pill success">Saved</div>
+    }
+    <label>Internal recipients<input asp-for="InternalRecipients" /></label>
+    <label>CC recipients<input asp-for="CcRecipients" /></label>
+    <label>PPTX source path<input asp-for="PptxSourcePath" /></label>
+    <label>PDF source path<input asp-for="PdfSourcePath" /></label>
+    <label>Currency<input asp-for="Currency" /></label>
+    <button type="submit" class="btn btn-teal">Save</button>
+</form>

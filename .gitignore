@@ -1,0 +1,34 @@
+# Build output
+bin/
+obj/
+out/
+
+# .NET
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+
+# Logs
+*.log
+*.err
+
+# Screenshots / temp images
+*.png
+
+# dotnet install script
+dotnet-install.ps1
+.dotnet/
+
+# Claude internal
+.claude/
+
+# Runtime output
+run.out.log
+app-run.*

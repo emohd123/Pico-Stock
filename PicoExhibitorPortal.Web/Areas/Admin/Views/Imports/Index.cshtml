@@ -1,0 +1,28 @@
+@model IReadOnlyList<PicoExhibitorPortal.Web.Domain.ImportBatch>
+@{
+    ViewData["Title"] = "Imports";
+}
+
+<section class="section-head">
+    <div>
+        <h1>Imports</h1>
+        <p>Run imports from the configured Pico source files and review warnings.</p>
+    </div>
+    <form asp-action="Run" method="post">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn btn-teal">Run configured import</button>
+    </form>
+</section>
+
+@foreach (var batch in Model)
+{
+    <div class="form-card">
+        <h3>@batch.SourceFileName</h3>
+        <p>@batch.ImportedAtUtc.ToLocalTime()</p>
+        <p>@batch.Summary</p>
+        @if (!string.IsNullOrWhiteSpace(batch.Warnings))
+        {
+            <pre class="warning-box">@batch.Warnings</pre>
+        }
+    </div>
+}

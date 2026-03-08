@@ -1,0 +1,51 @@
+@model CatalogIndexViewModel
+@inject PicoExhibitorPortal.Web.Infrastructure.Localization.IUiTextService T
+@{
+    ViewData["Title"] = T.Get("Catalog");
+}
+
+<section class="section-head">
+    <div>
+        <h1>@T.Get("Catalog")</h1>
+        <p>@T.Get("VerifiedCatalog")</p>
+    </div>
+</section>
+
+<div class="filter-bar">
+    <a class="@(string.IsNullOrWhiteSpace(Model.ActiveCategory) ? "active" : string.Empty)" asp-action="Index">All</a>
+    @foreach (var category in Model.Categories)
+    {
+        <a class="@(Model.ActiveCategory == category ? "active" : string.Empty)" asp-action="Index" asp-route-category="@category">@category</a>
+    }
+</div>
+
+@if (Model.Items.Count == 0)
+{
+    <div class="empty-state">@T.Get("NoItems")</div>
+}
+else
+{
+    <div class="catalog-grid">
+        @foreach (var item in Model.Items)
+        {
+            <article class="catalog-card reveal">
+                <a class="catalog-card-media" asp-action="Item" asp-route-slug="@item.Slug">
+                    <img src="@item.PrimaryImagePath" alt="@item.NameEn" />
+                </a>
+                <div class="catalog-card-body">
+                    <span class="pill">@T.Localize(item.CategoryEn, item.CategoryAr)</span>
+                    <h3 class="catalog-card-title">@T.Localize(item.NameEn, item.NameAr)</h3>
+                    <p class="catalog-card-code">@item.Code</p>
+                    @if (item.Price.HasValue)
+                    {
+                        <strong class="catalog-card-price">@item.Price?.ToString("0.000") @item.Currency</strong>
+                    }
+                    else
+                    {
+                        <strong class="catalog-card-price pending-price">@T.Get("RequestPrice")</strong>
+                    }
+                </div>
+            </article>
+        }
+    </div>
+}

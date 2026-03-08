@@ -1,0 +1,47 @@
+@model OrderConfirmationViewModel
+@inject PicoExhibitorPortal.Web.Infrastructure.Localization.IUiTextService T
+@{
+    ViewData["Title"] = T.Get("OrderPlaced");
+}
+
+<div class="form-card reveal">
+    <span class="pill success">@T.Get("OrderPlaced")</span>
+    <h1>@T.Get("Reference"): @Model.Order.PublicReference</h1>
+    <p>@Model.Order.ExhibitorCompany | @Model.Order.ExhibitionName | Booth @Model.Order.BoothNumber</p>
+    @if (Model.Order.PdfGeneratedAtUtc is not null)
+    {
+        <div class="hero-actions">
+            <div class="pill success">PDF generated and saved</div>
+            <a class="btn btn-teal" asp-controller="Order" asp-action="Document" asp-route-publicReference="@Model.Order.PublicReference">Download order PDF</a>
+        </div>
+    }
+    @if (Model.Order.EmailDeliveryStatus == PicoExhibitorPortal.Web.Domain.OrderEmailDeliveryStatuses.PendingRetry)
+    {
+        <div class="warning-box">
+            Order saved successfully. The PDF is ready to download now. Email confirmation is still pending.
+        </div>
+    }
+    else if (Model.Order.EmailDeliveryStatus == PicoExhibitorPortal.Web.Domain.OrderEmailDeliveryStatuses.Sent)
+    {
+        <div class="pill success">Order email sent with attached PDF</div>
+    }
+    <div class="summary-stack order-confirmation-lines">
+        @foreach (var line in Model.Order.Lines)
+        {
+            <div class="checkout-summary-item checkout-summary-item-strong">
+                <img src="@line.ItemImagePath" alt="@line.ItemNameEn" />
+                <div class="checkout-summary-copy">
+                    <strong>@T.Localize(line.ItemNameEn, line.ItemNameAr)</strong>
+                    <span>@line.ItemCode</span>
+                    <small>Qty @line.Quantity</small>
+                </div>
+                <strong>@line.LineTotal.ToString("0.000") @Model.Order.Currency</strong>
+            </div>
+        }
+        <hr />
+        <div class="summary-line summary-line-strong">
+            <span>Total</span>
+            <strong>@Model.Order.GrandTotal.ToString("0.000") @Model.Order.Currency</strong>
+        </div>
+    </div>
+</div>
