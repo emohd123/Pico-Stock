@@ -206,6 +206,36 @@ public sealed partial class CatalogImportService(
         return batch;
     }
 
+    public async Task<ImportBatch?> RunUploadedImportAsync(Stream pptxStream, string pptxFileName, Stream? pdfStream, string? pdfFileName, CancellationToken cancellationToken)
+    {
+        var settings = await settingsService.GetAsync(cancellationToken);
+        var uploadRoot = Path.Combine(environment.WebRootPath, "uploads", "source");
+        Directory.CreateDirectory(uploadRoot);
+
+        var pptxPath = Path.Combine(uploadRoot, pptxFileName);
+        await using (var file = File.Create(pptxPath))
+            await pptxStream.CopyToAsync(file, cancellationToken);
+
+        string? pdfPath = null;
+        if (pdfStream is not null && !string.IsNullOrWhiteSpace(pdfFileName))
+        {
+            pdfPath = Path.Combine(uploadRoot, pdfFileName);
+            await using var file = File.Create(pdfPath);
+            await pdfStream.CopyToAsync(file, cancellationToken);
+        }
+
+        await settingsService.SaveAsync(new PortalSettingsView
+        {
+            InternalRecipients = settings.InternalRecipients,
+            CcRecipients = settings.CcRecipients,
+            PptxSourcePath = pptxPath,
+            PdfSourcePath = pdfPath ?? settings.PdfSourcePath,
+            Currency = settings.Currency
+        }, cancellationToken);
+
+        return await RunConfiguredImportAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<ImportBatch>> GetBatchesAsync(CancellationToken cancellationToken) =>
         await dbContext.ImportBatches.AsNoTracking().Include(x => x.Items).OrderByDescending(x => x.ImportedAtUtc).ToListAsync(cancellationToken);
 

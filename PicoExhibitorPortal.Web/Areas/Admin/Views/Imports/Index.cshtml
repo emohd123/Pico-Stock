@@ -6,13 +6,39 @@
 <section class="section-head">
     <div>
         <h1>Imports</h1>
-        <p>Run imports from the configured Pico source files and review warnings.</p>
+        <p>Upload your PPTX inventory file and optional PDF price sheet, or re-run the last configured import.</p>
     </div>
+</section>
+
+@if (TempData["Error"] is string error)
+{
+    <div class="pill error">@error</div>
+}
+
+<div class="form-card">
+    <h3>Upload source files</h3>
+    <form asp-action="Upload" method="post" enctype="multipart/form-data" class="form-grid">
+        @Html.AntiForgeryToken()
+        <label>
+            PPTX inventory file <span style="color:var(--color-teal)">*</span>
+            <input type="file" name="pptxFile" accept=".pptx" required />
+        </label>
+        <label>
+            PDF price sheet <span style="opacity:.6">(optional)</span>
+            <input type="file" name="pdfFile" accept=".pdf" />
+        </label>
+        <button type="submit" class="btn btn-teal">Upload &amp; run import</button>
+    </form>
+</div>
+
+<div class="form-card" style="margin-top:1rem">
+    <h3>Re-run last import</h3>
+    <p style="opacity:.7;margin-bottom:.75rem">Uses the source files from the previous import run.</p>
     <form asp-action="Run" method="post">
         @Html.AntiForgeryToken()
-        <button type="submit" class="btn btn-teal">Run configured import</button>
+        <button type="submit" class="btn">Re-run configured import</button>
     </form>
-</section>
+</div>
 
 @foreach (var batch in Model)
 {

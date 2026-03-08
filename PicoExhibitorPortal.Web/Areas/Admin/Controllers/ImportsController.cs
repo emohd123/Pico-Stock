@@ -16,4 +16,31 @@ public sealed class ImportsController(ICatalogImportService importService) : Con
         await importService.RunConfiguredImportAsync(cancellationToken);
         return RedirectToAction(nameof(Index));
     }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [RequestSizeLimit(200 * 1024 * 1024)] // 200 MB
+    public async Task<IActionResult> Upload(IFormFile pptxFile, IFormFile? pdfFile, CancellationToken cancellationToken)
+    {
+        if (pptxFile is null || pptxFile.Length == 0)
+        {
+            TempData["Error"] = "Please select a PPTX file to upload.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        await using var pptxStream = pptxFile.OpenReadStream();
+        Stream? pdfStream = null;
+        if (pdfFile is { Length: > 0 })
+            pdfStream = pdfFile.OpenReadStream();
+
+        await importService.RunUploadedImportAsync(
+            pptxStream, pptxFile.FileName,
+            pdfStream, pdfFile?.FileName,
+            cancellationToken);
+
+        if (pdfStream is not null)
+            await pdfStream.DisposeAsync();
+
+        return RedirectToAction(nameof(Index));
+    }
 }
