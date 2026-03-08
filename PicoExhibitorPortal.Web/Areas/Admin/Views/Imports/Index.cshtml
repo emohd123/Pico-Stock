@@ -17,7 +17,11 @@
 
 @if (TempData["Success"] is string success)
 {
-    <div class="pill success">@success</div>
+    <div class="form-card" style="margin-bottom:1rem;border-color:rgba(43,144,78,.18);background:rgba(240,251,245,.96)">
+        <span class="pill success">Import completed</span>
+        <p style="margin:.85rem 0 0;font-weight:600">@success</p>
+        <p style="margin:.45rem 0 0;color:var(--muted)">If you uploaded the same PPTX again, the catalog may look unchanged because the existing items were refreshed rather than duplicated.</p>
+    </div>
 }
 
 <div class="form-card">

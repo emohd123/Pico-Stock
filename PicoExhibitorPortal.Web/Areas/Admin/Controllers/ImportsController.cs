@@ -13,8 +13,10 @@ public sealed class ImportsController(ICatalogImportService importService) : Con
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Run(CancellationToken cancellationToken)
     {
-        await importService.RunConfiguredImportAsync(cancellationToken);
-        TempData["Success"] = "Import completed successfully.";
+        var batch = await importService.RunConfiguredImportAsync(cancellationToken);
+        TempData["Success"] = batch is null
+            ? "Import did not run because no configured PPTX source was found."
+            : batch.Summary;
         return RedirectToAction(nameof(Index));
     }
 
@@ -46,7 +48,7 @@ public sealed class ImportsController(ICatalogImportService importService) : Con
         if (pdfFile is { Length: > 0 })
             pdfStream = pdfFile.OpenReadStream();
 
-        await importService.RunUploadedImportAsync(
+        var batch = await importService.RunUploadedImportAsync(
             pptxStream, pptxFile.FileName,
             pdfStream, pdfFile?.FileName,
             cancellationToken);
@@ -54,7 +56,7 @@ public sealed class ImportsController(ICatalogImportService importService) : Con
         if (pdfStream is not null)
             await pdfStream.DisposeAsync();
 
-        TempData["Success"] = "Files uploaded and import started successfully.";
+        TempData["Success"] = batch?.Summary ?? $"Files uploaded successfully from {pptxFile.FileName}.";
         return RedirectToAction(nameof(Index));
     }
 }

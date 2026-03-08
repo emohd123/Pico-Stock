@@ -32,3 +32,10 @@ dotnet-install.ps1
 # Runtime output
 run.out.log
 app-run.*
+
+# Local import test files and generated upload assets
+temp-import.pptx
+temp-rates.pdf
+PicoExhibitorPortal.Web/wwwroot/uploads/imports/
+PicoExhibitorPortal.Web/wwwroot/uploads/source/
+PicoExhibitorPortal.Web/wwwroot/uploads/manual-catalog/
