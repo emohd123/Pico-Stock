@@ -91,7 +91,7 @@ public static class PortalDatabaseBootstrapper
         string columnName,
         CancellationToken cancellationToken)
     {
-        await using var connection = dbContext.Database.GetDbConnection();
+        var connection = dbContext.Database.GetDbConnection();
         if (connection.State != System.Data.ConnectionState.Open)
         {
             await connection.OpenAsync(cancellationToken);
