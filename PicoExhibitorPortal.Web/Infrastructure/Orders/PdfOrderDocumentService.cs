@@ -124,13 +124,24 @@ public sealed class PdfOrderDocumentService(IWebHostEnvironment environment) : I
             return string.Empty;
         }
 
+        // Web-relative paths always start with '/' and must be combined with WebRootPath.
+        // Do NOT use Path.IsPathRooted here: on Linux, web paths like "/uploads/foo.png"
+        // are considered rooted, so we would incorrectly skip the WebRootPath prefix and
+        // the file would never be found (it lives at /app/wwwroot/uploads/foo.png).
+        if (imagePath[0] == '/')
+        {
+            var trimmed = imagePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+            return Path.Combine(environment.WebRootPath, trimmed);
+        }
+
+        // Already a platform-specific absolute path (e.g. Windows drive-letter path).
         if (Path.IsPathRooted(imagePath))
         {
             return imagePath;
         }
 
-        var trimmed = imagePath.TrimStart('/', '\\').Replace('/', Path.DirectorySeparatorChar);
-        return Path.Combine(environment.WebRootPath, trimmed);
+        var rel = imagePath.TrimStart('/', '\\').Replace('/', Path.DirectorySeparatorChar);
+        return Path.Combine(environment.WebRootPath, rel);
     }
 
     private static XRect FitRect(double sourceWidth, double sourceHeight, double targetX, double targetY, double targetWidth, double targetHeight)
