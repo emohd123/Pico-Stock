@@ -27,8 +27,8 @@ public sealed class PortalSettingsService(
         {
             InternalRecipients = GetValue(stored, Keys.InternalRecipients, emailOptions.Value.InternalRecipients),
             CcRecipients = GetValue(stored, Keys.CcRecipients, emailOptions.Value.CcRecipients),
-            PptxSourcePath = GetValue(stored, Keys.PptxPath, sourceOptions.Value.PptxPath),
-            PdfSourcePath = GetValue(stored, Keys.PdfPath, sourceOptions.Value.PdfPath),
+            PptxSourcePath = GetFilePathValue(stored, Keys.PptxPath, sourceOptions.Value.PptxPath),
+            PdfSourcePath = GetFilePathValue(stored, Keys.PdfPath, sourceOptions.Value.PdfPath),
             Currency = GetValue(stored, Keys.Currency, sourceOptions.Value.DefaultCurrency)
         };
     }
@@ -57,4 +57,9 @@ public sealed class PortalSettingsService(
 
     private static string GetValue(IReadOnlyDictionary<string, string> source, string key, string fallback) =>
         source.TryGetValue(key, out var value) ? value : fallback;
+
+    // For file-path settings: only use the DB value if the file still exists on disk.
+    // Falls back to the seed/env-var path when the container's ephemeral filesystem has been wiped.
+    private static string GetFilePathValue(IReadOnlyDictionary<string, string> source, string key, string fallback) =>
+        source.TryGetValue(key, out var value) && File.Exists(value) ? value : fallback;
 }
