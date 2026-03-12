@@ -1,0 +1,58 @@
+[     713ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:54821/company-profile:0
+[     891ms] ModuleBuildError: Module build failed (from ./node_modules/next/dist/build/webpack/loaders/next-swc-loader.js):
+Error: 
+  × Unexpected character '‘'
+    ╭─[C:\Users\Admin\Desktop\apps\Pico Stock\app\company-profile\page.js:41:1]
+ 41 │ 
+ 42 │ const portfolioHighlights = [
+ 43 │     {
+ 44 │         title: ‘Events Portfolio',
+    ·                ▲
+ 45 │         description: ‘A Bahrain-focused overview of event environments, client-facing experiences, and delivery capabilities across live projects.',
+ 46 │         image: ‘/company/portfolio-events.png',
+ 47 │         href: ‘https://u.pcloud.link/publink/show?code=XZOwzq5ZCX8ABOA4HHRp92vxfuoa80RX7bRV',
+    ╰────
+
+
+Caused by:
+    Syntax Error
+    at processResult (file://C:\Users\Admin\Desktop\apps\Pico Stock\node_modules\next\dist\compiled\webpack\bundle5.js:28:400590)
+    at <unknown> (file://C:\Users\Admin\Desktop\apps\Pico Stock\node_modules\next\dist\compiled\webpack\bundle5.js:28:402302)
+    at <unknown> (file://C:\Users\Admin\Desktop\apps\Pico Stock\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js:1:8645)
+    at <unknown> (file://C:\Users\Admin\Desktop\apps\Pico Stock\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js:1:5019)
+    at r.callback (file://C:\Users\Admin\Desktop\apps\Pico Stock\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js:1:4039)
+[     890ms] [ERROR] ./app/company-profile/page.js
+Error: 
+  × Unexpected character '‘'
+    ╭─[C:\Users\Admin\Desktop\apps\Pico Stock\app\company-profile\page.js:41:1]
+ 41 │ 
+ 42 │ const portfolioHighlights = [
+ 43 │     {
+ 44 │         title: ‘Events Portfolio',
+    ·                ▲
+ 45 │         description: ‘A Bahrain-focused overview of event environments, client-facing experiences, and delivery capabilities across live projects.',
+ 46 │         image: ‘/company/portfolio-events.png',
+ 47 │         href: ‘https://u.pcloud.link/publink/show?code=XZOwzq5ZCX8ABOA4HHRp92vxfuoa80RX7bRV',
+    ╰────
+
+Caused by:
+    Syntax Error @ webpack-internal:///./node_modules/next/dist/client/components/react-dev-overlay/internal/helpers/hydration-error-info.js:62
+[     892ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:54821/favicon.ico:0
+[     915ms] [ERROR] ./app/company-profile/page.js
+Error: 
+  × Unexpected character '‘'
+    ╭─[C:\Users\Admin\Desktop\apps\Pico Stock\app\company-profile\page.js:41:1]
+ 41 │ 
+ 42 │ const portfolioHighlights = [
+ 43 │     {
+ 44 │         title: ‘Events Portfolio',
+    ·                ▲
+ 45 │         description: ‘A Bahrain-focused overview of event environments, client-facing experiences, and delivery capabilities across live projects.',
+ 46 │         image: ‘/company/portfolio-events.png',
+ 47 │         href: ‘https://u.pcloud.link/publink/show?code=XZOwzq5ZCX8ABOA4HHRp92vxfuoa80RX7bRV',
+    ╰────
+
+Caused by:
+    Syntax Error @ webpack-internal:///./node_modules/next/dist/client/components/react-dev-overlay/internal/helpers/hydration-error-info.js:62
+[   51366ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:54821/_next/static/webpack/67401f94706abb11.webpack.hot-update.json:0
+[   51367ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ webpack-internal:///./node_modules/next/dist/client/components/react-dev-overlay/pages/hot-reloader-client.js:349
