@@ -1,0 +1,50 @@
+@model CartViewModel
+@inject PicoExhibitorPortal.Web.Infrastructure.Localization.IUiTextService T
+@{
+    ViewData["Title"] = T.Get("Cart");
+    const string fallbackImage = "/brand/product-placeholder.svg";
+}
+
+<section class="section-head">
+    <div>
+        <h1>@T.Get("Cart")</h1>
+        <p>@T.Get("OrderSummary")</p>
+    </div>
+</section>
+
+@if (Model.Lines.Count == 0)
+{
+    <div class="empty-state">Your cart is empty.</div>
+}
+else
+{
+    <div class="cart-table">
+        @foreach (var line in Model.Lines)
+        {
+            <div class="cart-row reveal">
+                <img src="@(string.IsNullOrWhiteSpace(line.ImagePath) ? fallbackImage : line.ImagePath)" alt="@line.NameEn" data-product-image="true" data-fallback-src="@fallbackImage" />
+                <div>
+                    <strong>@T.Localize(line.NameEn, line.NameAr)</strong>
+                    <p>@line.Code</p>
+                </div>
+                <form asp-action="Update" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="catalogItemId" value="@line.CatalogItemId" />
+                    <input type="number" name="quantity" value="@line.Quantity" min="0" />
+                    <button type="submit" class="btn btn-outline-dark">Update</button>
+                </form>
+                <strong>@line.LineTotal.ToString("0.000") @line.Currency</strong>
+                <form asp-action="Remove" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="catalogItemId" value="@line.CatalogItemId" />
+                    <button type="submit" class="btn btn-outline-danger">Remove</button>
+                </form>
+            </div>
+        }
+    </div>
+
+    <div class="summary-bar mt-3 summary-bar-strong">
+        <strong>Total: @Model.Total.ToString("0.000") @Model.Currency</strong>
+        <a class="btn btn-teal" asp-controller="Checkout" asp-action="Index">@T.Get("Checkout")</a>
+    </div>
+}

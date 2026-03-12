@@ -1,0 +1,82 @@
+@model PicoExhibitorPortal.Web.Domain.Order
+@{
+    ViewData["Title"] = Model.PublicReference;
+}
+
+<section class="section-head section-head-tight">
+    <div>
+        <h1>@Model.PublicReference</h1>
+        <p>@Model.ExhibitorCompany | @Model.ExhibitionName | Booth @Model.BoothNumber</p>
+    </div>
+    <div class="hero-actions">
+        <a class="btn btn-teal" asp-action="Edit" asp-route-id="@Model.Id">Edit order</a>
+        <a class="btn btn-outline-dark" asp-action="Document" asp-route-publicReference="@Model.PublicReference">Download PDF</a>
+        <a class="btn btn-outline-dark" asp-action="Index">Back to orders</a>
+    </div>
+</section>
+
+<div class="admin-order-shell">
+    <section class="form-card reveal">
+        <div class="admin-panel-heading">
+            <div>
+                <span class="eyebrow">Order profile</span>
+                <h2>@Model.ContactPerson</h2>
+            </div>
+            <span class="pill">@Model.Status</span>
+        </div>
+        <div class="detail-meta-grid">
+            <div class="spec-box">
+                <strong>Contact</strong>
+                <p>@Model.Email<br />@Model.Phone</p>
+            </div>
+            <div class="spec-box">
+                <strong>Delivery state</strong>
+                <p>Email: @Model.EmailDeliveryStatus<br />Submitted: @Model.SubmittedAtUtc.ToLocalTime()</p>
+            </div>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(Model.Notes))
+        {
+            <div class="spec-box">
+                <strong>Notes</strong>
+                <p>@Model.Notes</p>
+            </div>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.EmailDeliveryError))
+        {
+            <div class="warning-box">Last email issue: @Model.EmailDeliveryError</div>
+        }
+    </section>
+
+    <aside class="form-card reveal order-side-panel">
+        <span class="eyebrow">Grand total</span>
+        <div class="price-line">@Model.GrandTotal.ToString("0.000") @Model.Currency</div>
+        <p class="muted">Use the edit screen to update quantities, prices, or customer details and rebuild the PDF.</p>
+        <form asp-action="Delete" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Delete this order permanently?');">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-outline-danger">Delete permanently</button>
+        </form>
+    </aside>
+</div>
+
+<section class="form-card reveal admin-lines-panel">
+    <div class="admin-panel-heading">
+        <div>
+            <span class="eyebrow">Line items</span>
+            <h2>Order contents</h2>
+        </div>
+    </div>
+    <div class="order-line-review">
+        @foreach (var line in Model.Lines)
+        {
+            <div class="checkout-summary-item checkout-summary-item-strong">
+                <img src="@line.ItemImagePath" alt="@line.ItemNameEn" />
+                <div class="checkout-summary-copy">
+                    <strong>@line.ItemNameEn</strong>
+                    <span>@line.ItemCode</span>
+                    <small>Qty @line.Quantity • @line.UnitPrice.ToString("0.000") @Model.Currency</small>
+                </div>
+                <strong class="checkout-summary-price">@line.LineTotal.ToString("0.000") @Model.Currency</strong>
+            </div>
+        }
+    </div>
+</section>

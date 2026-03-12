@@ -1,0 +1,45 @@
+@model CatalogDetailViewModel
+@inject PicoExhibitorPortal.Web.Infrastructure.Localization.IUiTextService T
+@{
+    ViewData["Title"] = T.Localize(Model.Item.NameEn, Model.Item.NameAr);
+    const string fallbackImage = "/brand/product-placeholder.svg";
+    var detailImage = string.IsNullOrWhiteSpace(Model.Item.DetailImagePath) ? Model.Item.PrimaryImagePath : Model.Item.DetailImagePath;
+}
+
+<div class="detail-grid detail-grid-polished">
+    <div class="detail-media">
+        <div class="detail-media-stage">
+            <img src="@(string.IsNullOrWhiteSpace(detailImage) ? fallbackImage : detailImage)" alt="@Model.Item.NameEn" data-product-image="true" data-fallback-src="@fallbackImage" />
+        </div>
+    </div>
+    <div class="detail-copy">
+        <span class="pill">@T.Localize(Model.Item.CategoryEn, Model.Item.CategoryAr)</span>
+        <h1 class="detail-title">@T.Localize(Model.Item.NameEn, Model.Item.NameAr)</h1>
+        <p class="muted detail-code">@Model.Item.PicoCode</p>
+        <p class="detail-description">@T.Localize(Model.Item.DescriptionEn, Model.Item.DescriptionAr)</p>
+        <div class="detail-meta-grid">
+            <div class="spec-box">
+                <strong>@T.Get("Specs")</strong>
+                <p>@T.Localize(Model.Item.DimensionsAndSpecsEn, Model.Item.DimensionsAndSpecsAr)</p>
+            </div>
+            @if (Model.IsOrderable)
+            {
+                <div class="detail-order-panel">
+                    <span class="eyebrow">@T.Get("VerifiedCatalog")</span>
+                    <div class="price-line">@Model.Item.Price?.ToString("0.000") @Model.Item.Currency</div>
+                    <p class="muted">Prepared for direct order and operational review by Pico staff.</p>
+                    <form asp-controller="Cart" asp-action="Add" method="post" class="inline-order">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="catalogItemId" value="@Model.Item.Id" />
+                        <input type="number" name="quantity" value="1" min="1" />
+                        <button type="submit" class="btn btn-teal">@T.Get("AddToCart")</button>
+                    </form>
+                </div>
+            }
+            else
+            {
+                <div class="empty-state">@T.Get("RequestPrice")</div>
+            }
+        </div>
+    </div>
+</div>

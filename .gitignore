@@ -31,3 +31,45 @@ yarn-error.log*
 # uploads
 /public/uploads/*
 !/public/uploads/.gitkeep
+
+# Build output
+bin/
+obj/
+out/
+
+# .NET
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+
+# Logs
+*.log
+*.err
+
+# Screenshots / temp images
+*.png
+
+# dotnet install script
+dotnet-install.ps1
+.dotnet/
+
+# Claude internal
+.claude/
+
+# Runtime output
+run.out.log
+app-run.*
+
+# Local import test files and generated upload assets
+temp-import.pptx
+temp-rates.pdf
+PicoExhibitorPortal.Web/wwwroot/uploads/imports/
+PicoExhibitorPortal.Web/wwwroot/uploads/source/
+PicoExhibitorPortal.Web/wwwroot/uploads/manual-catalog/

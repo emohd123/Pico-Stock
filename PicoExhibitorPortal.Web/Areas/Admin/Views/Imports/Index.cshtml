@@ -1,0 +1,73 @@
+@model IReadOnlyList<PicoExhibitorPortal.Web.Domain.ImportBatch>
+@{
+    ViewData["Title"] = "Imports";
+}
+
+<section class="section-head">
+    <div>
+        <h1>Imports</h1>
+        <p>Upload a fresh PPTX inventory file and optional PDF price sheet, then push the new catalog into the portal from one place.</p>
+    </div>
+</section>
+
+@if (TempData["Error"] is string error)
+{
+    <div class="pill error">@error</div>
+}
+
+@if (TempData["Success"] is string success)
+{
+    <div class="form-card" style="margin-bottom:1rem;border-color:rgba(43,144,78,.18);background:rgba(240,251,245,.96)">
+        <span class="pill success">Import completed</span>
+        <p style="margin:.85rem 0 0;font-weight:600">@success</p>
+        <p style="margin:.45rem 0 0;color:var(--muted)">If you uploaded the same PPTX again, the catalog may look unchanged because the existing items were refreshed rather than duplicated.</p>
+    </div>
+}
+
+<div class="form-card">
+    <div class="section-head" style="margin-bottom:1rem">
+        <div>
+            <h3 style="margin-bottom:.35rem">Upload source files</h3>
+            <p style="margin:0;color:var(--muted)">Use this when you receive a new exhibition inventory or updated rate sheet.</p>
+        </div>
+    </div>
+    <form asp-action="Upload" method="post" enctype="multipart/form-data" class="form-grid">
+        @Html.AntiForgeryToken()
+        <label>
+            PPTX inventory file <span style="color:var(--color-teal)">*</span>
+            <input type="file" name="pptxFile" accept=".pptx" required />
+        </label>
+        <label>
+            PDF price sheet <span style="opacity:.6">(optional)</span>
+            <input type="file" name="pdfFile" accept=".pdf" />
+        </label>
+        <button type="submit" class="btn btn-teal">Upload &amp; run import</button>
+    </form>
+</div>
+
+<div class="form-card" style="margin-top:1rem">
+    <h3>Re-run last import</h3>
+    <p style="opacity:.7;margin-bottom:.75rem">Uses the source files from the previous import run.</p>
+    <form asp-action="Run" method="post">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn">Re-run configured import</button>
+    </form>
+</div>
+
+@foreach (var batch in Model)
+{
+    <div class="form-card">
+        <div class="section-head" style="margin-bottom:.75rem">
+            <div>
+                <h3 style="margin-bottom:.25rem">@batch.SourceFileName</h3>
+                <p style="margin:0;color:var(--muted)">@batch.ImportedAtUtc.ToLocalTime()</p>
+            </div>
+            <span class="pill success">Imported</span>
+        </div>
+        <p style="margin-bottom:0">@batch.Summary</p>
+        @if (!string.IsNullOrWhiteSpace(batch.Warnings))
+        {
+            <pre class="warning-box">@batch.Warnings</pre>
+        }
+    </div>
+}

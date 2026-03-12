@@ -1,0 +1,64 @@
+@model IReadOnlyList<CatalogListItemViewModel>
+@{
+    ViewData["Title"] = "Catalog management";
+    var approvedCount = Model.Count(x => x.IsVerified && x.IsActive);
+    var missingPriceCount = Model.Count(x => !x.Price.HasValue);
+}
+
+<section class="section-head">
+    <div>
+        <h1>Catalog management</h1>
+        <p>All imported items are approved for the portal. Use edit only for corrections.</p>
+    </div>
+    <div class="hero-actions">
+        <a class="btn btn-teal" asp-action="Create">New item</a>
+        <a class="btn btn-outline-dark" asp-area="Admin" asp-controller="Imports" asp-action="Index">Imports</a>
+    </div>
+</section>
+
+<div class="summary-bar admin-summary-bar">
+    <div>
+        <strong>@approvedCount</strong>
+        <span>Approved items</span>
+    </div>
+    <div>
+        <strong>@missingPriceCount</strong>
+        <span>Items without price</span>
+    </div>
+    <div>
+        <strong>@Model.Count</strong>
+        <span>Total catalog items</span>
+    </div>
+</div>
+
+<div class="admin-table">
+    @foreach (var item in Model)
+    {
+        <div class="admin-row">
+            <img src="@item.PrimaryImagePath" alt="@item.NameEn" />
+            <div>
+                <strong>@item.NameEn</strong>
+                <p>@item.Code | @item.CategoryEn</p>
+                <small>@item.SourceDocumentReference</small>
+            </div>
+            <div class="admin-price-cell">
+                @if (item.Price.HasValue)
+                {
+                    <strong>@item.Price.Value.ToString("0.000") @item.Currency</strong>
+                }
+                else
+                {
+                    <strong class="pending-price">Price pending</strong>
+                }
+            </div>
+            <div class="admin-status-stack">
+                <span class="pill success">Approved</span>
+                @if (!item.Price.HasValue)
+                {
+                    <span class="pill">Price missing</span>
+                }
+            </div>
+            <a class="btn btn-teal" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+        </div>
+    }
+</div>

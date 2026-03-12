@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="PicoExhibitorPortal.Tests/PicoExhibitorPortal.Tests.csproj" />
+  <Project Path="PicoExhibitorPortal.Web/PicoExhibitorPortal.Web.csproj" />
+</Solution>

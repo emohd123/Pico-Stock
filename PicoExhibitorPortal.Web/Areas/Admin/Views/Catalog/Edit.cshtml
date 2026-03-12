@@ -1,0 +1,49 @@
+@model AdminCatalogEditViewModel
+@{
+    var isNew = Model.Id == 0;
+    ViewData["Title"] = isNew ? "Add catalog item" : "Edit catalog item";
+}
+
+<section class="section-head section-head-tight">
+    <div>
+        <h1>@(isNew ? "Add catalog item" : "Edit catalog item")</h1>
+        <p>Create or update a product record for the public catalog.</p>
+    </div>
+    <a class="btn btn-outline-dark" asp-action="Index">Back to catalog</a>
+</section>
+
+<form method="post" enctype="multipart/form-data" class="form-card form-grid">
+    @Html.AntiForgeryToken()
+    <input asp-for="Id" type="hidden" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <label>Pico code<input asp-for="PicoCode" /></label>
+    <label>Source item ID<input asp-for="SourceItemId" /></label>
+    <label>Name (EN)<input asp-for="NameEn" /></label>
+    <label>Name (AR)<input asp-for="NameAr" /></label>
+    <label>Category (EN)<input asp-for="CategoryEn" /></label>
+    <label>Category (AR)<input asp-for="CategoryAr" /></label>
+    <label>Price<input asp-for="Price" /></label>
+    <label>Currency<input asp-for="Currency" /></label>
+    <label>Upload image<input asp-for="ImageUpload" type="file" accept="image/*" /></label>
+    <label>Primary image path<input asp-for="PrimaryImagePath" /></label>
+    <label>Source reference<input asp-for="SourceDocumentReference" /></label>
+    <label>Description (EN)<textarea asp-for="DescriptionEn"></textarea></label>
+    <label>Description (AR)<textarea asp-for="DescriptionAr"></textarea></label>
+    <label>Specs (EN)<textarea asp-for="DimensionsAndSpecsEn"></textarea></label>
+    <label>Specs (AR)<textarea asp-for="DimensionsAndSpecsAr"></textarea></label>
+    <label><input asp-for="IsActive" /> Active</label>
+    <label><input asp-for="IsVerified" /> Verified</label>
+    <button type="submit" class="btn btn-teal">@(isNew ? "Create item" : "Save item")</button>
+</form>
+
+@if (!string.IsNullOrWhiteSpace(Model.PrimaryImagePath))
+{
+    <div class="form-card mt-3">
+        <strong>Current image</strong>
+        <img src="@Model.PrimaryImagePath" alt="@Model.NameEn" style="max-width:220px;max-height:220px;object-fit:contain;margin-top:1rem;" />
+    </div>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

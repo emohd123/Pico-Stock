@@ -1,0 +1,42 @@
+@model IReadOnlyList<PicoExhibitorPortal.Web.Domain.Order>
+@{
+    ViewData["Title"] = "Orders";
+}
+
+<section class="section-head">
+    <div>
+        <h1>Orders</h1>
+        <p>Full exhibitor order history with edit, delete, PDF access, and delivery status.</p>
+    </div>
+</section>
+
+<div class="admin-table">
+    @foreach (var order in Model)
+    {
+        <div class="admin-row">
+            <div>
+                <strong><a asp-action="Details" asp-route-id="@order.Id">@order.PublicReference</a></strong>
+                <p>@order.ExhibitorCompany | @order.ExhibitionName | Booth @order.BoothNumber</p>
+            </div>
+            <div class="admin-status-stack">
+                <span class="pill">@order.Status</span>
+                <span class="muted">Email: @order.EmailDeliveryStatus</span>
+            </div>
+            <div class="admin-price-cell">
+                <strong>@order.GrandTotal.ToString("0.000") @order.Currency</strong>
+                <span class="muted">@order.Lines.Count item(s)</span>
+            </div>
+            <div class="admin-status-stack">
+                <div>@order.SubmittedAtUtc.ToLocalTime()</div>
+                <div class="admin-order-actions">
+                    <a asp-action="Details" asp-route-id="@order.Id">Details</a>
+                    <a asp-action="Edit" asp-route-id="@order.Id">Edit</a>
+                    @if (!string.IsNullOrWhiteSpace(order.PdfPath))
+                    {
+                        <a asp-action="Document" asp-route-publicReference="@order.PublicReference">PDF</a>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
