@@ -368,6 +368,13 @@ export default function AdminDashboard() {
                         📤 Upload & Import
                     </button>
                     <Link
+                        href="/admin/pcloud"
+                        className="admin-sidebar-item"
+                        style={{ display: 'block', textDecoration: 'none' }}
+                    >
+                        ☁️ pCloud
+                    </Link>
+                    <Link
                         href="/admin/designers"
                         className="admin-sidebar-item"
                         style={{ display: 'block', textDecoration: 'none' }}

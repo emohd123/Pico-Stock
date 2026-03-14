@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import CompanyContactForm from '@/components/CompanyContactForm';
 
 export const metadata = {
     title: 'Company Profile — Pico Bahrain Exhibition, Events & Interiors',
@@ -10,32 +11,38 @@ const capabilityCards = [
     {
         title: 'Exhibition Stands',
         description: 'Design-led exhibition stands and branded environments shaped for live events, trade shows, and business-facing activations.',
-        image: '/company/cap-exhibition.png',
+        image: '/company/stands-p17.png',
+        imageClassName: 'company-media-image-hero-main',
     },
     {
         title: 'Event Environments',
         description: 'Integrated event support for visitor flow, hospitality spaces, feature areas, and presentation-ready brand experiences.',
-        image: '/company/cap-events.png',
+        image: '/company/events-p17.png',
+        imageClassName: 'company-media-image-stage',
     },
     {
         title: 'Interiors & Fit-Out',
         description: 'Interior solutions for branded spaces, receptions, lounges, and functional environments that need a clean professional finish.',
-        image: '/company/cap-interiors.png',
+        image: '/company/int-p29.png',
+        imageClassName: 'company-media-image-interior',
     },
     {
         title: 'Booth Furniture & Rental Support',
         description: 'Flexible furniture and booth extras rental to complete exhibition spaces quickly, consistently, and with local coordination.',
         image: '/company/cap-furniture.png',
+        imageClassName: 'company-media-image-poster',
     },
     {
         title: 'Graphics & Signage',
         description: 'Visual communication support across booth graphics, branded surfaces, directional messaging, and presentation-ready signage.',
-        image: '/company/cap-graphics.png',
+        image: '/company/stands-p15.png',
+        imageClassName: 'company-media-image-poster',
     },
     {
         title: 'AV & Digital Display Support',
         description: 'Screen-based and presentation-focused support for digital content, display moments, and high-visibility touchpoints.',
         image: '/company/cap-av.png',
+        imageClassName: 'company-media-image-poster',
     },
 ];
 
@@ -43,21 +50,24 @@ const portfolioHighlights = [
     {
         title: 'Events Portfolio',
         description: 'A Bahrain-focused overview of event environments, client-facing experiences, and delivery capabilities across live projects.',
-        image: '/company/portfolio-events.png',
+        image: '/company/events-p17.png',
+        imageClassName: 'company-media-image-stage',
         href: 'https://u.pcloud.link/publink/show?code=XZOwzq5ZCX8ABOA4HHRp92vxfuoa80RX7bRV',
         linkLabel: 'View Events Portfolio',
     },
     {
         title: 'Exhibition Stands Portfolio',
         description: "Reference material showing Pico Bahrain's exhibition-stand direction, booth presentation quality, and spatial execution style.",
-        image: '/company/portfolio-stands.png',
+        image: '/company/stands-p15.png',
+        imageClassName: 'company-media-image-poster',
         href: 'https://u.pcloud.link/publink/show?code=XZHFte5Zk0MLSfIJLGLAW8fqj1l8juMDH4s7',
         linkLabel: 'View Stands Portfolio',
     },
     {
         title: 'Interiors Portfolio',
         description: 'A supporting look at interior-focused work and space styling that complements exhibition and event delivery.',
-        image: '/company/portfolio-interiors.png',
+        image: '/company/int-p29.png',
+        imageClassName: 'company-media-image-interior',
         href: 'https://u.pcloud.link/publink/show?code=XZLCzq5ZuOJCabuPOMLh0WtIdgPaukB0sI5y',
         linkLabel: 'View Interiors Portfolio',
     },
@@ -103,31 +113,31 @@ export default function CompanyProfilePage() {
                 <div className="company-hero-media">
                     <div className="company-hero-main-image">
                         <Image
-                            src="/company/events-p12.png"
-                            alt="Pico Bahrain exhibition stand — Future Energy Asia Bangkok"
+                            src="/company/stands-p17.png"
+                            alt="Pico Bahrain exhibition stand design"
                             fill
                             sizes="(max-width: 768px) 100vw, 46vw"
-                            className="company-media-image company-media-image-poster company-media-image-poster-main company-media-image-stage"
+                            className="company-media-image company-media-image-hero-main"
                             priority
                         />
                     </div>
                     <div className="company-hero-rail">
                         <div className="company-hero-rail-card">
                             <Image
-                                src="/company/stands-p15.png"
-                                alt="Bahrain International Garden exhibition pavilion"
+                                src="/company/events-p17.png"
+                                alt="Pico Bahrain live event environment"
                                 fill
                                 sizes="(max-width: 768px) 50vw, 20vw"
-                                className="company-media-image company-media-image-poster company-media-image-stage"
+                                className="company-media-image company-media-image-stage"
                             />
                         </div>
                         <div className="company-hero-rail-card">
                             <Image
                                 src="/company/int-p29.png"
-                                alt="Bahrain Marina exhibition stand with LED floor"
+                                alt="Pico Bahrain hospitality interior fit-out"
                                 fill
                                 sizes="(max-width: 768px) 50vw, 20vw"
-                                className="company-media-image company-media-image-poster company-media-image-interior"
+                                className="company-media-image company-media-image-interior"
                             />
                         </div>
                     </div>
@@ -158,29 +168,29 @@ export default function CompanyProfilePage() {
                     <div className="company-image-collage">
                         <div className="company-collage-primary">
                             <Image
-                                src="/company/events-p17.png"
-                                alt="33rd Arab League Summit — Pico Bahrain event delivery"
+                                src="/company/cap-av.png"
+                                alt="Pico Bahrain immersive exhibition environment"
                                 fill
                                 sizes="(max-width: 768px) 100vw, 40vw"
-                                className="company-media-image company-media-image-poster company-media-image-stage"
-                            />
-                        </div>
-                        <div className="company-collage-secondary">
-                            <Image
-                                src="/company/cap-av.png"
-                                alt="17th Manama Dialogue — Pico Bahrain event setup"
-                                fill
-                                sizes="(max-width: 768px) 50vw, 18vw"
                                 className="company-media-image company-media-image-poster"
                             />
                         </div>
                         <div className="company-collage-secondary">
                             <Image
                                 src="/company/cap-events.png"
-                                alt="Pico Bahrain interior fit-out — BLINK cafe"
+                                alt="Pico Bahrain event production setup"
                                 fill
                                 sizes="(max-width: 768px) 50vw, 18vw"
-                                className="company-media-image company-media-image-poster company-media-image-stage"
+                                className="company-media-image company-media-image-stage"
+                            />
+                        </div>
+                        <div className="company-collage-secondary">
+                            <Image
+                                src="/company/cap-furniture.png"
+                                alt="Pico Bahrain branded hospitality setup"
+                                fill
+                                sizes="(max-width: 768px) 50vw, 18vw"
+                                className="company-media-image company-media-image-poster"
                             />
                         </div>
                     </div>
@@ -202,7 +212,7 @@ export default function CompanyProfilePage() {
                                     alt={capability.title}
                                     fill
                                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                    className="company-media-image company-media-image-poster"
+                                    className={`company-media-image ${capability.imageClassName}`}
                                 />
                             </div>
                             <div className="company-capability-body">
@@ -229,7 +239,7 @@ export default function CompanyProfilePage() {
                                     alt={portfolio.title}
                                     fill
                                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                    className="company-media-image"
+                                    className={`company-media-image ${portfolio.imageClassName}`}
                                 />
                             </div>
                             <div className="company-portfolio-body">
@@ -268,26 +278,36 @@ export default function CompanyProfilePage() {
             </section>
 
             <section className="section company-section">
-                <div className="company-cta-strip">
-                    <div className="company-cta-copy">
-                        <span className="hero-badge">Pico Bahrain</span>
-                        <h2>Let&apos;s build a more polished exhibition presence.</h2>
-                        <p>
-                            Whether you need booth extras, supporting furniture, presentation-ready spaces, or a stronger
-                            event environment, our catalogue is ready to help you move faster.
-                        </p>
-                        <div className="company-contact-inline">
-                            <a href="tel:+97336357377">+973 3635 7377</a>
-                            <a href="mailto:info@picobahrain.com">info@picobahrain.com</a>
-                            <a href="https://instagram.com/picobahrain" target="_blank" rel="noopener noreferrer">
-                                Instagram
-                            </a>
+                <div className="company-contact-layout">
+                    <div className="company-cta-strip company-contact-summary">
+                        <div className="company-cta-copy">
+                            <span className="hero-badge">Pico Bahrain</span>
+                            <h2>Let&apos;s build a more polished exhibition presence.</h2>
+                            <p>
+                                Share your event, stand, or interior requirement and our team will get back to you
+                                about the right service approach.
+                            </p>
+                            <div className="company-contact-inline">
+                                <a href="tel:+97336357377">+973 3635 7377</a>
+                                <a href="mailto:ebrahim@picobahrain.com">ebrahim@picobahrain.com</a>
+                                <a href="https://instagram.com/picobahrain" target="_blank" rel="noopener noreferrer">
+                                    Instagram
+                                </a>
+                            </div>
+                        </div>
+                        <div className="company-cta-actions">
+                            <Link href="/catalogue" className="btn btn-secondary btn-lg">
+                                Browse Our Catalogue
+                            </Link>
                         </div>
                     </div>
-                    <div className="company-cta-actions">
-                        <Link href="/catalogue" className="btn btn-primary btn-lg">
-                            Browse Our Catalogue
-                        </Link>
+
+                    <div className="company-form-card">
+                        <div className="section-header company-section-header company-section-header-left">
+                            <h2>Contact Us for Services</h2>
+                            <p>Send your brief and we will route it directly to our Bahrain team.</p>
+                        </div>
+                        <CompanyContactForm />
                     </div>
                 </div>
             </section>

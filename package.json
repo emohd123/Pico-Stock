@@ -6,18 +6,24 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "pcloud:check": "node worker/index.js check",
+    "pcloud:scan": "node worker/index.js scan",
+    "pcloud:scan:incremental": "node worker/index.js scan --incremental"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.99.0",
+    "dotenv": "^17.3.1",
     "jszip": "^3.10.1",
     "next": "14.2.21",
     "nodemailer": "^6.9.16",
+    "openai": "^6.29.0",
     "pdf-parse": "^2.4.5",
     "pdfkit": "^0.17.2",
     "pg": "^8.20.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "tesseract.js": "^7.0.0",
     "uuid": "^11.1.0",
     "xlsx": "^0.18.5"
   },
