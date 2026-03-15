@@ -146,6 +146,10 @@ export default function PCloudDashboard() {
             )}
 
             <div className="pcloud-quick-links">
+                <Link href="/admin/brain" className="card pcloud-quick-link-card" style={{ borderColor: 'rgba(139,92,246,0.5)', background: 'linear-gradient(135deg, rgba(139,92,246,0.1), rgba(99,102,241,0.05))' }}>
+                    <strong style={{ color: '#a78bfa' }}>🧠 Pico Brain</strong>
+                    <span>Company intelligence — chat, search, insights</span>
+                </Link>
                 <Link href="/admin/pcloud/search" className="card pcloud-quick-link-card">
                     <strong>Smart Search</strong>
                     <span>Find files by meaning and Ask pCloud</span>
