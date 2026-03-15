@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function AdminLoginPage() {
@@ -8,6 +8,13 @@ export default function AdminLoginPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+
+    // Redirect away if already authenticated
+    useEffect(() => {
+        if (sessionStorage.getItem('pico-admin')) {
+            router.replace('/admin');
+        }
+    }, [router]);
 
     const handleLogin = async (e) => {
         e.preventDefault();

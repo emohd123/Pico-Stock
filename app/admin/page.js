@@ -91,15 +91,6 @@ export default function AdminDashboard() {
         name: '', description: '', category: 'furniture', price: '', image: '/products/table.svg', stock: '', featured: false
     });
 
-    useEffect(() => {
-        const isAdmin = sessionStorage.getItem('pico-admin');
-        if (!isAdmin) {
-            router.push('/admin/login');
-            return;
-        }
-        fetchData();
-    }, [router]);
-
     const fetchData = async () => {
         setLoading(true);
         try {
@@ -112,6 +103,16 @@ export default function AdminDashboard() {
         } catch { }
         setLoading(false);
     };
+
+    useEffect(() => {
+        const isAdmin = sessionStorage.getItem('pico-admin');
+        if (!isAdmin) {
+            router.push('/admin/login');
+            return;
+        }
+        fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const showMsg = (type, text) => {
         setMessage({ type, text });
@@ -441,13 +442,6 @@ export default function AdminDashboard() {
                     >
                         📤 Upload & Import
                     </button>
-                    <Link
-                        href="/admin/brain"
-                        className="admin-sidebar-item"
-                        style={{ display: 'block', textDecoration: 'none', background: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(99,102,241,0.05))', borderLeft: '2px solid #7c3aed' }}
-                    >
-                        🧠 Pico Brain
-                    </Link>
                     <Link
                         href="/admin/pcloud"
                         className="admin-sidebar-item"

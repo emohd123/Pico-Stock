@@ -168,6 +168,25 @@ export default function PCloudSearchPage() {
 
     const totalPages = useMemo(() => Math.max(Math.ceil(total / pageSize), 1), [pageSize, total]);
 
+    const handleOpenLocation = async (fileId) => {
+        try {
+            const res = await fetch('/api/pcloud/open-location', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fileId }),
+            });
+            const data = await res.json();
+            if (!data.success) {
+                // Fallback: show the path in an alert so they can navigate manually
+                alert(data.relativePath
+                    ? `No absolute path stored. Relative path:\n${data.relativePath}`
+                    : data.error || 'Could not open file location.');
+            }
+        } catch {
+            alert('Could not open file location.');
+        }
+    };
+
     return (
         <div className="pcloud-page-shell">
             <div className="pcloud-page-header">
@@ -282,7 +301,8 @@ export default function PCloudSearchPage() {
                                                 <button
                                                     type="button"
                                                     className="pcloud-result-link"
-                                                    onClick={() => router.push(`/admin/pcloud/files/${result.id}`)}
+                                                    title="Open file location in Explorer"
+                                                    onClick={() => handleOpenLocation(result.id)}
                                                 >
                                                     {result.filename}
                                                 </button>
@@ -370,7 +390,8 @@ export default function PCloudSearchPage() {
                                                 key={file.id}
                                                 type="button"
                                                 className="pcloud-supporting-card"
-                                                onClick={() => router.push(`/admin/pcloud/files/${file.id}`)}
+                                                title="Open file location in Explorer"
+                                                onClick={() => handleOpenLocation(file.id)}
                                             >
                                                 <strong>{file.filename}</strong>
                                                 <span>{file.relativePath}</span>
