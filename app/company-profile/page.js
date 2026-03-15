@@ -7,41 +7,50 @@ export const metadata = {
     description: 'Discover Pico Bahrain and explore our exhibition stands, event environments, interiors, graphics, AV support, and booth-ready rental solutions.',
 };
 
+const companyImages = {
+    exhibition: '/company-profile/exhibition-main.jpeg',
+    eventsMain: '/company-profile/events-main.jpeg',
+    eventsAlt: '/company-profile/events-alt.jpeg',
+    conference: '/company-profile/conference-main.jpg',
+    interiorMain: '/company-profile/interior-main.jpeg',
+    interiorAlt: '/company-profile/interior-alt.jpg',
+};
+
 const capabilityCards = [
     {
         title: 'Exhibition Stands',
         description: 'Design-led exhibition stands and branded environments shaped for live events, trade shows, and business-facing activations.',
-        image: '/company/stands-p17.png',
+        image: companyImages.exhibition,
         imageClassName: 'company-media-image-hero-main',
     },
     {
         title: 'Event Environments',
         description: 'Integrated event support for visitor flow, hospitality spaces, feature areas, and presentation-ready brand experiences.',
-        image: '/company/events-p17.png',
+        image: companyImages.eventsMain,
         imageClassName: 'company-media-image-stage',
     },
     {
         title: 'Interiors & Fit-Out',
         description: 'Interior solutions for branded spaces, receptions, lounges, and functional environments that need a clean professional finish.',
-        image: '/company/int-p29.png',
+        image: companyImages.interiorMain,
         imageClassName: 'company-media-image-interior',
     },
     {
         title: 'Booth Furniture & Rental Support',
         description: 'Flexible furniture and booth extras rental to complete exhibition spaces quickly, consistently, and with local coordination.',
-        image: '/company/cap-furniture.png',
+        image: companyImages.conference,
         imageClassName: 'company-media-image-poster',
     },
     {
         title: 'Graphics & Signage',
         description: 'Visual communication support across booth graphics, branded surfaces, directional messaging, and presentation-ready signage.',
-        image: '/company/stands-p15.png',
+        image: companyImages.eventsAlt,
         imageClassName: 'company-media-image-poster',
     },
     {
         title: 'AV & Digital Display Support',
         description: 'Screen-based and presentation-focused support for digital content, display moments, and high-visibility touchpoints.',
-        image: '/company/cap-av.png',
+        image: companyImages.conference,
         imageClassName: 'company-media-image-poster',
     },
 ];
@@ -50,7 +59,7 @@ const portfolioHighlights = [
     {
         title: 'Events Portfolio',
         description: 'A Bahrain-focused overview of event environments, client-facing experiences, and delivery capabilities across live projects.',
-        image: '/company/events-p17.png',
+        image: companyImages.eventsMain,
         imageClassName: 'company-media-image-stage',
         href: 'https://u.pcloud.link/publink/show?code=XZOwzq5ZCX8ABOA4HHRp92vxfuoa80RX7bRV',
         linkLabel: 'View Events Portfolio',
@@ -58,7 +67,7 @@ const portfolioHighlights = [
     {
         title: 'Exhibition Stands Portfolio',
         description: "Reference material showing Pico Bahrain's exhibition-stand direction, booth presentation quality, and spatial execution style.",
-        image: '/company/stands-p15.png',
+        image: companyImages.exhibition,
         imageClassName: 'company-media-image-poster',
         href: 'https://u.pcloud.link/publink/show?code=XZHFte5Zk0MLSfIJLGLAW8fqj1l8juMDH4s7',
         linkLabel: 'View Stands Portfolio',
@@ -66,7 +75,7 @@ const portfolioHighlights = [
     {
         title: 'Interiors Portfolio',
         description: 'A supporting look at interior-focused work and space styling that complements exhibition and event delivery.',
-        image: '/company/int-p29.png',
+        image: companyImages.interiorMain,
         imageClassName: 'company-media-image-interior',
         href: 'https://u.pcloud.link/publink/show?code=XZLCzq5ZuOJCabuPOMLh0WtIdgPaukB0sI5y',
         linkLabel: 'View Interiors Portfolio',
@@ -113,7 +122,7 @@ export default function CompanyProfilePage() {
                 <div className="company-hero-media">
                     <div className="company-hero-main-image">
                         <Image
-                            src="/company/stands-p17.png"
+                            src={companyImages.exhibition}
                             alt="Pico Bahrain exhibition stand design"
                             fill
                             sizes="(max-width: 768px) 100vw, 46vw"
@@ -124,7 +133,7 @@ export default function CompanyProfilePage() {
                     <div className="company-hero-rail">
                         <div className="company-hero-rail-card">
                             <Image
-                                src="/company/events-p17.png"
+                                src={companyImages.eventsMain}
                                 alt="Pico Bahrain live event environment"
                                 fill
                                 sizes="(max-width: 768px) 50vw, 20vw"
@@ -133,7 +142,7 @@ export default function CompanyProfilePage() {
                         </div>
                         <div className="company-hero-rail-card">
                             <Image
-                                src="/company/int-p29.png"
+                                src={companyImages.interiorMain}
                                 alt="Pico Bahrain hospitality interior fit-out"
                                 fill
                                 sizes="(max-width: 768px) 50vw, 20vw"
@@ -168,7 +177,7 @@ export default function CompanyProfilePage() {
                     <div className="company-image-collage">
                         <div className="company-collage-primary">
                             <Image
-                                src="/company/cap-av.png"
+                                src={companyImages.conference}
                                 alt="Pico Bahrain immersive exhibition environment"
                                 fill
                                 sizes="(max-width: 768px) 100vw, 40vw"
@@ -177,7 +186,7 @@ export default function CompanyProfilePage() {
                         </div>
                         <div className="company-collage-secondary">
                             <Image
-                                src="/company/cap-events.png"
+                                src={companyImages.eventsAlt}
                                 alt="Pico Bahrain event production setup"
                                 fill
                                 sizes="(max-width: 768px) 50vw, 18vw"
@@ -186,7 +195,7 @@ export default function CompanyProfilePage() {
                         </div>
                         <div className="company-collage-secondary">
                             <Image
-                                src="/company/cap-furniture.png"
+                                src={companyImages.interiorAlt}
                                 alt="Pico Bahrain branded hospitality setup"
                                 fill
                                 sizes="(max-width: 768px) 50vw, 18vw"
