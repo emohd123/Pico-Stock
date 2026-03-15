@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { extractCleanName, extractCatalogNumber, extractDims, formatOrderReference, getProductSpecs } from '@/lib/nameHelpers';
+import { extractCleanName, inferProductType, formatOrderReference, getProductSpecs } from '@/lib/nameHelpers';
 
 /**
  * Returns the serial portion of the internal ID without the PICO- prefix.
@@ -18,6 +18,47 @@ function formatSerial(product) {
     return `${prefix}-${suffix}`;
 }
 
+function buildParsedSpecsState(product) {
+    const specs = getProductSpecs(product);
+    return {
+        productName: extractCleanName(product?.name || '') === '--' ? '' : extractCleanName(product?.name || ''),
+        description: product?.description || '',
+        type: specs.type === '—' ? '' : specs.type,
+        idNo: specs.idNo === '—' ? '' : specs.idNo,
+        code: specs.code === '—' ? '' : specs.code,
+        colour: specs.colour === '—' ? '' : specs.colour,
+        dimensions: specs.dimensions === '—' ? '' : specs.dimensions,
+        stockQty: specs.stockQty === '—' ? '' : specs.stockQty,
+        unitRate: product?.price != null && product?.price !== '' ? String(product.price) : '',
+    };
+}
+
+function composeProductNameFromSpecs(specs) {
+    const idNo = (specs.idNo || '').trim();
+    const code = (specs.code || '').trim();
+    const stockQty = (specs.stockQty || '').trim();
+    const type = (specs.type || '').trim();
+    const productName = (specs.productName || '').trim();
+    const colour = (specs.colour || '').trim();
+    const dimensions = (specs.dimensions || '').trim();
+
+    const nameCore = productName || type || 'Product';
+    const nameWithType = type && productName && !productName.toLowerCase().includes(type.toLowerCase())
+        ? `${productName} ${type}`
+        : nameCore;
+
+    const parts = [
+        idNo ? `ID ${idNo}` : '',
+        code,
+        stockQty ? `[${stockQty}]` : '',
+        nameWithType,
+        colour,
+        dimensions,
+    ].filter(Boolean);
+
+    return parts.join(' ').replace(/\s+/g, ' ').trim();
+}
+
 export default function AdminDashboard() {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState('products');
@@ -26,7 +67,9 @@ export default function AdminDashboard() {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editProduct, setEditProduct] = useState(null);
+    const [previewProduct, setPreviewProduct] = useState(null);
     const [message, setMessage] = useState({ type: '', text: '' });
+    const [parsedSpecsForm, setParsedSpecsForm] = useState(buildParsedSpecsState(null));
 
     // Upload & Extract
     const [extractedProducts, setExtractedProducts] = useState([]);
@@ -117,6 +160,8 @@ export default function AdminDashboard() {
                 setEditProduct(null);
                 resetProductForm();
                 fetchData();
+            } else {
+                showMsg('error', data.error || 'Failed to save product.');
             }
         } catch {
             showMsg('error', 'Failed to save product.');
@@ -166,6 +211,23 @@ export default function AdminDashboard() {
         );
     };
 
+    const updateParsedSpecs = (field, value) => {
+        setParsedSpecsForm(prev => {
+            const next = { ...prev, [field]: value };
+            const nextName = composeProductNameFromSpecs(next);
+
+            setProductForm(current => ({
+                ...current,
+                name: nextName || current.name,
+                description: field === 'description' ? value : current.description,
+                stock: field === 'stockQty' ? value : current.stock,
+                price: field === 'unitRate' ? value : current.price,
+            }));
+
+            return next;
+        });
+    };
+
     const openEditProduct = (product) => {
         setProductForm({
             name: product.name,
@@ -176,6 +238,7 @@ export default function AdminDashboard() {
             stock: product.stock != null ? String(product.stock) : '',
             featured: product.featured,
         });
+        setParsedSpecsForm(buildParsedSpecsState(product));
         setEditProduct(product);
         setShowModal(true);
     };
@@ -190,6 +253,13 @@ export default function AdminDashboard() {
         setProductForm({
             name: '', description: '', category: 'furniture', price: '', image: '/products/table.svg', stock: '', featured: false
         });
+        setParsedSpecsForm(buildParsedSpecsState({
+            name: '',
+            description: '',
+            category: 'furniture',
+            stock: '',
+            price: '',
+        }));
     };
 
     // Send Zoho quote to customer
@@ -333,6 +403,10 @@ export default function AdminDashboard() {
         'tv-led': ['/products/tv55.svg', '/products/tv75.svg', '/products/touch-screen.svg', '/products/videowall.svg', '/products/kiosk.svg'],
         graphics: ['/products/backdrop.svg', '/products/rollup.svg', '/products/fascia.svg', '/products/floor-graphic.svg', '/products/flag.svg'],
     };
+    const defaultCategoryImages = categoryImages[productForm.category] || categoryImages.furniture;
+    const productImageOptions = productForm.image && !defaultCategoryImages.includes(productForm.image)
+        ? [productForm.image, ...defaultCategoryImages]
+        : defaultCategoryImages;
 
     if (loading) {
         return <div className="loading-page"><div className="spinner"></div></div>;
@@ -553,10 +627,23 @@ export default function AdminDashboard() {
                                                 />
                                             </td>
                                             <td data-label="Image">
-                                                <img src={product.image} alt={product.name} style={{
-                                                    width: '50px', height: '40px', objectFit: 'cover',
-                                                    borderRadius: '6px', background: 'var(--bg-glass)'
-                                                }} />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setPreviewProduct(product)}
+                                                    style={{
+                                                        padding: 0,
+                                                        border: 'none',
+                                                        background: 'transparent',
+                                                        cursor: 'pointer',
+                                                        lineHeight: 0,
+                                                    }}
+                                                    aria-label={`Preview image for ${product.name}`}
+                                                >
+                                                    <img src={product.image} alt={product.name} style={{
+                                                        width: '50px', height: '40px', objectFit: 'cover',
+                                                        borderRadius: '6px', background: 'var(--bg-glass)'
+                                                    }} />
+                                                </button>
                                             </td>
                                             <td data-label="Product">
                                                 {(() => {
@@ -1242,24 +1329,41 @@ export default function AdminDashboard() {
                     <div className="modal" onClick={e => e.stopPropagation()}>
                         <h3>{editProduct ? 'Edit Product' : 'Add New Product'}</h3>
                         <form onSubmit={handleProductSubmit}>
-                            <div className="form-group">
-                                <label className="form-label">Product Name *</label>
-                                <input
-                                    className="form-input"
-                                    value={productForm.name}
-                                    onChange={e => setProductForm(p => ({ ...p, name: e.target.value }))}
-                                    placeholder="Product name"
-                                    required
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label className="form-label">Description</label>
-                                <textarea
-                                    className="form-textarea"
-                                    value={productForm.description}
-                                    onChange={e => setProductForm(p => ({ ...p, description: e.target.value }))}
-                                    placeholder="Product description"
-                                />
+                            <div style={{
+                                marginBottom: '1rem',
+                                display: 'flex',
+                                justifyContent: 'center',
+                            }}>
+                                <button
+                                    type="button"
+                                    onClick={() => setPreviewProduct({
+                                        name: productForm.name || parsedSpecsForm.productName || 'Product image',
+                                        description: productForm.description || parsedSpecsForm.description || '',
+                                        image: productForm.image,
+                                    })}
+                                    style={{
+                                        padding: 0,
+                                        border: '1px solid var(--border-subtle)',
+                                        borderRadius: 'var(--radius-md)',
+                                        background: 'var(--bg-glass)',
+                                        overflow: 'hidden',
+                                        cursor: 'pointer',
+                                    }}
+                                    aria-label="Open product image preview"
+                                >
+                                    <img
+                                        src={productForm.image}
+                                        alt={productForm.name || parsedSpecsForm.productName || 'Product image'}
+                                        style={{
+                                            width: '100%',
+                                            maxWidth: '220px',
+                                            height: '150px',
+                                            objectFit: 'contain',
+                                            display: 'block',
+                                            background: '#fff',
+                                        }}
+                                    />
+                                </button>
                             </div>
                             <div style={{
                                 marginBottom: '1rem',
@@ -1269,29 +1373,95 @@ export default function AdminDashboard() {
                                 borderRadius: 'var(--radius-md)'
                             }}>
                                 <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.6rem' }}>
-                                    Parsed Product Specs
+                                    Product Details
                                 </div>
-                                {(() => {
-                                    const specs = getProductSpecs({
-                                        name: productForm.name,
-                                        description: productForm.description,
-                                        category: productForm.category,
-                                        stock: productForm.stock === '' ? null : productForm.stock,
-                                        price: productForm.price
-                                    });
-
-                                    return (
-                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.5rem 1rem', fontSize: '0.8rem' }}>
-                                            <div><strong>TYPE:</strong> {specs.type}</div>
-                                            <div><strong>ID NO:</strong> <span style={{ fontFamily: 'monospace' }}>{specs.idNo}</span></div>
-                                            <div><strong>CODE:</strong> <span style={{ fontFamily: 'monospace' }}>{specs.code}</span></div>
-                                            <div><strong>COLOUR:</strong> {specs.colour}</div>
-                                            <div><strong>DIMENSIONS:</strong> <span style={{ fontFamily: 'monospace' }}>{specs.dimensions}</span></div>
-                                            <div><strong>STOCK QTY:</strong> {specs.stockQty}</div>
-                                            <div><strong>UNIT RATE:</strong> {specs.unitRate}</div>
-                                        </div>
-                                    );
-                                })()}
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.75rem 1rem', fontSize: '0.8rem' }}>
+                                    <div style={{ gridColumn: '1 / -1' }}>
+                                        <label className="form-label" style={{ fontSize: '0.72rem', marginBottom: '0.35rem' }}>Product Name</label>
+                                        <input
+                                            className="form-input"
+                                            value={parsedSpecsForm.productName}
+                                            onChange={e => updateParsedSpecs('productName', e.target.value)}
+                                            placeholder="Parsed product name"
+                                        />
+                                    </div>
+                                    <div style={{ gridColumn: '1 / -1' }}>
+                                        <label className="form-label" style={{ fontSize: '0.72rem', marginBottom: '0.35rem' }}>Description</label>
+                                        <textarea
+                                            className="form-textarea"
+                                            rows={3}
+                                            value={parsedSpecsForm.description}
+                                            onChange={e => updateParsedSpecs('description', e.target.value)}
+                                            placeholder="Description"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="form-label" style={{ fontSize: '0.72rem', marginBottom: '0.35rem' }}>Type</label>
+                                        <input
+                                            className="form-input"
+                                            value={parsedSpecsForm.type}
+                                            onChange={e => updateParsedSpecs('type', e.target.value)}
+                                            placeholder="Type"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="form-label" style={{ fontSize: '0.72rem', marginBottom: '0.35rem' }}>ID No</label>
+                                        <input
+                                            className="form-input"
+                                            value={parsedSpecsForm.idNo}
+                                            onChange={e => updateParsedSpecs('idNo', e.target.value)}
+                                            placeholder="ID number"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="form-label" style={{ fontSize: '0.72rem', marginBottom: '0.35rem' }}>Code</label>
+                                        <input
+                                            className="form-input"
+                                            value={parsedSpecsForm.code}
+                                            onChange={e => updateParsedSpecs('code', e.target.value.toUpperCase())}
+                                            placeholder="Code"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="form-label" style={{ fontSize: '0.72rem', marginBottom: '0.35rem' }}>Colour</label>
+                                        <input
+                                            className="form-input"
+                                            value={parsedSpecsForm.colour}
+                                            onChange={e => updateParsedSpecs('colour', e.target.value)}
+                                            placeholder="Colour"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="form-label" style={{ fontSize: '0.72rem', marginBottom: '0.35rem' }}>Dimensions</label>
+                                        <input
+                                            className="form-input"
+                                            value={parsedSpecsForm.dimensions}
+                                            onChange={e => updateParsedSpecs('dimensions', e.target.value)}
+                                            placeholder="H80xD55xW47cm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="form-label" style={{ fontSize: '0.72rem', marginBottom: '0.35rem' }}>Stock Qty</label>
+                                        <input
+                                            className="form-input"
+                                            value={parsedSpecsForm.stockQty}
+                                            onChange={e => updateParsedSpecs('stockQty', e.target.value)}
+                                            placeholder="Stock quantity"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="form-label" style={{ fontSize: '0.72rem', marginBottom: '0.35rem' }}>Unit Rate</label>
+                                        <input
+                                            className="form-input"
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            value={parsedSpecsForm.unitRate}
+                                            onChange={e => updateParsedSpecs('unitRate', e.target.value)}
+                                            placeholder="0.00"
+                                        />
+                                    </div>
+                                </div>
                             </div>
                             <div className="form-row">
                                 <div className="form-group">
@@ -1299,7 +1469,28 @@ export default function AdminDashboard() {
                                     <select
                                         className="form-select"
                                         value={productForm.category}
-                                        onChange={e => setProductForm(p => ({ ...p, category: e.target.value }))}
+                                        onChange={e => {
+                                            const category = e.target.value;
+                                            setProductForm(p => ({ ...p, category }));
+                                            setParsedSpecsForm(prev => {
+                                                const currentType = (prev.type || '').trim();
+                                                const inferredCurrentType = inferProductType({
+                                                    name: productForm.name,
+                                                    description: productForm.description,
+                                                    category: productForm.category,
+                                                });
+                                                return {
+                                                    ...prev,
+                                                    type: !currentType || currentType === inferredCurrentType
+                                                        ? inferProductType({
+                                                            name: productForm.name,
+                                                            description: productForm.description,
+                                                            category,
+                                                        })
+                                                        : prev.type,
+                                                };
+                                            });
+                                        }}
                                     >
                                         <option value="furniture">Furniture</option>
                                         <option value="tv-led">TV / LED</option>
@@ -1314,7 +1505,11 @@ export default function AdminDashboard() {
                                         step="0.01"
                                         min="0"
                                         value={productForm.price}
-                                        onChange={e => setProductForm(p => ({ ...p, price: e.target.value }))}
+                                        onChange={e => {
+                                            const price = e.target.value;
+                                            setProductForm(p => ({ ...p, price }));
+                                            setParsedSpecsForm(prev => ({ ...prev, unitRate: price }));
+                                        }}
                                         placeholder="0.00"
                                         required
                                     />
@@ -1327,8 +1522,10 @@ export default function AdminDashboard() {
                                     value={productForm.image}
                                     onChange={e => setProductForm(p => ({ ...p, image: e.target.value }))}
                                 >
-                                    {(categoryImages[productForm.category] || categoryImages.furniture).map(img => (
-                                        <option key={img} value={img}>{img.split('/').pop().replace('.svg', '')}</option>
+                                    {productImageOptions.map(img => (
+                                        <option key={img} value={img}>
+                                            {img.split('/').pop().replace(/\.(svg|png|jpe?g|webp)$/i, '')}
+                                        </option>
                                     ))}
                                 </select>
                             </div>
@@ -1341,7 +1538,11 @@ export default function AdminDashboard() {
                                         min="0"
                                         step="1"
                                         value={productForm.stock}
-                                        onChange={e => setProductForm(p => ({ ...p, stock: e.target.value }))}
+                                        onChange={e => {
+                                            const stock = e.target.value;
+                                            setProductForm(p => ({ ...p, stock }));
+                                            setParsedSpecsForm(prev => ({ ...prev, stockQty: stock }));
+                                        }}
                                         placeholder="e.g. 10"
                                     />
                                     {productForm.stock !== '' && parseInt(productForm.stock) === 0 && (
@@ -1369,6 +1570,38 @@ export default function AdminDashboard() {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {previewProduct && (
+                <div className="modal-overlay" onClick={() => setPreviewProduct(null)}>
+                    <div
+                        className="modal-box"
+                        onClick={e => e.stopPropagation()}
+                        style={{ maxWidth: 'min(92vw, 900px)' }}
+                    >
+                        <button
+                            type="button"
+                            className="modal-close"
+                            onClick={() => setPreviewProduct(null)}
+                            aria-label="Close image preview"
+                        >
+                            ×
+                        </button>
+                        <div className="modal-image-wrap" style={{ height: 'min(70vh, 680px)' }}>
+                            <img
+                                src={previewProduct.image}
+                                alt={previewProduct.name}
+                                className="modal-image"
+                            />
+                        </div>
+                        <div className="modal-body">
+                            <div className="modal-title">{previewProduct.name}</div>
+                            <div className="modal-desc" style={{ marginTop: '0.5rem', marginBottom: 0 }}>
+                                {previewProduct.description || 'No description available.'}
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
