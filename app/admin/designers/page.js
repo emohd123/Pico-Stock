@@ -209,7 +209,7 @@ export default function DesignersPage() {
     if (loading) return <div className="loading-page"><div className="spinner"></div></div>;
 
     return (
-        <div style={{ minHeight: '100vh', padding: '2rem', background: 'var(--bg-primary)' }}>
+        <div style={{ minHeight: '100%', background: 'var(--bg-primary)' }}>
 
             {/* ── Page Header ─────────────────────────────────────── */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>

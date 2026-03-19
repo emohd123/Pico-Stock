@@ -59,11 +59,9 @@ function composeProductNameFromSpecs(specs) {
     return parts.join(' ').replace(/\s+/g, ' ').trim();
 }
 
-const QUOTATION_SYSTEM_URL = 'http://localhost:3000';
-
 export default function AdminDashboard() {
     const router = useRouter();
-    const [activeTab, setActiveTab] = useState('products');
+    const [activeTab, setActiveTab] = useState('overview');
     const [products, setProducts] = useState([]);
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -99,6 +97,13 @@ export default function AdminDashboard() {
             router.push('/admin/login');
             return;
         }
+
+        const params = new URLSearchParams(window.location.search);
+        const initialTab = params.get('tab');
+        if (['overview', 'products', 'orders', 'upload'].includes(initialTab || '')) {
+            setActiveTab(initialTab);
+        }
+
         fetchData();
     }, [router]);
 
@@ -444,28 +449,19 @@ export default function AdminDashboard() {
                         📤 Upload & Import
                     </button>
                     <Link
-                        href="/admin/pcloud"
-                        className="admin-sidebar-item"
-                        style={{ display: 'block', textDecoration: 'none' }}
-                    >
-                        ☁️ pCloud
-                    </Link>
-                    <Link
                         href="/admin/designers"
                         className="admin-sidebar-item"
                         style={{ display: 'block', textDecoration: 'none' }}
                     >
                         🎨 Designers Board
                     </Link>
-                    <a
-                        href={QUOTATION_SYSTEM_URL}
+                    <Link
+                        href="/admin/quotations"
                         className="admin-sidebar-item"
                         style={{ display: 'block', textDecoration: 'none' }}
-                        target="_blank"
-                        rel="noopener noreferrer"
                     >
-                        Quote System
-                    </a>
+                        Quotation Studio
+                    </Link>
                     <button className="admin-sidebar-item" onClick={handleLogout}>
                         🚪 Logout
                     </button>
@@ -507,19 +503,17 @@ export default function AdminDashboard() {
                                     <div className="stat-card-value">{totalRevenue.toFixed(0)}</div>
                                     <div className="stat-card-label">Revenue (BHD)</div>
                                 </div>
-                                <a
-                                    href={QUOTATION_SYSTEM_URL}
+                                <Link
+                                    href="/admin/quotations"
                                     className="stat-card"
                                     style={{ textDecoration: 'none', display: 'block' }}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
                                 >
                                     <div className="stat-card-icon">QS</div>
                                     <div className="stat-card-value" style={{ fontSize: '1.2rem', lineHeight: 1.3 }}>
                                         Open
                                     </div>
-                                    <div className="stat-card-label">Quotation System</div>
-                                </a>
+                                    <div className="stat-card-label">Quotation Studio</div>
+                                </Link>
                             </div>
 
                             {/* Recent Orders */}
