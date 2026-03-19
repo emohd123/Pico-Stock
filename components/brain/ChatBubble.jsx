@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 
-const PLACEHOLDER = 'Ask anything about Pico's files, clients, products...';
+const PLACEHOLDER = "Ask anything about Pico's files, clients, products...";
 
 const S = {
     /* floating trigger button */
