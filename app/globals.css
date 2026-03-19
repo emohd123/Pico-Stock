@@ -1744,6 +1744,62 @@ input[type="checkbox"] {
   padding: 0 2rem;
 }
 
+.catalogue-filter-panel {
+  background: linear-gradient(180deg, rgba(17, 24, 39, 0.92), rgba(11, 17, 32, 0.92));
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-md);
+}
+
+.catalogue-search-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(200px, 0.7fr) minmax(220px, 0.8fr);
+  gap: 0.85rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.catalogue-search-box {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.catalogue-search-icon {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.catalogue-search-input {
+  min-height: 48px;
+}
+
+.catalogue-select-wrap .form-select {
+  min-height: 48px;
+}
+
+.catalogue-results-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.catalogue-results-copy {
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}
+
+.catalogue-results-copy strong {
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
 .filter-sort-wrap {
   margin-left: auto;
 }
@@ -1864,8 +1920,16 @@ input[type="checkbox"] {
     padding: 0 1rem;
   }
 
+  .catalogue-search-row {
+    grid-template-columns: 1fr;
+  }
+
   .filter-bar {
     align-items: stretch;
+  }
+
+  .catalogue-results-row .btn {
+    width: 100%;
   }
 
   .filter-sort-wrap {
