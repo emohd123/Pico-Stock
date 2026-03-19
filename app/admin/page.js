@@ -59,6 +59,8 @@ function composeProductNameFromSpecs(specs) {
     return parts.join(' ').replace(/\s+/g, ' ').trim();
 }
 
+const QUOTATION_SYSTEM_URL = 'http://localhost:3000';
+
 export default function AdminDashboard() {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState('products');
@@ -442,13 +444,6 @@ export default function AdminDashboard() {
                         📤 Upload & Import
                     </button>
                     <Link
-                        href="/admin/brain"
-                        className="admin-sidebar-item"
-                        style={{ display: 'block', textDecoration: 'none', background: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(99,102,241,0.05))', borderLeft: '2px solid #7c3aed' }}
-                    >
-                        🧠 Pico Brain
-                    </Link>
-                    <Link
                         href="/admin/pcloud"
                         className="admin-sidebar-item"
                         style={{ display: 'block', textDecoration: 'none' }}
@@ -462,6 +457,15 @@ export default function AdminDashboard() {
                     >
                         🎨 Designers Board
                     </Link>
+                    <a
+                        href={QUOTATION_SYSTEM_URL}
+                        className="admin-sidebar-item"
+                        style={{ display: 'block', textDecoration: 'none' }}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        Quote System
+                    </a>
                     <button className="admin-sidebar-item" onClick={handleLogout}>
                         🚪 Logout
                     </button>
@@ -503,6 +507,19 @@ export default function AdminDashboard() {
                                     <div className="stat-card-value">{totalRevenue.toFixed(0)}</div>
                                     <div className="stat-card-label">Revenue (BHD)</div>
                                 </div>
+                                <a
+                                    href={QUOTATION_SYSTEM_URL}
+                                    className="stat-card"
+                                    style={{ textDecoration: 'none', display: 'block' }}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    <div className="stat-card-icon">QS</div>
+                                    <div className="stat-card-value" style={{ fontSize: '1.2rem', lineHeight: 1.3 }}>
+                                        Open
+                                    </div>
+                                    <div className="stat-card-label">Quotation System</div>
+                                </a>
                             </div>
 
                             {/* Recent Orders */}

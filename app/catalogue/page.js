@@ -148,30 +148,32 @@ export default function CataloguePage() {
                         </div>
                     </div>
 
-                    <div className="filter-bar">
-                        {categories.map((category) => (
-                            <button
-                                key={category.value}
-                                className={`filter-chip ${activeCategory === category.value ? 'active' : ''}`}
-                                onClick={() => setActiveCategory(category.value)}
-                                type="button"
-                            >
-                                {category.icon} {category.label}
-                            </button>
-                        ))}
-                    </div>
-
-                    <div className="catalogue-results-row">
-                        <div className="catalogue-results-copy">
-                            <strong>{sorted.length}</strong> item{sorted.length !== 1 ? 's' : ''} found
-                            {normalizedQuery ? ` for "${searchQuery.trim()}"` : ''}
+                    <div className="catalogue-filter-meta">
+                        <div className="filter-bar">
+                            {categories.map((category) => (
+                                <button
+                                    key={category.value}
+                                    className={`filter-chip ${activeCategory === category.value ? 'active' : ''}`}
+                                    onClick={() => setActiveCategory(category.value)}
+                                    type="button"
+                                >
+                                    {category.icon} {category.label}
+                                </button>
+                            ))}
                         </div>
 
-                        {hasActiveFilters && (
-                            <button className="btn btn-secondary btn-sm" onClick={clearFilters} type="button">
-                                Clear Filters
-                            </button>
-                        )}
+                        <div className="catalogue-results-row">
+                            <div className="catalogue-results-copy">
+                                <strong>{sorted.length}</strong> item{sorted.length !== 1 ? 's' : ''} found
+                                {normalizedQuery ? ` for "${searchQuery.trim()}"` : ''}
+                            </div>
+
+                            {hasActiveFilters && (
+                                <button className="btn btn-secondary btn-sm" onClick={clearFilters} type="button">
+                                    Clear Filters
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

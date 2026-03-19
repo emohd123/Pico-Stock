@@ -159,17 +159,19 @@ export default function CategoryPage() {
                         </div>
                     </div>
 
-                    <div className="catalogue-results-row">
-                        <div className="catalogue-results-copy">
-                            <strong>{sortedProducts.length}</strong> item{sortedProducts.length !== 1 ? 's' : ''} in {catInfo.title}
-                            {normalizedQuery ? ` for "${searchQuery.trim()}"` : ''}
-                        </div>
+                    <div className="catalogue-filter-meta">
+                        <div className="catalogue-results-row">
+                            <div className="catalogue-results-copy">
+                                <strong>{sortedProducts.length}</strong> item{sortedProducts.length !== 1 ? 's' : ''} in {catInfo.title}
+                                {normalizedQuery ? ` for "${searchQuery.trim()}"` : ''}
+                            </div>
 
-                        {hasActiveFilters && (
-                            <button className="btn btn-secondary btn-sm" onClick={clearFilters} type="button">
-                                Clear Filters
-                            </button>
-                        )}
+                            {hasActiveFilters && (
+                                <button className="btn btn-secondary btn-sm" onClick={clearFilters} type="button">
+                                    Clear Filters
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
