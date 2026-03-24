@@ -52,7 +52,6 @@ export default function QuotationDashboardTable({
                                 <div className="quotation-dashboard-actions">
                                     <button type="button" className="quotation-btn quotation-btn-ghost" onClick={() => onOpen(quote.id)}>Edit</button>
                                     <button type="button" className="quotation-btn quotation-btn-ghost" onClick={() => onExportPdf(quote.id, 'customer')}>PDF</button>
-                                    <button type="button" className="quotation-btn quotation-btn-ghost" onClick={() => onExportExcel(quote.id)}>Excel</button>
                                     <button type="button" className="quotation-btn quotation-btn-ghost" onClick={() => onDuplicate(quote.id)}>Duplicate</button>
                                     <button type="button" className="quotation-btn quotation-btn-danger" onClick={() => onDelete(quote.id)}>Delete</button>
                                 </div>

@@ -2,9 +2,10 @@ import { getSignatures, getSignatureByName, upsertSignature, deleteSignature } f
 
 export const runtime = 'nodejs';
 
-export async function GET(request, { searchParams }) {
+export async function GET(request) {
     try {
-        const { name } = await searchParams;
+        const searchParams = request.nextUrl?.searchParams || new URL(request.url).searchParams;
+        const name = searchParams.get('name');
         if (name) {
             const sig = await getSignatureByName(name);
             return Response.json(sig || null);
@@ -32,9 +33,10 @@ export async function POST(request) {
     }
 }
 
-export async function DELETE(request, { searchParams }) {
+export async function DELETE(request) {
     try {
-        const { name } = await searchParams;
+        const searchParams = request.nextUrl?.searchParams || new URL(request.url).searchParams;
+        const name = searchParams.get('name');
         if (!name) return Response.json({ error: 'name is required' }, { status: 400 });
         const deleted = await deleteSignature(name);
         if (!deleted) return Response.json({ error: 'Not found' }, { status: 404 });

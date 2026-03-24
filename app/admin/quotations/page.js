@@ -14,7 +14,7 @@ import {
 } from '@/lib/quotationCommercial';
 
 const STATUS_OPTIONS = ['Draft', 'Confirmed', 'Cancelled'];
-const UNIT_OPTIONS = ['nos', 'sqm', 'lm', 'rm', 'sets', 'l.s.', 'lot', 'kg', 'hrs', 'days'];
+const UNIT_OPTIONS = ['nos', 'sqm', 'lm', 'rm', 'sets', 'l.s.', 'lot', 'kg', 'hrs', 'days', 'pax'];
 
 let quotationMessageTimer = null;
 
@@ -51,6 +51,7 @@ function createDraft(quoteNumber) {
         client_to: '',
         client_org: '',
         client_location: '',
+        client_trn: '',
         event_name: '',
         venue: '',
         event_date: '',
@@ -62,6 +63,9 @@ function createDraft(quoteNumber) {
         terms: defaults.terms,
         payment_terms: defaults.payment_terms,
         vat_percent: 10,
+        expiry_date: '',
+        subject: '',
+        company_profile: { ...QUOTATION_COMPANY_PROFILE },
     };
 }
 
@@ -70,6 +74,7 @@ function normalizeQuote(raw) {
     return {
         ...createDraft(raw?.qt_number ?? null),
         ...raw,
+        client_trn: String(raw?.client_trn || ''),
         sections: Array.isArray(raw?.sections) && raw.sections.length > 0
             ? raw.sections.map((section) => ({
                 name: section?.name || '',
@@ -93,6 +98,9 @@ function normalizeQuote(raw) {
         payment_terms: Array.isArray(raw?.payment_terms) && raw.payment_terms.length > 0 ? raw.payment_terms : defaults.payment_terms,
         vat_percent: Number(raw?.vat_percent ?? 10),
         ref: raw?.ref || buildReference(raw?.date, raw?.qt_number),
+        company_profile: raw?.company_profile || { ...QUOTATION_COMPANY_PROFILE },
+        expiry_date: raw?.expiry_date || '',
+        subject: raw?.subject || '',
     };
 }
 
@@ -132,6 +140,8 @@ export default function QuotationsAdminPage() {
     const router = useRouter();
     const [quotes, setQuotes] = useState([]);
     const [priceReferences, setPriceReferences] = useState([]);
+    const [customers, setCustomers] = useState([]);
+    const [signatures, setSignatures] = useState([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [referenceSaving, setReferenceSaving] = useState(false);
@@ -230,12 +240,16 @@ export default function QuotationsAdminPage() {
 
         async function bootstrap() {
             try {
-                const [quoteResponse, referenceResponse] = await Promise.all([
+                const [quoteResponse, referenceResponse, customerResponse, sigResponse] = await Promise.all([
                     fetch('/api/quotations', { cache: 'no-store' }),
                     fetch('/api/price-references', { cache: 'no-store' }),
+                    fetch('/api/customers', { cache: 'no-store' }),
+                    fetch('/api/signatures', { cache: 'no-store' }),
                 ]);
                 const quoteData = await quoteResponse.json();
                 const referenceData = await referenceResponse.json();
+                const customerData = await customerResponse.json();
+                const sigData = await sigResponse.json();
 
                 if (!quoteResponse.ok) throw new Error(quoteData.error || 'Failed to load quotations');
                 if (!referenceResponse.ok) throw new Error(referenceData.error || 'Failed to load price references');
@@ -244,6 +258,8 @@ export default function QuotationsAdminPage() {
                 const nextQuotes = Array.isArray(quoteData) ? quoteData : [];
                 setQuotes(nextQuotes);
                 setPriceReferences(Array.isArray(referenceData) ? referenceData : []);
+                setCustomers(Array.isArray(customerData) ? customerData : []);
+                setSignatures(Array.isArray(sigData) ? sigData : []);
 
                 if (nextQuotes[0]) {
                     setSelectedId(nextQuotes[0].id);
@@ -360,6 +376,56 @@ export default function QuotationsAdminPage() {
                 };
             }),
         }));
+    }
+
+    function applyCustomer(customerId) {
+        const customer = customers.find((c) => String(c.id) === String(customerId));
+        if (!customer) return;
+        setForm((current) => ({
+            ...current,
+            client_org: customer.display_name || current.client_org,
+            client_to: customer.contact_to || current.client_to,
+            client_location: customer.address || current.client_location,
+            client_trn: customer.trn || current.client_trn,
+        }));
+    }
+
+    async function saveCustomer(payload) {
+        try {
+            const existing = customers.find((c) => c.display_name.toLowerCase() === String(payload.display_name || '').trim().toLowerCase());
+            const response = await fetch(existing ? `/api/customers/${existing.id}` : '/api/customers', {
+                method: existing ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Failed to save customer');
+            const customerResponse = await fetch('/api/customers', { cache: 'no-store' });
+            const customerData = await customerResponse.json();
+            setCustomers(Array.isArray(customerData) ? customerData : []);
+            flash('success', existing ? 'Customer updated' : 'Customer saved');
+            return data;
+        } catch (error) {
+            flash('error', error.message || 'Failed to save customer');
+        }
+    }
+
+    async function saveSignature(name, signatureImage, stampImage) {
+        try {
+            const response = await fetch('/api/signatures', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, signature_image: signatureImage, stamp_image: stampImage }),
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Failed to save signature');
+            const sigResponse = await fetch('/api/signatures', { cache: 'no-store' });
+            const sigData = await sigResponse.json();
+            setSignatures(Array.isArray(sigData) ? sigData : []);
+            flash('success', 'Signature / stamp saved');
+        } catch (error) {
+            flash('error', error.message || 'Failed to save signature');
+        }
     }
 
     async function saveQuote(nextStatus) {
@@ -579,6 +645,8 @@ export default function QuotationsAdminPage() {
                         sellingRuleOptions={SELLING_RULE_OPTIONS}
                         companyProfile={QUOTATION_COMPANY_PROFILE}
                         priceReferences={priceReferences}
+                        customers={customers}
+                        signatures={signatures}
                         onBack={() => setViewMode('dashboard')}
                         onToggleManagement={setShowManagement}
                         onFieldChange={setField}
@@ -591,6 +659,9 @@ export default function QuotationsAdminPage() {
                         onRemoveItem={removeItem}
                         onAttachImage={attachImage}
                         onApplyReference={applyReference}
+                        onApplyCustomer={applyCustomer}
+                        onSaveCustomer={saveCustomer}
+                        onSaveSignature={saveSignature}
                         onSaveDraft={() => saveQuote('Draft')}
                         onSaveConfirmed={() => saveQuote('Confirmed')}
                         onExportCustomerPdf={() => exportQuotePdf(form.id, 'customer')}
