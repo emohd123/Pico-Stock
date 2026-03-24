@@ -61,24 +61,24 @@ const portfolioHighlights = [
         description: 'A Bahrain-focused overview of event environments, client-facing experiences, and delivery capabilities across live projects.',
         image: companyImages.eventsMain,
         imageClassName: 'company-media-image-stage',
-        href: 'https://u.pcloud.link/publink/show?code=XZOwzq5ZCX8ABOA4HHRp92vxfuoa80RX7bRV',
-        linkLabel: 'View Events Portfolio',
+        href: '/company-profile#company-contact',
+        linkLabel: 'Request Events Portfolio',
     },
     {
         title: 'Exhibition Stands Portfolio',
         description: "Reference material showing Pico Bahrain's exhibition-stand direction, booth presentation quality, and spatial execution style.",
         image: companyImages.exhibition,
         imageClassName: 'company-media-image-poster',
-        href: 'https://u.pcloud.link/publink/show?code=XZHFte5Zk0MLSfIJLGLAW8fqj1l8juMDH4s7',
-        linkLabel: 'View Stands Portfolio',
+        href: '/company-profile#company-contact',
+        linkLabel: 'Request Stands Portfolio',
     },
     {
         title: 'Interiors Portfolio',
         description: 'A supporting look at interior-focused work and space styling that complements exhibition and event delivery.',
         image: companyImages.interiorMain,
         imageClassName: 'company-media-image-interior',
-        href: 'https://u.pcloud.link/publink/show?code=XZLCzq5ZuOJCabuPOMLh0WtIdgPaukB0sI5y',
-        linkLabel: 'View Interiors Portfolio',
+        href: '/company-profile#company-contact',
+        linkLabel: 'Request Interiors Portfolio',
     },
 ];
 
@@ -254,14 +254,9 @@ export default function CompanyProfilePage() {
                             <div className="company-portfolio-body">
                                 <h3>{portfolio.title}</h3>
                                 <p>{portfolio.description}</p>
-                                <a
-                                    href={portfolio.href}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="btn btn-secondary"
-                                >
+                                <Link href={portfolio.href} className="btn btn-secondary">
                                     {portfolio.linkLabel}
-                                </a>
+                                </Link>
                             </div>
                         </article>
                     ))}
@@ -286,7 +281,7 @@ export default function CompanyProfilePage() {
                 </div>
             </section>
 
-            <section className="section company-section">
+            <section id="company-contact" className="section company-section">
                 <div className="company-contact-layout">
                     <div className="company-cta-strip company-contact-summary">
                         <div className="company-cta-copy">

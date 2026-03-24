@@ -289,12 +289,6 @@ export default function QuotationsAdminPage() {
     }
 
     useEffect(() => {
-        const isAdmin = sessionStorage.getItem('pico-admin');
-        if (!isAdmin) {
-            router.push('/admin/login');
-            return;
-        }
-
         let cancelled = false;
 
         async function bootstrap() {

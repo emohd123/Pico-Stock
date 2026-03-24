@@ -14,8 +14,6 @@ export default function AdminLoginPage() {
         setError('');
         setLoading(true);
 
-        // Simple client-side password check
-        // In production, use proper auth (NextAuth, etc.)
         try {
             const res = await fetch('/api/admin/login', {
                 method: 'POST',
@@ -25,8 +23,8 @@ export default function AdminLoginPage() {
             const data = await res.json();
 
             if (data.success) {
-                sessionStorage.setItem('pico-admin', 'true');
                 router.push('/admin');
+                router.refresh();
             } else {
                 setError('Invalid password. Please try again.');
             }

@@ -6,10 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "pcloud:check": "node worker/index.js check",
-    "pcloud:scan": "node worker/index.js scan",
-    "pcloud:scan:incremental": "node worker/index.js scan --incremental"
+    "lint": "next lint"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.99.0",

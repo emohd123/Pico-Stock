@@ -92,12 +92,6 @@ export default function AdminDashboard() {
     });
 
     useEffect(() => {
-        const isAdmin = sessionStorage.getItem('pico-admin');
-        if (!isAdmin) {
-            router.push('/admin/login');
-            return;
-        }
-
         const params = new URLSearchParams(window.location.search);
         const initialTab = params.get('tab');
         if (['overview', 'products', 'orders', 'upload'].includes(initialTab || '')) {
@@ -394,9 +388,12 @@ export default function AdminDashboard() {
         }
     };
 
-    const handleLogout = () => {
-        sessionStorage.removeItem('pico-admin');
+    const handleLogout = async () => {
+        try {
+            await fetch('/api/admin/logout', { method: 'POST' });
+        } catch {}
         router.push('/admin/login');
+        router.refresh();
     };
 
     // Stats

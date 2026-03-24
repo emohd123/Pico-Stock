@@ -46,12 +46,7 @@ export default function DesignersPage() {
 
     const TODAY = todayStr();
 
-    // Auth check
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const isAdmin = sessionStorage.getItem('pico-admin');
-            if (!isAdmin) { router.push('/admin/login'); return; }
-        }
         fetch('/api/designers')
             .then(r => r.json())
             .then(data => {

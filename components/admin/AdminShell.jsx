@@ -19,9 +19,12 @@ function itemClassName(active) {
 export default function AdminShell({ activeSection, children, contentClassName = 'admin-content' }) {
     const router = useRouter();
 
-    function handleLogout() {
-        sessionStorage.removeItem('pico-admin');
+    async function handleLogout() {
+        try {
+            await fetch('/api/admin/logout', { method: 'POST' });
+        } catch {}
         router.push('/admin/login');
+        router.refresh();
     }
 
     return (
