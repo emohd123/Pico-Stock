@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createQuotation, getQuotations } from '@/lib/quotationStore';
+import { createQuotation, getQuotations, QuotationStoreError } from '@/lib/quotationStore';
 
 export const runtime = 'nodejs';
 
@@ -22,6 +22,9 @@ export async function POST(request) {
         const quotation = await createQuotation(body);
         return NextResponse.json(quotation, { status: 201 });
     } catch (error) {
+        if (error instanceof QuotationStoreError) {
+            return NextResponse.json({ error: error.message, details: error.details }, { status: error.status });
+        }
         return NextResponse.json({ error: 'Failed to create quotation' }, { status: 500 });
     }
 }

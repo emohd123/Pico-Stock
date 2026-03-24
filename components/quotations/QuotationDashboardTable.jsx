@@ -40,20 +40,37 @@ export default function QuotationDashboardTable({
                 <tbody>
                     {quotes.map((quote) => (
                         <tr key={quote.id}>
-                            <td><strong>QT-{quote.qt_number}</strong></td>
+                            <td>
+                                <div className="quotation-dashboard-qt">
+                                    <strong>QT-{quote.qt_number}</strong>
+                                </div>
+                            </td>
                             <td>{quote.date || '--'}</td>
-                            <td>{quote.project_title || 'Untitled quotation'}</td>
-                            <td>{quote.client_org || quote.client_to || '--'}</td>
+                            <td>
+                                <div className="quotation-dashboard-project">{quote.project_title || 'Untitled quotation'}</div>
+                            </td>
+                            <td>
+                                <div className="quotation-dashboard-client">{quote.client_org || quote.client_to || '--'}</div>
+                            </td>
                             <td>{quote.created_by || '--'}</td>
-                            <td>{getReferenceSummary ? getReferenceSummary(quote) : '--'}</td>
-                            <td>BHD {formatMoney(quote.total_with_vat)}</td>
+                            <td>
+                                <div className="quotation-dashboard-reference">{getReferenceSummary ? getReferenceSummary(quote) : '--'}</div>
+                                {Array.isArray(quote.attachments) && quote.attachments.length > 0 ? (
+                                    <div style={{ marginTop: '0.35rem', fontSize: '0.76rem', color: '#64748b' }}>
+                                        Files: {quote.attachments.length}
+                                    </div>
+                                ) : null}
+                            </td>
+                            <td>
+                                <div className="quotation-dashboard-total">{formatMoney(quote.total_with_vat, quote.currency_code, { withCode: true })}</div>
+                            </td>
                             <td><StatusPill status={quote.status} /></td>
                             <td>
                                 <div className="quotation-dashboard-actions">
-                                    <button type="button" className="quotation-btn quotation-btn-ghost" onClick={() => onOpen(quote.id)}>Edit</button>
-                                    <button type="button" className="quotation-btn quotation-btn-ghost" onClick={() => onExportPdf(quote.id, 'customer')}>PDF</button>
-                                    <button type="button" className="quotation-btn quotation-btn-ghost" onClick={() => onDuplicate(quote.id)}>Duplicate</button>
-                                    <button type="button" className="quotation-btn quotation-btn-danger" onClick={() => onDelete(quote.id)}>Delete</button>
+                                    <button type="button" className="quotation-btn quotation-btn-ghost quotation-dashboard-action-btn" onClick={() => onOpen(quote.id)}>Edit</button>
+                                    <button type="button" className="quotation-btn quotation-btn-ghost quotation-dashboard-action-btn" onClick={() => onExportPdf(quote.id, 'customer')}>PDF</button>
+                                    <button type="button" className="quotation-btn quotation-btn-ghost quotation-dashboard-action-btn" onClick={() => onDuplicate(quote.id)}>Duplicate</button>
+                                    <button type="button" className="quotation-btn quotation-btn-danger quotation-dashboard-action-btn" onClick={() => onDelete(quote.id)}>Delete</button>
                                 </div>
                             </td>
                         </tr>

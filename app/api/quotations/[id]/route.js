@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { deleteQuotation, getQuotationById, updateQuotation } from '@/lib/quotationStore';
+import { deleteQuotation, getQuotationById, QuotationStoreError, updateQuotation } from '@/lib/quotationStore';
 
 export const runtime = 'nodejs';
 
@@ -27,6 +27,9 @@ export async function PUT(request, { params }) {
 
         return NextResponse.json(quotation);
     } catch (error) {
+        if (error instanceof QuotationStoreError) {
+            return NextResponse.json({ error: error.message, details: error.details }, { status: error.status });
+        }
         return NextResponse.json({ error: 'Failed to update quotation' }, { status: 500 });
     }
 }

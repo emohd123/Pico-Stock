@@ -1,14 +1,18 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import QuotationDashboardTable from '@/components/quotations/QuotationDashboardTable';
 import PriceReferenceManager from '@/components/quotations/PriceReferenceManager';
 import QuoteEditor from '@/components/quotations/QuoteEditor';
 import {
+    DEFAULT_CURRENCY_CODE,
     defaultCommercialLists,
+    formatCurrencyAmount,
     getSectionCommercialSummary,
+    normalizeCurrencyCode,
     numberToWords,
+    QUOTATION_CURRENCIES,
     QUOTATION_COMPANY_PROFILE,
     SELLING_RULE_OPTIONS,
 } from '@/lib/quotationCommercial';
@@ -21,6 +25,22 @@ let quotationMessageTimer = null;
 function todayString() {
     const now = new Date();
     return `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}`;
+}
+
+export function displayDateToInput(dateValue) {
+    const parts = String(dateValue || '').split('.');
+    if (parts.length !== 3) return '';
+    const [day, month, year] = parts;
+    if (!day || !month || !year) return '';
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+}
+
+export function inputDateToDisplay(dateValue) {
+    const parts = String(dateValue || '').split('-');
+    if (parts.length !== 3) return '';
+    const [year, month, day] = parts;
+    if (!day || !month || !year) return '';
+    return `${day.padStart(2, '0')}.${month.padStart(2, '0')}.${year}`;
 }
 
 function buildReference(dateValue, quoteNumber) {
@@ -44,9 +64,11 @@ function createDraft(quoteNumber) {
 
     return {
         id: null,
+        customer_id: '',
         qt_number: quoteNumber,
         date,
-        ref: buildReference(date, quoteNumber),
+        ref: '',
+        currency_code: DEFAULT_CURRENCY_CODE,
         project_title: '',
         client_to: '',
         client_org: '',
@@ -59,6 +81,7 @@ function createDraft(quoteNumber) {
         status: 'Draft',
         notes: '',
         sections: [createSection()],
+        attachments: [],
         exclusions: defaults.exclusions,
         terms: defaults.terms,
         payment_terms: defaults.payment_terms,
@@ -74,6 +97,8 @@ function normalizeQuote(raw) {
     return {
         ...createDraft(raw?.qt_number ?? null),
         ...raw,
+        customer_id: String(raw?.customer_id || ''),
+        currency_code: normalizeCurrencyCode(raw?.currency_code),
         client_trn: String(raw?.client_trn || ''),
         sections: Array.isArray(raw?.sections) && raw.sections.length > 0
             ? raw.sections.map((section) => ({
@@ -93,27 +118,41 @@ function normalizeQuote(raw) {
                     : [createItem()],
             }))
             : [createSection()],
+        attachments: Array.isArray(raw?.attachments)
+            ? raw.attachments.map((attachment) => ({
+                id: attachment?.id || `att-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                name: attachment?.name || 'Attachment',
+                type: attachment?.type || 'application/octet-stream',
+                size: Number(attachment?.size || 0),
+                category: attachment?.category === 'download' ? 'download' : 'internal',
+                data: attachment?.data || '',
+                uploaded_at: attachment?.uploaded_at || new Date().toISOString(),
+            }))
+            : [],
         exclusions: Array.isArray(raw?.exclusions) && raw.exclusions.length > 0 ? raw.exclusions : defaults.exclusions,
         terms: Array.isArray(raw?.terms) && raw.terms.length > 0 ? raw.terms : defaults.terms,
         payment_terms: Array.isArray(raw?.payment_terms) && raw.payment_terms.length > 0 ? raw.payment_terms : defaults.payment_terms,
         vat_percent: Number(raw?.vat_percent ?? 10),
-        ref: raw?.ref || buildReference(raw?.date, raw?.qt_number),
+        ref: raw?.ref || '',
         company_profile: raw?.company_profile || { ...QUOTATION_COMPANY_PROFILE },
         expiry_date: raw?.expiry_date || '',
         subject: raw?.subject || '',
     };
 }
 
-function formatMoney(value) {
-    return Number(value || 0).toFixed(3);
+function formatMoney(value, currencyCode = DEFAULT_CURRENCY_CODE, options = {}) {
+    return formatCurrencyAmount(value, currencyCode, options);
 }
 
 function sectionTotals(section) {
     const summary = getSectionCommercialSummary(section);
+    const itemCostSubtotal = (section.items || []).reduce((sum, item) => sum + Number(item?.costs_bhd || 0), 0);
     return {
         internal: summary.internalSubtotal,
-        client: summary.internalSubtotal > 0 ? summary.suggestedSelling : (Number(section.section_selling || 0) > 0 ? Number(section.section_selling || 0) : summary.clientLineTotal),
+        client: summary.customerTotal,
         suggested: summary.suggestedSelling,
+        itemCustomerTotal: summary.clientLineTotal,
+        itemCostSubtotal,
     };
 }
 
@@ -153,6 +192,7 @@ export default function QuotationsAdminPage() {
     const [referenceSearch, setReferenceSearch] = useState('');
     const [selectedId, setSelectedId] = useState(null);
     const [form, setForm] = useState(createDraft(null));
+    const [quotationHistory, setQuotationHistory] = useState([]);
     const [message, setMessage] = useState({ type: '', text: '' });
 
     const priceReferenceMap = useMemo(() => {
@@ -189,11 +229,28 @@ export default function QuotationsAdminPage() {
             if (!response.ok) throw new Error(data.error || 'Failed to load quotation');
             setSelectedId(data.id);
             setForm(normalizeQuote(data));
+            await loadQuotationHistory(data.id);
             if (switchView) setViewMode('editor');
         } catch (error) {
             flash('error', error.message || 'Failed to open quotation');
         }
     }
+
+    const loadQuotationHistory = useCallback(async (id) => {
+        if (!id) {
+            setQuotationHistory([]);
+            return;
+        }
+        try {
+            const response = await fetch(`/api/quotations/${id}/history`, { cache: 'no-store' });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Failed to load quotation history');
+            setQuotationHistory(Array.isArray(data) ? data : []);
+        } catch (error) {
+            setQuotationHistory([]);
+            flash('error', error.message || 'Failed to load quotation history');
+        }
+    }, []);
 
     async function loadQuotes(nextSelectedId = selectedId) {
         setLoading(true);
@@ -264,11 +321,13 @@ export default function QuotationsAdminPage() {
                 if (nextQuotes[0]) {
                     setSelectedId(nextQuotes[0].id);
                     setForm(normalizeQuote(nextQuotes[0]));
+                    await loadQuotationHistory(nextQuotes[0].id);
                 } else {
                     const nextNumber = await fetchNextDraftNumber();
                     if (cancelled) return;
                     setSelectedId(null);
                     setForm(createDraft(nextNumber));
+                    setQuotationHistory([]);
                 }
             } catch (error) {
                 if (!cancelled) flash('error', error.message || 'Failed to load quotations');
@@ -282,13 +341,14 @@ export default function QuotationsAdminPage() {
         return () => {
             cancelled = true;
         };
-    }, [router]);
+    }, [router, loadQuotationHistory]);
 
     async function startNewQuote() {
         try {
             const nextNumber = await fetchNextDraftNumber();
             setSelectedId(null);
             setForm(createDraft(nextNumber));
+            setQuotationHistory([]);
             setViewMode('editor');
         } catch (error) {
             flash('error', error.message || 'Could not prepare a draft');
@@ -298,7 +358,6 @@ export default function QuotationsAdminPage() {
     function setField(field, value) {
         setForm((current) => {
             const next = { ...current, [field]: value };
-            if (field === 'date') next.ref = buildReference(value, current.qt_number);
             return next;
         });
     }
@@ -354,6 +413,51 @@ export default function QuotationsAdminPage() {
         }
     }
 
+    async function attachQuotationFiles(fileList, category = 'internal') {
+        const files = Array.from(fileList || []);
+        if (files.length === 0) return;
+        const oversized = files.find((file) => file.size > 8 * 1024 * 1024);
+        if (oversized) {
+            return flash('error', `${oversized.name} is too large. Keep files under 8MB each.`);
+        }
+
+        try {
+            const attachments = await Promise.all(files.map(async (file) => ({
+                id: `att-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                name: file.name,
+                type: file.type || 'application/octet-stream',
+                size: file.size,
+                category,
+                data: await toDataUrl(file),
+                uploaded_at: new Date().toISOString(),
+            })));
+
+            setForm((current) => ({
+                ...current,
+                attachments: [...(current.attachments || []), ...attachments],
+            }));
+            flash('success', `${attachments.length} file${attachments.length > 1 ? 's' : ''} attached to quotation`);
+        } catch {
+            flash('error', 'Could not attach those files');
+        }
+    }
+
+    function updateQuotationAttachment(attachmentId, field, value) {
+        setForm((current) => ({
+            ...current,
+            attachments: (current.attachments || []).map((attachment) => (
+                attachment.id === attachmentId ? { ...attachment, [field]: value } : attachment
+            )),
+        }));
+    }
+
+    function removeQuotationAttachment(attachmentId) {
+        setForm((current) => ({
+            ...current,
+            attachments: (current.attachments || []).filter((attachment) => attachment.id !== attachmentId),
+        }));
+    }
+
     function applyReference(sectionIndex, itemIndex, referenceId) {
         const reference = priceReferenceMap[referenceId];
         if (!reference) {
@@ -379,14 +483,27 @@ export default function QuotationsAdminPage() {
     }
 
     function applyCustomer(customerId) {
+        if (!customerId) {
+            setForm((current) => ({
+                ...current,
+                customer_id: '',
+                client_org: '',
+                client_to: '',
+                client_location: '',
+                client_trn: '',
+            }));
+            return;
+        }
+
         const customer = customers.find((c) => String(c.id) === String(customerId));
         if (!customer) return;
         setForm((current) => ({
             ...current,
-            client_org: customer.display_name || current.client_org,
-            client_to: customer.contact_to || current.client_to,
-            client_location: customer.address || current.client_location,
-            client_trn: customer.trn || current.client_trn,
+            customer_id: String(customer.id),
+            client_org: String(customer.display_name || ''),
+            client_to: String(customer.contact_to || ''),
+            client_location: String(customer.address || ''),
+            client_trn: String(customer.trn || ''),
         }));
     }
 
@@ -407,6 +524,48 @@ export default function QuotationsAdminPage() {
             return data;
         } catch (error) {
             flash('error', error.message || 'Failed to save customer');
+        }
+    }
+
+    async function saveSelectedCustomerDetails() {
+        if (!form.customer_id) {
+            return flash('error', 'Select a customer first');
+        }
+
+        try {
+            const response = await fetch(`/api/customers/${form.customer_id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    display_name: form.client_org,
+                    contact_to: form.client_to,
+                    address: form.client_location,
+                    trn: form.client_trn,
+                }),
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Failed to update customer');
+
+            const customerResponse = await fetch('/api/customers', { cache: 'no-store' });
+            const customerData = await customerResponse.json();
+            const nextCustomers = Array.isArray(customerData) ? customerData : [];
+            setCustomers(nextCustomers);
+
+            const updatedCustomer = nextCustomers.find((customer) => String(customer.id) === String(form.customer_id));
+            if (updatedCustomer) {
+                setForm((current) => ({
+                    ...current,
+                    customer_id: String(updatedCustomer.id),
+                    client_org: String(updatedCustomer.display_name || ''),
+                    client_to: String(updatedCustomer.contact_to || ''),
+                    client_location: String(updatedCustomer.address || ''),
+                    client_trn: String(updatedCustomer.trn || ''),
+                }));
+            }
+
+            flash('success', 'Customer details saved');
+        } catch (error) {
+            flash('error', error.message || 'Failed to update customer');
         }
     }
 
@@ -454,8 +613,9 @@ export default function QuotationsAdminPage() {
             if (!response.ok) throw new Error(data.error || 'Failed to save quotation');
             setSelectedId(data.id);
             setForm(normalizeQuote(data));
+            await loadQuotationHistory(data.id);
             await loadQuotes(data.id);
-            setViewMode('editor');
+            setViewMode('dashboard');
             flash('success', `Quotation QT-${data.qt_number} saved`);
         } catch (error) {
             flash('error', error.message || 'Failed to save quotation');
@@ -470,6 +630,7 @@ export default function QuotationsAdminPage() {
             const response = await fetch(`/api/quotations/${id}/duplicate`, { method: 'POST' });
             const data = await response.json();
             if (!response.ok) throw new Error(data.error || 'Failed to duplicate quotation');
+            await loadQuotationHistory(data.id);
             await loadQuotes(data.id);
             setViewMode('editor');
             flash('success', `Duplicated into QT-${data.qt_number}`);
@@ -487,10 +648,34 @@ export default function QuotationsAdminPage() {
             const data = await response.json();
             if (!response.ok) throw new Error(data.error || 'Failed to delete quotation');
             await loadQuotes();
+            setQuotationHistory([]);
             setViewMode('dashboard');
             flash('success', 'Quotation deleted');
         } catch (error) {
             flash('error', error.message || 'Failed to delete quotation');
+        }
+    }
+
+    async function restoreQuoteVersion(version) {
+        if (!form.id) return;
+        if (!window.confirm(`Restore quotation to version ${version}?`)) return;
+        setSaving(true);
+        try {
+            const response = await fetch(`/api/quotations/${form.id}/restore`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ version }),
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Failed to restore quotation version');
+            setForm(normalizeQuote(data));
+            await loadQuotationHistory(data.id);
+            await loadQuotes(data.id);
+            flash('success', `Restored quotation to version ${version}`);
+        } catch (error) {
+            flash('error', error.message || 'Failed to restore quotation version');
+        } finally {
+            setSaving(false);
         }
     }
 
@@ -585,6 +770,10 @@ export default function QuotationsAdminPage() {
         drafts: quotes.filter((quote) => quote.status === 'Draft').length,
         pipeline: quotes.reduce((sum, quote) => sum + Number(quote.total_with_vat || 0), 0),
     };
+    const pipelineCurrencies = [...new Set(quotes.map((quote) => normalizeCurrencyCode(quote.currency_code)))];
+    const pipelineCurrencyCode = quotes.length === 0
+        ? DEFAULT_CURRENCY_CODE
+        : (pipelineCurrencies.length === 1 ? pipelineCurrencies[0] : null);
 
     if (loading) {
         return <div className="loading-page"><div className="spinner"></div></div>;
@@ -596,32 +785,82 @@ export default function QuotationsAdminPage() {
 
                 {viewMode === 'dashboard' ? (
                     <div className="quotation-dashboard-screen">
-                        <div className="quotation-screen-header">
-                            <div>
+                        <div className="quotation-screen-header quotation-dashboard-hero">
+                            <div className="quotation-dashboard-hero-copy">
+                                <div className="quotation-dashboard-kicker">Pico Bahrain</div>
                                 <h1>Quotation Studio</h1>
                                 <p>Search, filter, export, reopen quotes, and manage reusable price references from one place.</p>
                             </div>
-                            <div className="quotation-dashboard-toolbar">
-                                <input className="quotation-input" type="search" placeholder="Search by QT, project, client, owner, or references" value={search} onChange={(event) => setSearch(event.target.value)} />
-                                <select className="quotation-input" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-                                    <option value="">All statuses</option>
-                                    {STATUS_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
-                                </select>
-                                <button type="button" className="quotation-btn quotation-btn-ghost" onClick={() => setShowReferenceManager(true)}>
-                                    Price References
-                                </button>
-                                <button type="button" className="quotation-btn quotation-btn-primary" onClick={startNewQuote}>+ New Quotation</button>
+                            <div className="quotation-dashboard-toolbar quotation-dashboard-toolbar-panel">
+                                <div className="quotation-dashboard-toolbar-filters">
+                                    <div className="quotation-dashboard-search-shell">
+                                        <span className="quotation-dashboard-search-icon" aria-hidden="true">⌕</span>
+                                        <input
+                                            className="quotation-input quotation-dashboard-search"
+                                            type="search"
+                                            placeholder="Search by QT #, project, client, owner, or references"
+                                            value={search}
+                                            onChange={(event) => setSearch(event.target.value)}
+                                        />
+                                        {search ? (
+                                            <button
+                                                type="button"
+                                                className="quotation-dashboard-search-clear"
+                                                onClick={() => setSearch('')}
+                                                aria-label="Clear quotation search"
+                                            >
+                                                Clear
+                                            </button>
+                                        ) : null}
+                                    </div>
+                                    <div className="quotation-dashboard-filter-stack">
+                                        <span className="quotation-dashboard-filter-label">Status</span>
+                                        <select className="quotation-input quotation-dashboard-select" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+                                            <option value="">All statuses</option>
+                                            {STATUS_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="quotation-dashboard-toolbar-actions">
+                                    <button type="button" className="quotation-btn quotation-btn-ghost quotation-dashboard-toolbar-btn" onClick={() => setShowReferenceManager(true)}>
+                                        Price References
+                                    </button>
+                                    <button type="button" className="quotation-btn quotation-btn-primary quotation-dashboard-toolbar-btn quotation-dashboard-new-btn" onClick={startNewQuote}>+ New Quotation</button>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="quotation-dashboard-stats">
-                            <div className="quotation-dashboard-stat"><span>Total Quotations</span><strong>{stats.total}</strong></div>
-                            <div className="quotation-dashboard-stat"><span>Confirmed</span><strong>{stats.confirmed}</strong></div>
-                            <div className="quotation-dashboard-stat"><span>Drafts</span><strong>{stats.drafts}</strong></div>
-                            <div className="quotation-dashboard-stat"><span>Pipeline Value</span><strong>BHD {formatMoney(stats.pipeline)}</strong></div>
+                        <div className="quotation-dashboard-results-bar">
+                            <div className="quotation-dashboard-results-copy">
+                                Showing <strong>{filteredQuotes.length}</strong> of <strong>{quotes.length}</strong> quotations
+                            </div>
+                            {(search || statusFilter) ? (
+                                <button
+                                    type="button"
+                                    className="quotation-dashboard-reset"
+                                    onClick={() => {
+                                        setSearch('');
+                                        setStatusFilter('');
+                                    }}
+                                >
+                                    Reset filters
+                                </button>
+                            ) : (
+                                <div className="quotation-dashboard-results-hint">Use search or status to narrow results faster.</div>
+                            )}
                         </div>
 
-                        <div className="quotation-card">
+                        <div className="quotation-dashboard-stats">
+                            <div className="quotation-dashboard-stat quotation-dashboard-stat-total"><span>Total Quotations</span><strong>{stats.total}</strong></div>
+                            <div className="quotation-dashboard-stat quotation-dashboard-stat-confirmed"><span>Confirmed</span><strong>{stats.confirmed}</strong></div>
+                            <div className="quotation-dashboard-stat quotation-dashboard-stat-drafts"><span>Drafts</span><strong>{stats.drafts}</strong></div>
+                            <div className="quotation-dashboard-stat quotation-dashboard-stat-pipeline">
+                                <span>Pipeline Value</span>
+                                <strong>{pipelineCurrencyCode ? formatMoney(stats.pipeline, pipelineCurrencyCode, { withCode: true }) : 'Mixed currencies'}</strong>
+                            </div>
+                        </div>
+
+                        <div className="quotation-card quotation-dashboard-table-card">
                             <QuotationDashboardTable
                                 quotes={filteredQuotes}
                                 onOpen={openQuote}
@@ -643,11 +882,12 @@ export default function QuotationsAdminPage() {
                         statusOptions={STATUS_OPTIONS}
                         unitOptions={UNIT_OPTIONS}
                         sellingRuleOptions={SELLING_RULE_OPTIONS}
+                        currencies={QUOTATION_CURRENCIES}
                         companyProfile={QUOTATION_COMPANY_PROFILE}
                         priceReferences={priceReferences}
-                        customers={customers}
-                        signatures={signatures}
-                        onBack={() => setViewMode('dashboard')}
+                customers={customers}
+                signatures={signatures}
+                onBack={() => setViewMode('dashboard')}
                         onToggleManagement={setShowManagement}
                         onFieldChange={setField}
                         onListChange={setListField}
@@ -658,10 +898,14 @@ export default function QuotationsAdminPage() {
                         onAddItem={addItem}
                         onRemoveItem={removeItem}
                         onAttachImage={attachImage}
+                        onAttachQuotationFiles={attachQuotationFiles}
+                        onUpdateQuotationAttachment={updateQuotationAttachment}
+                        onRemoveQuotationAttachment={removeQuotationAttachment}
                         onApplyReference={applyReference}
-                        onApplyCustomer={applyCustomer}
-                        onSaveCustomer={saveCustomer}
-                        onSaveSignature={saveSignature}
+                onApplyCustomer={applyCustomer}
+                onSaveCustomer={saveCustomer}
+                onSaveSelectedCustomer={saveSelectedCustomerDetails}
+                onSaveSignature={saveSignature}
                         onSaveDraft={() => saveQuote('Draft')}
                         onSaveConfirmed={() => saveQuote('Confirmed')}
                         onExportCustomerPdf={() => exportQuotePdf(form.id, 'customer')}
@@ -669,9 +913,11 @@ export default function QuotationsAdminPage() {
                         onExportExcel={() => exportQuoteExcel(form.id)}
                         onDuplicate={() => duplicateQuote(form.id)}
                         onDelete={() => deleteQuote(form.id)}
-                        formatMoney={formatMoney}
+                        formatMoney={(value, options = {}) => formatMoney(value, form.currency_code, options)}
                         getSectionTotals={sectionTotals}
-                        numberToWords={numberToWords}
+                        numberToWords={(value) => numberToWords(value, form.currency_code)}
+                        quotationHistory={quotationHistory}
+                        onRestoreVersion={restoreQuoteVersion}
                     />
                 )}
 
