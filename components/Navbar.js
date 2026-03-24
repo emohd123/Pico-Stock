@@ -1,15 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useCart } from '@/lib/cartContext';
+import { DEFAULT_BRANDING_LOGO, FALLBACK_BRANDING_LOGO } from '@/lib/quotationCommercial';
 
 export default function Navbar() {
     const { cartCount } = useCart();
     const pathname = usePathname();
     const [menuOpen, setMenuOpen] = useState(false);
+    const [logoSrc, setLogoSrc] = useState(DEFAULT_BRANDING_LOGO);
 
     const isActive = (path) => pathname === path || pathname.startsWith(path + '/');
 
@@ -29,13 +30,17 @@ export default function Navbar() {
         <>
             <nav className="navbar">
                 <Link href="/" className="navbar-brand">
-                    <Image
-                        src="/branding/pico-logo.png"
+                    <img
+                        src={logoSrc}
                         alt="Pico Stock"
+                        className="navbar-logo"
                         width={176}
                         height={48}
-                        className="navbar-logo"
-                        priority
+                        onError={() => {
+                            setLogoSrc((current) => (
+                                current === DEFAULT_BRANDING_LOGO ? FALLBACK_BRANDING_LOGO : current
+                            ));
+                        }}
                     />
                 </Link>
 

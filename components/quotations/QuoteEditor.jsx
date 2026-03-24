@@ -1,7 +1,38 @@
 'use client';
-import { useState, useRef, useMemo } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { displayDateToInput, inputDateToDisplay } from '@/app/admin/quotations/page';
-import { computeSellingFromInternal } from '@/lib/quotationCommercial';
+import {
+    computeSellingFromInternal,
+    DEFAULT_BRANDING_LOGO,
+    FALLBACK_BRANDING_LOGO,
+    normalizeBrandingLogoPath,
+} from '@/lib/quotationCommercial';
+
+function SafeBrandLogo({ src, alt, className, style, width, height }) {
+    const [logoSrc, setLogoSrc] = useState(() => normalizeBrandingLogoPath(src));
+
+    useEffect(() => {
+        setLogoSrc(normalizeBrandingLogoPath(src));
+    }, [src]);
+
+    return (
+        <img
+            src={logoSrc}
+            alt={alt}
+            className={className}
+            style={style}
+            width={width}
+            height={height}
+            onError={(event) => {
+                if (logoSrc === DEFAULT_BRANDING_LOGO) {
+                    setLogoSrc(FALLBACK_BRANDING_LOGO);
+                    return;
+                }
+                event.currentTarget.style.display = 'none';
+            }}
+        />
+    );
+}
 
 /* ─── Editable collapsible block ───────────────────────────────────────── */
 function EditableBlock({ title, items, onChange }) {
@@ -256,7 +287,7 @@ function QuotationPreview({ form, totals, companyProfile, formatMoney, numberToW
         <div className="qp-root">
             <div className="qp-header">
                 <div className="qp-logo-stack">
-                    <img src={profile.logoPath} alt={profile.legalName} className="qp-logo" onError={(e) => { e.target.style.display = 'none'; }} />
+                    <SafeBrandLogo src={profile.logoPath} alt={profile.legalName} className="qp-logo" />
                     <div className="qp-title-block">
                         <div className="qp-title">QUOTATION</div>
                         <div className="qp-title-meta">Date: {form.date || '—'}</div>
@@ -691,7 +722,7 @@ export default function QuoteEditor({
                     {/* Header Branding (Compact) */}
                     <div className="quotation-brand-pro-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #f1f5f9', paddingBottom: '1.5rem', marginBottom: '1.5rem' }}>
                         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                            <img src={activeProfile.logoPath} alt="Logo" style={{ height: '40px', width: 'auto' }} />
+                            <SafeBrandLogo src={activeProfile.logoPath} alt="Logo" style={{ height: '40px', width: 'auto' }} />
                             <div style={{ fontSize: '0.9rem', color: '#475569' }}>
                                 <strong style={{ display: 'block', color: '#1e293b' }}>{activeProfile.legalName}</strong>
                                 <span>{activeProfile.vatNumber}</span>

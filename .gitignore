@@ -55,6 +55,8 @@ out/
 
 # Screenshots / temp images
 *.png
+!/public/branding/pico-logo.png
+!/public/branding/Pico logo horizontal 3265c.png
 
 # dotnet install script
 dotnet-install.ps1
