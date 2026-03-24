@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverComponentsExternalPackages: ['nodemailer', 'pdf-parse', 'jszip'],
+    serverComponentsExternalPackages: ['nodemailer', 'pdf-parse', 'jszip', 'pdfkit'],
   },
   images: {
     domains: ['localhost'],

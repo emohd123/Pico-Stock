@@ -8,6 +8,7 @@ import QuoteEditor from '@/components/quotations/QuoteEditor';
 import {
     defaultCommercialLists,
     getSectionCommercialSummary,
+    numberToWords,
     QUOTATION_COMPANY_PROFILE,
     SELLING_RULE_OPTIONS,
 } from '@/lib/quotationCommercial';
@@ -134,7 +135,7 @@ export default function QuotationsAdminPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [referenceSaving, setReferenceSaving] = useState(false);
-    const [viewMode, setViewMode] = useState('editor');
+    const [viewMode, setViewMode] = useState('dashboard');
     const [showManagement, setShowManagement] = useState(true);
     const [showReferenceManager, setShowReferenceManager] = useState(false);
     const [search, setSearch] = useState('');
@@ -525,28 +526,13 @@ export default function QuotationsAdminPage() {
 
     return (
         <div className="quotation-page-shell">
-            <header className="quotation-topbar">
-                <div className="quotation-topbar-brand">
-                    <img src={QUOTATION_COMPANY_PROFILE.logoPath} alt={QUOTATION_COMPANY_PROFILE.legalName} className="quotation-topbar-logo" />
-                    <div>
-                        <div className="quotation-topbar-title">Quotation System</div>
-                        <div className="quotation-topbar-subtitle">Pico International (Bahrain)</div>
-                    </div>
-                </div>
-                <div className="quotation-topbar-actions">
-                    <button type="button" className={`quotation-btn ${viewMode === 'dashboard' ? 'quotation-btn-inverse' : 'quotation-btn-topbar'}`} onClick={() => setViewMode('dashboard')}>Dashboard</button>
-                    <button type="button" className="quotation-btn quotation-btn-outline-light" onClick={startNewQuote}>+ New Quotation</button>
-                </div>
-            </header>
-
-            <main className="quotation-page-main">
-                {message.text ? <div className={`alert alert-${message.type}`} style={{ marginBottom: '1rem' }}>{message.text}</div> : null}
+            {message.text ? <div className={`alert alert-${message.type}`} style={{ marginBottom: '1rem' }}>{message.text}</div> : null}
 
                 {viewMode === 'dashboard' ? (
                     <div className="quotation-dashboard-screen">
                         <div className="quotation-screen-header">
                             <div>
-                                <h1>Quotation Dashboard</h1>
+                                <h1>Quotation Studio</h1>
                                 <p>Search, filter, export, reopen quotes, and manage reusable price references from one place.</p>
                             </div>
                             <div className="quotation-dashboard-toolbar">
@@ -555,9 +541,10 @@ export default function QuotationsAdminPage() {
                                     <option value="">All statuses</option>
                                     {STATUS_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
                                 </select>
-                                <button type="button" className="quotation-btn quotation-btn-primary" onClick={() => setShowReferenceManager(true)}>
+                                <button type="button" className="quotation-btn quotation-btn-ghost" onClick={() => setShowReferenceManager(true)}>
                                     Price References
                                 </button>
+                                <button type="button" className="quotation-btn quotation-btn-primary" onClick={startNewQuote}>+ New Quotation</button>
                             </div>
                         </div>
 
@@ -613,9 +600,9 @@ export default function QuotationsAdminPage() {
                         onDelete={() => deleteQuote(form.id)}
                         formatMoney={formatMoney}
                         getSectionTotals={sectionTotals}
+                        numberToWords={numberToWords}
                     />
                 )}
-            </main>
 
             {showReferenceManager ? (
                 <div className="modal-overlay" onClick={() => setShowReferenceManager(false)}>

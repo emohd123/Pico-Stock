@@ -23,6 +23,7 @@ export async function GET(request, { params }) {
             },
         });
     } catch (error) {
-        return Response.json({ error: 'Failed to generate quotation PDF' }, { status: 500 });
+        console.error('[PDF] generation failed:', error);
+        return Response.json({ error: 'Failed to generate quotation PDF', detail: String(error) }, { status: 500 });
     }
 }

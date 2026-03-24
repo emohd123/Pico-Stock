@@ -1,3 +1,32 @@
+import { useState } from 'react';
+
+function EditableBlock({ title, items, onChange }) {
+    const [open, setOpen] = useState(false);
+    const text = (items || []).join('\n');
+    function handleChange(event) {
+        const lines = event.target.value.split('\n').filter(line => line.trim() !== '');
+        onChange(lines.length > 0 ? lines : ['']);
+    }
+    return (
+        <div className={`quotation-collapsible${open ? ' quotation-collapsible-open' : ''}`}>
+            <button type="button" className="quotation-collapsible-trigger" onClick={() => setOpen((v) => !v)}>
+                <span>{title}</span>
+                <span className="quotation-collapsible-chevron">{open ? '▲' : '▼'}</span>
+            </button>
+            {open && (
+                <div className="quotation-collapsible-body">
+                    <textarea
+                        className="quotation-input quotation-textarea"
+                        rows={6}
+                        value={text}
+                        onChange={handleChange}
+                    />
+                </div>
+            )}
+        </div>
+    );
+}
+
 function EditableTextList({ title, items, onChange }) {
     function updateItem(index, value) {
         onChange(items.map((item, itemIndex) => itemIndex === index ? value : item));
@@ -91,6 +120,7 @@ export default function QuoteEditor({
     onDelete,
     formatMoney,
     getSectionTotals,
+    numberToWords,
 }) {
     const groupedPriceReferences = groupPriceReferences(priceReferences);
 
@@ -222,22 +252,20 @@ export default function QuoteEditor({
                                         />
                                     </div>
                                     <div className="quotation-scope-section-tools">
-                                        <label className="quotation-inline-input quotation-inline-input-compact">
-                                            <span>Selling Note</span>
-                                            <select
-                                                className="quotation-input quotation-input-small"
-                                                value={section.selling_rule}
-                                                onChange={(event) => onSectionChange(sectionIndex, (current) => ({ ...current, selling_rule: event.target.value }))}
-                                            >
-                                                {sellingRuleOptions.map((rule) => (
-                                                    <option key={rule.value} value={rule.value}>{rule.label}</option>
-                                                ))}
-                                            </select>
-                                        </label>
-                                        <div className="quotation-section-rule-copy">
-                                            <strong>{sellingRuleLabel(section.selling_rule)}</strong>
-                                            <span>Section Selling: BHD {formatMoney(sectionTotals.customer)}</span>
-                                        </div>
+                                        {showManagement && (
+                                            <label className="quotation-inline-input quotation-inline-input-compact">
+                                                <span>Selling %</span>
+                                                <select
+                                                    className="quotation-input quotation-input-small"
+                                                    value={section.selling_rule}
+                                                    onChange={(event) => onSectionChange(sectionIndex, (current) => ({ ...current, selling_rule: event.target.value }))}
+                                                >
+                                                    {sellingRuleOptions.map((rule) => (
+                                                        <option key={rule.value} value={rule.value}>{rule.label}</option>
+                                                    ))}
+                                                </select>
+                                            </label>
+                                        )}
                                         <button type="button" className="quotation-btn quotation-btn-danger" onClick={() => onRemoveSection(sectionIndex)}>Remove</button>
                                     </div>
                                 </div>
@@ -318,13 +346,19 @@ export default function QuoteEditor({
 
                                 <div className="quotation-scope-footer">
                                     <button type="button" className="quotation-btn quotation-btn-primary" onClick={() => onAddItem(sectionIndex)}>+ Add Item</button>
-                                    <div className="quotation-scope-summary">
-                                        Internal Cost: <strong>BHD {formatMoney(sectionTotals.internal)}</strong>
-                                        <span>|</span>
-                                        Selling Note: <strong>{section.selling_rule}</strong>
-                                        <span>|</span>
-                                        Section Selling: <strong>BHD {formatMoney(sectionTotals.customer)}</strong>
-                                    </div>
+                                    {showManagement && (
+                                        <div className="quotation-scope-summary">
+                                            <div className="quotation-scope-total-block">
+                                                <span>Sub-Total</span>
+                                                <strong>BHD {formatMoney(sectionTotals.internal)}</strong>
+                                            </div>
+                                            <div className="quotation-scope-total-divider" />
+                                            <div className="quotation-scope-total-block quotation-scope-total-selling">
+                                                <span>Selling ({sellingRuleLabel(section.selling_rule)})</span>
+                                                <strong>BHD {formatMoney(sectionTotals.client)}</strong>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         );
@@ -342,9 +376,9 @@ export default function QuoteEditor({
                 </div>
             </div>
 
-            <EditableTextList title="Exclusions" items={form.exclusions} onChange={(nextValue) => onListChange('exclusions', nextValue)} />
-            <EditableTextList title="Terms & Conditions of Contract" items={form.terms} onChange={(nextValue) => onListChange('terms', nextValue)} />
-            <EditableTextList title="Payment Terms" items={form.payment_terms} onChange={(nextValue) => onListChange('payment_terms', nextValue)} />
+            <EditableBlock title="Exclusions" items={form.exclusions} onChange={(nextValue) => onListChange('exclusions', nextValue)} />
+            <EditableBlock title="Terms & Conditions of Contract" items={form.terms} onChange={(nextValue) => onListChange('terms', nextValue)} />
+            <EditableBlock title="Payment Terms" items={form.payment_terms} onChange={(nextValue) => onListChange('payment_terms', nextValue)} />
 
             <div className="quotation-card">
                 <div className="quotation-card-heading">Internal Notes</div>
@@ -355,24 +389,39 @@ export default function QuoteEditor({
 
             <div className="quotation-bottom-bar">
                 <div className="quotation-bottom-metrics">
-                    <div className="quotation-bottom-metric"><span>Internal Cost</span><strong>BHD {formatMoney(totals.internal)}</strong></div>
-                    <div className="quotation-bottom-metric"><span>Selling Total</span><strong>BHD {formatMoney(totals.client)}</strong></div>
-                    <div className="quotation-bottom-metric"><span>VAT</span><strong>BHD {formatMoney(totals.vat)}</strong></div>
-                    <div className="quotation-bottom-metric"><span>Grand Total</span><strong>BHD {formatMoney(totals.grand)}</strong></div>
-                    <div className="quotation-bottom-metric"><span>Margin %</span><strong>{totals.margin.toFixed(1)}%</strong></div>
+                    <div className="quotation-bottom-metric"><span>Total Cost</span><strong>BHD {formatMoney(totals.client)}</strong></div>
+                    <div className="quotation-bottom-metric"><span>VAT {form.vat_percent}%</span><strong>BHD {formatMoney(totals.vat)}</strong></div>
+                    <div className="quotation-bottom-metric"><span>Total Cost Inc. VAT</span><strong>BHD {formatMoney(totals.grand)}</strong></div>
+                    <div className="quotation-bottom-metric quotation-bottom-metric-words"><span>In Words</span><strong>{numberToWords ? numberToWords(totals.grand) : ''}</strong></div>
                 </div>
                 <div className="quotation-bottom-actions">
-                    <button type="button" className="quotation-btn quotation-btn-ghost" onClick={onSaveDraft} disabled={saving}>{saving ? 'Saving...' : 'Save Draft'}</button>
-                    <button type="button" className="quotation-btn quotation-btn-primary-solid" onClick={onSaveConfirmed} disabled={saving}>{saving ? 'Saving...' : 'Save Quotation'}</button>
+                    <button type="button" className="quotation-btn quotation-btn-save-draft" onClick={onSaveDraft} disabled={saving}>
+                        {saving ? 'Saving…' : 'Save Draft'}
+                    </button>
+                    <button type="button" className="quotation-btn quotation-btn-save-confirm" onClick={onSaveConfirmed} disabled={saving}>
+                        {saving ? 'Saving…' : 'Save Quotation'}
+                    </button>
                 </div>
             </div>
 
             <div className="quotation-editor-utilities">
-                <button type="button" className="quotation-btn quotation-btn-ghost" onClick={onExportCustomerPdf} disabled={!form.id}>Customer PDF</button>
-                <button type="button" className="quotation-btn quotation-btn-ghost" onClick={onExportManagementPdf} disabled={!form.id}>Management PDF</button>
-                <button type="button" className="quotation-btn quotation-btn-ghost" onClick={onExportExcel} disabled={!form.id}>Excel</button>
-                <button type="button" className="quotation-btn quotation-btn-ghost" onClick={onDuplicate} disabled={!form.id}>Duplicate</button>
-                <button type="button" className="quotation-btn quotation-btn-danger" onClick={onDelete} disabled={!form.id}>Delete</button>
+                <div className="quotation-utilities-group">
+                    <span className="quotation-utilities-label">Export</span>
+                    <button type="button" className="quotation-btn quotation-btn-ghost" onClick={onExportCustomerPdf} disabled={!form.id} title={!form.id ? 'Save the quotation first' : 'Download customer PDF'}>
+                        ↓ Customer PDF
+                    </button>
+                    <button type="button" className="quotation-btn quotation-btn-ghost" onClick={onExportManagementPdf} disabled={!form.id} title={!form.id ? 'Save the quotation first' : 'Download management PDF'}>
+                        ↓ Management PDF
+                    </button>
+                </div>
+                <div className="quotation-utilities-group">
+                    <button type="button" className="quotation-btn quotation-btn-primary" onClick={onDuplicate} disabled={!form.id} title={!form.id ? 'Save the quotation first' : 'Duplicate this quotation'}>
+                        + Duplicate
+                    </button>
+                    <button type="button" className="quotation-btn quotation-btn-danger" onClick={onDelete} disabled={!form.id} title={!form.id ? 'Save the quotation first' : 'Delete this quotation'}>
+                        Delete
+                    </button>
+                </div>
             </div>
         </div>
     );

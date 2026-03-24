@@ -17,12 +17,8 @@ export default function AdminLayout({ children }) {
         return <>{children}</>;
     }
 
-    const contentClassName = activeSection === 'quotations'
-        ? 'admin-content admin-content-flush'
-        : 'admin-content';
-
     return (
-        <AdminShell activeSection={activeSection} contentClassName={contentClassName}>
+        <AdminShell activeSection={activeSection} contentClassName="admin-content">
             {children}
         </AdminShell>
     );
