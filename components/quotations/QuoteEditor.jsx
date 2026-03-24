@@ -137,8 +137,8 @@ function SaveCustomerPanel({ form, customers, onSaveCustomer, onClose }) {
     return (
         <div className="quotation-save-customer-panel">
             <div className="quotation-save-customer-header">
-                <strong>{existing ? '✏ Update Customer' : '+ Save as Customer'}</strong>
-                <button type="button" className="quotation-btn quotation-btn-ghost" onClick={onClose}>✕</button>
+                <strong>{existing ? 'Update Customer' : 'Save as Customer'}</strong>
+                <button type="button" className="quotation-btn quotation-btn-ghost" onClick={onClose}>Close</button>
             </div>
             <div className="quotation-form-grid quotation-form-grid-3">
                 <div className="quotation-field quotation-span-2">
@@ -673,7 +673,7 @@ export default function QuoteEditor({
                         className={`quotation-btn ${showPreview ? 'quotation-btn-primary' : 'quotation-btn-ghost'}`}
                         onClick={() => setShowPreview((v) => !v)}
                     >
-                        {showPreview ? '✕ Close Preview' : '👁 Preview'}
+                        {showPreview ? 'Close Preview' : 'Preview'}
                     </button>
                     <button type="button" className="quotation-btn quotation-btn-ghost" onClick={() => setShowActivityLog(true)}>
                         Activity
@@ -681,7 +681,7 @@ export default function QuoteEditor({
                     <button type="button" className="quotation-pro-btn-primary" onClick={form.status === 'Confirmed' ? onSaveConfirmed : onSaveDraft}>
                         {saving ? 'Saving...' : 'Save Quote'}
                     </button>
-                    <button type="button" className="quotation-btn quotation-btn-ghost" onClick={onBack}>✕</button>
+                    <button type="button" className="quotation-btn quotation-btn-ghost" onClick={onBack}>Close</button>
                 </div>
             </div>
 
@@ -697,7 +697,7 @@ export default function QuoteEditor({
                                 <span>{activeProfile.vatNumber}</span>
                             </div>
                         </div>
-                        <button type="button" className="quotation-header-edit-btn" onClick={() => setIsEditingHeader(true)}>✏️ Edit Header</button>
+                        <button type="button" className="quotation-header-edit-btn" onClick={() => setIsEditingHeader(true)}>Edit Header</button>
                     </div>
 
                     {isEditingHeader && (
@@ -755,7 +755,7 @@ export default function QuoteEditor({
                                         readOnly
                                     />
                                     <button type="button" className="quotation-link-btn" onClick={() => setIsEditingClient(!isEditingClient)} style={{ background: 'none', border: 'none', color: '#2563eb', fontSize: '0.8rem', textAlign: 'left', padding: '4px 0', cursor: 'pointer' }}>
-                                        {isEditingClient ? '✕ Close Details' : '✏️ Edit Address / Contact / TRN'}
+                                        {isEditingClient ? 'Close Details' : 'Edit Address / Contact / TRN'}
                                     </button>
                                 </div>
                             </div>
@@ -1051,9 +1051,9 @@ export default function QuoteEditor({
                                 </div>
                             )}
                             <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem', width: '100%', justifyContent: 'flex-end' }}>
-                                <button className="quotation-btn quotation-btn-ghost" onClick={onExportCustomerPdf} disabled={!form.id}>↓ Customer PDF</button>
-                                <button className="quotation-btn quotation-btn-ghost" onClick={onExportManagementPdf} disabled={!form.id}>↓ Management PDF</button>
-                                <button className="quotation-btn quotation-btn-ghost" onClick={onExportExcel} disabled={!form.id}>↓ Export Excel</button>
+                                <button className="quotation-btn quotation-btn-ghost" onClick={onExportCustomerPdf} disabled={!form.id}>Customer PDF</button>
+                                <button className="quotation-btn quotation-btn-ghost" onClick={onExportManagementPdf} disabled={!form.id}>Management PDF</button>
+                                <button className="quotation-btn quotation-btn-ghost" onClick={onExportExcel} disabled={!form.id}>Export Excel</button>
                             </div>
                         </div>
                     </div>
@@ -1072,7 +1072,7 @@ export default function QuoteEditor({
                     <div className="quotation-preview-modal" onClick={(e) => e.stopPropagation()} style={{ background: '#fff', width: '900px', maxWidth: '95vw', height: '90vh', borderRadius: '8px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                         <div className="quotation-preview-header" style={{ padding: '1rem', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontWeight: 600 }}>Live Preview</span>
-                            <button type="button" className="quotation-btn quotation-btn-ghost" onClick={() => setShowPreview(false)}>✕</button>
+                            <button type="button" className="quotation-btn quotation-btn-ghost" onClick={() => setShowPreview(false)}>Close</button>
                         </div>
                         <div className="quotation-preview-scroll" style={{ flex: 1, overflowY: 'auto', padding: '2rem', background: '#f1f5f9' }}>
                             <div style={{ background: '#fff', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', margin: '0 auto', maxWidth: '800px', minHeight: '100%' }}>
@@ -1095,7 +1095,7 @@ export default function QuoteEditor({
                     <div className="quotation-activity-modal" onClick={(e) => e.stopPropagation()}>
                         <div className="quotation-preview-header">
                             <span>Quotation Activity</span>
-                            <button type="button" className="quotation-btn quotation-btn-ghost" onClick={() => setShowActivityLog(false)}>âœ•</button>
+                            <button type="button" className="quotation-btn quotation-btn-ghost" onClick={() => setShowActivityLog(false)}>Close</button>
                         </div>
                         <div className="quotation-activity-scroll">
                             <QuotationActivityLog
@@ -1113,3 +1113,5 @@ export default function QuoteEditor({
         </div>
     );
 }
+
+

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import QuotationDashboardTable from '@/components/quotations/QuotationDashboardTable';
+import QuotationReports from '@/components/quotations/QuotationReports';
 import PriceReferenceManager from '@/components/quotations/PriceReferenceManager';
 import QuoteEditor from '@/components/quotations/QuoteEditor';
 import {
@@ -185,6 +186,7 @@ export default function QuotationsAdminPage() {
     const [saving, setSaving] = useState(false);
     const [referenceSaving, setReferenceSaving] = useState(false);
     const [viewMode, setViewMode] = useState('dashboard');
+    const [dashboardTab, setDashboardTab] = useState('overview');
     const [showManagement, setShowManagement] = useState(true);
     const [showReferenceManager, setShowReferenceManager] = useState(false);
     const [search, setSearch] = useState('');
@@ -656,6 +658,34 @@ export default function QuotationsAdminPage() {
         }
     }
 
+    async function updateQuoteStatus(id, status) {
+        if (!id || !status) return;
+        try {
+            const quote = await fetch(`/api/quotations/${id}`, { cache: 'no-store' }).then((response) => response.json().then((data) => ({ ok: response.ok, data })));
+            if (!quote.ok) throw new Error(quote.data.error || 'Failed to load quotation');
+
+            const response = await fetch(`/api/quotations/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ...quote.data,
+                    status,
+                }),
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Failed to update quotation status');
+
+            await loadQuotes(id === selectedId ? id : null);
+            if (id === selectedId) {
+                setForm(normalizeQuote(data));
+                await loadQuotationHistory(id);
+            }
+            flash('success', `Quotation marked as ${status}`);
+        } catch (error) {
+            flash('error', error.message || 'Failed to update quotation status');
+        }
+    }
+
     async function restoreQuoteVersion(version) {
         if (!form.id) return;
         if (!window.confirm(`Restore quotation to version ${version}?`)) return;
@@ -768,10 +798,13 @@ export default function QuotationsAdminPage() {
         total: quotes.length,
         confirmed: quotes.filter((quote) => quote.status === 'Confirmed').length,
         drafts: quotes.filter((quote) => quote.status === 'Draft').length,
-        pipeline: quotes.reduce((sum, quote) => sum + Number(quote.total_with_vat || 0), 0),
+        pipeline: quotes
+            .filter((quote) => quote.status === 'Confirmed')
+            .reduce((sum, quote) => sum + Number(quote.total_with_vat || 0), 0),
     };
-    const pipelineCurrencies = [...new Set(quotes.map((quote) => normalizeCurrencyCode(quote.currency_code)))];
-    const pipelineCurrencyCode = quotes.length === 0
+    const pipelineQuotes = quotes.filter((quote) => quote.status === 'Confirmed');
+    const pipelineCurrencies = [...new Set(pipelineQuotes.map((quote) => normalizeCurrencyCode(quote.currency_code)))];
+    const pipelineCurrencyCode = pipelineQuotes.length === 0
         ? DEFAULT_CURRENCY_CODE
         : (pipelineCurrencies.length === 1 ? pipelineCurrencies[0] : null);
 
@@ -794,7 +827,7 @@ export default function QuotationsAdminPage() {
                             <div className="quotation-dashboard-toolbar quotation-dashboard-toolbar-panel">
                                 <div className="quotation-dashboard-toolbar-filters">
                                     <div className="quotation-dashboard-search-shell">
-                                        <span className="quotation-dashboard-search-icon" aria-hidden="true">⌕</span>
+                                        <span className="quotation-dashboard-search-icon" aria-hidden="true"></span>
                                         <input
                                             className="quotation-input quotation-dashboard-search"
                                             type="search"
@@ -830,48 +863,72 @@ export default function QuotationsAdminPage() {
                             </div>
                         </div>
 
-                        <div className="quotation-dashboard-results-bar">
-                            <div className="quotation-dashboard-results-copy">
-                                Showing <strong>{filteredQuotes.length}</strong> of <strong>{quotes.length}</strong> quotations
-                            </div>
-                            {(search || statusFilter) ? (
-                                <button
-                                    type="button"
-                                    className="quotation-dashboard-reset"
-                                    onClick={() => {
-                                        setSearch('');
-                                        setStatusFilter('');
-                                    }}
-                                >
-                                    Reset filters
-                                </button>
-                            ) : (
-                                <div className="quotation-dashboard-results-hint">Use search or status to narrow results faster.</div>
-                            )}
+                        <div className="quotation-dashboard-tabs">
+                            <button
+                                type="button"
+                                className={`quotation-dashboard-tab ${dashboardTab === 'overview' ? 'quotation-dashboard-tab-active' : ''}`}
+                                onClick={() => setDashboardTab('overview')}
+                            >
+                                Dashboard
+                            </button>
+                            <button
+                                type="button"
+                                className={`quotation-dashboard-tab ${dashboardTab === 'reports' ? 'quotation-dashboard-tab-active' : ''}`}
+                                onClick={() => setDashboardTab('reports')}
+                            >
+                                Reports
+                            </button>
                         </div>
 
-                        <div className="quotation-dashboard-stats">
-                            <div className="quotation-dashboard-stat quotation-dashboard-stat-total"><span>Total Quotations</span><strong>{stats.total}</strong></div>
-                            <div className="quotation-dashboard-stat quotation-dashboard-stat-confirmed"><span>Confirmed</span><strong>{stats.confirmed}</strong></div>
-                            <div className="quotation-dashboard-stat quotation-dashboard-stat-drafts"><span>Drafts</span><strong>{stats.drafts}</strong></div>
-                            <div className="quotation-dashboard-stat quotation-dashboard-stat-pipeline">
-                                <span>Pipeline Value</span>
-                                <strong>{pipelineCurrencyCode ? formatMoney(stats.pipeline, pipelineCurrencyCode, { withCode: true }) : 'Mixed currencies'}</strong>
-                            </div>
-                        </div>
+                        {dashboardTab === 'overview' ? (
+                            <>
+                                <div className="quotation-dashboard-results-bar">
+                                    <div className="quotation-dashboard-results-copy">
+                                        Showing <strong>{filteredQuotes.length}</strong> of <strong>{quotes.length}</strong> quotations
+                                    </div>
+                                    {(search || statusFilter) ? (
+                                        <button
+                                            type="button"
+                                            className="quotation-dashboard-reset"
+                                            onClick={() => {
+                                                setSearch('');
+                                                setStatusFilter('');
+                                            }}
+                                        >
+                                            Reset filters
+                                        </button>
+                                    ) : (
+                                        <div className="quotation-dashboard-results-hint">Use search or status to narrow results faster.</div>
+                                    )}
+                                </div>
 
-                        <div className="quotation-card quotation-dashboard-table-card">
-                            <QuotationDashboardTable
-                                quotes={filteredQuotes}
-                                onOpen={openQuote}
-                                onDuplicate={duplicateQuote}
-                                onDelete={deleteQuote}
-                                onExportPdf={exportQuotePdf}
-                                onExportExcel={exportQuoteExcel}
-                                formatMoney={formatMoney}
-                                getReferenceSummary={getReferenceSummary}
-                            />
-                        </div>
+                                <div className="quotation-dashboard-stats">
+                                    <div className="quotation-dashboard-stat quotation-dashboard-stat-total"><span>Total Quotations</span><strong>{stats.total}</strong></div>
+                                    <div className="quotation-dashboard-stat quotation-dashboard-stat-confirmed"><span>Confirmed</span><strong>{stats.confirmed}</strong></div>
+                                    <div className="quotation-dashboard-stat quotation-dashboard-stat-drafts"><span>Drafts</span><strong>{stats.drafts}</strong></div>
+                                    <div className="quotation-dashboard-stat quotation-dashboard-stat-pipeline">
+                                        <span>Pipeline Value</span>
+                                        <strong>{pipelineCurrencyCode ? formatMoney(stats.pipeline, pipelineCurrencyCode, { withCode: true }) : 'Mixed currencies'}</strong>
+                                    </div>
+                                </div>
+
+                                <div className="quotation-card quotation-dashboard-table-card">
+                                    <QuotationDashboardTable
+                                        quotes={filteredQuotes}
+                                        onOpen={openQuote}
+                                        onDuplicate={duplicateQuote}
+                                        onDelete={deleteQuote}
+                                        onStatusChange={updateQuoteStatus}
+                                        onExportPdf={exportQuotePdf}
+                                        onExportExcel={exportQuoteExcel}
+                                        formatMoney={formatMoney}
+                                        getReferenceSummary={getReferenceSummary}
+                                    />
+                                </div>
+                            </>
+                        ) : (
+                            <QuotationReports />
+                        )}
                     </div>
                 ) : (
                     <QuoteEditor

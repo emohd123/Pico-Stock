@@ -1,12 +1,9 @@
-function StatusPill({ status }) {
-    return <span className={`quotation-status-pill quotation-status-pill-${String(status || 'Draft').toLowerCase()}`}>{status || 'Draft'}</span>;
-}
-
 export default function QuotationDashboardTable({
     quotes,
     onOpen,
     onDuplicate,
     onDelete,
+    onStatusChange,
     onExportPdf,
     onExportExcel,
     formatMoney,
@@ -64,7 +61,19 @@ export default function QuotationDashboardTable({
                             <td>
                                 <div className="quotation-dashboard-total">{formatMoney(quote.total_with_vat, quote.currency_code, { withCode: true })}</div>
                             </td>
-                            <td><StatusPill status={quote.status} /></td>
+                            <td>
+                                <div className={`quotation-dashboard-status-wrap quotation-status-pill quotation-status-pill-${String(quote.status || 'Draft').toLowerCase()}`}>
+                                    <select
+                                        className="quotation-input quotation-dashboard-status-select"
+                                        value={quote.status || 'Draft'}
+                                        onChange={(event) => onStatusChange?.(quote.id, event.target.value)}
+                                    >
+                                        <option value="Draft">Draft</option>
+                                        <option value="Confirmed">Confirmed</option>
+                                    </select>
+                                    <span className="quotation-dashboard-status-arrow" aria-hidden="true"></span>
+                                </div>
+                            </td>
                             <td>
                                 <div className="quotation-dashboard-actions">
                                     <button type="button" className="quotation-btn quotation-btn-ghost quotation-dashboard-action-btn" onClick={() => onOpen(quote.id)}>Edit</button>
