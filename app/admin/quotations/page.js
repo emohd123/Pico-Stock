@@ -594,6 +594,38 @@ function QuotationsAdminPageContent() {
         }
     }
 
+    async function deleteCustomers(customerIds = []) {
+        const ids = [...new Set((customerIds || []).map((id) => String(id)).filter(Boolean))];
+        if (!ids.length) return;
+        const selectedCustomerId = String(form.customer_id || '');
+        if (selectedCustomerId && ids.includes(selectedCustomerId)) {
+            flash('error', 'Switch away from the selected customer before deleting it');
+            return;
+        }
+        if (!window.confirm(`Delete ${ids.length} customer${ids.length > 1 ? 's' : ''}?`)) {
+            return;
+        }
+
+        try {
+            const results = await Promise.all(ids.map(async (id) => {
+                const response = await fetch(`/api/customers/${id}`, { method: 'DELETE' });
+                if (!response.ok) {
+                    const data = await response.json().catch(() => ({}));
+                    throw new Error(data.error || 'Failed to delete customer');
+                }
+                return true;
+            }));
+            if (results.length) {
+                const customerResponse = await fetch('/api/customers', { cache: 'no-store' });
+                const customerData = await customerResponse.json();
+                setCustomers(Array.isArray(customerData) ? customerData : []);
+                flash('success', `Deleted ${ids.length} customer${ids.length > 1 ? 's' : ''}`);
+            }
+        } catch (error) {
+            flash('error', error.message || 'Failed to delete customers');
+        }
+    }
+
     async function saveSignature(name, signatureImage, stampImage) {
         try {
             const response = await fetch('/api/signatures', {
@@ -1039,6 +1071,7 @@ function QuotationsAdminPageContent() {
                         onApplyReference={applyReference}
                 onApplyCustomer={applyCustomer}
                 onSaveCustomer={saveCustomer}
+                onDeleteCustomers={deleteCustomers}
                 onSaveSelectedCustomer={saveSelectedCustomerDetails}
                 onSaveSignature={saveSignature}
                         onSaveDraft={() => saveQuote('Draft')}

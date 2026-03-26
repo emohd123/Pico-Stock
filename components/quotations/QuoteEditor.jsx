@@ -240,6 +240,139 @@ function SaveCustomerPanel({ form, customers, onSaveCustomer, onClose }) {
     );
 }
 
+function CustomerDirectoryPanel({ customers, selectedCustomerId, onDeleteCustomers, onClose }) {
+    const [search, setSearch] = useState('');
+    const [selectedIds, setSelectedIds] = useState([]);
+    const filteredCustomers = customers.filter((customer) =>
+        [
+            customer.display_name,
+            customer.contact_to,
+            customer.contact_title,
+            customer.registration_number,
+            customer.email,
+            customer.phone,
+        ].some((value) => String(value || '').toLowerCase().includes(search.trim().toLowerCase()))
+    );
+
+    function toggleCustomer(id) {
+        setSelectedIds((current) =>
+            current.includes(id)
+                ? current.filter((value) => value !== id)
+                : [...current, id]
+        );
+    }
+
+    async function handleDelete(ids) {
+        if (!ids.length) return;
+        await onDeleteCustomers(ids);
+        setSelectedIds((current) => current.filter((value) => !ids.includes(value)));
+    }
+
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-box" style={{ width: 'min(960px, calc(100vw - 2rem))', padding: '1.25rem' }} onClick={(event) => event.stopPropagation()}>
+                <div className="quotation-save-customer-header">
+                    <strong>Manage Customers</strong>
+                    <button type="button" className="quotation-btn quotation-btn-ghost" onClick={onClose}>Close</button>
+                </div>
+                <div style={{ display: 'grid', gap: '0.9rem' }}>
+                    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+                        <input
+                            className="quotation-input"
+                            style={{ width: 'min(100%, 360px)' }}
+                            placeholder="Search customers..."
+                            value={search}
+                            onChange={(event) => setSearch(event.target.value)}
+                        />
+                        <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <span style={{ color: '#64748b', fontSize: '0.88rem' }}>{selectedIds.length} selected</span>
+                            <button
+                                type="button"
+                                className="quotation-btn quotation-btn-ghost"
+                                onClick={() => setSelectedIds(filteredCustomers.map((customer) => String(customer.id)))}
+                                disabled={!filteredCustomers.length}
+                            >
+                                Select Filtered
+                            </button>
+                            <button
+                                type="button"
+                                className="quotation-btn"
+                                style={{ background: '#fff1f2', borderColor: '#fecdd3', color: '#be123c' }}
+                                onClick={() => handleDelete(selectedIds)}
+                                disabled={!selectedIds.length}
+                            >
+                                Delete Selected
+                            </button>
+                        </div>
+                    </div>
+                    <div style={{ maxHeight: '60vh', overflow: 'auto', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
+                        {filteredCustomers.map((customer) => {
+                            const customerId = String(customer.id);
+                            const checked = selectedIds.includes(customerId);
+                            return (
+                                <label
+                                    key={customerId}
+                                    style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: '20px minmax(0, 1.3fr) minmax(0, 0.9fr) auto auto',
+                                        gap: '0.9rem',
+                                        alignItems: 'start',
+                                        padding: '0.85rem 1rem',
+                                        borderBottom: '1px solid #eef2f7',
+                                        background: checked ? '#f0fdfa' : '#fff',
+                                        cursor: 'pointer',
+                                    }}
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={checked}
+                                        onChange={() => toggleCustomer(customerId)}
+                                        style={{ marginTop: '0.2rem' }}
+                                    />
+                                    <div>
+                                        <div style={{ fontWeight: 700, color: '#0f172a' }}>{customer.display_name}</div>
+                                        <div style={{ color: '#64748b', fontSize: '0.84rem', marginTop: '0.2rem' }}>
+                                            {[customer.contact_to, customer.contact_title].filter(Boolean).join(' • ') || 'No main contact'}
+                                        </div>
+                                    </div>
+                                    <div style={{ color: '#475569', fontSize: '0.84rem' }}>
+                                        {customer.registration_number || customer.trn || 'No registration'}
+                                    </div>
+                                    <div style={{ color: '#64748b', fontSize: '0.82rem', minWidth: '140px' }}>
+                                        {customer.email || customer.phone || 'No email / phone'}
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                        <button
+                                            type="button"
+                                            className="quotation-btn quotation-btn-ghost"
+                                            style={{ color: '#be123c', borderColor: '#fecdd3', background: '#fff1f2', minHeight: '38px', padding: '0.45rem 0.8rem' }}
+                                            onClick={(event) => {
+                                                event.preventDefault();
+                                                event.stopPropagation();
+                                                handleDelete([customerId]);
+                                            }}
+                                            disabled={selectedCustomerId === customerId}
+                                            title={selectedCustomerId === customerId ? 'Cannot delete the currently selected customer' : 'Delete customer'}
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
+                                </label>
+                            );
+                        })}
+                        {!filteredCustomers.length ? (
+                            <div style={{ padding: '1.2rem', color: '#64748b', textAlign: 'center' }}>No customers found.</div>
+                        ) : null}
+                    </div>
+                    <div style={{ color: '#64748b', fontSize: '0.82rem' }}>
+                        The currently selected customer cannot be deleted until you switch to another one.
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 /* ─── Header Editor ────────────────────────────────────────────────────── */
 function HeaderEditor({ profile, onChange, onClose }) {
     const [local, setLocal] = useState({ ...profile });
@@ -689,6 +822,7 @@ export default function QuoteEditor({
     onApplyReference,
     onApplyCustomer,
     onSaveCustomer,
+    onDeleteCustomers,
     onSaveSelectedCustomer,
     onSaveSignature,
     onListChange,
@@ -709,6 +843,7 @@ export default function QuoteEditor({
     const [showPreview, setShowPreview] = useState(false);
     const [showActivityLog, setShowActivityLog] = useState(false);
     const [showSaveCustomer, setShowSaveCustomer] = useState(false);
+    const [showCustomerDirectory, setShowCustomerDirectory] = useState(false);
     const [isEditingClient, setIsEditingClient] = useState(!form.client_org);
     const [isEditingHeader, setIsEditingHeader] = useState(false);
     const selectedCustomerId = form.customer_id || customers.find((customer) => customer.display_name === form.client_org)?.id || '';
@@ -794,6 +929,7 @@ export default function QuoteEditor({
                                             ))}
                                         </select>
                                         <button type="button" className="quotation-btn-small" onClick={() => setShowSaveCustomer(true)} style={{ border: '1px solid #cbd5e1', borderRadius: '4px', background: '#fff', padding: '0 10px', fontSize: '12px' }}>+ New</button>
+                                        <button type="button" className="quotation-btn-small" onClick={() => setShowCustomerDirectory(true)} style={{ border: '1px solid #cbd5e1', borderRadius: '4px', background: '#fff', padding: '0 10px', fontSize: '12px' }}>Manage</button>
                                     </div>
                                     {showSaveCustomer && (
                                         <div style={{ marginTop: '1rem' }}>
@@ -1213,6 +1349,15 @@ export default function QuoteEditor({
                     </div>
                 </div>
             )}
+
+            {showCustomerDirectory ? (
+                <CustomerDirectoryPanel
+                    customers={customers}
+                    selectedCustomerId={selectedCustomerId}
+                    onDeleteCustomers={onDeleteCustomers}
+                    onClose={() => setShowCustomerDirectory(false)}
+                />
+            ) : null}
         </div>
     );
 }
