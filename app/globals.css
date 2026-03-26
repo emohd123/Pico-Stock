@@ -3790,12 +3790,17 @@ input[type="checkbox"] {
   gap: 0.9rem;
 }
 
+.quotation-dashboard-toolbar-filters {
+  min-width: 0;
+  width: 100%;
+}
+
 .quotation-dashboard-search-shell {
   display: flex;
   align-items: center;
   gap: 0.65rem;
   flex: 1;
-  min-width: 300px;
+  min-width: 0;
   padding: 0.35rem 0.45rem 0.35rem 0.85rem;
   border: 1px solid #d4e0e8;
   border-radius: 18px;
@@ -3855,6 +3860,7 @@ input[type="checkbox"] {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  flex: 0 0 236px;
   min-width: 236px;
 }
 
@@ -3881,6 +3887,7 @@ input[type="checkbox"] {
 .quotation-dashboard-toolbar-actions {
   display: grid;
   grid-template-columns: repeat(2, max-content);
+  flex: 0 0 auto;
   justify-content: end;
   align-items: end;
   gap: 0.85rem;
