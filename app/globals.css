@@ -3771,8 +3771,9 @@ input[type="checkbox"] {
 .quotation-dashboard-toolbar-panel {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.9rem;
-  padding: 1rem;
+  gap: 1rem 1.1rem;
+  align-items: end;
+  padding: 1.1rem 1.2rem;
   border: 1px solid #dce8ef;
   border-radius: 22px;
   background:
@@ -3785,8 +3786,8 @@ input[type="checkbox"] {
 .quotation-dashboard-toolbar-filters,
 .quotation-dashboard-toolbar-actions {
   display: flex;
-  align-items: center;
-  gap: 0.8rem;
+  align-items: end;
+  gap: 0.9rem;
 }
 
 .quotation-dashboard-search-shell {
@@ -3794,7 +3795,7 @@ input[type="checkbox"] {
   align-items: center;
   gap: 0.65rem;
   flex: 1;
-  min-width: 0;
+  min-width: 300px;
   padding: 0.35rem 0.45rem 0.35rem 0.85rem;
   border: 1px solid #d4e0e8;
   border-radius: 18px;
@@ -3831,7 +3832,7 @@ input[type="checkbox"] {
 }
 
 .quotation-dashboard-select {
-  min-width: 180px;
+  min-width: 236px;
 }
 
 .quotation-dashboard-search:focus {
@@ -3854,7 +3855,7 @@ input[type="checkbox"] {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  min-width: 190px;
+  min-width: 236px;
 }
 
 .quotation-dashboard-filter-label {
@@ -3864,13 +3865,25 @@ input[type="checkbox"] {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.1em;
+  line-height: 1;
+  min-height: 0.85rem;
 }
 
 .quotation-dashboard-toolbar-btn {
   min-height: 56px;
   border-radius: 18px;
-  padding-left: 1.1rem;
-  padding-right: 1.1rem;
+  padding-left: 1.2rem;
+  padding-right: 1.2rem;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.quotation-dashboard-toolbar-actions {
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  justify-content: end;
+  align-items: end;
+  gap: 0.85rem;
 }
 
 .quotation-dashboard-new-btn {
