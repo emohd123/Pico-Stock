@@ -103,6 +103,26 @@ function formatDateLabel(dateValue) {
     }).format(date);
 }
 
+async function readJsonResponse(response, fallbackMessage) {
+    const raw = await response.text();
+    let data = null;
+
+    try {
+        data = raw ? JSON.parse(raw) : null;
+    } catch {
+        if (!response.ok) {
+            throw new Error(fallbackMessage);
+        }
+        throw new Error('Received an invalid server response.');
+    }
+
+    if (!response.ok) {
+        throw new Error(data?.error || fallbackMessage);
+    }
+
+    return data;
+}
+
 function ReportsKpi({ label, value, tone = 'neutral', subcopy }) {
     return (
         <div className={`quotation-report-kpi quotation-report-kpi-${tone}`}>
@@ -146,10 +166,7 @@ export default function QuotationReports() {
                 if (filters.customer) query.set('customer', filters.customer);
 
                 const response = await fetch(`/api/quotations/reports?${query.toString()}`, { cache: 'no-store' });
-                const data = await response.json();
-                if (!response.ok) {
-                    throw new Error(data.error || 'Failed to load reports');
-                }
+                const data = await readJsonResponse(response, 'Failed to load reports');
                 if (!ignore) {
                     setReport(data);
                 }
@@ -188,10 +205,7 @@ export default function QuotationReports() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ report }),
                 });
-                const data = await response.json();
-                if (!response.ok) {
-                    throw new Error(data.error || 'Failed to load AI summary');
-                }
+                const data = await readJsonResponse(response, 'AI summary is temporarily unavailable.');
                 if (!ignore) {
                     setAiSummary(data);
                 }
