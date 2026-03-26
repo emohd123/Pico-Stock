@@ -146,16 +146,21 @@ function SignatureUploader({ name, signatures, onSaveSignature }) {
 
 /* ─── Save-as-Customer mini form ────────────────────────────────────────── */
 function SaveCustomerPanel({ form, customers, onSaveCustomer, onClose }) {
+    const existing = customers.find(
+        (c) => c.display_name.toLowerCase() === String(form.client_org || '').trim().toLowerCase()
+    );
     const [localForm, setLocalForm] = useState({
         display_name: form.client_org || '',
         contact_to: form.client_to || '',
+        contact_title: existing?.contact_title || '',
         address: form.client_location || '',
         trn: form.client_trn || '',
+        registration_number: existing?.registration_number || '',
         email: '',
         phone: '',
+        extra_contacts: Array.isArray(existing?.extra_contacts) ? existing.extra_contacts : [],
     });
-
-    const existing = customers.find(
+    const duplicate = customers.find(
         (c) => c.display_name.toLowerCase() === localForm.display_name.trim().toLowerCase()
     );
 
@@ -184,9 +189,17 @@ function SaveCustomerPanel({ form, customers, onSaveCustomer, onClose }) {
                     <label>Contact / Attention</label>
                     <input className="quotation-input" value={localForm.contact_to} onChange={(e) => setLocalForm({ ...localForm, contact_to: e.target.value })} />
                 </div>
+                <div className="quotation-field">
+                    <label>Contact Title</label>
+                    <input className="quotation-input" value={localForm.contact_title} onChange={(e) => setLocalForm({ ...localForm, contact_title: e.target.value })} />
+                </div>
                 <div className="quotation-field quotation-span-2">
                     <label>Address</label>
                     <input className="quotation-input" value={localForm.address} onChange={(e) => setLocalForm({ ...localForm, address: e.target.value })} />
+                </div>
+                <div className="quotation-field">
+                    <label>Registration Number</label>
+                    <input className="quotation-input" value={localForm.registration_number} onChange={(e) => setLocalForm({ ...localForm, registration_number: e.target.value })} />
                 </div>
                 <div className="quotation-field">
                     <label>Email</label>
@@ -196,11 +209,31 @@ function SaveCustomerPanel({ form, customers, onSaveCustomer, onClose }) {
                     <label>Phone</label>
                     <input className="quotation-input" value={localForm.phone} onChange={(e) => setLocalForm({ ...localForm, phone: e.target.value })} />
                 </div>
+                <div className="quotation-field quotation-span-2">
+                    <label>Additional Contacts</label>
+                    <textarea
+                        className="quotation-input quotation-textarea"
+                        rows={4}
+                        value={(localForm.extra_contacts || [])
+                            .map((contact) => [contact.name, contact.title, contact.email, contact.phone].filter(Boolean).join(' | '))
+                            .join('\n')}
+                        onChange={(e) => setLocalForm({
+                            ...localForm,
+                            extra_contacts: e.target.value
+                                .split('\n')
+                                .map((line) => {
+                                    const [name = '', title = '', email = '', phone = ''] = line.split('|').map((part) => part.trim());
+                                    return { name, title, email, phone };
+                                })
+                                .filter((contact) => contact.name || contact.title || contact.email || contact.phone),
+                        })}
+                    />
+                </div>
             </div>
             <div className="quotation-save-customer-actions">
-                {existing && <span className="quotation-customer-exists-badge">Will update existing record</span>}
+                {duplicate && <span className="quotation-customer-exists-badge">Will update existing record</span>}
                 <button type="button" className="quotation-btn quotation-btn-save-confirm" onClick={handleSave}>
-                    {existing ? 'Update Customer' : 'Save Customer'}
+                    {duplicate ? 'Update Customer' : 'Save Customer'}
                 </button>
             </div>
         </div>
@@ -486,10 +519,10 @@ function formatAttachmentSize(size) {
 }
 
 function downloadAttachment(attachment) {
-    if (!attachment?.data) return;
+    if (!attachment?.data && !attachment?.path) return;
     const link = document.createElement('a');
-    link.href = attachment.data;
-    link.download = attachment.name || 'attachment';
+    link.href = attachment.data || attachment.path;
+    link.download = attachment.original_name || attachment.name || 'attachment';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -679,6 +712,7 @@ export default function QuoteEditor({
     const [isEditingClient, setIsEditingClient] = useState(!form.client_org);
     const [isEditingHeader, setIsEditingHeader] = useState(false);
     const selectedCustomerId = form.customer_id || customers.find((customer) => customer.display_name === form.client_org)?.id || '';
+    const selectedCustomer = customers.find((customer) => String(customer.id) === String(selectedCustomerId)) || null;
     const salespersonOptions = [...new Set(signatures.map((signature) => String(signature.name || '').trim()).filter(Boolean))]
         .sort((left, right) => left.localeCompare(right));
     const itemTableColumns = showManagement
@@ -788,6 +822,39 @@ export default function QuoteEditor({
                                     <button type="button" className="quotation-link-btn" onClick={() => setIsEditingClient(!isEditingClient)} style={{ background: 'none', border: 'none', color: '#2563eb', fontSize: '0.8rem', textAlign: 'left', padding: '4px 0', cursor: 'pointer' }}>
                                         {isEditingClient ? 'Close Details' : 'Edit Address / Contact / TRN'}
                                     </button>
+                                    {selectedCustomer ? (
+                                        <div style={{ marginTop: '0.75rem', padding: '0.9rem 1rem', border: '1px solid #e2e8f0', borderRadius: '10px', background: '#ffffff' }}>
+                                            <div style={{ display: 'grid', gap: '0.65rem' }}>
+                                                {selectedCustomer.contact_title ? (
+                                                    <div>
+                                                        <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Contact Title</div>
+                                                        <div style={{ marginTop: '0.2rem', color: '#0f172a' }}>{selectedCustomer.contact_title}</div>
+                                                    </div>
+                                                ) : null}
+                                                {selectedCustomer.registration_number ? (
+                                                    <div>
+                                                        <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Registration Number</div>
+                                                        <div style={{ marginTop: '0.2rem', color: '#0f172a' }}>{selectedCustomer.registration_number}</div>
+                                                    </div>
+                                                ) : null}
+                                                {Array.isArray(selectedCustomer.extra_contacts) && selectedCustomer.extra_contacts.length ? (
+                                                    <div>
+                                                        <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Additional Contacts</div>
+                                                        <div style={{ display: 'grid', gap: '0.45rem', marginTop: '0.45rem' }}>
+                                                            {selectedCustomer.extra_contacts.map((contact, index) => (
+                                                                <div key={`${contact.name || 'contact'}-${index}`} style={{ padding: '0.55rem 0.7rem', borderRadius: '8px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                                                                    <div style={{ fontWeight: 700, color: '#0f172a' }}>{contact.name || 'Contact'}</div>
+                                                                    {contact.title ? <div style={{ color: '#475569', fontSize: '0.88rem' }}>{contact.title}</div> : null}
+                                                                    {contact.email ? <div style={{ color: '#2563eb', fontSize: '0.84rem' }}>{contact.email}</div> : null}
+                                                                    {contact.phone ? <div style={{ color: '#475569', fontSize: '0.84rem' }}>{contact.phone}</div> : null}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                ) : null}
+                                            </div>
+                                        </div>
+                                    ) : null}
                                 </div>
                             </div>
 
@@ -823,6 +890,11 @@ export default function QuoteEditor({
 
                         {/* Metadata Section */}
                         <div className="quotation-pro-section">
+                            {form.source_type === 'order' && form.source_order_reference ? (
+                                <div style={{ marginBottom: '1rem', padding: '0.85rem 1rem', borderRadius: '10px', background: '#eefbf7', border: '1px solid #bde6d8', color: '#0f766e', fontSize: '0.84rem', fontWeight: 700 }}>
+                                    Linked order: {form.source_order_reference}
+                                </div>
+                            ) : null}
                             <div className="quotation-pro-field-row">
                                 <label className="quotation-pro-label required">Quote#</label>
                                 <input className="quotation-pro-input" style={{ background: '#f8fafc', fontWeight: 600 }} value={`QT-${form.qt_number}`} readOnly />
