@@ -30,7 +30,7 @@ function OrderSuccessContent() {
                 <h1>Order Submitted!</h1>
                 <p>
                     Thank you for your order. Your request has been received and our team
-                    will review it shortly. You will receive a confirmation email with your order details.
+                    will review it shortly. Our team will prepare your quotation and send it to you after review.
                 </p>
 
                 {orderId && (
@@ -107,8 +107,8 @@ function OrderSuccessContent() {
                     <strong style={{ color: 'var(--pico-teal)' }}>What happens next?</strong>
                     <ol style={{ marginTop: '0.5rem', paddingLeft: '1.25rem', color: 'var(--text-secondary)' }}>
                         <li>Our team receives your order and reviews it</li>
-                        <li>A confirmation email is sent to you with order details</li>
-                        <li>Our team contacts you to finalize and confirm the order</li>
+                        <li>Our team prepares your internal quotation draft</li>
+                        <li>The quotation PDF is sent to you for review and confirmation</li>
                         <li>Items are delivered and set up at your booth</li>
                     </ol>
                 </div>

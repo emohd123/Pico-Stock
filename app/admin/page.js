@@ -263,26 +263,54 @@ export default function AdminDashboard() {
         }));
     };
 
-    // Send Zoho quote to customer
-    const handleSendQuote = async (orderId) => {
+    const openOrderQuotation = (quotationId) => {
+        if (!quotationId) return;
+        router.push(`/admin/quotations?tab=orders&quote=${encodeURIComponent(quotationId)}`);
+    };
+
+    const handleCreateQuote = async (orderId) => {
         setSendingQuote(prev => ({ ...prev, [orderId]: true }));
         try {
-            const res = await fetch('/api/quote', {
+            const res = await fetch('/api/quotations/from-order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ orderId }),
+                body: JSON.stringify({ orderId, reuseExisting: true }),
+            });
+            const data = await res.json();
+            if (res.ok && data?.id) {
+                showMsg('success', `Draft QT-${data.qt_number} ready in Quotation Studio`);
+                openOrderQuotation(data.id);
+                fetchData();
+                showMsg('success', `QT-${order.quotationQtNumber || ''} sent to customer`);
+            } else {
+                showMsg('error', data.error || 'Failed to create quotation');
+            }
+        } catch {
+            showMsg('error', 'Failed to create quotation.');
+        }
+        setSendingQuote(prev => ({ ...prev, [orderId]: false }));
+    };
+
+    const handleSendQuote = async (order) => {
+        if (!order?.quotationId) return;
+        setSendingQuote(prev => ({ ...prev, [order.id]: true }));
+        try {
+            const res = await fetch(`/api/quotations/${order.quotationId}/send`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ markConfirmed: false }),
             });
             const data = await res.json();
             if (data.success) {
-                showMsg('success', `✅ Quote ${data.estimate_number} sent to customer`);
+                showMsg('success', `QT-${order.quotationQtNumber || ''} sent to customer`);
                 fetchData();
             } else {
-                showMsg('error', `Quote failed: ${data.error}`);
+                showMsg('error', data.error || 'Failed to send quotation');
             }
         } catch {
-            showMsg('error', 'Failed to generate quote.');
+            showMsg('error', 'Failed to send quotation.');
         }
-        setSendingQuote(prev => ({ ...prev, [orderId]: false }));
+        setSendingQuote(prev => ({ ...prev, [order.id]: false }));
     };
 
     // Order status update
@@ -813,33 +841,47 @@ export default function AdminDashboard() {
                                                     </div>
                                                 )}
 
-                                                {/* Zoho Quote Link */}
-                                                {order.zohoQuoteId && (
+                                                {order.quotationId && (
                                                     <div style={{ marginTop: '0.75rem', padding: '8px 12px', background: '#f0fdfa', borderRadius: '6px', border: '1px solid #a7f3d0', fontSize: '0.82rem', color: '#065f46' }}>
-                                                        📋 Zoho Quote: <strong>{order.zohoQuoteId}</strong>
-                                                        <a href={`https://books.zoho.com/app/916511405#/estimates`} target="_blank" rel="noreferrer" style={{ marginLeft: '8px', color: '#00A5A5' }}>
-                                                            View in Zoho →
-                                                        </a>
+                                                        <strong>Internal Quote:</strong> QT-{order.quotationQtNumber || '--'}
+                                                        <span style={{ marginLeft: '8px', color: '#0f766e' }}>{order.quotationStatus || 'Draft'}</span>
+                                                        {order.quotationSentAt ? (
+                                                            <span style={{ marginLeft: '8px', color: '#64748b' }}>Sent: {new Date(order.quotationSentAt).toLocaleString()}</span>
+                                                        ) : null}
                                                     </div>
                                                 )}
 
                                                 {/* Actions */}
                                                 <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                                    {!order.zohoQuoteId && (order.status === 'pending' || order.status === 'confirmed') && (
-                                                        <button
-                                                            className="btn btn-primary btn-sm"
-                                                            onClick={() => handleSendQuote(order.id)}
-                                                            disabled={sendingQuote[order.id]}
-                                                        >
-                                                            {sendingQuote[order.id] ? '⏳ Generating...' : '📄 Send Quote'}
+                                                    {order.quotationId && (
+                                                        <button className="btn btn-primary btn-sm" onClick={() => openOrderQuotation(order.quotationId)}>
+                                                            Open Quote
                                                         </button>
                                                     )}
-                                                    {order.zohoQuoteId && order.status === 'quoted' && (
+                                                    {!order.quotationId && (order.status === 'pending' || order.status === 'confirmed') && (
+                                                        <button
+                                                            className="btn btn-primary btn-sm"
+                                                            onClick={() => handleCreateQuote(order.id)}
+                                                            disabled={sendingQuote[order.id]}
+                                                        >
+                                                            {sendingQuote[order.id] ? 'Preparing...' : 'Create Quote'}
+                                                        </button>
+                                                    )}
+                                                    {order.quotationId && order.quotationStatus === 'Draft' && (
+                                                        <button
+                                                            className="btn btn-secondary btn-sm"
+                                                            onClick={() => handleSendQuote(order)}
+                                                            disabled={sendingQuote[order.id]}
+                                                        >
+                                                            {sendingQuote[order.id] ? 'Sending...' : 'Send Quote Email'}
+                                                        </button>
+                                                    )}
+                                                    {order.quotationId && order.status === 'quoted' && (
                                                         <button className="btn btn-primary btn-sm" onClick={() => handleOrderStatus(order.id, 'confirmed')}>
                                                             ✅ Confirm Order
                                                         </button>
                                                     )}
-                                                    {order.status === 'pending' && (
+                                                    {order.status === 'pending' && !order.quotationId && (
                                                         <button className="btn btn-secondary btn-sm" onClick={() => handleOrderStatus(order.id, 'confirmed')}>
                                                             ✅ Confirm Order
                                                         </button>

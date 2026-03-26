@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getOrders, addOrder, updateOrder, getOrderById, deleteOrder } from '@/lib/store';
+import { createQuotationFromOrder } from '@/lib/quotationStore';
 
 export async function GET(request) {
     try {
@@ -40,7 +41,16 @@ export async function POST(request) {
         };
 
         const created = await addOrder(order);
-        return NextResponse.json({ success: true, order: created });
+        const quotation = await createQuotationFromOrder(created, { reuseExisting: true });
+        const linkedOrder = await updateOrder(created.id, {
+            quotationId: quotation.id,
+            quotationQtNumber: quotation.qt_number,
+            quotationStatus: quotation.status,
+            quotationSentAt: quotation.email_sent_at || null,
+            quotationConfirmedAt: quotation.confirmed_at || null,
+        });
+
+        return NextResponse.json({ success: true, order: linkedOrder || created, quotation });
     } catch (error) {
         return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });
     }

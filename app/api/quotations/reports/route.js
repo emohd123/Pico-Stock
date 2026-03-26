@@ -3,6 +3,7 @@ import { getQuotationReportSource } from '@/lib/quotationStore';
 import { buildQuotationReport } from '@/lib/quotationReports';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
     try {

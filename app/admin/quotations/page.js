@@ -208,6 +208,7 @@ function QuotationsAdminPageContent() {
     const [selectedId, setSelectedId] = useState(null);
     const [form, setForm] = useState(createDraft(null));
     const [quotationHistory, setQuotationHistory] = useState([]);
+    const [pendingAiHistoryMeta, setPendingAiHistoryMeta] = useState(null);
     const [message, setMessage] = useState({ type: '', text: '' });
 
     const priceReferenceMap = useMemo(() => {
@@ -221,6 +222,13 @@ function QuotationsAdminPageContent() {
         setMessage({ type, text });
         window.clearTimeout(quotationMessageTimer);
         quotationMessageTimer = window.setTimeout(() => setMessage({ type: '', text: '' }), 3200);
+    }
+
+    function queueAiHistoryMeta(activity_type, activity_summary) {
+        setPendingAiHistoryMeta({
+            activity_type: String(activity_type || '').trim(),
+            activity_summary: String(activity_summary || '').trim(),
+        });
     }
 
     async function fetchNextDraftNumber() {
@@ -243,6 +251,7 @@ function QuotationsAdminPageContent() {
             const data = await response.json();
             if (!response.ok) throw new Error(data.error || 'Failed to load quotation');
             setSelectedId(data.id);
+            setPendingAiHistoryMeta(null);
             setForm(normalizeQuote(data));
             await loadQuotationHistory(data.id);
             if (switchView) setViewMode('editor');
@@ -288,10 +297,12 @@ function QuotationsAdminPageContent() {
                 await openQuote(nextSelectedId, false);
             } else if (nextQuotes[0]) {
                 setSelectedId(nextQuotes[0].id);
+                setPendingAiHistoryMeta(null);
                 setForm(normalizeQuote(nextQuotes[0]));
             } else {
                 const nextNumber = await fetchNextDraftNumber();
                 setSelectedId(null);
+                setPendingAiHistoryMeta(null);
                 setForm(createDraft(nextNumber));
             }
         } catch (error) {
@@ -345,12 +356,14 @@ function QuotationsAdminPageContent() {
 
                 if (nextQuotes[0]) {
                     setSelectedId(nextQuotes[0].id);
+                    setPendingAiHistoryMeta(null);
                     setForm(normalizeQuote(nextQuotes[0]));
                     await loadQuotationHistory(nextQuotes[0].id);
                 } else {
                     const nextNumber = await fetchNextDraftNumber();
                     if (cancelled) return;
                     setSelectedId(null);
+                    setPendingAiHistoryMeta(null);
                     setForm(createDraft(nextNumber));
                     setQuotationHistory([]);
                 }
@@ -372,6 +385,7 @@ function QuotationsAdminPageContent() {
         try {
             const nextNumber = await fetchNextDraftNumber();
             setSelectedId(null);
+            setPendingAiHistoryMeta(null);
             setForm(createDraft(nextNumber));
             setQuotationHistory([]);
             setViewMode('editor');
@@ -644,6 +658,105 @@ function QuotationsAdminPageContent() {
         }
     }
 
+    function mergeAiDraftIntoForm(current, draftPatch = {}, result = {}) {
+        const next = normalizeQuote({
+            ...current,
+            ...draftPatch,
+            project_title: draftPatch.project_title ?? current.project_title,
+            subject: draftPatch.subject ?? current.subject,
+            exclusions: Array.isArray(draftPatch.exclusions) && draftPatch.exclusions.length ? draftPatch.exclusions : current.exclusions,
+            terms: Array.isArray(draftPatch.terms) && draftPatch.terms.length ? draftPatch.terms : current.terms,
+            payment_terms: Array.isArray(draftPatch.payment_terms) && draftPatch.payment_terms.length ? draftPatch.payment_terms : current.payment_terms,
+            sections: Array.isArray(draftPatch.sections) && draftPatch.sections.length ? draftPatch.sections : current.sections,
+            notes: [
+                current.notes,
+                draftPatch.notes || '',
+                Array.isArray(result.assumptions) && result.assumptions.length
+                    ? `AI assumptions:\n${result.assumptions.map((item) => `- ${item}`).join('\n')}`
+                    : '',
+                Array.isArray(result.missing_details) && result.missing_details.length
+                    ? `AI follow-up needed:\n${result.missing_details.map((item) => `- ${item}`).join('\n')}`
+                    : '',
+            ].filter(Boolean).join('\n\n'),
+        });
+        return next;
+    }
+
+    async function generateAiDraft({ brief = '', files = [] } = {}) {
+        const response = await fetch('/api/quotations/ai/draft', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                quotation: form,
+                brief,
+                files,
+            }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to generate AI draft');
+        setForm((current) => mergeAiDraftIntoForm(current, data.draft_patch || {}, data));
+        queueAiHistoryMeta('ai-draft', data.summary || 'AI generated a quotation draft');
+        return data;
+    }
+
+    async function suggestAiPricing() {
+        const response = await fetch('/api/quotations/ai/pricing', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ quotation: form }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to generate AI pricing suggestions');
+        if (Array.isArray(data.suggestions) && data.suggestions.length) {
+            applyAiPricingSuggestions(data.suggestions);
+        }
+        return data;
+    }
+
+    function applyAiPricingSuggestions(suggestions = []) {
+        const byKey = new Map(
+            (Array.isArray(suggestions) ? suggestions : []).map((suggestion) => [
+                `${suggestion.sectionIndex}:${suggestion.itemIndex}`,
+                suggestion,
+            ])
+        );
+        setForm((current) => normalizeQuote({
+            ...current,
+            sections: (current.sections || []).map((section, sectionIndex) => ({
+                ...section,
+                selling_rule: (Array.isArray(suggestions) ? suggestions : []).find(
+                    (suggestion) => Number(suggestion.sectionIndex) === sectionIndex && suggestion.selling_rule
+                )?.selling_rule || section.selling_rule,
+                items: (section.items || []).map((item, itemIndex) => {
+                    const suggestion = byKey.get(`${sectionIndex}:${itemIndex}`);
+                    if (!suggestion) return item;
+                    return {
+                        ...item,
+                        price_reference_id: suggestion.reference_id || item.price_reference_id,
+                        costs_bhd: suggestion.costs_bhd ?? item.costs_bhd,
+                        rate: suggestion.rate ?? item.rate,
+                    };
+                }),
+            })),
+        }));
+        queueAiHistoryMeta('ai-pricing', `AI applied ${suggestions.length} pricing suggestion${suggestions.length === 1 ? '' : 's'}`);
+    }
+
+    async function reviewAiQuote({ brief = '', files = [] } = {}) {
+        const response = await fetch('/api/quotations/ai/review', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                quotation: form,
+                brief,
+                files,
+            }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to review quotation');
+        return data;
+    }
+
     async function saveQuote(nextStatus) {
         if (!form.project_title.trim()) return flash('error', 'Project title is required');
         if (!form.created_by.trim()) return flash('error', 'Created by is required');
@@ -665,6 +778,7 @@ function QuotationsAdminPageContent() {
                     status: isOrderConfirmation ? 'Draft' : (nextStatus || form.status),
                     total_selling: totals.client,
                     total_with_vat: totals.grand,
+                    history_meta: pendingAiHistoryMeta,
                 }),
             });
             const data = await response.json();
@@ -684,6 +798,7 @@ function QuotationsAdminPageContent() {
 
             setSelectedId(finalQuote.id);
             setForm(normalizeQuote(finalQuote));
+            setPendingAiHistoryMeta(null);
             await loadQuotationHistory(finalQuote.id);
             await loadQuotes(finalQuote.id);
             setViewMode('dashboard');
@@ -1074,7 +1189,11 @@ function QuotationsAdminPageContent() {
                 onDeleteCustomers={deleteCustomers}
                 onSaveSelectedCustomer={saveSelectedCustomerDetails}
                 onSaveSignature={saveSignature}
-                        onSaveDraft={() => saveQuote('Draft')}
+                onGenerateAiDraft={generateAiDraft}
+                onSuggestAiPricing={suggestAiPricing}
+                onApplyAiPricingSuggestions={applyAiPricingSuggestions}
+                onReviewAiQuote={reviewAiQuote}
+                onSaveDraft={() => saveQuote('Draft')}
                         onSaveConfirmed={() => saveQuote('Confirmed')}
                         onExportCustomerPdf={() => exportQuotePdf(form.id, 'customer')}
                         onExportManagementPdf={() => exportQuotePdf(form.id, 'management')}

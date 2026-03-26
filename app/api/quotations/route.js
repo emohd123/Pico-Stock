@@ -7,9 +7,10 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search') || '';
     const status = searchParams.get('status') || '';
+    const sourceType = searchParams.get('source_type') || '';
 
     try {
-        const quotations = await getQuotations({ search, status });
+        const quotations = await getQuotations({ search, status, sourceType });
         return NextResponse.json(quotations);
     } catch (error) {
         return NextResponse.json({ error: 'Failed to fetch quotations' }, { status: 500 });

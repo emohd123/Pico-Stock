@@ -45,6 +45,11 @@ export default function QuotationDashboardTable({
                             <td>{quote.date || '--'}</td>
                             <td>
                                 <div className="quotation-dashboard-project">{quote.project_title || 'Untitled quotation'}</div>
+                                {quote.source_type === 'order' && quote.source_order_reference ? (
+                                    <div style={{ marginTop: '0.35rem', fontSize: '0.76rem', color: '#64748b' }}>
+                                        From order: {quote.source_order_reference}
+                                    </div>
+                                ) : null}
                             </td>
                             <td>
                                 <div className="quotation-dashboard-client">{quote.client_org || quote.client_to || '--'}</div>
@@ -52,6 +57,11 @@ export default function QuotationDashboardTable({
                             <td>{quote.created_by || '--'}</td>
                             <td>
                                 <div className="quotation-dashboard-reference">{getReferenceSummary ? getReferenceSummary(quote) : '--'}</div>
+                                {quote.email_sent_at ? (
+                                    <div style={{ marginTop: '0.35rem', fontSize: '0.76rem', color: '#64748b' }}>
+                                        Sent: {new Date(quote.email_sent_at).toLocaleDateString()}
+                                    </div>
+                                ) : null}
                                 {Array.isArray(quote.attachments) && quote.attachments.length > 0 ? (
                                     <div style={{ marginTop: '0.35rem', fontSize: '0.76rem', color: '#64748b' }}>
                                         Files: {quote.attachments.length}

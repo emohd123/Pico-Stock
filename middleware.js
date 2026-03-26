@@ -17,7 +17,6 @@ function isProtectedApiRequest(pathname, method) {
     if (pathname === '/api/extract') return true;
     if (pathname === '/api/sync-stock') return true;
     if (pathname === '/api/email') return true;
-    if (pathname === '/api/quote') return true;
     if (pathname === '/api/admin/logout') return true;
     if (pathname === '/api/products') return method !== 'GET';
     if (pathname === '/api/orders') return method !== 'POST';

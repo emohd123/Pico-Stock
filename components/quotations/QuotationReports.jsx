@@ -127,6 +127,9 @@ export default function QuotationReports() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [isPrinting, setIsPrinting] = useState(false);
+    const [aiSummary, setAiSummary] = useState(null);
+    const [aiLoading, setAiLoading] = useState(false);
+    const [aiError, setAiError] = useState('');
 
     useEffect(() => {
         let ignore = false;
@@ -166,6 +169,49 @@ export default function QuotationReports() {
             ignore = true;
         };
     }, [filters]);
+
+    useEffect(() => {
+        if (!report) {
+            setAiSummary(null);
+            setAiError('');
+            return;
+        }
+
+        let ignore = false;
+
+        async function loadAiSummary() {
+            setAiLoading(true);
+            setAiError('');
+            try {
+                const response = await fetch('/api/quotations/ai/report-summary', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ report }),
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to load AI summary');
+                }
+                if (!ignore) {
+                    setAiSummary(data);
+                }
+            } catch (summaryError) {
+                if (!ignore) {
+                    setAiError(summaryError.message || 'Failed to load AI summary');
+                    setAiSummary(null);
+                }
+            } finally {
+                if (!ignore) {
+                    setAiLoading(false);
+                }
+            }
+        }
+
+        loadAiSummary();
+        return () => {
+            ignore = true;
+        };
+    }, [report]);
 
     function applyPreset(nextPreset) {
         const range = dateRangeFromPreset(nextPreset);
@@ -360,6 +406,48 @@ export default function QuotationReports() {
                                 ].join(' | ')}
                             </strong>
                         </div>
+                    </section>
+
+                    <section className="quotation-report-card quotation-report-card-wide" style={{ marginBottom: '1.35rem' }}>
+                        <div className="quotation-report-card-head">
+                            <div>
+                                <h3>AI Management Summary</h3>
+                                <p>Internal narrative summary of the filtered quotation performance window.</p>
+                            </div>
+                        </div>
+                        {aiLoading ? (
+                            <div className="quotation-report-empty-note">Preparing AI management summary...</div>
+                        ) : aiError ? (
+                            <div className="quotation-report-empty-note" style={{ color: '#b91c1c' }}>{aiError}</div>
+                        ) : aiSummary ? (
+                            <div style={{ display: 'grid', gap: '1rem' }}>
+                                <div style={{ color: '#334155', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
+                                    {String(aiSummary.summary_markdown || '').replace(/\*\*/g, '')}
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '1rem' }}>
+                                    <div style={{ padding: '0.95rem 1rem', borderRadius: '14px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                                        <div style={{ fontWeight: 700, color: '#0f172a', marginBottom: '0.45rem' }}>Highlights</div>
+                                        <ul style={{ margin: 0, paddingLeft: '1rem', color: '#475569', lineHeight: 1.7 }}>
+                                            {(aiSummary.highlights || []).map((item, index) => <li key={`highlight-${index}`}>{item}</li>)}
+                                        </ul>
+                                    </div>
+                                    <div style={{ padding: '0.95rem 1rem', borderRadius: '14px', background: '#fffaf0', border: '1px solid #fde68a' }}>
+                                        <div style={{ fontWeight: 700, color: '#92400e', marginBottom: '0.45rem' }}>Risks</div>
+                                        <ul style={{ margin: 0, paddingLeft: '1rem', color: '#78350f', lineHeight: 1.7 }}>
+                                            {(aiSummary.risks || []).length ? (aiSummary.risks || []).map((item, index) => <li key={`risk-${index}`}>{item}</li>) : <li>No major risks flagged for this range.</li>}
+                                        </ul>
+                                    </div>
+                                    <div style={{ padding: '0.95rem 1rem', borderRadius: '14px', background: '#ecfeff', border: '1px solid #a5f3fc' }}>
+                                        <div style={{ fontWeight: 700, color: '#155e75', marginBottom: '0.45rem' }}>Recommended Actions</div>
+                                        <ul style={{ margin: 0, paddingLeft: '1rem', color: '#164e63', lineHeight: 1.7 }}>
+                                            {(aiSummary.actions || []).map((item, index) => <li key={`action-${index}`}>{item}</li>)}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="quotation-report-empty-note">No AI summary is available for the current filters.</div>
+                        )}
                     </section>
 
                     <div className="quotation-reports-kpis">

@@ -772,6 +772,17 @@ function QuotationActivityLog({ history = [], onRestoreVersion, disabled }) {
                             <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.18rem' }}>
                                 {entry.changed_by || 'Unknown'} · {entry.status || 'Draft'}
                             </div>
+                            {entry.activity_type ? (
+                                <div style={{ marginTop: '0.42rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.72rem', fontWeight: 700, color: '#0f766e', background: '#ecfdf5', border: '1px solid #bbf7d0', borderRadius: '999px', padding: '0.24rem 0.55rem' }}>
+                                    <span>AI</span>
+                                    <span>{String(entry.activity_type || '').replace(/^ai-/, '').replace(/-/g, ' ')}</span>
+                                </div>
+                            ) : null}
+                            {entry.activity_summary ? (
+                                <div style={{ fontSize: '0.8rem', color: '#475569', marginTop: '0.45rem', lineHeight: 1.5 }}>
+                                    {entry.activity_summary}
+                                </div>
+                            ) : null}
                             <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '0.18rem' }}>
                                 {entry.changed_at ? new Date(entry.changed_at).toLocaleString() : '--'}
                             </div>
@@ -793,6 +804,22 @@ function QuotationActivityLog({ history = [], onRestoreVersion, disabled }) {
 }
 
 /* ─── Main QuoteEditor ──────────────────────────────────────────────────── */
+function fileToAiPayload(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            resolve({
+                name: file.name,
+                type: file.type || 'application/octet-stream',
+                size: Number(file.size || 0),
+                data: String(reader.result || ''),
+            });
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
 export default function QuoteEditor({
     form,
     saving,
@@ -825,6 +852,10 @@ export default function QuoteEditor({
     onDeleteCustomers,
     onSaveSelectedCustomer,
     onSaveSignature,
+    onGenerateAiDraft,
+    onSuggestAiPricing,
+    onApplyAiPricingSuggestions,
+    onReviewAiQuote,
     onListChange,
     onSaveDraft,
     onSaveConfirmed,
@@ -842,10 +873,18 @@ export default function QuoteEditor({
     const groupedPriceReferences = groupPriceReferences(priceReferences);
     const [showPreview, setShowPreview] = useState(false);
     const [showActivityLog, setShowActivityLog] = useState(false);
+    const [showAiAssistant, setShowAiAssistant] = useState(false);
     const [showSaveCustomer, setShowSaveCustomer] = useState(false);
     const [showCustomerDirectory, setShowCustomerDirectory] = useState(false);
     const [isEditingClient, setIsEditingClient] = useState(!form.client_org);
     const [isEditingHeader, setIsEditingHeader] = useState(false);
+    const [aiBrief, setAiBrief] = useState('');
+    const [aiFiles, setAiFiles] = useState([]);
+    const [aiBusy, setAiBusy] = useState(false);
+    const [aiBusyLabel, setAiBusyLabel] = useState('');
+    const [aiResult, setAiResult] = useState(null);
+    const [aiLibraryStats, setAiLibraryStats] = useState(null);
+    const [aiLibraryBusy, setAiLibraryBusy] = useState(false);
     const selectedCustomerId = form.customer_id || customers.find((customer) => customer.display_name === form.client_org)?.id || '';
     const selectedCustomer = customers.find((customer) => String(customer.id) === String(selectedCustomerId)) || null;
     const salespersonOptions = [...new Set(signatures.map((signature) => String(signature.name || '').trim()).filter(Boolean))]
@@ -855,6 +894,135 @@ export default function QuoteEditor({
         : '40px minmax(280px,1.45fr) 64px 78px 110px 92px';
 
     const activeProfile = form.company_profile || companyProfile;
+    const sectionHeaderControlStyle = {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.28rem',
+        minWidth: '122px',
+        padding: '0.55rem 0.65rem',
+        borderRadius: '12px',
+        background: 'rgba(255,255,255,0.92)',
+        border: '1px solid #dbe5f0',
+        boxShadow: '0 8px 18px rgba(15, 23, 42, 0.05)',
+    };
+    const sectionHeaderLabelStyle = {
+        fontSize: '0.68rem',
+        fontWeight: 800,
+        color: '#64748b',
+        textTransform: 'uppercase',
+        letterSpacing: '0.08em',
+        lineHeight: 1,
+    };
+
+    async function buildAiFilesPayload(fileList) {
+        const files = Array.from(fileList || []);
+        return Promise.all(files.map(fileToAiPayload));
+    }
+
+    async function handleAiFileChange(event) {
+        const files = Array.from(event.target.files || []);
+        setAiFiles(files);
+        setAiResult(null);
+    }
+
+    async function loadAiLibraryStatus() {
+        setAiLibraryBusy(true);
+        try {
+            const response = await fetch('/api/quotations/ai/library/import', { cache: 'no-store' });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Failed to load AI library status');
+            setAiLibraryStats(data.stats || null);
+        } catch (error) {
+            setAiResult({
+                type: 'AI Library',
+                error: error.message || 'Failed to load AI library status',
+            });
+        } finally {
+            setAiLibraryBusy(false);
+        }
+    }
+
+    async function importAiLibrary() {
+        setAiLibraryBusy(true);
+        try {
+            const response = await fetch('/api/quotations/ai/library/import', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({}),
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Failed to import quotation AI library');
+            setAiLibraryStats(data.stats || null);
+            setAiResult({
+                type: 'AI Library',
+                data: {
+                    summary: `Imported ${data.historical?.imported_records || 0} historical quotation groups and indexed ${data.system_indexed || 0} live system quotations.`,
+                    matched_quotations: [],
+                    library_stats: data.stats || null,
+                },
+            });
+        } catch (error) {
+            setAiResult({
+                type: 'AI Library',
+                error: error.message || 'Failed to import quotation AI library',
+            });
+        } finally {
+            setAiLibraryBusy(false);
+        }
+    }
+
+    async function runAiAction(label, action) {
+        setAiBusy(true);
+        setAiBusyLabel(label);
+        try {
+            const files = await buildAiFilesPayload(aiFiles);
+            const result = await action({ brief: aiBrief, files });
+            if (result?.library_stats) {
+                setAiLibraryStats(result.library_stats);
+            }
+            setAiResult({ type: label, data: result });
+        } catch (error) {
+            setAiResult({
+                type: label,
+                error: error.message || `Failed to ${label.toLowerCase()}`,
+            });
+        } finally {
+            setAiBusy(false);
+            setAiBusyLabel('');
+        }
+    }
+
+    function renderAiWarnings(result) {
+        const warnings = Array.isArray(result?.warnings) ? result.warnings : [];
+        if (!warnings.length) {
+            return <div style={{ color: '#0f766e', fontWeight: 600 }}>No obvious quotation issues were found.</div>;
+        }
+        return (
+            <div style={{ display: 'grid', gap: '0.65rem' }}>
+                {warnings.map((warning, index) => (
+                    <div
+                        key={`${warning.title || 'warning'}-${index}`}
+                        style={{
+                            padding: '0.8rem 0.9rem',
+                            borderRadius: '12px',
+                            border: '1px solid #e2e8f0',
+                            background: warning.severity === 'high' ? '#fff1f2' : warning.severity === 'medium' ? '#fff7ed' : '#f8fafc',
+                        }}
+                    >
+                        <div style={{ fontWeight: 700, color: '#0f172a', textTransform: 'capitalize' }}>
+                            {warning.severity || 'info'}: {warning.title}
+                        </div>
+                        <div style={{ marginTop: '0.35rem', color: '#475569', lineHeight: 1.5 }}>{warning.message}</div>
+                    </div>
+                ))}
+            </div>
+        );
+    }
+
+    useEffect(() => {
+        if (!showAiAssistant) return;
+        loadAiLibraryStatus();
+    }, [showAiAssistant]);
 
     return (
         <div className="quotation-editor-screen">
@@ -874,6 +1042,9 @@ export default function QuoteEditor({
                         onClick={() => setShowPreview((v) => !v)}
                     >
                         {showPreview ? 'Close Preview' : 'Preview'}
+                    </button>
+                    <button type="button" className="quotation-btn quotation-btn-ghost" onClick={() => setShowAiAssistant(true)}>
+                        AI Assistant
                     </button>
                     <button type="button" className="quotation-btn quotation-btn-ghost" onClick={() => setShowActivityLog(true)}>
                         Activity
@@ -1128,23 +1299,23 @@ export default function QuoteEditor({
 
                         {form.sections.map((section, sectionIndex) => (
                             <div key={`section-${sectionIndex}`} className="quotation-pro-section-row">
-                                <div style={{ background: 'linear-gradient(180deg, #eef4fb 0%, #e7eef8 100%)', padding: '0.9rem 0.95rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #d9e4f0' }}>
-                                    <div style={{ display: 'flex', gap: '0.85rem', alignItems: 'center' }}>
-                                        <span style={{ fontWeight: 900, color: '#5d7089', fontSize: '1.35rem', lineHeight: 1 }}>{String.fromCharCode(65 + sectionIndex)}</span>
+                                <div style={{ background: 'linear-gradient(180deg, #f4f8fd 0%, #eaf1fa 100%)', padding: '1rem 1rem 1.05rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #d9e4f0', gap: '1rem', flexWrap: 'wrap' }}>
+                                    <div style={{ display: 'flex', gap: '0.9rem', alignItems: 'center', minWidth: '320px', flex: '1 1 360px' }}>
+                                        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', borderRadius: '12px', fontWeight: 900, color: '#42617f', fontSize: '1.05rem', lineHeight: 1, background: '#ffffff', border: '1px solid #d8e2ee', boxShadow: '0 8px 16px rgba(15, 23, 42, 0.05)' }}>{String.fromCharCode(65 + sectionIndex)}</span>
                                         <input 
                                             className="quotation-pro-input" 
-                                            style={{ background: 'transparent', border: 'none', fontWeight: 800, textTransform: 'uppercase', width: '320px', fontSize: '1rem', color: '#243447', padding: 0, boxShadow: 'none' }} 
+                                            style={{ background: 'transparent', border: 'none', fontWeight: 800, textTransform: 'uppercase', width: '100%', maxWidth: '420px', fontSize: '1rem', color: '#243447', padding: 0, boxShadow: 'none', letterSpacing: '0.01em' }} 
                                             value={section.name} 
                                             onChange={e => onSectionChange(sectionIndex, s => ({ ...s, name: e.target.value.toUpperCase() }))}
                                             placeholder="Section Title..."
                                         />
                                     </div>
-                                    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                                        <div style={{ display: 'flex', gap: '0.45rem', alignItems: 'center', fontSize: '0.78rem', color: '#64748b', background: 'rgba(255,255,255,0.7)', border: '1px solid #d5dfeb', borderRadius: '999px', padding: '0.35rem 0.45rem 0.35rem 0.75rem' }}>
-                                            <label style={{ whiteSpace: 'nowrap' }}>Section Total</label>
+                                    <div style={{ display: 'flex', gap: '0.7rem', alignItems: 'stretch', flexWrap: 'wrap', justifyContent: 'flex-end', flex: '0 1 auto' }}>
+                                        <div style={sectionHeaderControlStyle}>
+                                            <label style={sectionHeaderLabelStyle}>Section Total</label>
                                             <input
                                                 className="quotation-pro-input"
-                                                style={{ width: '98px', padding: '4px 8px', height: '30px', borderRadius: '8px', background: '#fff' }}
+                                                style={{ width: '100%', padding: '6px 10px', height: '34px', borderRadius: '10px', background: '#fff', fontWeight: 700 }}
                                                 value={section.section_selling || ''}
                                                 onChange={e => onSectionChange(sectionIndex, s => ({ ...s, section_selling: e.target.value }))}
                                                 placeholder="Auto"
@@ -1152,12 +1323,12 @@ export default function QuoteEditor({
                                             />
                                         </div>
                                         {showManagement && (
-                                            <div style={{ display: 'flex', gap: '0.45rem', alignItems: 'center', fontSize: '0.78rem', color: '#64748b', background: 'rgba(255,255,255,0.7)', border: '1px solid #d5dfeb', borderRadius: '999px', padding: '0.35rem 0.45rem 0.35rem 0.75rem' }}>
-                                                <label style={{ whiteSpace: 'nowrap' }}>Selling %</label>
-                                                <input className="quotation-pro-input" style={{ width: '70px', padding: '4px 8px', height: '30px', borderRadius: '8px', background: '#fff' }} value={section.selling_rule} onChange={e => onSectionChange(sectionIndex, s => ({ ...s, selling_rule: e.target.value }))} />
+                                            <div style={{ ...sectionHeaderControlStyle, minWidth: '112px' }}>
+                                                <label style={sectionHeaderLabelStyle}>Selling %</label>
+                                                <input className="quotation-pro-input" style={{ width: '100%', padding: '6px 10px', height: '34px', borderRadius: '10px', background: '#fff', fontWeight: 700 }} value={section.selling_rule} onChange={e => onSectionChange(sectionIndex, s => ({ ...s, selling_rule: e.target.value }))} />
                                             </div>
                                         )}
-                                        <button className="quotation-btn-danger" style={{ padding: '0.45rem 0.8rem', fontSize: '11px', borderRadius: '999px' }} onClick={() => onRemoveSection(sectionIndex)}>Remove Section</button>
+                                        <button className="quotation-btn-danger" style={{ padding: '0.6rem 0.95rem', fontSize: '11px', borderRadius: '12px', alignSelf: 'stretch', minHeight: '50px', display: 'inline-flex', alignItems: 'center' }} onClick={() => onRemoveSection(sectionIndex)}>Remove Section</button>
                                     </div>
                                 </div>
 
@@ -1206,37 +1377,41 @@ export default function QuoteEditor({
                                     );
                                 })}
                                 {showManagement && (
-                                    <div style={{ display: 'grid', gridTemplateColumns: itemTableColumns, gap: '0.75rem', padding: '0.7rem 0.9rem', background: 'linear-gradient(180deg, #fffef7 0%, #fff9e8 100%)', borderBottom: '1px solid #eee2b5', alignItems: 'center' }}>
-                                        <div />
-                                        <div style={{ fontWeight: 700, color: '#9a3412', fontSize: '0.92rem' }}>Section Summary</div>
-                                        <div />
-                                        <div />
-                                        <div />
-                                        <div style={{ textAlign: 'right', fontWeight: 700, color: '#2563eb', lineHeight: 1.3, fontSize: '0.9rem' }}>{sellingRuleLabel(section.selling_rule)}</div>
-                                        <div style={{ textAlign: 'right', color: '#64748b', fontWeight: 700, lineHeight: 1.2 }}>
-                                            <span style={{ display: 'block', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Sub-Total</span>
-                                            <span style={{ fontSize: '0.98rem', color: '#475569' }}>{formatMoney(getSectionTotals(section).itemCostSubtotal)}</span>
-                                        </div>
-                                        <div style={{ textAlign: 'right', fontWeight: 700, color: '#a16207', lineHeight: 1.2 }}>
-                                            <span style={{ display: 'block', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Selling</span>
-                                            <span style={{ fontSize: '0.98rem' }}>{formatMoney(getSectionTotals(section).suggested)}</span>
+                                    <div style={{ padding: '0.95rem 1rem', background: 'linear-gradient(180deg, #fffef8 0%, #fff9eb 100%)', borderBottom: '1px solid #eee2b5' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                                            <div style={{ fontWeight: 800, color: '#9a3412', fontSize: '0.95rem' }}>Section Summary</div>
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(120px, auto))', gap: '0.75rem', alignItems: 'stretch' }}>
+                                                <div style={{ padding: '0.7rem 0.85rem', borderRadius: '12px', background: '#ffffff', border: '1px solid #e8dcc0', textAlign: 'right' }}>
+                                                    <span style={{ display: 'block', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#64748b', fontWeight: 800 }}>Selling Rule</span>
+                                                    <span style={{ display: 'block', marginTop: '0.25rem', fontWeight: 800, color: '#2563eb', lineHeight: 1.35 }}>{sellingRuleLabel(section.selling_rule)}</span>
+                                                </div>
+                                                <div style={{ padding: '0.7rem 0.85rem', borderRadius: '12px', background: '#ffffff', border: '1px solid #e8dcc0', textAlign: 'right' }}>
+                                                    <span style={{ display: 'block', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#64748b', fontWeight: 800 }}>Sub-Total</span>
+                                                    <span style={{ display: 'block', marginTop: '0.25rem', fontSize: '1rem', color: '#475569', fontWeight: 800 }}>{formatMoney(getSectionTotals(section).itemCostSubtotal)}</span>
+                                                </div>
+                                                <div style={{ padding: '0.7rem 0.85rem', borderRadius: '12px', background: '#ffffff', border: '1px solid #e8dcc0', textAlign: 'right' }}>
+                                                    <span style={{ display: 'block', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#64748b', fontWeight: 800 }}>Selling</span>
+                                                    <span style={{ display: 'block', marginTop: '0.25rem', fontSize: '1rem', color: '#a16207', fontWeight: 800 }}>{formatMoney(getSectionTotals(section).suggested)}</span>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 )}
                                 {!showManagement && (
-                                    <div style={{ display: 'grid', gridTemplateColumns: itemTableColumns, gap: '0.75rem', padding: '0.65rem 0.9rem', background: '#fbfcfe', borderBottom: '1px solid #e8eef5', alignItems: 'center' }}>
-                                        <div />
-                                        <div style={{ fontWeight: 700, color: '#64748b', fontSize: '0.88rem' }}>Customer Section Total</div>
-                                        <div />
-                                        <div />
-                                        <div style={{ textAlign: 'right', fontWeight: 700, color: '#0f766e' }}>
-                                            {formatMoney(getSectionTotals(section).client)}
+                                    <div style={{ padding: '0.8rem 1rem', background: '#fbfcfe', borderBottom: '1px solid #e8eef5' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                                            <div style={{ fontWeight: 700, color: '#64748b', fontSize: '0.9rem' }}>Customer Section Total</div>
+                                            <div style={{ padding: '0.65rem 0.85rem', borderRadius: '12px', background: '#ffffff', border: '1px solid #dbe5f0', textAlign: 'right', minWidth: '150px' }}>
+                                                <span style={{ display: 'block', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#64748b', fontWeight: 800 }}>Total</span>
+                                                <span style={{ display: 'block', marginTop: '0.25rem', fontWeight: 800, color: '#0f766e' }}>
+                                                    {formatMoney(getSectionTotals(section).client)}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div />
                                     </div>
                                 )}
-                                <div style={{ padding: '0.95rem 0.9rem 1rem', borderBottom: '1px solid #e2e8f0', background: '#fbfdff' }}>
-                                    <button className="quotation-pro-btn-primary" style={{ background: '#f8fbff', color: '#64748b', border: '1px dashed #c3d4e8', width: '100%', borderRadius: '10px' }} onClick={() => onAddItem(sectionIndex)}>+ Add Item Line</button>
+                                <div style={{ padding: '0.95rem 1rem 1.05rem', borderBottom: '1px solid #e2e8f0', background: '#fbfdff' }}>
+                                    <button className="quotation-pro-btn-primary" style={{ background: '#f8fbff', color: '#64748b', border: '1px dashed #c3d4e8', width: '100%', borderRadius: '12px', minHeight: '44px', fontWeight: 700 }} onClick={() => onAddItem(sectionIndex)}>+ Add Item Line</button>
                                 </div>
                             </div>
                         ))}
@@ -1305,6 +1480,205 @@ export default function QuoteEditor({
                     </button>
                 </div>
             </div>
+
+            {showAiAssistant && (
+                <div className="quotation-preview-overlay" onClick={() => setShowAiAssistant(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }}>
+                    <div onClick={(e) => e.stopPropagation()} style={{ background: '#fff', width: 'min(980px, 96vw)', maxHeight: '90vh', overflow: 'auto', borderRadius: '20px', boxShadow: '0 35px 90px rgba(15,23,42,0.28)', padding: '1.25rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.95rem' }}>
+                            <div>
+                                <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0f172a' }}>AI Assistant</div>
+                                <div style={{ color: '#64748b', fontSize: '0.88rem', marginTop: '0.2rem' }}>Generate a first draft, suggest pricing, and review the quote before sending.</div>
+                            </div>
+                            <button type="button" className="quotation-btn quotation-btn-ghost" onClick={() => setShowAiAssistant(false)}>Close</button>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 0.95fr) minmax(0, 1.05fr)', gap: '1rem', marginTop: '1rem' }}>
+                            <div style={{ display: 'grid', gap: '0.9rem' }}>
+                                <div style={{ padding: '1rem', border: '1px solid #e2e8f0', borderRadius: '16px', background: '#fbfdff' }}>
+                                    <div style={{ fontWeight: 700, color: '#1e293b', marginBottom: '0.55rem' }}>Brief</div>
+                                    <textarea
+                                        className="quotation-input quotation-textarea"
+                                        rows={8}
+                                        placeholder="Paste the client brief, notes, design scope, or the outcome you want the quotation to cover..."
+                                        value={aiBrief}
+                                        onChange={(event) => {
+                                            setAiBrief(event.target.value);
+                                            setAiResult(null);
+                                        }}
+                                    />
+                                </div>
+
+                                <div style={{ padding: '1rem', border: '1px solid #e2e8f0', borderRadius: '16px', background: '#fbfdff' }}>
+                                    <div style={{ fontWeight: 700, color: '#1e293b', marginBottom: '0.55rem' }}>Source Files</div>
+                                    <input type="file" multiple accept=".pdf,.ppt,.pptx,.xlsx,.xls,.txt,.png,.jpg,.jpeg,.webp" onChange={handleAiFileChange} />
+                                    <div style={{ marginTop: '0.55rem', color: '#64748b', fontSize: '0.82rem' }}>
+                                        Supports PDF, PPT/PPTX, Excel, text, and images for internal draft generation.
+                                    </div>
+                                    {aiFiles.length ? (
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', marginTop: '0.75rem' }}>
+                                            {aiFiles.map((file) => (
+                                                <span key={`${file.name}-${file.size}`} style={{ fontSize: '0.78rem', borderRadius: '999px', padding: '0.3rem 0.6rem', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' }}>
+                                                    {file.name}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    ) : null}
+                                </div>
+
+                                <div style={{ padding: '1rem', border: '1px solid #d9edf2', borderRadius: '16px', background: 'linear-gradient(180deg, #f5fdff 0%, #effbff 100%)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                                        <div>
+                                            <div style={{ fontWeight: 700, color: '#155e75' }}>AI Learning Library</div>
+                                            <div style={{ color: '#64748b', fontSize: '0.82rem', marginTop: '0.2rem' }}>Import old quotation spreadsheets once, then keep learning from future saved quotations automatically.</div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            className="quotation-btn quotation-btn-ghost"
+                                            onClick={importAiLibrary}
+                                            disabled={aiLibraryBusy}
+                                        >
+                                            {aiLibraryBusy ? 'Importing...' : 'Import Historical Library'}
+                                        </button>
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '0.65rem', marginTop: '0.85rem' }}>
+                                        <div style={{ padding: '0.7rem 0.8rem', borderRadius: '12px', background: '#fff', border: '1px solid #dbeafe' }}>
+                                            <div style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Historical</div>
+                                            <div style={{ marginTop: '0.25rem', fontWeight: 800, color: '#0f172a' }}>{aiLibraryStats?.historical_records ?? '--'}</div>
+                                        </div>
+                                        <div style={{ padding: '0.7rem 0.8rem', borderRadius: '12px', background: '#fff', border: '1px solid #dbeafe' }}>
+                                            <div style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>System</div>
+                                            <div style={{ marginTop: '0.25rem', fontWeight: 800, color: '#0f172a' }}>{aiLibraryStats?.system_records ?? '--'}</div>
+                                        </div>
+                                        <div style={{ padding: '0.7rem 0.8rem', borderRadius: '12px', background: '#fff', border: '1px solid #dbeafe' }}>
+                                            <div style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Last Import</div>
+                                            <div style={{ marginTop: '0.25rem', fontWeight: 700, color: '#0f172a', fontSize: '0.82rem' }}>
+                                                {aiLibraryStats?.historical_imported_at ? new Date(aiLibraryStats.historical_imported_at).toLocaleString() : (aiLibraryBusy ? 'Loading...' : 'Not imported yet')}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'grid', gap: '0.65rem' }}>
+                                    <button
+                                        type="button"
+                                        className="quotation-pro-btn-primary"
+                                        onClick={() => runAiAction('Generate Draft', onGenerateAiDraft)}
+                                        disabled={aiBusy}
+                                    >
+                                        {aiBusyLabel === 'Generate Draft' ? 'Generating Draft...' : 'Generate Draft'}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="quotation-btn quotation-btn-ghost"
+                                        onClick={() => runAiAction('Suggest Pricing', () => onSuggestAiPricing())}
+                                        disabled={aiBusy}
+                                    >
+                                        {aiBusyLabel === 'Suggest Pricing' ? 'Checking Pricing...' : 'Suggest Pricing'}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="quotation-btn quotation-btn-ghost"
+                                        onClick={() => runAiAction('Review Quote', onReviewAiQuote)}
+                                        disabled={aiBusy}
+                                    >
+                                        {aiBusyLabel === 'Review Quote' ? 'Reviewing Quote...' : 'Review Quote'}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div style={{ padding: '1rem', border: '1px solid #e2e8f0', borderRadius: '16px', background: '#fff', minHeight: '420px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', marginBottom: '0.85rem' }}>
+                                    <div>
+                                        <div style={{ fontWeight: 700, color: '#1e293b' }}>AI Results</div>
+                                        <div style={{ color: '#64748b', fontSize: '0.82rem', marginTop: '0.2rem' }}>The assistant updates the working draft only. Save when you are happy with the result.</div>
+                                    </div>
+                                </div>
+
+                                {!aiResult ? (
+                                    <div style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: 1.7 }}>
+                                        Use the assistant to build a draft from notes and files, suggest pricing from your saved references, or review the quote before export.
+                                    </div>
+                                ) : aiResult.error ? (
+                                    <div style={{ padding: '0.9rem 1rem', borderRadius: '12px', background: '#fff1f2', border: '1px solid #fecdd3', color: '#9f1239' }}>
+                                        {aiResult.error}
+                                    </div>
+                                ) : (
+                                    <div style={{ display: 'grid', gap: '0.9rem' }}>
+                                        <div style={{ padding: '0.9rem 1rem', borderRadius: '12px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                                            <div style={{ fontWeight: 700, color: '#0f172a' }}>{aiResult.type}</div>
+                                            {aiResult.data?.summary ? (
+                                                <div style={{ marginTop: '0.35rem', color: '#475569', lineHeight: 1.6 }}>{aiResult.data.summary}</div>
+                                            ) : null}
+                                        </div>
+
+                                        {Array.isArray(aiResult.data?.assumptions) && aiResult.data.assumptions.length ? (
+                                            <div>
+                                                <div style={{ fontWeight: 700, color: '#1e293b', marginBottom: '0.45rem' }}>Assumptions</div>
+                                                <ul style={{ margin: 0, paddingLeft: '1.1rem', color: '#475569', lineHeight: 1.7 }}>
+                                                    {aiResult.data.assumptions.map((item, index) => <li key={`${item}-${index}`}>{item}</li>)}
+                                                </ul>
+                                            </div>
+                                        ) : null}
+
+                                        {Array.isArray(aiResult.data?.missing_details) && aiResult.data.missing_details.length ? (
+                                            <div>
+                                                <div style={{ fontWeight: 700, color: '#1e293b', marginBottom: '0.45rem' }}>Still Needed</div>
+                                                <ul style={{ margin: 0, paddingLeft: '1.1rem', color: '#475569', lineHeight: 1.7 }}>
+                                                    {aiResult.data.missing_details.map((item, index) => <li key={`${item}-${index}`}>{item}</li>)}
+                                                </ul>
+                                            </div>
+                                        ) : null}
+
+                                        {Array.isArray(aiResult.data?.suggestions) ? (
+                                            <div style={{ display: 'grid', gap: '0.7rem' }}>
+                                                <div style={{ fontWeight: 700, color: '#1e293b' }}>Pricing Suggestions</div>
+                                                {aiResult.data.suggestions.length ? aiResult.data.suggestions.map((suggestion, index) => (
+                                                    <div key={`${suggestion.sectionIndex}-${suggestion.itemIndex}-${index}`} style={{ padding: '0.85rem 0.95rem', borderRadius: '12px', border: '1px solid #e2e8f0', background: '#fbfdff' }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
+                                                            <strong style={{ color: '#0f172a' }}>Section {Number(suggestion.sectionIndex) + 1}, item {Number(suggestion.itemIndex) + 1}</strong>
+                                                            <span style={{ fontSize: '0.78rem', color: '#0f766e', fontWeight: 700 }}>Confidence {(Number(suggestion.confidence || 0) * 100).toFixed(0)}%</span>
+                                                        </div>
+                                                        <div style={{ marginTop: '0.35rem', color: '#475569', lineHeight: 1.55 }}>{suggestion.reasoning}</div>
+                                                        <div style={{ marginTop: '0.45rem', display: 'flex', flexWrap: 'wrap', gap: '0.6rem', fontSize: '0.82rem', color: '#334155' }}>
+                                                            {suggestion.reference_title ? <span>Reference: {suggestion.reference_title}</span> : null}
+                                                            {suggestion.matched_quotation_label ? <span>Matched Quote: {suggestion.matched_quotation_label}</span> : null}
+                                                            {suggestion.costs_bhd !== undefined ? <span>Cost: {suggestion.costs_bhd}</span> : null}
+                                                            {suggestion.rate !== undefined ? <span>Rate: {suggestion.rate}</span> : null}
+                                                            {suggestion.selling_rule ? <span>Selling %: {suggestion.selling_rule}</span> : null}
+                                                        </div>
+                                                    </div>
+                                                )) : <div style={{ color: '#64748b' }}>No pricing suggestions were returned for the current quote.</div>}
+                                                {aiResult.data.suggestions.length ? <div style={{ color: '#0f766e', fontWeight: 700 }}>Pricing suggestions were applied to the working draft. Save the quotation when you are ready.</div> : null}
+                                            </div>
+                                        ) : null}
+
+                                        {Array.isArray(aiResult.data?.matched_quotations) && aiResult.data.matched_quotations.length ? (
+                                            <div>
+                                                <div style={{ fontWeight: 700, color: '#1e293b', marginBottom: '0.45rem' }}>Matched Quotations</div>
+                                                <div style={{ display: 'grid', gap: '0.55rem' }}>
+                                                    {aiResult.data.matched_quotations.map((match, index) => (
+                                                        <div key={`${match.source_key || match.source_label}-${index}`} style={{ padding: '0.8rem 0.9rem', border: '1px solid #e2e8f0', borderRadius: '12px', background: '#fbfdff' }}>
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
+                                                                <strong style={{ color: '#0f172a' }}>{match.source_label || match.title || 'Matched quotation'}</strong>
+                                                                <span style={{ fontSize: '0.78rem', color: '#64748b' }}>{match.source_type}</span>
+                                                            </div>
+                                                            <div style={{ marginTop: '0.35rem', color: '#475569', fontSize: '0.84rem' }}>
+                                                                {[match.title, match.customer_name, match.ref].filter(Boolean).join(' | ')}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ) : null}
+
+                                        {Array.isArray(aiResult.data?.warnings) ? renderAiWarnings(aiResult.data) : null}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {showPreview && (
                 <div className="quotation-preview-overlay" onClick={() => setShowPreview(false)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }}>
