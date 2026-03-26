@@ -3743,9 +3743,9 @@ input[type="checkbox"] {
 
 .quotation-dashboard-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(420px, 0.9fr);
+  grid-template-columns: 1fr;
   gap: 1.25rem;
-  align-items: end;
+  align-items: start;
 }
 
 .quotation-dashboard-hero-copy {
@@ -3770,9 +3770,12 @@ input[type="checkbox"] {
 
 .quotation-dashboard-toolbar-panel {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) auto;
-  gap: 1rem 1.1rem;
-  align-items: end;
+  grid-template-columns: 1fr;
+  gap: 0.95rem;
+  align-items: stretch;
+  width: 100%;
+  max-width: 1080px;
+  justify-self: end;
   padding: 1.1rem 1.2rem;
   border: 1px solid #dce8ef;
   border-radius: 22px;
@@ -3783,19 +3786,17 @@ input[type="checkbox"] {
   backdrop-filter: blur(10px);
 }
 
-.quotation-dashboard-toolbar-filters,
+.quotation-dashboard-toolbar-top,
 .quotation-dashboard-toolbar-actions {
   display: flex;
   align-items: end;
   gap: 0.9rem;
 }
 
-.quotation-dashboard-toolbar-filters {
+.quotation-dashboard-toolbar-top {
+  justify-content: space-between;
   min-width: 0;
   width: 100%;
-  display: grid;
-  grid-template-columns: minmax(320px, 1fr) 236px;
-  align-items: end;
 }
 
 .quotation-dashboard-search-shell {
@@ -3868,6 +3869,7 @@ input[type="checkbox"] {
   flex-direction: column;
   gap: 0.35rem;
   min-width: 0;
+  width: min(100%, 236px);
 }
 
 .quotation-dashboard-filter-label {
@@ -3900,10 +3902,6 @@ input[type="checkbox"] {
 }
 
 @media (max-width: 1360px) {
-  .quotation-dashboard-toolbar-panel {
-    grid-template-columns: 1fr;
-  }
-
   .quotation-dashboard-toolbar-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     width: 100%;
@@ -3912,13 +3910,14 @@ input[type="checkbox"] {
   .quotation-dashboard-toolbar-btn {
     width: 100%;
   }
+
+  .quotation-dashboard-toolbar-top {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
 @media (max-width: 980px) {
-  .quotation-dashboard-toolbar-filters {
-    grid-template-columns: 1fr;
-  }
-
   .quotation-dashboard-filter-stack {
     width: 100%;
   }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import QuotationDashboardTable from '@/components/quotations/QuotationDashboardTable';
 import QuotationReports from '@/components/quotations/QuotationReports';
 import PriceReferenceManager from '@/components/quotations/PriceReferenceManager';
@@ -67,6 +67,12 @@ function createDraft(quoteNumber) {
         id: null,
         customer_id: '',
         qt_number: quoteNumber,
+        source_type: 'manual',
+        source_order_id: '',
+        source_order_reference: '',
+        source_order_customer_email: '',
+        email_sent_at: null,
+        confirmed_at: null,
         date,
         ref: '',
         currency_code: DEFAULT_CURRENCY_CODE,
@@ -99,6 +105,12 @@ function normalizeQuote(raw) {
         ...createDraft(raw?.qt_number ?? null),
         ...raw,
         customer_id: String(raw?.customer_id || ''),
+        source_type: String(raw?.source_type || 'manual'),
+        source_order_id: String(raw?.source_order_id || ''),
+        source_order_reference: String(raw?.source_order_reference || ''),
+        source_order_customer_email: String(raw?.source_order_customer_email || ''),
+        email_sent_at: raw?.email_sent_at || null,
+        confirmed_at: raw?.confirmed_at || null,
         currency_code: normalizeCurrencyCode(raw?.currency_code),
         client_trn: String(raw?.client_trn || ''),
         sections: Array.isArray(raw?.sections) && raw.sections.length > 0
@@ -178,6 +190,7 @@ async function toDataUrl(file) {
 
 export default function QuotationsAdminPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [quotes, setQuotes] = useState([]);
     const [priceReferences, setPriceReferences] = useState([]);
     const [customers, setCustomers] = useState([]);
@@ -287,6 +300,22 @@ export default function QuotationsAdminPage() {
             setLoading(false);
         }
     }
+
+    // Deep-link support for opening a quotation directly from the orders admin screen.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    useEffect(() => {
+        const requestedTab = searchParams.get('tab');
+        const requestedQuote = searchParams.get('quote');
+
+        if (requestedTab && ['overview', 'reports', 'orders'].includes(requestedTab)) {
+            setDashboardTab(requestedTab);
+        }
+
+        if (requestedQuote) {
+            openQuote(requestedQuote, true);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams]);
 
     useEffect(() => {
         let cancelled = false;
@@ -594,25 +623,39 @@ export default function QuotationsAdminPage() {
         const totals = quoteTotals({ ...form, sections: normalizedSections });
         setSaving(true);
         try {
+            const isOrderConfirmation = form.source_type === 'order' && nextStatus === 'Confirmed';
             const response = await fetch(form.id ? `/api/quotations/${form.id}` : '/api/quotations', {
                 method: form.id ? 'PUT' : 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     ...form,
                     sections: normalizedSections,
-                    status: nextStatus || form.status,
+                    status: isOrderConfirmation ? 'Draft' : (nextStatus || form.status),
                     total_selling: totals.client,
                     total_with_vat: totals.grand,
                 }),
             });
             const data = await response.json();
             if (!response.ok) throw new Error(data.error || 'Failed to save quotation');
-            setSelectedId(data.id);
-            setForm(normalizeQuote(data));
-            await loadQuotationHistory(data.id);
-            await loadQuotes(data.id);
+            let finalQuote = data;
+
+            if (isOrderConfirmation) {
+                const sendResponse = await fetch(`/api/quotations/${data.id}/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ markConfirmed: true }),
+                });
+                const sendData = await sendResponse.json();
+                if (!sendResponse.ok) throw new Error(sendData.error || 'Failed to send confirmed quotation');
+                finalQuote = sendData.quotation || data;
+            }
+
+            setSelectedId(finalQuote.id);
+            setForm(normalizeQuote(finalQuote));
+            await loadQuotationHistory(finalQuote.id);
+            await loadQuotes(finalQuote.id);
             setViewMode('dashboard');
-            flash('success', `Quotation QT-${data.qt_number} saved`);
+            flash('success', isOrderConfirmation ? `QT-${finalQuote.qt_number} confirmed and emailed` : `Quotation QT-${finalQuote.qt_number} saved`);
         } catch (error) {
             flash('error', error.message || 'Failed to save quotation');
         } finally {
@@ -657,6 +700,35 @@ export default function QuotationsAdminPage() {
         try {
             const quote = await fetch(`/api/quotations/${id}`, { cache: 'no-store' }).then((response) => response.json().then((data) => ({ ok: response.ok, data })));
             if (!quote.ok) throw new Error(quote.data.error || 'Failed to load quotation');
+
+            if (quote.data.source_type === 'order' && status === 'Confirmed') {
+                const saveResponse = await fetch(`/api/quotations/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ...quote.data,
+                        status: 'Draft',
+                    }),
+                });
+                const saveData = await saveResponse.json();
+                if (!saveResponse.ok) throw new Error(saveData.error || 'Failed to prepare quotation for sending');
+
+                const sendResponse = await fetch(`/api/quotations/${id}/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ markConfirmed: true }),
+                });
+                const sendData = await sendResponse.json();
+                if (!sendResponse.ok) throw new Error(sendData.error || 'Failed to send confirmed quotation');
+
+                await loadQuotes(id === selectedId ? id : null);
+                if (id === selectedId) {
+                    setForm(normalizeQuote(sendData.quotation || saveData));
+                    await loadQuotationHistory(id);
+                }
+                flash('success', `QT-${quote.data.qt_number} confirmed and emailed`);
+                return;
+            }
 
             const response = await fetch(`/api/quotations/${id}`, {
                 method: 'PUT',
@@ -765,7 +837,11 @@ export default function QuotationsAdminPage() {
         return `${labels.join(', ')}${ids.length > 2 ? ` +${ids.length - 2}` : ''}`;
     }
 
-    const filteredQuotes = quotes.filter((quote) => {
+    const manualQuotes = quotes.filter((quote) => quote.source_type !== 'order');
+    const orderQuotes = quotes.filter((quote) => quote.source_type === 'order');
+    const activeQuotePool = dashboardTab === 'orders' ? orderQuotes : manualQuotes;
+
+    const filteredQuotes = activeQuotePool.filter((quote) => {
         const needle = search.trim().toLowerCase();
         const matchesSearch = !needle || [
             quote.project_title,
@@ -773,6 +849,7 @@ export default function QuotationsAdminPage() {
             quote.client_to,
             quote.created_by,
             quote.ref,
+            quote.source_order_reference,
             getReferenceSummary(quote),
             String(quote.qt_number || ''),
         ].some((value) => String(value || '').toLowerCase().includes(needle));
@@ -789,14 +866,14 @@ export default function QuotationsAdminPage() {
 
     const totals = quoteTotals(form);
     const stats = {
-        total: quotes.length,
-        confirmed: quotes.filter((quote) => quote.status === 'Confirmed').length,
-        drafts: quotes.filter((quote) => quote.status === 'Draft').length,
-        pipeline: quotes
+        total: activeQuotePool.length,
+        confirmed: activeQuotePool.filter((quote) => quote.status === 'Confirmed').length,
+        drafts: activeQuotePool.filter((quote) => quote.status === 'Draft').length,
+        pipeline: activeQuotePool
             .filter((quote) => quote.status === 'Confirmed')
             .reduce((sum, quote) => sum + Number(quote.total_with_vat || 0), 0),
     };
-    const pipelineQuotes = quotes.filter((quote) => quote.status === 'Confirmed');
+    const pipelineQuotes = activeQuotePool.filter((quote) => quote.status === 'Confirmed');
     const pipelineCurrencies = [...new Set(pipelineQuotes.map((quote) => normalizeCurrencyCode(quote.currency_code)))];
     const pipelineCurrencyCode = pipelineQuotes.length === 0
         ? DEFAULT_CURRENCY_CODE
@@ -819,27 +896,7 @@ export default function QuotationsAdminPage() {
                                 <p>Search, filter, export, reopen quotes, and manage reusable price references from one place.</p>
                             </div>
                             <div className="quotation-dashboard-toolbar quotation-dashboard-toolbar-panel">
-                                <div className="quotation-dashboard-toolbar-filters">
-                                    <div className="quotation-dashboard-search-shell">
-                                        <span className="quotation-dashboard-search-icon" aria-hidden="true"></span>
-                                        <input
-                                            className="quotation-input quotation-dashboard-search"
-                                            type="search"
-                                            placeholder="Search by QT #, project, client, owner, or references"
-                                            value={search}
-                                            onChange={(event) => setSearch(event.target.value)}
-                                        />
-                                        {search ? (
-                                            <button
-                                                type="button"
-                                                className="quotation-dashboard-search-clear"
-                                                onClick={() => setSearch('')}
-                                                aria-label="Clear quotation search"
-                                            >
-                                                Clear
-                                            </button>
-                                        ) : null}
-                                    </div>
+                                <div className="quotation-dashboard-toolbar-top">
                                     <div className="quotation-dashboard-filter-stack">
                                         <span className="quotation-dashboard-filter-label">Status</span>
                                         <select className="quotation-input quotation-dashboard-select" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
@@ -853,6 +910,26 @@ export default function QuotationsAdminPage() {
                                         Price References
                                     </button>
                                     <button type="button" className="quotation-btn quotation-btn-primary quotation-dashboard-toolbar-btn quotation-dashboard-new-btn" onClick={startNewQuote}>+ New Quotation</button>
+                                </div>
+                                <div className="quotation-dashboard-search-shell">
+                                    <span className="quotation-dashboard-search-icon" aria-hidden="true"></span>
+                                    <input
+                                        className="quotation-input quotation-dashboard-search"
+                                        type="search"
+                                        placeholder="Search by QT #, project, client, owner, or references"
+                                        value={search}
+                                        onChange={(event) => setSearch(event.target.value)}
+                                    />
+                                    {search ? (
+                                        <button
+                                            type="button"
+                                            className="quotation-dashboard-search-clear"
+                                            onClick={() => setSearch('')}
+                                            aria-label="Clear quotation search"
+                                        >
+                                            Clear
+                                        </button>
+                                    ) : null}
                                 </div>
                             </div>
                         </div>
@@ -872,13 +949,22 @@ export default function QuotationsAdminPage() {
                             >
                                 Reports
                             </button>
+                            <button
+                                type="button"
+                                className={`quotation-dashboard-tab ${dashboardTab === 'orders' ? 'quotation-dashboard-tab-active' : ''}`}
+                                onClick={() => setDashboardTab('orders')}
+                            >
+                                Orders Quotations
+                            </button>
                         </div>
 
-                        {dashboardTab === 'overview' ? (
+                        {dashboardTab === 'reports' ? (
+                            <QuotationReports />
+                        ) : (
                             <>
                                 <div className="quotation-dashboard-results-bar">
                                     <div className="quotation-dashboard-results-copy">
-                                        Showing <strong>{filteredQuotes.length}</strong> of <strong>{quotes.length}</strong> quotations
+                                        Showing <strong>{filteredQuotes.length}</strong> of <strong>{activeQuotePool.length}</strong> quotations
                                     </div>
                                     {(search || statusFilter) ? (
                                         <button
@@ -920,8 +1006,6 @@ export default function QuotationsAdminPage() {
                                     />
                                 </div>
                             </>
-                        ) : (
-                            <QuotationReports />
                         )}
                     </div>
                 ) : (
