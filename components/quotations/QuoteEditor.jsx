@@ -1665,6 +1665,39 @@ export default function QuoteEditor({
                                                             <div style={{ marginTop: '0.35rem', color: '#475569', fontSize: '0.84rem' }}>
                                                                 {[match.title, match.customer_name, match.ref].filter(Boolean).join(' | ')}
                                                             </div>
+                                                            {Array.isArray(match.reasons) && match.reasons.length ? (
+                                                                <div style={{ marginTop: '0.45rem', display: 'flex', flexWrap: 'wrap', gap: '0.45rem' }}>
+                                                                    {match.reasons.map((reason) => (
+                                                                        <span key={`${match.source_key || match.source_label}-${reason}`} style={{ fontSize: '0.75rem', borderRadius: '999px', padding: '0.2rem 0.5rem', background: '#ecfeff', color: '#0f766e', border: '1px solid #bae6fd' }}>
+                                                                            {reason}
+                                                                        </span>
+                                                                    ))}
+                                                                </div>
+                                                            ) : null}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ) : null}
+
+                                        {aiResult.data?.learned_patterns ? (
+                                            <div>
+                                                <div style={{ fontWeight: 700, color: '#1e293b', marginBottom: '0.45rem' }}>Learned Patterns</div>
+                                                <div style={{ display: 'grid', gap: '0.75rem' }}>
+                                                    {[
+                                                        ['Preferred Sections', aiResult.data.learned_patterns.preferred_section_names],
+                                                        ['Common Units', aiResult.data.learned_patterns.preferred_units],
+                                                        ['Typical Selling Rules', aiResult.data.learned_patterns.recommended_selling_rules],
+                                                    ].filter(([, values]) => Array.isArray(values) && values.length).map(([label, values]) => (
+                                                        <div key={label} style={{ padding: '0.85rem 0.95rem', borderRadius: '12px', border: '1px solid #e2e8f0', background: '#fbfdff' }}>
+                                                            <div style={{ fontWeight: 700, color: '#0f172a', marginBottom: '0.45rem' }}>{label}</div>
+                                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem' }}>
+                                                                {values.map((value) => (
+                                                                    <span key={`${label}-${value}`} style={{ fontSize: '0.78rem', borderRadius: '999px', padding: '0.28rem 0.55rem', background: '#f8fafc', color: '#334155', border: '1px solid #cbd5e1' }}>
+                                                                        {value}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
                                                         </div>
                                                     ))}
                                                 </div>
