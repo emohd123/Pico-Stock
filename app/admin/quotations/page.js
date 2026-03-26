@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import QuotationDashboardTable from '@/components/quotations/QuotationDashboardTable';
 import QuotationReports from '@/components/quotations/QuotationReports';
@@ -188,7 +188,7 @@ async function toDataUrl(file) {
     });
 }
 
-export default function QuotationsAdminPage() {
+function QuotationsAdminPageContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [quotes, setQuotes] = useState([]);
@@ -1076,5 +1076,13 @@ export default function QuotationsAdminPage() {
                 </div>
             ) : null}
         </div>
+    );
+}
+
+export default function QuotationsAdminPage() {
+    return (
+        <Suspense fallback={<div className="loading-page"><div className="spinner"></div></div>}>
+            <QuotationsAdminPageContent />
+        </Suspense>
     );
 }
