@@ -10,6 +10,7 @@ export async function POST(request) {
             quotation: payload.quotation || {},
             brief: payload.brief || '',
             files: Array.isArray(payload.files) ? payload.files : [],
+            mode: payload.mode === 'duplicate' ? 'duplicate' : 'draft',
         });
         return NextResponse.json(result);
     } catch (error) {

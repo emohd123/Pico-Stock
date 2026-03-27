@@ -662,6 +662,7 @@ function QuotationsAdminPageContent() {
         const next = normalizeQuote({
             ...current,
             ...draftPatch,
+            client_org: draftPatch.client_org ?? current.client_org,
             project_title: draftPatch.project_title ?? current.project_title,
             subject: draftPatch.subject ?? current.subject,
             exclusions: Array.isArray(draftPatch.exclusions) && draftPatch.exclusions.length ? draftPatch.exclusions : current.exclusions,
@@ -682,7 +683,7 @@ function QuotationsAdminPageContent() {
         return next;
     }
 
-    async function generateAiDraft({ brief = '', files = [] } = {}) {
+    async function generateAiDraft({ brief = '', files = [], mode = 'draft' } = {}) {
         const response = await fetch('/api/quotations/ai/draft', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -690,12 +691,13 @@ function QuotationsAdminPageContent() {
                 quotation: form,
                 brief,
                 files,
+                mode,
             }),
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Failed to generate AI draft');
         setForm((current) => mergeAiDraftIntoForm(current, data.draft_patch || {}, data));
-        queueAiHistoryMeta('ai-draft', data.summary || 'AI generated a quotation draft');
+        queueAiHistoryMeta(mode === 'duplicate' ? 'ai-duplicate' : 'ai-draft', data.summary || (mode === 'duplicate' ? 'AI duplicated an uploaded quotation into a new draft' : 'AI generated a quotation draft'));
         return data;
     }
 

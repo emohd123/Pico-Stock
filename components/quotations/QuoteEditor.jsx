@@ -1514,6 +1514,9 @@ export default function QuoteEditor({
                                     <div style={{ marginTop: '0.55rem', color: '#64748b', fontSize: '0.82rem' }}>
                                         Supports PDF, PPT/PPTX, Excel, text, and images for internal draft generation.
                                     </div>
+                                    <div style={{ marginTop: '0.35rem', color: '#0f766e', fontSize: '0.8rem', fontWeight: 600 }}>
+                                        Upload an old quotation here to duplicate it into a new draft.
+                                    </div>
                                     {aiFiles.length ? (
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', marginTop: '0.75rem' }}>
                                             {aiFiles.map((file) => (
@@ -1566,6 +1569,14 @@ export default function QuoteEditor({
                                         disabled={aiBusy}
                                     >
                                         {aiBusyLabel === 'Generate Draft' ? 'Generating Draft...' : 'Generate Draft'}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="quotation-btn quotation-btn-ghost"
+                                        onClick={() => runAiAction('Duplicate Uploaded Quote', ({ brief, files }) => onGenerateAiDraft({ brief, files, mode: 'duplicate' }))}
+                                        disabled={aiBusy}
+                                    >
+                                        {aiBusyLabel === 'Duplicate Uploaded Quote' ? 'Duplicating Quote...' : 'Duplicate Uploaded Quote'}
                                     </button>
                                     <button
                                         type="button"
