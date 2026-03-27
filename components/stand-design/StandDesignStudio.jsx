@@ -96,10 +96,10 @@ export default function StandDesignStudio() {
         try {
             const response = await fetch('/api/stand-design', { cache: 'no-store' });
             const data = await response.json();
+            if (data.ai) setAiStatus(data.ai);
             if (!response.ok) throw new Error(data.error || 'Failed to load stand design studio');
             const items = Array.isArray(data.items) ? data.items.map(normalizeDesignRecord) : [];
             setRecords(items);
-            setAiStatus(data.ai || { configured: false, model: '' });
             if (items[0] && !form.id) setForm(items[0]);
         } catch (error) {
             setMessage({ type: 'error', text: error.message || 'Failed to load stand design studio' });

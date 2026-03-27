@@ -13,6 +13,6 @@ export async function GET() {
             ai: getStandDesignAiStatus(),
         });
     } catch (error) {
-        return NextResponse.json({ error: 'Failed to fetch stand designs' }, { status: 500 });
+        return NextResponse.json({ error: 'Failed to fetch stand designs', ai: getStandDesignAiStatus() }, { status: 500 });
     }
 }
