@@ -1,5 +1,10 @@
 {
     "buildCommand": "next build",
     "outputDirectory": ".next",
-    "framework": "nextjs"
+    "framework": "nextjs",
+    "functions": {
+        "app/api/stand-design/generate/route.js": { "maxDuration": 300 },
+        "app/api/stand-design/[id]/regenerate/route.js": { "maxDuration": 300 },
+        "app/api/stand-design/[id]/views/route.js": { "maxDuration": 300 }
+    }
 }
