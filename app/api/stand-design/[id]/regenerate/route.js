@@ -12,13 +12,22 @@ export async function POST(request, { params }) {
         }
 
         const body = await request.json();
+        const conceptIndexRaw = Number(body.concept_index);
+        const conceptIndex = (Number.isInteger(conceptIndexRaw) && conceptIndexRaw >= 0 && conceptIndexRaw <= 1)
+            ? conceptIndexRaw
+            : null;
+        const conceptIndexes = conceptIndex !== null ? [conceptIndex] : [0, 1];
         const nextPayload = {
             ...existing,
-            ...body,
+            mode: body.mode ?? existing.mode,
+            prompt: body.prompt ?? existing.prompt,
+            refinement_prompt: body.refinement_prompt ?? existing.refinement_prompt,
+            style_preset: body.style_preset ?? existing.style_preset,
+            angle: body.angle ?? existing.angle,
+            reference_image_path: body.reference_image_path ?? existing.reference_image_path,
+            brief: body.brief ?? existing.brief,
             id: existing.id,
         };
-        const conceptIndex = Number.isInteger(Number(body.concept_index)) ? Number(body.concept_index) : null;
-        const conceptIndexes = conceptIndex !== null ? [conceptIndex] : [0, 1];
 
         const generation = await generateStandDesignConcepts({
             designId: existing.id,

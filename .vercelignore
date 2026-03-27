@@ -1,0 +1,25 @@
+# Large non-Next.js assets — excluded from Vercel deployments
+company profile/
+PicoExhibitorPortal.Web/
+PicoExhibitorPortal.Tests/
+seeds/
+supabase/
+worker/
+
+# Local development data (stand-designs JSON with base64 images)
+data/stand-designs.json
+data/stand-designs.json.tmp
+
+# OCR training data
+eng.traineddata
+
+# Temp files
+tmp-*.json
+tmp-*.pdf
+tmp-stand-design-*.json
+
+# Next.js build output
+.next/
+
+# Local uploads (generated at runtime — use Vercel Blob or DB for production)
+public/uploads/stand-design/generated/
