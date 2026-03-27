@@ -6149,6 +6149,21 @@ input[type="checkbox"] {
   object-fit: cover;
 }
 
+.stand-design-image-placeholder {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  text-align: center;
+  color: #60758a;
+  background: linear-gradient(180deg, #f8fbfd, #eef4f8);
+  border: 1px dashed #c8d9e3;
+  border-radius: 16px;
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
 .stand-design-result-actions {
   display: flex;
   flex-wrap: wrap;
@@ -6248,7 +6263,8 @@ input[type="checkbox"] {
   gap: 0.65rem;
 }
 
-.stand-design-saved-thumbs img {
+.stand-design-saved-thumbs img,
+.stand-design-saved-thumb-image {
   width: 100%;
   aspect-ratio: 16 / 10;
   object-fit: cover;

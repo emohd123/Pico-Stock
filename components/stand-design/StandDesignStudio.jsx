@@ -70,6 +70,14 @@ function getCoverageLabel(status) {
     return 'Needs review';
 }
 
+function RenderImageOrPlaceholder({ src, alt, className, placeholder }) {
+    const [failed, setFailed] = useState(false);
+    if (!src || failed) {
+        return <div className={`${className} stand-design-image-placeholder`}>{placeholder || 'Image unavailable'}</div>;
+    }
+    return <img src={src} alt={alt} className={className} onError={() => setFailed(true)} />;
+}
+
 export default function StandDesignStudio() {
     const [records, setRecords] = useState([]);
     const [form, setForm] = useState(createDraft());
@@ -380,7 +388,7 @@ export default function StandDesignStudio() {
                                         <div><div className="stand-design-result-label">{concept.title || `Concept ${index + 1}`}</div><p className="stand-design-result-summary">{concept.summary || 'Pico-style concept direction'}</p></div>
                                         <span className="stand-design-mini-pill">{concept.source_variant || `concept-${index + 1}`}</span>
                                     </div>
-                                    <img src={concept.path} alt={`Stand concept ${index + 1}`} className="stand-design-result-image stand-design-result-image-xl" />
+                                    <RenderImageOrPlaceholder src={concept.path} alt={`Stand concept ${index + 1}`} className="stand-design-result-image stand-design-result-image-xl" placeholder="Saved image unavailable for this older record" />
                                     <div className="stand-design-result-actions">
                                         <a className="stand-design-inline-link" href={concept.path} target="_blank" rel="noreferrer">Preview</a>
                                         <a className="stand-design-inline-link" href={concept.path} download>Download</a>
@@ -406,7 +414,7 @@ export default function StandDesignStudio() {
                                             <div className="stand-design-view-grid">
                                                 {concept.views.map((view) => (
                                                     <article key={view.id || view.path} className="stand-design-view-card">
-                                                        <img src={view.path} alt={view.label || 'Stand view'} className="stand-design-view-image" />
+                                                        <RenderImageOrPlaceholder src={view.path} alt={view.label || 'Stand view'} className="stand-design-view-image" placeholder="View unavailable" />
                                                         <div className="stand-design-view-meta">
                                                             <strong>{view.label || 'View'}</strong>
                                                             <span>{view.angle || ''}</span>
@@ -455,7 +463,7 @@ export default function StandDesignStudio() {
                                         <button type="button" className="stand-design-inline-link is-danger" onClick={() => deleteRecord(record.id)}>Delete</button>
                                     </div>
                                     <p>{record.prompt || 'Structured brief driven record'}</p>
-                                    <div className="stand-design-saved-thumbs">{(record.concepts || []).slice(0, 2).map((concept) => <img key={concept.id} src={concept.path} alt="Saved stand concept" />)}</div>
+                                    <div className="stand-design-saved-thumbs">{(record.concepts || []).slice(0, 2).map((concept) => <RenderImageOrPlaceholder key={concept.id} src={concept.path} alt="Saved stand concept" className="stand-design-saved-thumb-image" placeholder="Unavailable" />)}</div>
                                     <button type="button" className="stand-design-secondary-btn" onClick={() => setForm(normalizeDesignRecord(record))}>Open Record</button>
                                 </article>
                             ))}
