@@ -10,6 +10,7 @@ const ADMIN_NAV_ITEMS = [
     { key: 'upload', href: '/admin?tab=upload', label: 'Upload & Import' },
     { key: 'designers', href: '/admin/designers', label: 'Designers Board' },
     { key: 'quotations', href: '/admin/quotations', label: 'Quotation Studio' },
+    { key: 'stand-design', href: '/admin/stand-design', label: 'Stand Design' },
 ];
 
 function itemClassName(active) {

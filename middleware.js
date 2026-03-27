@@ -9,6 +9,7 @@ function isAdminPage(pathname) {
 
 function isProtectedApiRequest(pathname, method) {
     if (pathname.startsWith('/api/quotations')) return true;
+    if (pathname.startsWith('/api/stand-design')) return true;
     if (pathname.startsWith('/api/customers')) return true;
     if (pathname.startsWith('/api/designers')) return true;
     if (pathname.startsWith('/api/price-references')) return true;

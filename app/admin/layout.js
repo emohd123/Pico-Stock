@@ -6,6 +6,7 @@ import AdminShell from '@/components/admin/AdminShell';
 function getAdminSection(pathname) {
     if (pathname.startsWith('/admin/designers')) return 'designers';
     if (pathname.startsWith('/admin/quotations')) return 'quotations';
+    if (pathname.startsWith('/admin/stand-design')) return 'stand-design';
     return '';
 }
 
