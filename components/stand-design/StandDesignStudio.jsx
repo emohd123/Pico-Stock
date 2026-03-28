@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import { STAND_DESIGN_ANGLE_OPTIONS, STAND_DESIGN_MODES, STAND_DESIGN_STYLE_PRESETS } from '@/lib/standDesignConfig';
-import { createDefaultStandDesignBrief, getStandDesignBriefSections, summarizeStandDesignBrief } from '@/lib/standDesignBrief';
+import { buildStandDesignCoverageSummary, createDefaultStandDesignBrief, getStandDesignBriefSections, summarizeStandDesignBrief } from '@/lib/standDesignBrief';
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 function createDraft() {
@@ -20,6 +20,13 @@ function createDraft() {
   };
 }
 function buildUploadAccept() { return 'image/png,image/jpeg,image/webp'; }
+function buildDownloadFilename(brief = {}, label = '', suffix = '') {
+  const slug = (str) => String(str || '').trim().replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase();
+  const client = slug(brief?.client_name || brief?.brand_name || '');
+  const event = slug(brief?.event_name || brief?.stand_size || '');
+  const parts = [client, event, slug(label), slug(suffix)].filter(Boolean);
+  return (parts.join('-') || 'stand-concept') + '.png';
+}
 function toLocalDate(value) {
   if (!value) return '';
   try { return new Date(value).toLocaleString(); } catch { return ''; }
@@ -156,12 +163,20 @@ export default function StandDesignStudio() {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [aiStatus, setAiStatus] = useState({ configured: false, model: '' });
   const [collapsedSections, setCollapsedSections] = useState(new Set());
+  const [activeConcept, setActiveConcept] = useState(0);
+  const [parsingBrief, setParsingBrief] = useState(false);
+  const [briefParseInfo, setBriefParseInfo] = useState({ count: 0, show: false });
+  const [regeneratingConceptIndex, setRegeneratingConceptIndex] = useState(null);
+  const [expandedRecordId, setExpandedRecordId] = useState(null);
 
   const selectedRecord = useMemo(
     () => records.find((item) => String(item.id) === String(form.id)) || null,
     [records, form.id],
   );
   const briefSummary = useMemo(() => summarizeStandDesignBrief(form.brief), [form.brief]);
+  // Live coverage — always derived from form.brief so it reflects the current state,
+  // never stale from the generation-time snapshot stored in concept.coverage
+  const liveCoverage = useMemo(() => buildStandDesignCoverageSummary(form.brief), [form.brief]);
 
   function toggleSection(id) {
     setCollapsedSections((prev) => {
@@ -192,6 +207,48 @@ export default function StandDesignStudio() {
     loadStandDesigns();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Auto-parse Design Prompt into brief fields (debounced, only fills empty fields)
+  useEffect(() => {
+    const prompt = form.prompt?.trim() || '';
+    if (prompt.length < 60) return;
+    const timer = setTimeout(() => parsePromptIntoBrief(prompt), 1500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.prompt]);
+
+  async function parsePromptIntoBrief(promptText, { overwrite = false } = {}) {
+    if (parsingBrief) return;
+    setParsingBrief(true);
+    try {
+      const response = await fetch('/api/stand-design/parse-prompt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: promptText || form.prompt }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.brief) return;
+      let filled = 0;
+      setForm((current) => {
+        const nextBrief = { ...current.brief };
+        for (const [key, value] of Object.entries(data.brief)) {
+          // Auto-debounce: only fill empty fields; manual button: overwrite all extracted fields
+          if ((overwrite || !nextBrief[key]?.trim()) && value) {
+            nextBrief[key] = value;
+            filled += 1;
+          }
+        }
+        return filled > 0 ? { ...current, brief: nextBrief } : current;
+      });
+      if (data.count > 0) {
+        setBriefParseInfo({ count: data.count, show: true });
+        setTimeout(() => setBriefParseInfo((p) => ({ ...p, show: false })), 5000);
+        // Auto-expand all brief sections so user immediately sees the filled fields
+        setCollapsedSections(new Set());
+      }
+    } catch { /* silent — parse is best-effort */ }
+    finally { setParsingBrief(false); }
+  }
 
   function flash(type, text) { setMessage({ type, text }); }
   function setField(field, value) { setForm((current) => ({ ...current, [field]: value })); }
@@ -249,6 +306,8 @@ export default function StandDesignStudio() {
       setForm(nextItem);
       setAiStatus(data.ai || aiStatus);
       setRecords((current) => [nextItem, ...current.filter((item) => String(item.id) !== String(nextItem.id))]);
+      if (conceptIndex !== null) setActiveConcept(conceptIndex);
+      else setActiveConcept(0);
       flash('success', conceptIndex === null
         ? regenerate ? 'Stand design regenerated' : '2 concepts generated'
         : `Concept ${conceptIndex + 1} regenerated`);
@@ -281,7 +340,9 @@ export default function StandDesignStudio() {
 
   function applyConceptAsReference(conceptPath) {
     setForm((current) => ({ ...current, mode: 'edit', reference_image_path: conceptPath }));
-    flash('success', 'Concept moved into edit mode as the new reference');
+    flash('success', 'Concept set as reference — Edit & Enhance mode is now active in the left panel.');
+    // Scroll so the user can see the reference image appear in the left panel
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   async function refineConcept(index) {
@@ -375,7 +436,13 @@ export default function StandDesignStudio() {
                   <h3>Structured Stand Brief</h3>
                   <p>Layout-first inputs are treated as the main truth for generation.</p>
                 </div>
-                {briefSummary ? <span className="stand-design-mini-pill">{briefSummary}</span> : null}
+                <div className="sd-brief-header-right">
+                  {parsingBrief && <span className="sd-parse-spinner" title="Extracting from prompt…">⟳ Parsing…</span>}
+                  {!parsingBrief && briefParseInfo.show && (
+                    <span className="sd-parse-badge">✦ {briefParseInfo.count} fields filled from prompt</span>
+                  )}
+                  {briefSummary ? <span className="stand-design-mini-pill">{briefSummary}</span> : null}
+                </div>
               </div>
               {getStandDesignBriefSections().map((section) => (
                 <CollapsibleSection key={section.id} id={section.id} title={section.title}
@@ -395,6 +462,11 @@ export default function StandDesignStudio() {
                   </div>
                 </CollapsibleSection>
               ))}
+              {/* Live coverage preview inside the brief panel — updates as fields are filled */}
+              <div className="sd-brief-coverage-preview">
+                <CoverageRow coverage={liveCoverage} conceptTitle="Current Brief" />
+              </div>
+
               <div className="stand-design-upload-grid">
                 <label className={`stand-design-upload ${uploadingField === 'logo_image_path' ? 'is-busy' : ''}`}>
                   <input type="file" accept={buildUploadAccept()}
@@ -412,10 +484,21 @@ export default function StandDesignStudio() {
             </div>
 
             <div className="stand-design-section">
-              <label className="stand-design-section-label" htmlFor="stand-design-prompt">Design Prompt</label>
+              <div className="sd-prompt-label-row">
+                <label className="stand-design-section-label" htmlFor="stand-design-prompt">Design Prompt</label>
+                <button type="button" className="sd-parse-btn"
+                  disabled={parsingBrief || !form.prompt?.trim()}
+                  onClick={() => parsePromptIntoBrief(form.prompt, { overwrite: true })}
+                  title="Extract and fill ALL brief fields from this prompt (overwrites existing values)">
+                  {parsingBrief ? '⟳ Parsing…' : '✦ Fill Brief from Prompt'}
+                </button>
+              </div>
               <textarea id="stand-design-prompt" className="stand-design-textarea" rows={6}
                 value={form.prompt} onChange={(e) => setField('prompt', e.target.value)}
-                placeholder="Add extra direction, client preferences, creative emphasis, or anything not already captured in the structured brief." />
+                placeholder="Paste your full project brief or describe the stand — client, event, size, open sides, branding, screens, VIP zone… AI will extract and fill the structured brief automatically." />
+              {briefParseInfo.show && !parsingBrief && (
+                <p className="sd-parse-notice">✦ {briefParseInfo.count} brief fields auto-filled from your prompt — review and adjust as needed.</p>
+              )}
             </div>
 
             <div className="stand-design-section">
@@ -514,107 +597,155 @@ export default function StandDesignStudio() {
               </>}
             </div>
 
-            {/* Concept cards */}
-            <div className="stand-design-results-grid stand-design-results-grid-wide">
-              {(form.concepts || []).length > 0
-                ? form.concepts.map((concept, index) => (
-                    <article key={concept.id || index} className="stand-design-result-card stand-design-result-card-xl">
-                      <div className="stand-design-result-header">
-                        <div>
-                          <div className="stand-design-result-label">{concept.title || `Concept ${index + 1}`}</div>
-                          <p className="stand-design-result-summary">{concept.summary || 'Pico-style concept direction'}</p>
-                        </div>
-                        <span className="stand-design-mini-pill">{concept.source_variant || `concept-${index + 1}`}</span>
-                      </div>
-
-                      <RenderImageOrPlaceholder src={concept.path} alt={`Stand concept ${index + 1}`}
-                        className="stand-design-result-image stand-design-result-image-xl"
-                        placeholder="Saved image unavailable for this older record" />
-
-                      <div className="stand-design-result-actions">
-                        <a className="stand-design-inline-link" href={concept.path} target="_blank" rel="noreferrer">Preview</a>
-                        <a className="stand-design-inline-link" href={concept.path} download>Download</a>
-                        <button type="button" className="stand-design-inline-link"
-                          onClick={() => applyConceptAsReference(concept.path)}>Use as reference</button>
-                        <button type="button" className="stand-design-inline-link" disabled={busy}
-                          onClick={() => submitGeneration({ regenerate: Boolean(form.id), conceptIndex: index,
-                            payloadOverride: { ...form, mode: 'edit', reference_image_path: concept.path,
-                              refinement_prompt: concept.refinement_prompt || form.refinement_prompt } })}>
-                          Regenerate only
-                        </button>
-                        <button type="button" className="stand-design-inline-link"
-                          disabled={busy || !form.id || !concept?.path}
-                          onClick={() => generateConceptViews(index)}>
-                          {viewGenerationIndex === index ? 'Generating views...' : 'Generate all views'}
-                        </button>
-                      </div>
-
-                      <div className="stand-design-concept-refine">
-                        <label className="stand-design-field">
-                          <span>Refine this concept</span>
-                          <textarea className="stand-design-textarea stand-design-textarea-small" rows={2}
-                            value={concept.refinement_prompt || ''}
-                            onChange={(e) => setConceptField(index, 'refinement_prompt', e.target.value)}
-                            placeholder="Make it more premium, open the stand more, increase branding, move VIP area..." />
-                        </label>
-                        <button type="button" className="stand-design-secondary-btn" disabled={busy}
-                          onClick={() => refineConcept(index)}>Refine This Concept</button>
-                      </div>
-
-                      {Array.isArray(concept.views) && concept.views.length > 0 ? (
-                        <div className="stand-design-views">
-                          <div className="stand-design-coverage-header">
-                            <strong>All Views</strong>
-                            <span>{viewGenerationIndex === index ? 'Generating...' : `${concept.views.length} views generated`}</span>
-                          </div>
-                          <div className="stand-design-view-grid">
-                            {concept.views.map((view) => (
-                              <article key={view.id || view.path} className="stand-design-view-card">
-                                <RenderImageOrPlaceholder src={view.path} alt={view.label || 'Stand view'}
-                                  className="stand-design-view-image" placeholder="View unavailable" />
-                                <div className="stand-design-view-meta">
-                                  <strong>{view.label || 'View'}</strong>
-                                  <span>{view.angle || ''}</span>
-                                </div>
-                                <div className="stand-design-view-actions">
-                                  <a className="stand-design-inline-link" href={view.path} target="_blank" rel="noreferrer">Preview</a>
-                                  <a className="stand-design-inline-link" href={view.path} download>Download</a>
-                                  <button type="button" className="stand-design-inline-link"
-                                    onClick={() => applyConceptAsReference(view.path)}>Use as reference</button>
-                                </div>
-                              </article>
-                            ))}
-                          </div>
-                        </div>
-                      ) : null}
-
-                      {concept.coverage?.length > 0 && (
-                        <div className="stand-design-coverage">
-                          <div className="stand-design-coverage-header">
-                            <strong>Requirements Coverage</strong>
-                            <span>Heuristic review, not a guarantee</span>
-                          </div>
-                          <CoverageRow coverage={concept.coverage} conceptTitle={concept.title || `Concept ${index + 1}`} />
-                        </div>
+            {/* Concept sub-pages */}
+            {(form.concepts || []).length > 0 ? (
+              <>
+                {/* Tab bar */}
+                <div className="sd-concept-tabs">
+                  {form.concepts.map((concept, index) => (
+                    <button key={concept.id || index} type="button"
+                      className={`sd-concept-tab ${activeConcept === index ? 'is-active' : ''}`}
+                      onClick={() => setActiveConcept(index)}>
+                      <span className="sd-concept-tab-num">{index + 1}</span>
+                      {concept.title || `Concept ${index + 1}`}
+                      {concept.views?.length > 0 && (
+                        <span className="sd-concept-tab-badge">{concept.views.length} views</span>
                       )}
-                    </article>
-                  ))
-                : (
-                  <div className="stand-design-empty-state">
-                    <strong>No concepts yet</strong>
-                    <span>Fill the structured brief, add any extra prompt notes, and generate 2 Pico-style stand concepts.</span>
-                  </div>
-                )}
-            </div>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Active concept card */}
+                {form.concepts.map((concept, index) => (
+                  <article key={concept.id || index}
+                    className={`stand-design-result-card stand-design-result-card-xl ${activeConcept !== index ? 'sd-concept-hidden' : ''}`}>
+                    <div className="stand-design-result-header">
+                      <div>
+                        <div className="stand-design-result-label">{concept.title || `Concept ${index + 1}`}</div>
+                        <p className="stand-design-result-summary">{concept.summary || 'Pico-style concept direction'}</p>
+                      </div>
+                      <span className="stand-design-mini-pill">{concept.source_variant || `concept-${index + 1}`}</span>
+                    </div>
+
+                    <RenderImageOrPlaceholder src={concept.path} alt={`Stand concept ${index + 1}`}
+                      className="stand-design-result-image stand-design-result-image-xl"
+                      placeholder="Saved image unavailable for this older record" />
+
+                    <div className="stand-design-result-actions">
+                      {/* Preview — open in new tab */}
+                      <a className="stand-design-inline-link" href={concept.path} target="_blank" rel="noreferrer">
+                        Preview
+                      </a>
+
+                      {/* Download — client + event + concept title for meaningful filenames */}
+                      <a className="stand-design-inline-link" href={concept.path}
+                        download={buildDownloadFilename(form.brief, concept.title || `Concept ${index + 1}`)}>
+                        Download
+                      </a>
+
+                      {/* Use as reference — sets Edit mode and scrolls left panel into view */}
+                      <button type="button" className="stand-design-inline-link"
+                        disabled={!concept?.path}
+                        onClick={() => applyConceptAsReference(concept.path)}>
+                        Use as reference
+                      </button>
+
+                      {/* Regenerate only — requires a saved record (form.id) identical guard to Generate all views */}
+                      <button type="button" className="stand-design-inline-link"
+                        disabled={busy || !form.id || !concept?.path}
+                        onClick={async () => {
+                          setRegeneratingConceptIndex(index);
+                          await submitGeneration({
+                            regenerate: true,
+                            conceptIndex: index,
+                            payloadOverride: {
+                              ...form,
+                              mode: 'edit',
+                              reference_image_path: concept.path,
+                              refinement_prompt: concept.refinement_prompt || form.refinement_prompt,
+                            },
+                          });
+                          setRegeneratingConceptIndex(null);
+                        }}>
+                        {regeneratingConceptIndex === index ? 'Regenerating…' : 'Regenerate only'}
+                      </button>
+
+                      {/* Generate all views */}
+                      <button type="button" className="stand-design-inline-link"
+                        disabled={busy || !form.id || !concept?.path}
+                        onClick={() => generateConceptViews(index)}>
+                        {viewGenerationIndex === index ? 'Generating views…' : 'Generate all views'}
+                      </button>
+                    </div>
+
+                    <div className="stand-design-concept-refine">
+                      <label className="stand-design-field">
+                        <span>Refine this concept</span>
+                        <textarea className="stand-design-textarea stand-design-textarea-small" rows={2}
+                          value={concept.refinement_prompt || ''}
+                          onChange={(e) => setConceptField(index, 'refinement_prompt', e.target.value)}
+                          placeholder="Make it more premium, open the stand more, increase branding, move VIP area..." />
+                      </label>
+                      <button type="button" className="stand-design-secondary-btn" disabled={busy}
+                        onClick={() => refineConcept(index)}>Refine This Concept</button>
+                    </div>
+
+                    {Array.isArray(concept.views) && concept.views.length > 0 ? (
+                      <div className="stand-design-views">
+                        <div className="stand-design-coverage-header">
+                          <strong>All Views</strong>
+                          <span>{viewGenerationIndex === index ? 'Generating...' : `${concept.views.length} views generated`}</span>
+                        </div>
+                        <div className="stand-design-view-grid">
+                          {concept.views.map((view) => (
+                            <article key={view.id || view.path} className="stand-design-view-card">
+                              <RenderImageOrPlaceholder src={view.path} alt={view.label || 'Stand view'}
+                                className="stand-design-view-image" placeholder="View unavailable" />
+                              <div className="stand-design-view-meta">
+                                <strong>{view.label || 'View'}</strong>
+                                <span>{view.angle || ''}</span>
+                              </div>
+                              <div className="stand-design-view-actions">
+                                <a className="stand-design-inline-link" href={view.path} target="_blank" rel="noreferrer">Preview</a>
+                                <a className="stand-design-inline-link" href={view.path}
+                                  download={buildDownloadFilename(form.brief, concept.title || `Concept ${index + 1}`, view.label || view.angle || 'view')}>
+                                  Download
+                                </a>
+                                <button type="button" className="stand-design-inline-link"
+                                  disabled={!view?.path}
+                                  onClick={() => applyConceptAsReference(view.path)}>Use as reference</button>
+                              </div>
+                            </article>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+
+                    <div className="stand-design-coverage">
+                      <div className="stand-design-coverage-header">
+                        <strong>Requirements Coverage</strong>
+                        <span>Live — reflects your current brief</span>
+                      </div>
+                      <CoverageRow coverage={liveCoverage} conceptTitle={concept.title || `Concept ${index + 1}`} />
+                    </div>
+                  </article>
+                ))}
+              </>
+            ) : (
+              <div className="stand-design-empty-state">
+                <strong>No concepts yet</strong>
+                <span>Fill the structured brief, add any extra prompt notes, and generate 2 Pico-style stand concepts.</span>
+              </div>
+            )}
           </section>
         </div>
 
-        {/* Saved records panel */}
+        {/* Saved records panel — compact thumbnail cards, click to expand */}
         <section className="stand-design-saved-panel">
           <div className="stand-design-saved-header">
             <div>
               <h2>Saved Design Records</h2>
-              <p>Reopen a brief, compare prior rounds, or delete older concepts once the client direction is locked.</p>
+              <p>{records.length > 0 ? `${records.length} record${records.length !== 1 ? 's' : ''} — click any card to expand details` : 'Generated concepts will appear here.'}</p>
             </div>
           </div>
           {loading ? (
@@ -626,27 +757,101 @@ export default function StandDesignStudio() {
             </div>
           ) : (
             <div className="stand-design-saved-grid">
-              {records.map((record) => (
-                <article key={record.id} className={`stand-design-saved-card ${String(record.id) === String(form.id) ? 'is-active' : ''}`}>
-                  <div className="stand-design-saved-card-header">
-                    <div>
-                      <strong>{summarizeStandDesignBrief(record.brief) || (record.mode === 'edit' ? 'Edit & Enhance' : 'Generate New')}</strong>
-                      <span>{toLocalDate(record.updated_at)}</span>
+              {records.map((record) => {
+                const isActive = String(record.id) === String(form.id);
+                const isExpanded = expandedRecordId === record.id;
+                const concepts = Array.isArray(record.concepts) ? record.concepts.slice(0, 2) : [];
+                const title = summarizeStandDesignBrief(record.brief) || (record.mode === 'edit' ? 'Edit & Enhance' : 'Generate New');
+
+                return (
+                  <article key={record.id}
+                    className={`stand-design-saved-card ${isActive ? 'is-active' : ''}`}>
+
+                    {/* Thumbnail strip — always visible */}
+                    <div className={`sd-saved-thumbs ${concepts.length < 2 ? 'sd-saved-single' : ''}`}
+                      onClick={() => setExpandedRecordId(isExpanded ? null : record.id)}
+                      style={{ cursor: 'pointer' }}>
+                      {concepts.length > 0
+                        ? concepts.map((c) => (
+                            <RenderImageOrPlaceholder key={c.id} src={c.path} alt="Stand concept"
+                              className="stand-design-saved-thumb-image" placeholder="—" />
+                          ))
+                        : <div className="stand-design-saved-thumb-image stand-design-image-placeholder">No image</div>
+                      }
                     </div>
-                    <button type="button" className="stand-design-inline-link is-danger"
-                      onClick={() => deleteRecord(record.id)}>Delete</button>
-                  </div>
-                  <p>{record.prompt || 'Structured brief driven record'}</p>
-                  <div className="stand-design-saved-thumbs">
-                    {(record.concepts || []).slice(0, 2).map((concept) => (
-                      <RenderImageOrPlaceholder key={concept.id} src={concept.path} alt="Saved stand concept"
-                        className="stand-design-saved-thumb-image" placeholder="Unavailable" />
-                    ))}
-                  </div>
-                  <button type="button" className="stand-design-secondary-btn"
-                    onClick={() => setForm(normalizeDesignRecord(record))}>Open Record</button>
-                </article>
-              ))}
+
+                    {/* Compact meta row */}
+                    <div className="sd-saved-meta"
+                      onClick={() => setExpandedRecordId(isExpanded ? null : record.id)}
+                      style={{ cursor: 'pointer' }}>
+                      <strong title={title}>{title}</strong>
+                      <div className="sd-saved-meta-sub">
+                        <span>{toLocalDate(record.updated_at)}</span>
+                        {concepts.length > 0 && <>
+                          <span className="sd-saved-meta-sep">·</span>
+                          <span>{concepts.length} concept{concepts.length !== 1 ? 's' : ''}</span>
+                        </>}
+                      </div>
+                    </div>
+
+                    {/* Compact action row */}
+                    <div className="sd-saved-actions">
+                      <button type="button" className="stand-design-inline-link"
+                        onClick={() => setExpandedRecordId(isExpanded ? null : record.id)}>
+                        {isExpanded ? '▲ Collapse' : '▼ Details'}
+                      </button>
+                      <button type="button" className="stand-design-inline-link is-danger"
+                        onClick={(e) => { e.stopPropagation(); deleteRecord(record.id); }}>
+                        Delete
+                      </button>
+                    </div>
+
+                    {/* Expanded details — inline below the compact card */}
+                    {isExpanded && (
+                      <div className="sd-saved-expanded">
+                        {record.brief?.client_name && (
+                          <div className="sd-saved-expanded-row">
+                            <span className="sd-saved-expanded-label">Client</span>
+                            <span className="sd-saved-expanded-value">{record.brief.client_name}</span>
+                          </div>
+                        )}
+                        {record.brief?.event_name && (
+                          <div className="sd-saved-expanded-row">
+                            <span className="sd-saved-expanded-label">Event</span>
+                            <span className="sd-saved-expanded-value">{record.brief.event_name}</span>
+                          </div>
+                        )}
+                        {(record.brief?.stand_size || record.brief?.stand_type) && (
+                          <div className="sd-saved-expanded-row">
+                            <span className="sd-saved-expanded-label">Stand</span>
+                            <span className="sd-saved-expanded-value">
+                              {[record.brief.stand_size, record.brief.stand_type].filter(Boolean).join(' · ')}
+                            </span>
+                          </div>
+                        )}
+                        {record.prompt && (
+                          <div className="sd-saved-expanded-row">
+                            <span className="sd-saved-expanded-label">Prompt</span>
+                            <span className="sd-saved-expanded-value">{record.prompt}</span>
+                          </div>
+                        )}
+                        {record.model && (
+                          <div className="sd-saved-expanded-row">
+                            <span className="sd-saved-expanded-label">Model</span>
+                            <span className="sd-saved-expanded-value">{record.model}</span>
+                          </div>
+                        )}
+                        <div className="sd-saved-expanded-actions">
+                          <button type="button" className="stand-design-primary-btn"
+                            onClick={() => { setForm(normalizeDesignRecord(record)); setActiveConcept(0); setExpandedRecordId(null); }}>
+                            Load into Studio
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
             </div>
           )}
         </section>

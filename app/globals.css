@@ -5620,6 +5620,26 @@ input[type="checkbox"] {
 }
 
 /* ==================== STAND DESIGN STUDIO ==================== */
+
+/* Admin breadcrumb — sits above the hero, links back to the admin dashboard */
+.sd-admin-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.8rem;
+}
+.sd-admin-breadcrumb-link {
+  color: var(--pico-teal);
+  text-decoration: none;
+  font-weight: 500;
+  opacity: 0.85;
+  transition: opacity 0.15s;
+}
+.sd-admin-breadcrumb-link:hover { opacity: 1; text-decoration: underline; }
+.sd-admin-breadcrumb-sep { color: #9ab4c4; }
+.sd-admin-breadcrumb-current { color: #7a96a8; font-weight: 400; }
+
 .stand-design-page {
   background:
     radial-gradient(circle at top left, rgba(0, 165, 165, 0.08), transparent 26%),
@@ -5741,7 +5761,14 @@ input[type="checkbox"] {
   gap: 1rem;
   position: sticky;
   top: 1rem;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(18, 184, 175, 0.25) transparent;
 }
+.stand-design-controls::-webkit-scrollbar { width: 4px; }
+.stand-design-controls::-webkit-scrollbar-track { background: transparent; }
+.stand-design-controls::-webkit-scrollbar-thumb { background: rgba(18, 184, 175, 0.25); border-radius: 4px; }
 
 .stand-design-section {
   display: grid;
@@ -6012,7 +6039,7 @@ input[type="checkbox"] {
 }
 
 .stand-design-results-grid-wide {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
 }
 
 .stand-design-result-card-xl {
@@ -6216,60 +6243,131 @@ input[type="checkbox"] {
   text-align: center;
 }
 
+/* ── Saved records: compact thumbnail grid ─────────────────────── */
 .stand-design-saved-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.85rem;
   margin-top: 1rem;
 }
 
+/* Compact card — thumbnail cover + minimal meta */
 .stand-design-saved-card {
-  display: grid;
-  gap: 0.8rem;
-  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow 0.18s, border-color 0.18s;
+}
+
+.stand-design-saved-card:hover {
+  border-color: rgba(18, 184, 175, 0.4);
+  box-shadow: 0 6px 20px rgba(18, 184, 175, 0.1);
 }
 
 .stand-design-saved-card.is-active {
-  border-color: rgba(18, 184, 175, 0.48);
-  box-shadow: 0 16px 30px rgba(18, 184, 175, 0.12);
+  border-color: rgba(18, 184, 175, 0.55);
+  box-shadow: 0 10px 28px rgba(18, 184, 175, 0.14);
 }
 
-.stand-design-saved-card-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.stand-design-saved-card-header strong {
-  color: #17364d;
-  display: block;
-}
-
-.stand-design-saved-card-header span {
-  color: #60758a;
-  font-size: 0.8rem;
-}
-
-.stand-design-saved-card p {
-  color: #385164;
-  line-height: 1.5;
-  min-height: 4.5em;
-}
-
-.stand-design-saved-thumbs {
+/* Thumbnail strip — 2 images side by side */
+.sd-saved-thumbs {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.65rem;
+  gap: 2px;
+  background: #e8edf2;
 }
 
 .stand-design-saved-thumbs img,
-.stand-design-saved-thumb-image {
+.stand-design-saved-thumb-image,
+.sd-saved-thumbs .stand-design-saved-thumb-image {
   width: 100%;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 4 / 3;
   object-fit: cover;
-  border-radius: 14px;
-  border: 1px solid #dbe7ee;
+  border-radius: 0;
+  border: none;
+}
+
+/* Single thumbnail fallback (only 1 concept) */
+.sd-saved-thumbs.sd-saved-single { grid-template-columns: 1fr; }
+
+/* Compact meta row below thumbnail strip */
+.sd-saved-meta {
+  padding: 0.65rem 0.75rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  flex: 1;
+}
+
+.sd-saved-meta strong {
+  color: #17364d;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sd-saved-meta-sub {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: #60758a;
+}
+
+.sd-saved-meta-sep { color: #c5d3dc; }
+
+/* Compact action row */
+.sd-saved-actions {
+  padding: 0 0.75rem 0.65rem;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+/* Expanded detail panel — slides open below the compact card */
+.sd-saved-expanded {
+  border-top: 1px solid #e8edf2;
+  padding: 0.85rem 0.85rem 0.9rem;
+  display: grid;
+  gap: 0.65rem;
+  background: linear-gradient(180deg, #f6fafb, #ffffff);
+  animation: sd-fade-in 0.18s ease;
+}
+
+.sd-saved-expanded-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+}
+
+.sd-saved-expanded-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8fa4b4;
+}
+
+.sd-saved-expanded-value {
+  font-size: 0.8rem;
+  color: #385164;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.sd-saved-expanded-actions {
+  display: flex;
+  gap: 0.55rem;
+  margin-top: 0.25rem;
+  flex-wrap: wrap;
 }
 
 @media (max-width: 1200px) {
@@ -6779,4 +6877,271 @@ input[type="checkbox"] {
   overflow-y: auto;
   padding: 1.25rem;
   flex: 1;
+}
+
+/* ── Stand Design: concept sub-page tabs ─────────────────────────────────── */
+
+.sd-concept-tabs {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 2px solid #e4edf2;
+  padding-bottom: 0;
+  margin-bottom: 1rem;
+}
+
+.sd-concept-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.1rem;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #60758a;
+  border-radius: 10px 10px 0 0;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.sd-concept-tab:hover {
+  color: #17364d;
+  background: rgba(18, 184, 175, 0.05);
+}
+
+.sd-concept-tab.is-active {
+  color: #0f766e;
+  border-bottom-color: #12b8af;
+  background: rgba(18, 184, 175, 0.07);
+}
+
+.sd-concept-tab-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #e4edf2;
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: #536b86;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.sd-concept-tab.is-active .sd-concept-tab-num {
+  background: #12b8af;
+  color: #fff;
+}
+
+.sd-concept-tab-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(18, 184, 175, 0.12);
+  color: #0f766e;
+  border: 1px solid rgba(18, 184, 175, 0.2);
+}
+
+.sd-concept-hidden {
+  display: none !important;
+}
+
+/* ── Stand Design: prompt → brief auto-parse UI ───────────────────────────── */
+
+.sd-brief-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.sd-parse-spinner {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #0f766e;
+  animation: sd-spin-pulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes sd-spin-pulse {
+  from { opacity: 0.5; }
+  to   { opacity: 1; }
+}
+
+.sd-parse-badge {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #0f766e;
+  background: rgba(18, 184, 175, 0.1);
+  border: 1px solid rgba(18, 184, 175, 0.22);
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  white-space: nowrap;
+  animation: sd-fade-in 0.3s ease;
+}
+
+@keyframes sd-fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.sd-prompt-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.sd-parse-btn {
+  appearance: none;
+  border: 1px solid rgba(18, 184, 175, 0.35);
+  background: rgba(18, 184, 175, 0.07);
+  color: #0f766e;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  padding: 0.28rem 0.75rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+  white-space: nowrap;
+}
+
+.sd-parse-btn:hover:not(:disabled) {
+  background: rgba(18, 184, 175, 0.14);
+  border-color: rgba(18, 184, 175, 0.5);
+}
+
+.sd-parse-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.sd-parse-notice {
+  font-size: 0.78rem;
+  color: #0f766e;
+  font-weight: 600;
+  margin: 0;
+  padding: 0.45rem 0.75rem;
+  background: rgba(18, 184, 175, 0.08);
+  border: 1px solid rgba(18, 184, 175, 0.18);
+  border-radius: 10px;
+  animation: sd-fade-in 0.3s ease;
+}
+
+/* Live coverage preview inside the brief left-panel card */
+.sd-brief-coverage-preview {
+  padding: 0.85rem 1rem 0.6rem;
+  border-top: 1px solid var(--border-subtle);
+  margin-top: 0.25rem;
+}
+.sd-brief-coverage-preview .sd-coverage-bar {
+  gap: 0.6rem;
+}
+.sd-brief-coverage-preview .sd-coverage-pills {
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+/* ── Stand Design: full-width concept card fixes ──────────────────────────── */
+
+/* 1. The xl card adds padding: 1rem — remove the child elements' built-in
+      padding so it doesn't stack (would have been 1.85 rem top / 2rem sides). */
+.stand-design-result-card-xl .stand-design-result-label {
+  padding: 0;
+}
+.stand-design-result-card-xl .stand-design-result-actions {
+  padding: 0;
+}
+
+/* 2. Full-width cards: two-column interior — image left, detail right */
+.stand-design-result-card-xl {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto auto 1fr auto auto;
+  column-gap: 1.25rem;
+  row-gap: 0.75rem;
+}
+
+/* Header spans full width */
+.stand-design-result-card-xl .stand-design-result-header {
+  grid-column: 1 / -1;
+}
+
+/* Image fills left column, rows 2-4 */
+.stand-design-result-card-xl .stand-design-result-image-xl,
+.stand-design-result-card-xl .stand-design-image-placeholder {
+  grid-column: 1;
+  grid-row: 2 / 5;
+  aspect-ratio: 4 / 3;
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid #dbe7ee;
+  object-fit: cover;
+  align-self: start;
+}
+
+/* Actions, refine, coverage sit in right column */
+.stand-design-result-card-xl .stand-design-result-actions {
+  grid-column: 2;
+  grid-row: 2;
+}
+.stand-design-result-card-xl .stand-design-concept-refine {
+  grid-column: 2;
+  grid-row: 3;
+}
+.stand-design-result-card-xl .stand-design-coverage {
+  grid-column: 2;
+  grid-row: 4;
+  border-top: none;
+  padding-top: 0;
+}
+
+/* Views section spans full width below the two-column area */
+.stand-design-result-card-xl .stand-design-views {
+  grid-column: 1 / -1;
+  grid-row: 5;
+  border-top: 1px solid #e4edf2;
+  padding-top: 0.75rem;
+}
+
+/* 3. Views: 4-column row inside full-width cards */
+.stand-design-result-card-xl .stand-design-view-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* 4. Responsive: collapse to single column below 920 px */
+@media (max-width: 920px) {
+  .stand-design-result-card-xl {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+  .stand-design-result-card-xl .stand-design-result-header,
+  .stand-design-result-card-xl .stand-design-result-image-xl,
+  .stand-design-result-card-xl .stand-design-image-placeholder,
+  .stand-design-result-card-xl .stand-design-result-actions,
+  .stand-design-result-card-xl .stand-design-concept-refine,
+  .stand-design-result-card-xl .stand-design-coverage,
+  .stand-design-result-card-xl .stand-design-views {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  .stand-design-result-card-xl .stand-design-result-image-xl,
+  .stand-design-result-card-xl .stand-design-image-placeholder {
+    aspect-ratio: 16 / 9;
+  }
+  .stand-design-result-card-xl .stand-design-coverage {
+    border-top: 1px solid #e4edf2;
+    padding-top: 0.9rem;
+  }
+  .stand-design-result-card-xl .stand-design-view-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }

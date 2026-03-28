@@ -481,6 +481,13 @@ export default function AdminDashboard() {
                         🎨 Designers Board
                     </Link>
                     <Link
+                        href="/admin/stand-design"
+                        className="admin-sidebar-item"
+                        style={{ display: 'block', textDecoration: 'none' }}
+                    >
+                        Stand Design
+                    </Link>
+                    <Link
                         href="/admin/quotations"
                         className="admin-sidebar-item"
                         style={{ display: 'block', textDecoration: 'none' }}
