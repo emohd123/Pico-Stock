@@ -75,3 +75,28 @@ CREATE POLICY "service_role_all_designers" ON designers FOR ALL TO service_role 
 
 -- Allow anon SELECT on products (public catalogue)
 CREATE POLICY "anon_read_products" ON products FOR SELECT TO anon USING (true);
+
+-- ────────────────────────────────────────────────────────────
+-- STAND DESIGNS
+-- ────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS stand_designs (
+    id                    TEXT        PRIMARY KEY,
+    mode                  TEXT        NOT NULL,
+    prompt                TEXT        NOT NULL,
+    refinement_prompt     TEXT        NOT NULL DEFAULT '',
+    style_preset          TEXT        NOT NULL,
+    angle                 TEXT        NOT NULL DEFAULT '',
+    reference_image_path  TEXT        NOT NULL DEFAULT '',
+    brief_json            JSONB       NOT NULL DEFAULT '{}'::jsonb,
+    concepts              JSONB       NOT NULL DEFAULT '[]'::jsonb,
+    provider              TEXT        NOT NULL DEFAULT 'google-genai',
+    model                 TEXT        NOT NULL DEFAULT '',
+    created_at            TIMESTAMPTZ NOT NULL,
+    updated_at            TIMESTAMPTZ NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS stand_designs_updated_at_idx ON stand_designs (updated_at DESC);
+
+ALTER TABLE stand_designs ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "service_role_all_stand_designs" ON stand_designs FOR ALL TO service_role USING (true) WITH CHECK (true);
