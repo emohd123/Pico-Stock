@@ -6763,11 +6763,20 @@ input[type="checkbox"] {
   min-height: 1.6rem;
   border-radius: 999px;
   background: rgba(18, 184, 175, 0.12);
-  font-size: 0.95rem;
-  color: #0f7b72;
+  font-size: 0;
+  color: transparent;
   font-weight: 800;
   flex-shrink: 0;
   transition: transform 0.15s;
+}
+.sd-chevron::before {
+  content: "v";
+  font-size: 0.95rem;
+  line-height: 1;
+  color: #0f7b72;
+}
+.sd-collapsible.is-collapsed .sd-chevron::before {
+  content: ">";
 }
 .sd-collapsible-body {
   padding: 0.7rem 0.15rem 0.3rem;
