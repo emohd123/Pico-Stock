@@ -343,6 +343,8 @@ function buildBlueprintData(scene, brief, selectedConcept) {
     const footprint = scene?.footprint || { width: 0, depth: 0 };
     const objects = Array.isArray(scene?.objects) ? scene.objects.filter((item) => item.visible !== false) : [];
     const materialScheduleMap = new Map();
+    const zoneMap = new Map();
+    const openSides = [];
     objects.forEach((item) => {
         const material = item?.material || {};
         const key = material.preset_id || material.color || 'default';
@@ -354,6 +356,42 @@ function buildBlueprintData(scene, brief, selectedConcept) {
             opacity: Number.isFinite(Number(material.opacity)) ? Number(material.opacity) : 1,
         });
     });
+    objects.forEach((item) => {
+        const label = (item.group_id || item.type || 'General')
+            .replace(/[-_]/g, ' ')
+            .replace(/\b\w/g, (char) => char.toUpperCase());
+        const x = Number(item.position?.[0] || 0);
+        const z = Number(item.position?.[2] || 0);
+        const objectWidth = Number(item.dimensions?.width || 1);
+        const objectDepth = Math.max(Number(item.dimensions?.depth || 1), item.type === 'plane' ? 0.12 : 0.2);
+        const bounds = {
+            minX: x - (objectWidth / 2),
+            maxX: x + (objectWidth / 2),
+            minZ: z - (objectDepth / 2),
+            maxZ: z + (objectDepth / 2),
+        };
+        const current = zoneMap.get(label);
+        if (!current) {
+            zoneMap.set(label, { label, ...bounds, count: 1 });
+            return;
+        }
+        current.minX = Math.min(current.minX, bounds.minX);
+        current.maxX = Math.max(current.maxX, bounds.maxX);
+        current.minZ = Math.min(current.minZ, bounds.minZ);
+        current.maxZ = Math.max(current.maxZ, bounds.maxZ);
+        current.count += 1;
+    });
+    const standTypeText = `${brief?.stand_type || ''} ${brief?.partial_open_side_details || ''}`.toLowerCase();
+    if (/island|3 sides|three sides|open from 3/i.test(standTypeText)) {
+        openSides.push('Front Open', 'Left Open', 'Right Open');
+    } else if (/semi-open|partial/i.test(standTypeText)) {
+        openSides.push('Front Open', 'One Side Semi-open');
+    } else {
+        openSides.push('Front Open');
+    }
+    if (brief?.partial_open_side_details) {
+        openSides.push(brief.partial_open_side_details);
+    }
     return {
         projectName: selectedConcept?.blueprint?.project_name || selectedConcept?.title || 'Stand Design',
         venue: selectedConcept?.blueprint?.venue || brief?.location || brief?.event_name || 'Venue not specified',
@@ -361,6 +399,11 @@ function buildBlueprintData(scene, brief, selectedConcept) {
         footprint,
         objects,
         materialSchedule: [...materialScheduleMap.values()],
+        zones: [...zoneMap.values()].sort((a, b) => b.count - a.count).slice(0, 8),
+        openSides,
+        issueDate: new Date().toLocaleDateString('en-GB'),
+        projectCode: brief?.event_name || brief?.client_name || 'Stand Design',
+        objectCount: objects.length,
     };
 }
 
@@ -369,9 +412,21 @@ function BlueprintView({ scene, brief, selectedConcept }) {
     const width = 860;
     const height = 540;
     const padding = 48;
+    const footerHeight = 84;
     const footprintWidth = Math.max(Number(blueprint.footprint?.width || 1), 1);
     const footprintDepth = Math.max(Number(blueprint.footprint?.depth || 1), 1);
-    const scale = Math.min((width - (padding * 2)) / footprintWidth, (height - (padding * 2)) / footprintDepth);
+    const scale = Math.min((width - (padding * 2)) / footprintWidth, (height - footerHeight - (padding * 2)) / footprintDepth);
+    const drawingHeight = footprintDepth * scale;
+    const drawingWidth = footprintWidth * scale;
+    const drawingBottom = padding + drawingHeight;
+    const familyColor = (sceneObject) => {
+        const type = sceneObject.type || '';
+        if (/wall|partition|portal_leg|arch_band|fascia|logo_beam|branded_wall/.test(type)) return '#1e3a5f';
+        if (/screen|av_cabinet|screen_cluster_wall/.test(type)) return '#0f4c81';
+        if (/plinth|display|reception|counter/.test(type)) return '#9a6700';
+        if (/chair|sofa|coffee|meeting|stool/.test(type)) return '#6b4f3b';
+        return '#334155';
+    };
     const toSvgRect = (sceneObject) => {
         const x = Number(sceneObject.position?.[0] || 0);
         const z = Number(sceneObject.position?.[2] || 0);
@@ -384,12 +439,49 @@ function BlueprintView({ scene, brief, selectedConcept }) {
             height: objectDepth * scale,
         };
     };
+    const toZoneRect = (zone) => ({
+        x: (zone.minX + (footprintWidth / 2)) * scale + padding,
+        y: (zone.minZ + (footprintDepth / 2)) * scale + padding,
+        width: (zone.maxX - zone.minX) * scale,
+        height: (zone.maxZ - zone.minZ) * scale,
+    });
 
     return (
         <div className="stand-design-blueprint-shell">
             <svg className="stand-design-blueprint-svg" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Stand blueprint view">
                 <rect x="0" y="0" width={width} height={height} fill="#f8fafc" />
-                <rect x={padding} y={padding} width={footprintWidth * scale} height={footprintDepth * scale} fill="#ffffff" stroke="#0f172a" strokeWidth="2.5" />
+                <rect x={padding} y={padding} width={drawingWidth} height={drawingHeight} fill="#ffffff" stroke="#0f172a" strokeWidth="2.5" />
+                <line x1={padding} y1={padding - 16} x2={padding + drawingWidth} y2={padding - 16} stroke="#64748b" strokeWidth="1.25" />
+                <line x1={padding} y1={padding - 21} x2={padding} y2={padding - 11} stroke="#64748b" strokeWidth="1.25" />
+                <line x1={padding + drawingWidth} y1={padding - 21} x2={padding + drawingWidth} y2={padding - 11} stroke="#64748b" strokeWidth="1.25" />
+                <text x={padding + (drawingWidth / 2)} y={padding - 22} fontSize="11" textAnchor="middle" fill="#334155">{footprintWidth}m WIDTH</text>
+                <line x1={padding - 20} y1={padding} x2={padding - 20} y2={padding + drawingHeight} stroke="#64748b" strokeWidth="1.25" />
+                <line x1={padding - 25} y1={padding} x2={padding - 15} y2={padding} stroke="#64748b" strokeWidth="1.25" />
+                <line x1={padding - 25} y1={padding + drawingHeight} x2={padding - 15} y2={padding + drawingHeight} stroke="#64748b" strokeWidth="1.25" />
+                <text x={padding - 28} y={padding + (drawingHeight / 2)} fontSize="11" textAnchor="middle" fill="#334155" transform={`rotate(-90 ${padding - 28} ${padding + (drawingHeight / 2)})`}>{footprintDepth}m DEPTH</text>
+                <text x={padding + (drawingWidth / 2)} y={drawingBottom + 18} fontSize="11" textAnchor="middle" fill="#0f766e">FRONT OPEN EDGE</text>
+                {blueprint.openSides.slice(0, 3).map((item, index) => (
+                    <text key={`${item}-${index}`} x={padding + 8 + (index * 150)} y={drawingBottom + 34} fontSize="10" fill="#475569">{item}</text>
+                ))}
+                {blueprint.zones.map((zone) => {
+                    const rect = toZoneRect(zone);
+                    if (rect.width < 26 || rect.height < 18) return null;
+                    return (
+                        <g key={`zone-${zone.label}`}>
+                            <rect
+                                x={rect.x}
+                                y={rect.y}
+                                width={rect.width}
+                                height={rect.height}
+                                fill="none"
+                                stroke="#94a3b8"
+                                strokeDasharray="5 4"
+                                strokeWidth="1"
+                            />
+                            <text x={rect.x + 6} y={rect.y + 14} fontSize="9" fill="#475569">{zone.label}</text>
+                        </g>
+                    );
+                })}
                 {blueprint.objects.map((sceneObject) => {
                     const rect = toSvgRect(sceneObject);
                     return (
@@ -401,8 +493,9 @@ function BlueprintView({ scene, brief, selectedConcept }) {
                                 height={Math.max(rect.height, 4)}
                                 fill={sceneObject.material?.color || '#d6d3d1'}
                                 fillOpacity={sceneObject.material?.opacity ?? 0.95}
-                                stroke="#1f2937"
-                                strokeWidth="1"
+                                stroke={familyColor(sceneObject)}
+                                strokeWidth={sceneObject.type === 'plane' ? '1.4' : '1'}
+                                strokeDasharray={sceneObject.type === 'plane' ? '4 2' : undefined}
                             />
                             <text x={rect.x + 4} y={rect.y + 14} fontSize="10" fill="#0f172a">
                                 {(sceneObject.label || sceneObject.type).slice(0, 18)}
@@ -411,9 +504,23 @@ function BlueprintView({ scene, brief, selectedConcept }) {
                     );
                 })}
                 <text x={padding} y={22} fontSize="18" fontWeight="700" fill="#0f172a">{blueprint.projectName}</text>
-                <text x={padding} y={42} fontSize="11" fill="#475569">Venue: {blueprint.venue} | Scale: {blueprint.scaleLabel}</text>
-                <text x={padding} y={height - 18} fontSize="11" fill="#475569">Width: {footprintWidth}m</text>
-                <text x={padding + (footprintWidth * scale) - 70} y={height - 18} fontSize="11" fill="#475569">Depth: {footprintDepth}m</text>
+                <text x={padding} y={42} fontSize="11" fill="#475569">Venue: {blueprint.venue} | Scale: {blueprint.scaleLabel} | Objects: {blueprint.objectCount}</text>
+                <rect x={padding} y={height - footerHeight} width={width - (padding * 2)} height={footerHeight - 18} fill="#ffffff" stroke="#cbd5e1" strokeWidth="1.2" />
+                <line x1={padding + 290} y1={height - footerHeight} x2={padding + 290} y2={height - 18} stroke="#cbd5e1" strokeWidth="1" />
+                <line x1={padding + 510} y1={height - footerHeight} x2={padding + 510} y2={height - 18} stroke="#cbd5e1" strokeWidth="1" />
+                <text x={padding + 14} y={height - 58} fontSize="11" fontWeight="700" fill="#0f172a">PROJECT / LEGEND</text>
+                <text x={padding + 14} y={height - 40} fontSize="10" fill="#475569">{blueprint.projectCode}</text>
+                <text x={padding + 14} y={height - 24} fontSize="10" fill="#475569">{blueprint.venue}</text>
+                <text x={padding + 304} y={height - 58} fontSize="11" fontWeight="700" fill="#0f172a">OPEN SIDES / ISSUE</text>
+                <text x={padding + 304} y={height - 40} fontSize="10" fill="#475569">{blueprint.openSides.join(' | ')}</text>
+                <text x={padding + 304} y={height - 24} fontSize="10" fill="#475569">Issued {blueprint.issueDate}</text>
+                <text x={padding + 524} y={height - 58} fontSize="11" fontWeight="700" fill="#0f172a">MATERIAL SCHEDULE</text>
+                {blueprint.materialSchedule.slice(0, 3).map((item, index) => (
+                    <g key={`material-${item.key}`}>
+                        <rect x={padding + 524} y={height - 48 + (index * 14)} width="9" height="9" rx="2" fill={item.color} />
+                        <text x={padding + 538} y={height - 40 + (index * 14)} fontSize="9" fill="#475569">{item.label}</text>
+                    </g>
+                ))}
             </svg>
             <div className="stand-design-blueprint-meta">
                 <div>
@@ -421,6 +528,7 @@ function BlueprintView({ scene, brief, selectedConcept }) {
                     <p>{blueprint.projectName}</p>
                     <p>{blueprint.venue}</p>
                     <p>Scale {blueprint.scaleLabel}</p>
+                    <p>{blueprint.objectCount} mapped objects</p>
                 </div>
                 <div>
                     <strong>Material Schedule</strong>
@@ -430,6 +538,14 @@ function BlueprintView({ scene, brief, selectedConcept }) {
                                 <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 999, background: item.color, marginRight: 6, verticalAlign: 'middle' }} />
                                 {item.label}
                             </span>
+                        ))}
+                    </div>
+                </div>
+                <div>
+                    <strong>Open Sides</strong>
+                    <div className="stand-design-3d-chip-row">
+                        {blueprint.openSides.map((item, index) => (
+                            <span key={`${item}-${index}`} className="stand-design-mini-pill">{item}</span>
                         ))}
                     </div>
                 </div>
@@ -467,6 +583,64 @@ function normalizeSceneForClient(scene, brief) {
     }
 }
 
+function getSceneBounds(scene) {
+    const objects = Array.isArray(scene?.objects) ? scene.objects.filter((item) => item.visible !== false) : [];
+    if (!objects.length) {
+        const footprint = scene?.footprint || { width: 6, depth: 6 };
+        return {
+            minX: -(footprint.width / 2),
+            maxX: footprint.width / 2,
+            minY: 0,
+            maxY: 3,
+            minZ: -(footprint.depth / 2),
+            maxZ: footprint.depth / 2,
+        };
+    }
+    const bounds = {
+        minX: Infinity,
+        maxX: -Infinity,
+        minY: Infinity,
+        maxY: -Infinity,
+        minZ: Infinity,
+        maxZ: -Infinity,
+    };
+    objects.forEach((item) => {
+        const position = Array.isArray(item.position) ? item.position : [0, 0, 0];
+        const dimensions = item.dimensions || { width: 1, height: 1, depth: 1 };
+        const scale = Array.isArray(item.scale) ? item.scale : [1, 1, 1];
+        const width = Number(dimensions.width || 1) * Number(scale[0] || 1);
+        const height = Number(dimensions.height || 1) * Number(scale[1] || 1);
+        const depth = Math.max(Number(dimensions.depth || 1) * Number(scale[2] || 1), item.type === 'plane' ? 0.12 : 0.05);
+        bounds.minX = Math.min(bounds.minX, position[0] - (width / 2));
+        bounds.maxX = Math.max(bounds.maxX, position[0] + (width / 2));
+        bounds.minY = Math.min(bounds.minY, Math.max(0, position[1] - (height / 2)));
+        bounds.maxY = Math.max(bounds.maxY, position[1] + (height / 2));
+        bounds.minZ = Math.min(bounds.minZ, position[2] - (depth / 2));
+        bounds.maxZ = Math.max(bounds.maxZ, position[2] + (depth / 2));
+    });
+    return bounds;
+}
+
+function buildFitSceneCamera(scene, preset = 'fit') {
+    const bounds = getSceneBounds(scene);
+    const centerX = (bounds.minX + bounds.maxX) / 2;
+    const centerY = (bounds.minY + bounds.maxY) / 2;
+    const centerZ = (bounds.minZ + bounds.maxZ) / 2;
+    const width = Math.max(1, bounds.maxX - bounds.minX);
+    const height = Math.max(1, bounds.maxY - bounds.minY);
+    const depth = Math.max(1, bounds.maxZ - bounds.minZ);
+    const radius = Math.max(width, height, depth);
+    return {
+        preset,
+        position: [
+            centerX + Math.max(width * 0.95, radius * 0.95),
+            Math.max(2.4, centerY + Math.max(height * 0.9, radius * 0.5)),
+            centerZ + Math.max(depth * 1.18, radius * 1.1),
+        ],
+        target: [centerX, Math.max(0.8, centerY * 0.78), centerZ],
+    };
+}
+
 function conceptIndexFromConcept(selectedConcept) {
     const match = String(selectedConcept?.id || '').match(/concept-(\d+)/i);
     if (!match) return 0;
@@ -475,7 +649,6 @@ function conceptIndexFromConcept(selectedConcept) {
 
 function enrichSparseScene(scene, brief, selectedConcept) {
     const normalized = normalizeSceneForClient(scene, brief);
-    if ((normalized.objects || []).length >= 16) return normalized;
     const heuristicScene = createHeuristicStandScene({
         brief,
         conceptIndex: conceptIndexFromConcept(selectedConcept),
@@ -495,6 +668,9 @@ function enrichSparseScene(scene, brief, selectedConcept) {
             label: `${item.label} Detail`,
             locked: true,
         }));
+    if (enhancementObjects.length === 0 && (normalized.objects || []).length >= 16) {
+        return normalized;
+    }
     return {
         ...normalized,
         objects: [...normalized.objects, ...enhancementObjects],
@@ -597,6 +773,10 @@ function PrimitiveObject({ object, selected, showHelpers }) {
                         <torusGeometry args={[Math.max(0.2, innerRadius), Math.max(0.04, thickness / 2), 18, 48, Math.PI]} />
                         <meshStandardMaterial {...materialProps} />
                     </mesh>
+                    <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, -(depth * 0.12)]}>
+                        <torusGeometry args={[Math.max(0.16, innerRadius - (thickness * 0.5)), Math.max(0.018, thickness / 10), 16, 40, Math.PI]} />
+                        <meshStandardMaterial color={lightenHex(baseColor, 0.16)} metalness={0.2} roughness={0.26} emissive={glowColor} emissiveIntensity={0.12} />
+                    </mesh>
                     <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, depth * 0.12]}>
                         <torusGeometry args={[Math.max(0.18, innerRadius - (thickness * 0.28)), Math.max(0.025, thickness / 6), 16, 40, Math.PI]} />
                         <meshStandardMaterial color={accentColor} metalness={0.22} roughness={0.34} emissive={glowColor} emissiveIntensity={0.22} />
@@ -608,6 +788,10 @@ function PrimitiveObject({ object, selected, showHelpers }) {
                     <mesh position={[innerRadius, -height / 2.2, 0]}>
                         <boxGeometry args={[thickness, height, depth * 0.9]} />
                         <meshStandardMaterial {...materialProps} />
+                    </mesh>
+                    <mesh position={[0, -(height * 0.44), 0]}>
+                        <boxGeometry args={[Math.max(0.4, innerRadius * 1.72), Math.max(0.05, thickness * 0.32), depth * 0.76]} />
+                        <meshStandardMaterial color={lightenHex(baseColor, 0.1)} metalness={0.12} roughness={0.4} />
                     </mesh>
                 </group>
             );
@@ -625,6 +809,16 @@ function PrimitiveObject({ object, selected, showHelpers }) {
                         <boxGeometry args={[width * 0.78, height * 0.12, 0.02]} />
                         <meshStandardMaterial color={accentColor} emissive={glowColor} emissiveIntensity={0.12} metalness={0.18} roughness={0.42} />
                     </mesh>
+                    <mesh position={[0, height * 0.18, (depth / 2) + 0.016]}>
+                        <boxGeometry args={[width * 0.54, height * 0.16, 0.032]} />
+                        <meshStandardMaterial color={lightenHex(baseColor, 0.14)} metalness={0.08} roughness={0.52} />
+                    </mesh>
+                    {[-1, 1].map((dir) => (
+                        <mesh key={`counter-wing-${dir}`} position={[dir * (width * 0.34), height * 0.5, (depth * 0.18)]}>
+                            <boxGeometry args={[width * 0.18, height * 0.58, depth * 0.28]} />
+                            <meshStandardMaterial color={trimColor} metalness={0.18} roughness={0.36} />
+                        </mesh>
+                    ))}
                 </group>
             );
         case 'plinth':
@@ -640,6 +834,14 @@ function PrimitiveObject({ object, selected, showHelpers }) {
                     <mesh position={[0, 0.08, 0]}>
                         <boxGeometry args={[width * 0.92, 0.04, depth * 0.92]} />
                         <meshStandardMaterial color={accentColor} emissive={glowColor} emissiveIntensity={0.16} metalness={0.12} roughness={0.44} />
+                    </mesh>
+                    <mesh position={[0, height * 0.72, 0]}>
+                        <boxGeometry args={[width * 0.56, height * 0.18, depth * 0.56]} />
+                        <meshStandardMaterial color={lightenHex(baseColor, 0.12)} metalness={0.08} roughness={0.62} />
+                    </mesh>
+                    <mesh position={[0, height * 0.1, 0]}>
+                        <boxGeometry args={[width * 1.04, 0.05, depth * 1.04]} />
+                        <meshStandardMaterial color={darkenHex(baseColor, 0.08)} emissive={glowColor} emissiveIntensity={0.1} metalness={0.12} roughness={0.38} />
                     </mesh>
                 </group>
             );
@@ -661,12 +863,20 @@ function PrimitiveObject({ object, selected, showHelpers }) {
                     <RoundedBox args={[width, height, depth]} radius={0.05} smoothness={4} position={[0, height / 2, 0]}>
                         <meshStandardMaterial {...materialProps} />
                     </RoundedBox>
-                    {[-0.28, 0.28].map((offset, index) => (
+                    <mesh position={[0, height * 0.82, (depth / 2) + 0.012]}>
+                        <boxGeometry args={[width * 0.54, height * 0.12, 0.02]} />
+                        <meshStandardMaterial color={accentColor} emissive={glowColor} emissiveIntensity={0.12} metalness={0.16} roughness={0.34} />
+                    </mesh>
+                    {[-0.34, 0, 0.34].map((offset, index) => (
                         <mesh key={`cluster-screen-${index}`} position={[width * offset, height * 0.56, (depth / 2) + 0.012]}>
-                            <planeGeometry args={[width * 0.36, height * 0.38]} />
+                            <planeGeometry args={[width * 0.24, height * 0.34]} />
                             <meshStandardMaterial color="#1e293b" emissive="#4f8fd8" emissiveIntensity={0.38} metalness={0.06} roughness={0.16} />
                         </mesh>
                     ))}
+                    <mesh position={[0, height * 0.18, (depth / 2) + 0.014]}>
+                        <boxGeometry args={[width * 0.72, height * 0.018, 0.016]} />
+                        <meshStandardMaterial color={lightenHex(baseColor, 0.12)} emissive={glowColor} emissiveIntensity={0.08} metalness={0.1} roughness={0.36} />
+                    </mesh>
                 </group>
             );
         case 'wall':
@@ -704,6 +914,12 @@ function PrimitiveObject({ object, selected, showHelpers }) {
                         <boxGeometry args={[width * 0.62, height * 0.018, 0.016]} />
                         <meshStandardMaterial color={trimColor} emissive={glowColor} emissiveIntensity={0.1} />
                     </mesh>
+                    {[-1, 1].map((dir) => (
+                        <mesh key={`brand-fin-${dir}`} position={[dir * (width * 0.44), height * 0.52, (depth / 2) + 0.006]}>
+                            <boxGeometry args={[width * 0.05, height * 0.7, 0.016]} />
+                            <meshStandardMaterial color={accentColor} metalness={0.14} roughness={0.36} emissive={glowColor} emissiveIntensity={0.06} />
+                        </mesh>
+                    ))}
                 </group>
             );
         case 'plane':
@@ -743,6 +959,10 @@ function PrimitiveObject({ object, selected, showHelpers }) {
                     <mesh position={[0, height * 0.5, (depth / 2) + 0.01]}>
                         <boxGeometry args={[width * 0.36, height * 0.74, 0.018]} />
                         <meshStandardMaterial color={accentColor} emissive={glowColor} emissiveIntensity={0.09} metalness={0.12} roughness={0.42} />
+                    </mesh>
+                    <mesh position={[0, height * 0.5, -(depth / 2) - 0.002]}>
+                        <boxGeometry args={[width * 0.22, height * 0.66, 0.012]} />
+                        <meshStandardMaterial color={lightenHex(baseColor, 0.1)} metalness={0.08} roughness={0.52} />
                     </mesh>
                 </group>
             );
@@ -1181,14 +1401,7 @@ export default function StandDesign3DEditor({ recordId, initialConceptIndex = 0 
             setRecord(data.item);
             const generatedConcept = data.item?.concepts?.[index] || null;
             const nextScene = hydrateSceneForEditor(data.scene, data.item?.brief, generatedConcept);
-            const preferredCamera = data.item?.concepts?.[index]?.scene_match_camera || nextScene.match_camera;
-            if (preferredCamera?.position && preferredCamera?.target) {
-                nextScene.camera = {
-                    preset: 'match',
-                    position: preferredCamera.position,
-                    target: preferredCamera.target,
-                };
-            }
+            nextScene.camera = buildFitSceneCamera(nextScene);
             setScene(nextScene);
             setSelectedObjectId('');
             flash('success', data.generated_by === 'gemini' ? '3D scene generated from Gemini blueprint.' : '3D scene generated from the internal layout fallback.');
@@ -1208,14 +1421,7 @@ export default function StandDesign3DEditor({ recordId, initialConceptIndex = 0 
             setRecord(data.item);
             const loadedConcept = data.item?.concepts?.[index] || null;
             const nextScene = hydrateSceneForEditor(data.scene, data.item?.brief, loadedConcept);
-            const preferredCamera = data.item?.concepts?.[index]?.scene_match_camera || nextScene.match_camera;
-            if (preferredCamera?.position && preferredCamera?.target) {
-                nextScene.camera = {
-                    preset: 'match',
-                    position: preferredCamera.position,
-                    target: preferredCamera.target,
-                };
-            }
+            nextScene.camera = buildFitSceneCamera(nextScene);
             setScene(nextScene);
             setSelectedObjectId('');
             if (!data.scene && autoGenerate) {
@@ -1257,7 +1463,9 @@ export default function StandDesign3DEditor({ recordId, initialConceptIndex = 0 
             const data = await response.json();
             if (!response.ok) throw new Error(data.error || 'Failed to save 3D scene');
             setRecord(data.item);
-            setScene(hydrateSceneForEditor(data.scene, data.item?.brief, data.item?.concepts?.[conceptIndex] || null));
+            const savedScene = hydrateSceneForEditor(data.scene, data.item?.brief, data.item?.concepts?.[conceptIndex] || null);
+            savedScene.camera = buildFitSceneCamera(savedScene);
+            setScene(savedScene);
             flash('success', '3D scene saved.');
         } catch (error) {
             flash('error', error.message || 'Failed to save 3D scene');
@@ -1550,6 +1758,7 @@ export default function StandDesign3DEditor({ recordId, initialConceptIndex = 0 
         setScene((current) => {
             const footprint = current.footprint || { width: 6, depth: 6 };
             const nextCamera = {
+                fit: buildFitSceneCamera(current, 'fit'),
                 perspective: {
                     preset: 'perspective',
                     position: [footprint.width * 0.9, footprint.width * 0.7, footprint.depth * 0.9],
