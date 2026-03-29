@@ -162,6 +162,7 @@ export default function StandDesignStudio() {
   const [uploadingField, setUploadingField] = useState('');
   const [message, setMessage] = useState({ type: '', text: '' });
   const [aiStatus, setAiStatus] = useState({ configured: false, model: '' });
+  const [aiLoading, setAiLoading] = useState(true);
   const [collapsedSections, setCollapsedSections] = useState(new Set());
   const [activeConcept, setActiveConcept] = useState(0);
   const [parsingBrief, setParsingBrief] = useState(false);
@@ -192,6 +193,7 @@ export default function StandDesignStudio() {
       const response = await fetch('/api/stand-design', { cache: 'no-store' });
       const data = await response.json();
       if (data.ai) setAiStatus(data.ai);
+      setAiLoading(false);
       if (!response.ok) throw new Error(data.error || 'Failed to load stand design studio');
       const items = Array.isArray(data.items) ? data.items.map(normalizeDesignRecord) : [];
       setRecords(items);
@@ -398,11 +400,11 @@ export default function StandDesignStudio() {
             <p>Generate 2 different Pico-style stand concepts with stronger layout accuracy, richer brand control, and clearer comparison for client-facing reviews.</p>
           </div>
           <div className="stand-design-hero-status">
-            <span className={`stand-design-status-pill ${aiStatus.configured ? 'is-live' : 'is-warning'}`}>
-              {aiStatus.configured ? 'Gemini Ready' : 'Gemini Not Configured'}
+            <span className={`stand-design-status-pill ${aiLoading ? 'is-loading' : aiStatus.configured ? 'is-live' : 'is-warning'}`}>
+              {aiLoading ? 'Checking…' : aiStatus.configured ? 'Gemini Ready' : 'Gemini Not Configured'}
             </span>
             <span className="stand-design-status-meta">
-              {aiStatus.model ? `Model: ${aiStatus.model}` : 'Set GEMINI_API_KEY and GEMINI_IMAGE_MODEL on the server'}
+              {aiLoading ? '' : aiStatus.model ? `Model: ${aiStatus.model}` : 'Set GEMINI_API_KEY and GEMINI_IMAGE_MODEL on the server'}
             </span>
           </div>
         </div>
@@ -417,6 +419,7 @@ export default function StandDesignStudio() {
 
           {/* LEFT: Controls */}
           <aside className="stand-design-panel stand-design-controls">
+            <div className="stand-design-controls-body">
 
             <div className="stand-design-section">
               <div className="stand-design-section-label">Mode</div>
@@ -553,7 +556,9 @@ export default function StandDesignStudio() {
               </div>
             ) : null}
 
-            <div className="stand-design-actions">
+            </div>{/* end stand-design-controls-body */}
+
+            <div className="stand-design-actions stand-design-actions-footer">
               <button type="button" className="stand-design-primary-btn" disabled={busy}
                 onClick={() => submitGeneration({ regenerate: Boolean(form.id) })}>
                 {busy ? 'Generating...' : form.id ? 'Regenerate 2 Concepts' : 'Generate 2 Concepts'}

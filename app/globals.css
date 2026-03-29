@@ -5720,6 +5720,12 @@ input[type="checkbox"] {
   border: 1px solid rgba(245, 158, 11, 0.18);
 }
 
+.stand-design-status-pill.is-loading {
+  background: rgba(148, 163, 184, 0.1);
+  color: #64748b;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
 .stand-design-status-meta {
   color: #60758a;
   font-size: 0.84rem;
@@ -5757,18 +5763,34 @@ input[type="checkbox"] {
 }
 
 .stand-design-controls {
-  display: grid;
-  gap: 1rem;
+  display: flex;
+  flex-direction: column;
   position: sticky;
   top: 1rem;
   max-height: calc(100vh - 2rem);
+  overflow: hidden;
+  padding: 0 !important;
+}
+
+.stand-design-controls-body {
+  flex: 1;
   overflow-y: auto;
+  padding: 1.4rem 1.45rem;
+  display: grid;
+  gap: 1rem;
   scrollbar-width: thin;
   scrollbar-color: rgba(18, 184, 175, 0.25) transparent;
 }
-.stand-design-controls::-webkit-scrollbar { width: 4px; }
-.stand-design-controls::-webkit-scrollbar-track { background: transparent; }
-.stand-design-controls::-webkit-scrollbar-thumb { background: rgba(18, 184, 175, 0.25); border-radius: 4px; }
+.stand-design-controls-body::-webkit-scrollbar { width: 4px; }
+.stand-design-controls-body::-webkit-scrollbar-track { background: transparent; }
+.stand-design-controls-body::-webkit-scrollbar-thumb { background: rgba(18, 184, 175, 0.25); border-radius: 4px; }
+
+.stand-design-actions-footer {
+  flex-shrink: 0;
+  padding: 0.9rem 1.45rem 1.1rem;
+  border-top: 1px solid #dbe5ec;
+  background: rgba(255,255,255,0.97);
+}
 
 .stand-design-section {
   display: grid;
@@ -6417,6 +6439,14 @@ input[type="checkbox"] {
   .stand-design-hero {
     padding: 1.1rem;
     border-radius: 20px;
+  }
+
+  .stand-design-controls-body {
+    padding: 1.1rem;
+  }
+
+  .stand-design-actions-footer {
+    padding: 0.75rem 1.1rem 1rem;
   }
 
   .stand-design-actions,
