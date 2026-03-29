@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getStandDesignAiStatus } from '@/lib/standDesignAi';
-import { getStandDesigns } from '@/lib/standDesignStore';
+import { getStandDesigns, getStandDesignStorageStatus } from '@/lib/standDesignStore';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -11,8 +11,16 @@ export async function GET() {
         return NextResponse.json({
             items,
             ai: getStandDesignAiStatus(),
+            storage: getStandDesignStorageStatus(),
         });
     } catch (error) {
-        return NextResponse.json({ error: 'Failed to fetch stand designs', ai: getStandDesignAiStatus() }, { status: 500 });
+        return NextResponse.json({
+            items: [],
+            ai: getStandDesignAiStatus(),
+            storage: getStandDesignStorageStatus(),
+            warning: 'Saved stand designs are temporarily unavailable. You can still create a new concept.',
+            error: 'Failed to fetch stand designs',
+            details: error instanceof Error ? error.message : 'Unknown error',
+        });
     }
 }
