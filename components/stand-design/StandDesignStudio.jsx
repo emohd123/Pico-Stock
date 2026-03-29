@@ -169,6 +169,7 @@ export default function StandDesignStudio() {
   const [briefParseInfo, setBriefParseInfo] = useState({ count: 0, show: false });
   const [regeneratingConceptIndex, setRegeneratingConceptIndex] = useState(null);
   const [expandedRecordId, setExpandedRecordId] = useState(null);
+  const [previewItem, setPreviewItem] = useState(null);
 
   const selectedRecord = useMemo(
     () => records.find((item) => String(item.id) === String(form.id)) || null,
@@ -339,6 +340,14 @@ export default function StandDesignStudio() {
   }
 
   function resetDraft() { setForm(createDraft()); flash('', ''); }
+
+  function openPreview(src, title) {
+    if (!src) {
+      flash('error', 'Preview image is not available.');
+      return;
+    }
+    setPreviewItem({ src, title: title || 'Stand Preview' });
+  }
 
   function applyConceptAsReference(conceptPath) {
     setForm((current) => ({ ...current, mode: 'edit', reference_image_path: conceptPath }));
@@ -637,10 +646,9 @@ export default function StandDesignStudio() {
                       placeholder="Saved image unavailable for this older record" />
 
                     <div className="stand-design-result-actions">
-                      {/* Preview — open in new tab */}
-                      <a className="stand-design-inline-link" href={concept.path} target="_blank" rel="noreferrer">
+                      <button type="button" className="stand-design-inline-link" onClick={() => openPreview(concept.path, concept.title || `Concept ${index + 1}`)}>
                         Preview
-                      </a>
+                      </button>
 
                       {/* Download — client + event + concept title for meaningful filenames */}
                       <a className="stand-design-inline-link" href={concept.path}
@@ -711,7 +719,7 @@ export default function StandDesignStudio() {
                                 <span>{view.angle || ''}</span>
                               </div>
                               <div className="stand-design-view-actions">
-                                <a className="stand-design-inline-link" href={view.path} target="_blank" rel="noreferrer">Preview</a>
+                                <button type="button" className="stand-design-inline-link" onClick={() => openPreview(view.path, view.label || 'Stand View')}>Preview</button>
                                 <a className="stand-design-inline-link" href={view.path}
                                   download={buildDownloadFilename(form.brief, concept.title || `Concept ${index + 1}`, view.label || view.angle || 'view')}>
                                   Download
@@ -862,6 +870,26 @@ export default function StandDesignStudio() {
         </section>
 
       </div>
+      {previewItem && (
+        <Modal title={previewItem.title} onClose={() => setPreviewItem(null)}>
+          <div className="sd-preview-modal">
+            <RenderImageOrPlaceholder
+              src={previewItem.src}
+              alt={previewItem.title}
+              className="sd-preview-image"
+              placeholder="Preview image unavailable"
+            />
+            <div className="sd-preview-actions">
+              <a className="stand-design-inline-link" href={previewItem.src} download={buildDownloadFilename(form.brief, previewItem.title || 'preview')}>
+                Download
+              </a>
+              <button type="button" className="stand-design-inline-link" onClick={() => setPreviewItem(null)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
