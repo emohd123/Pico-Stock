@@ -44,7 +44,9 @@ export async function POST(request, { params }) {
 
         const updated = await updateStandDesign(existing.id, {
             ...existing,
-            ...body,
+            prompt: body.prompt ?? existing.prompt,
+            brief: body.brief ?? existing.brief,
+            style_preset: body.style_preset ?? existing.style_preset,
             concepts: nextConcepts,
             provider: generation.provider,
             model: generation.model,

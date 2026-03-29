@@ -218,10 +218,17 @@ export default function StandDesignStudio() {
 
     async function generateConceptViews(index) {
         const concept = form.concepts[index];
-        if (!form.id || !concept?.path) return;
+        if (!form.id) {
+            flash('error', 'Save the design first before generating views.');
+            return;
+        }
+        if (!concept?.path) {
+            flash('error', 'Concept image is not available. Try regenerating the concept first.');
+            return;
+        }
         setBusy(true);
         setViewGenerationIndex(index);
-        flash('success', `Generating all views for ${concept.title || `Concept ${index + 1}`}... this can take a few minutes.`);
+        flash('', `Generating all views for ${concept.title || `Concept ${index + 1}`}… this can take a few minutes.`);
         try {
             const response = await fetch(`/api/stand-design/${form.id}/views`, {
                 method: 'POST',
@@ -394,7 +401,7 @@ export default function StandDesignStudio() {
                                         <a className="stand-design-inline-link" href={concept.path} download>Download</a>
                                         <button type="button" className="stand-design-inline-link" onClick={() => applyConceptAsReference(concept.path)}>Use as next reference</button>
                                         <button type="button" className="stand-design-inline-link" disabled={busy} onClick={() => submitGeneration({ regenerate: Boolean(form.id), conceptIndex: index, payloadOverride: { ...form, mode: 'edit', reference_image_path: concept.path, refinement_prompt: concept.refinement_prompt || form.refinement_prompt } })}>Regenerate this concept only</button>
-                                        <button type="button" className="stand-design-inline-link" disabled={busy || !form.id} onClick={() => generateConceptViews(index)}>
+                                        <button type="button" className="stand-design-inline-link" disabled={busy || !form.id || !concept?.path} onClick={() => generateConceptViews(index)}>
                                             {viewGenerationIndex === index ? 'Generating views...' : 'Generate all views'}
                                         </button>
                                     </div>
