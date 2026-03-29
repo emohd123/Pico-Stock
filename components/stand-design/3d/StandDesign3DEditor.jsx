@@ -13,7 +13,7 @@ import {
     getStandDesignPrimitivePalette,
 } from '@/lib/standDesignAssetRegistry';
 import { createDefaultStandDesignBrief, summarizeStandDesignBrief } from '@/lib/standDesignBrief';
-import { createEmptyStandScene, createSceneObjectFromPalette, validateStandDesignScene } from '@/lib/standDesignScene';
+import { createEmptyStandScene, createHeuristicStandScene, createSceneObjectFromPalette, validateStandDesignScene } from '@/lib/standDesignScene';
 
 function numberValue(value, fallback = 0) {
     const next = Number(value);
@@ -467,8 +467,42 @@ function normalizeSceneForClient(scene, brief) {
     }
 }
 
-function hydrateSceneForEditor(scene, brief, selectedConcept) {
+function conceptIndexFromConcept(selectedConcept) {
+    const match = String(selectedConcept?.id || '').match(/concept-(\d+)/i);
+    if (!match) return 0;
+    return Math.max(0, Number(match[1]) - 1);
+}
+
+function enrichSparseScene(scene, brief, selectedConcept) {
     const normalized = normalizeSceneForClient(scene, brief);
+    if ((normalized.objects || []).length >= 16) return normalized;
+    const heuristicScene = createHeuristicStandScene({
+        brief,
+        conceptIndex: conceptIndexFromConcept(selectedConcept),
+    });
+    const preferredTypes = ['raised_floor', 'branded_wall', 'fascia', 'logo_beam', 'portal_leg', 'arch_band', 'screen_cluster_wall', 'lounge_enclosure', 'plane'];
+    const existingTypeCounts = normalized.objects.reduce((acc, item) => {
+        acc[item.type] = (acc[item.type] || 0) + 1;
+        return acc;
+    }, {});
+    const enhancementObjects = heuristicScene.objects
+        .filter((item) => preferredTypes.includes(item.type))
+        .filter((item) => (existingTypeCounts[item.type] || 0) < (item.type === 'portal_leg' ? 2 : 1))
+        .slice(0, 8)
+        .map((item) => ({
+            ...item,
+            id: `${item.id}-enhanced`,
+            label: `${item.label} Detail`,
+            locked: true,
+        }));
+    return {
+        ...normalized,
+        objects: [...normalized.objects, ...enhancementObjects],
+    };
+}
+
+function hydrateSceneForEditor(scene, brief, selectedConcept) {
+    const normalized = enrichSparseScene(scene, brief, selectedConcept);
     return applyReferenceThemeToScene(normalized, selectedConcept, brief);
 }
 
@@ -635,12 +669,33 @@ function PrimitiveObject({ object, selected, showHelpers }) {
                     ))}
                 </group>
             );
+        case 'wall':
+        case 'partition':
+            return (
+                <group>
+                    <RoundedBox args={[width, height, depth]} radius={0.03} smoothness={4} position={[0, height / 2, 0]}>
+                        <meshStandardMaterial {...materialProps} />
+                    </RoundedBox>
+                    <mesh position={[0, height * 0.58, (depth / 2) + 0.01]}>
+                        <boxGeometry args={[width * 0.74, height * 0.22, 0.018]} />
+                        <meshStandardMaterial color={lightenHex(baseColor, 0.08)} metalness={0.08} roughness={0.58} />
+                    </mesh>
+                    <mesh position={[0, height * 0.24, (depth / 2) + 0.012]}>
+                        <boxGeometry args={[width * 0.8, height * 0.022, 0.016]} />
+                        <meshStandardMaterial color={accentColor} emissive={glowColor} emissiveIntensity={0.1} metalness={0.12} roughness={0.42} />
+                    </mesh>
+                </group>
+            );
         case 'branded_wall':
             return (
                 <group>
                     <RoundedBox args={[width, height, depth]} radius={0.06} smoothness={4} position={[0, height / 2, 0]}>
                         <meshStandardMaterial {...materialProps} />
                     </RoundedBox>
+                    <mesh position={[0, height * 0.5, (depth / 2) + 0.004]}>
+                        <boxGeometry args={[width * 0.78, height * 0.68, 0.012]} />
+                        <meshStandardMaterial color={lightenHex(baseColor, 0.04)} metalness={0.04} roughness={0.82} />
+                    </mesh>
                     <mesh position={[0, height * 0.62, (depth / 2) + 0.01]}>
                         <boxGeometry args={[width * 0.52, height * 0.22, 0.02]} />
                         <meshStandardMaterial color={accentColor} metalness={0.14} roughness={0.36} />
@@ -680,14 +735,67 @@ function PrimitiveObject({ object, selected, showHelpers }) {
                 </group>
             );
         case 'portal_leg':
+            return (
+                <group>
+                    <RoundedBox args={[width, height, depth]} radius={Math.max(0.04, roundedness)} smoothness={4} position={[0, height / 2, 0]}>
+                        <meshStandardMaterial {...materialProps} />
+                    </RoundedBox>
+                    <mesh position={[0, height * 0.5, (depth / 2) + 0.01]}>
+                        <boxGeometry args={[width * 0.36, height * 0.74, 0.018]} />
+                        <meshStandardMaterial color={accentColor} emissive={glowColor} emissiveIntensity={0.09} metalness={0.12} roughness={0.42} />
+                    </mesh>
+                </group>
+            );
         case 'storage_core':
         case 'av_cabinet':
+            return (
+                <group>
+                    <RoundedBox args={[width, height, depth]} radius={Math.max(0.02, roundedness)} smoothness={4} position={[0, height / 2, 0]}>
+                        <meshStandardMaterial {...materialProps} />
+                    </RoundedBox>
+                    <mesh position={[0, height * 0.74, (depth / 2) + 0.012]}>
+                        <boxGeometry args={[width * 0.58, height * 0.12, 0.018]} />
+                        <meshStandardMaterial color={lightenHex(baseColor, 0.08)} metalness={0.12} roughness={0.54} />
+                    </mesh>
+                    <mesh position={[0, height * 0.28, (depth / 2) + 0.012]}>
+                        <boxGeometry args={[width * 0.68, height * 0.02, 0.018]} />
+                        <meshStandardMaterial color={accentColor} emissive={glowColor} emissiveIntensity={0.08} metalness={0.12} roughness={0.42} />
+                    </mesh>
+                </group>
+            );
         case 'raised_floor':
+            return (
+                <group>
+                    <RoundedBox args={[width, height, depth]} radius={Math.max(0.02, roundedness)} smoothness={4} position={[0, height / 2, 0]}>
+                        <meshStandardMaterial {...materialProps} />
+                    </RoundedBox>
+                    <mesh position={[0, height + 0.006, 0]}>
+                        <boxGeometry args={[width * 0.96, 0.012, depth * 0.96]} />
+                        <meshStandardMaterial color={lightenHex(baseColor, 0.06)} metalness={0.04} roughness={0.72} />
+                    </mesh>
+                    <mesh position={[0, height * 0.22, 0]}>
+                        <boxGeometry args={[width * 0.98, 0.016, depth * 0.98]} />
+                        <meshStandardMaterial color={accentColor} emissive={glowColor} emissiveIntensity={0.08} metalness={0.08} roughness={0.46} />
+                    </mesh>
+                </group>
+            );
         case 'lounge_enclosure':
             return (
-                <RoundedBox args={[width, height, depth]} radius={Math.max(0.02, roundedness)} smoothness={4} position={[0, height / 2, 0]}>
-                    <meshStandardMaterial {...materialProps} />
-                </RoundedBox>
+                <group>
+                    <RoundedBox args={[width, height, depth * 0.12]} radius={Math.max(0.02, roundedness)} smoothness={4} position={[0, height / 2, -(depth * 0.44)]}>
+                        <meshStandardMaterial {...materialProps} />
+                    </RoundedBox>
+                    <RoundedBox args={[width * 0.12, height, depth]} radius={Math.max(0.02, roundedness)} smoothness={4} position={[-(width * 0.44), height / 2, 0]}>
+                        <meshStandardMaterial {...materialProps} />
+                    </RoundedBox>
+                    <RoundedBox args={[width * 0.12, height, depth]} radius={Math.max(0.02, roundedness)} smoothness={4} position={[width * 0.44, height / 2, 0]}>
+                        <meshStandardMaterial {...materialProps} />
+                    </RoundedBox>
+                    <mesh position={[0, height * 0.28, -(depth * 0.44) + 0.012]}>
+                        <boxGeometry args={[width * 0.6, height * 0.024, 0.018]} />
+                        <meshStandardMaterial color={accentColor} emissive={glowColor} emissiveIntensity={0.08} metalness={0.12} roughness={0.42} />
+                    </mesh>
+                </group>
             );
         default:
             return (
