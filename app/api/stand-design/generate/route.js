@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
 import { generateStandDesignConcepts, getStandDesignAiStatus } from '@/lib/standDesignAi';
+import { createStandDesignMaintenanceResponse, getStandDesignMaintenanceStatus } from '@/lib/standDesignMaintenance';
 import { createStandDesign, StandDesignStoreError } from '@/lib/standDesignStore';
 
 export const runtime = 'nodejs';
 
 export async function POST(request) {
+    if (getStandDesignMaintenanceStatus().heavy_jobs_paused) {
+        return createStandDesignMaintenanceResponse(NextResponse);
+    }
     try {
         const body = await request.json();
         const draftId = body.id || `stand-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;

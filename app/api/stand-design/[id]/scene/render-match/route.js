@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getStandDesignAiStatus, storeStandDesignSceneRender } from '@/lib/standDesignAi';
+import { createStandDesignMaintenanceResponse, getStandDesignMaintenanceStatus } from '@/lib/standDesignMaintenance';
 import { getStandDesignById, StandDesignStoreError, updateStandDesign } from '@/lib/standDesignStore';
 
 export const runtime = 'nodejs';
 
 export async function POST(request, { params }) {
+    if (getStandDesignMaintenanceStatus().heavy_jobs_paused) {
+        return createStandDesignMaintenanceResponse(NextResponse);
+    }
     try {
         const existing = await getStandDesignById(params.id);
         if (!existing) {

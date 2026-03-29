@@ -216,6 +216,7 @@ export default function StandDesignStudio() {
   const [regeneratingConceptIndex, setRegeneratingConceptIndex] = useState(null);
   const [expandedRecordId, setExpandedRecordId] = useState(null);
   const [previewItem, setPreviewItem] = useState(null);
+  const [maintenance, setMaintenance] = useState({ heavy_jobs_paused: false, message: '' });
 
   const selectedRecord = useMemo(
     () => records.find((item) => String(item.id) === String(form.id)) || null,
@@ -256,6 +257,7 @@ export default function StandDesignStudio() {
       const response = await fetch('/api/stand-design', { cache: 'no-store' });
       const data = await response.json();
       if (data.ai) setAiStatus(data.ai);
+      if (data.maintenance) setMaintenance(data.maintenance);
       setAiLoading(false);
       if (!response.ok) throw new Error(data.error || 'Failed to load stand design studio');
       const items = Array.isArray(data.items) ? data.items.map(summarizeDesignRecord) : [];
@@ -353,6 +355,10 @@ export default function StandDesignStudio() {
   }
 
   async function submitGeneration({ regenerate = false, conceptIndex = null, payloadOverride = null } = {}) {
+    if (maintenance.heavy_jobs_paused) {
+      flash('error', maintenance.message || 'Stand Design heavy jobs are temporarily paused.');
+      return;
+    }
     setBusy(true);
     flash('', '');
     try {
@@ -436,6 +442,10 @@ export default function StandDesignStudio() {
   }
 
   async function generateConceptViews(index) {
+    if (maintenance.heavy_jobs_paused) {
+      flash('error', maintenance.message || 'Stand Design heavy jobs are temporarily paused.');
+      return;
+    }
     const concept = form.concepts[index];
     if (!form.id) { flash('error', 'Save the design first before generating views.'); return; }
     if (!concept?.path) { flash('error', 'Concept image is not available. Try regenerating the concept first.'); return; }
@@ -486,6 +496,9 @@ export default function StandDesignStudio() {
         </div>
 
         {/* Alert */}
+        {maintenance.heavy_jobs_paused
+          ? <div className="stand-design-alert is-warning">{maintenance.message}</div>
+          : null}
         {message.text
           ? <div className={`stand-design-alert ${message.type === 'error' ? 'is-error' : 'is-success'}`}>{message.text}</div>
           : null}
@@ -635,9 +648,9 @@ export default function StandDesignStudio() {
             </div>{/* end stand-design-controls-body */}
 
             <div className="stand-design-actions stand-design-actions-footer">
-              <button type="button" className="stand-design-primary-btn" disabled={busy}
+              <button type="button" className="stand-design-primary-btn" disabled={busy || maintenance.heavy_jobs_paused}
                 onClick={() => submitGeneration({ regenerate: Boolean(form.id) })}>
-                {busy ? 'Generating...' : form.id ? 'Regenerate 2 Concepts' : 'Generate 2 Concepts'}
+                {maintenance.heavy_jobs_paused ? 'Temporarily Paused' : busy ? 'Generating...' : form.id ? 'Regenerate 2 Concepts' : 'Generate 2 Concepts'}
               </button>
               <button type="button" className="stand-design-secondary-btn" onClick={resetDraft} disabled={busy}>Start Fresh</button>
             </div>
@@ -737,7 +750,7 @@ export default function StandDesignStudio() {
 
                       {/* Regenerate only — requires a saved record (form.id) identical guard to Generate all views */}
                       <button type="button" className="stand-design-inline-link"
-                        disabled={busy || !form.id || !concept?.path}
+                        disabled={busy || maintenance.heavy_jobs_paused || !form.id || !concept?.path}
                         onClick={async () => {
                           setRegeneratingConceptIndex(index);
                           await submitGeneration({
@@ -757,7 +770,7 @@ export default function StandDesignStudio() {
 
                       {/* Generate all views */}
                       <button type="button" className="stand-design-inline-link"
-                        disabled={busy || !form.id || !concept?.path}
+                        disabled={busy || maintenance.heavy_jobs_paused || !form.id || !concept?.path}
                         onClick={() => generateConceptViews(index)}>
                         {viewGenerationIndex === index ? 'Generating views…' : 'Generate all views'}
                       </button>
