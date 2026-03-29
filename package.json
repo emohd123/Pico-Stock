@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "stand-design:audit": "node scripts/auditStandDesignPayloads.mjs",
+    "stand-design:migrate-inline": "node scripts/auditStandDesignPayloads.mjs --migrate"
   },
   "dependencies": {
     "@google/genai": "^1.46.0",
