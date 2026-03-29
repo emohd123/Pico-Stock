@@ -27,6 +27,9 @@ function buildDownloadFilename(brief = {}, label = '', suffix = '') {
   const parts = [client, event, slug(label), slug(suffix)].filter(Boolean);
   return (parts.join('-') || 'stand-concept') + '.png';
 }
+function build3DEditorHref(recordId, conceptIndex) {
+  return `/admin/stand-design/${recordId}/3d?concept=${conceptIndex}`;
+}
 function toLocalDate(value) {
   if (!value) return '';
   try { return new Date(value).toLocaleString(); } catch { return ''; }
@@ -43,6 +46,18 @@ function normalizeConcept(concept = {}, index = 0) {
     prompt: concept.prompt || '',
     coverage: Array.isArray(concept.coverage) ? concept.coverage : [],
     views: Array.isArray(concept.views) ? concept.views : [],
+    scene: concept.scene || null,
+    scene_status: concept.scene_status || (concept.scene ? 'ready' : 'idle'),
+    scene_updated_at: concept.scene_updated_at || '',
+    scene_generated_by: concept.scene_generated_by || '',
+    scene_model: concept.scene_model || '',
+    scene_renders: Array.isArray(concept.scene_renders) ? concept.scene_renders : [],
+    reference_analysis: concept.reference_analysis || null,
+    scene_match_camera: concept.scene_match_camera || null,
+    scene_match_score: Number.isFinite(Number(concept.scene_match_score)) ? Number(concept.scene_match_score) : null,
+    scene_match_notes: Array.isArray(concept.scene_match_notes) ? concept.scene_match_notes : [],
+    scene_reference_views_used: Array.isArray(concept.scene_reference_views_used) ? concept.scene_reference_views_used : [],
+    scene_reconstruction_status: concept.scene_reconstruction_status || (concept.scene ? 'ready' : 'idle'),
     created_at: concept.created_at || '',
   };
 }
@@ -52,6 +67,37 @@ function normalizeDesignRecord(raw = {}) {
     ...raw,
     brief: { ...createDefaultStandDesignBrief(), ...(raw?.brief || {}) },
     concepts: Array.isArray(raw?.concepts) ? raw.concepts.map(normalizeConcept) : [],
+  };
+}
+function summarizeDesignRecord(raw = {}) {
+  const normalized = normalizeDesignRecord(raw);
+  return {
+    ...normalized,
+    concepts: normalized.concepts.map((concept) => ({
+      id: concept.id,
+      path: concept.path,
+      mimeType: concept.mimeType,
+      title: concept.title,
+      summary: concept.summary,
+      refinement_prompt: concept.refinement_prompt,
+      source_variant: concept.source_variant,
+      prompt: concept.prompt,
+      coverage: concept.coverage,
+      views: concept.views,
+      scene_status: concept.scene_status,
+      scene_updated_at: concept.scene_updated_at,
+      scene_generated_by: concept.scene_generated_by,
+      scene_model: concept.scene_model,
+      scene_match_score: concept.scene_match_score,
+      scene_match_notes: concept.scene_match_notes,
+      scene_reference_views_used: concept.scene_reference_views_used,
+      scene_reconstruction_status: concept.scene_reconstruction_status,
+      created_at: concept.created_at,
+      scene: null,
+      scene_renders: [],
+      reference_analysis: null,
+      scene_match_camera: null,
+    })),
   };
 }
 function getCoverageTone(status) {
@@ -188,6 +234,22 @@ export default function StandDesignStudio() {
     });
   }
 
+  async function loadRecordById(recordId, { closeExpanded = true } = {}) {
+    if (!recordId) return null;
+    const response = await fetch(`/api/stand-design/${recordId}`, { cache: 'no-store' });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Failed to load stand design');
+    const nextItem = normalizeDesignRecord(data);
+    setForm(nextItem);
+    setRecords((current) => {
+      const nextSummary = summarizeDesignRecord(nextItem);
+      return [nextSummary, ...current.filter((item) => String(item.id) !== String(nextSummary.id))];
+    });
+    setActiveConcept(0);
+    if (closeExpanded) setExpandedRecordId(null);
+    return nextItem;
+  }
+
   async function loadStandDesigns() {
     setLoading(true);
     try {
@@ -196,9 +258,11 @@ export default function StandDesignStudio() {
       if (data.ai) setAiStatus(data.ai);
       setAiLoading(false);
       if (!response.ok) throw new Error(data.error || 'Failed to load stand design studio');
-      const items = Array.isArray(data.items) ? data.items.map(normalizeDesignRecord) : [];
+      const items = Array.isArray(data.items) ? data.items.map(summarizeDesignRecord) : [];
       setRecords(items);
-      if (items[0] && !form.id) setForm(items[0]);
+      if (items[0] && !form.id) {
+        await loadRecordById(items[0].id, { closeExpanded: false });
+      }
     } catch (error) {
       setMessage({ type: 'error', text: error.message || 'Failed to load stand design studio' });
     } finally {
@@ -308,7 +372,7 @@ export default function StandDesignStudio() {
       const nextItem = normalizeDesignRecord(data.item);
       setForm(nextItem);
       setAiStatus(data.ai || aiStatus);
-      setRecords((current) => [nextItem, ...current.filter((item) => String(item.id) !== String(nextItem.id))]);
+      setRecords((current) => [summarizeDesignRecord(nextItem), ...current.filter((item) => String(item.id) !== String(nextItem.id))]);
       if (conceptIndex !== null) setActiveConcept(conceptIndex);
       else setActiveConcept(0);
       flash('success', conceptIndex === null
@@ -330,7 +394,10 @@ export default function StandDesignStudio() {
       if (!response.ok) throw new Error(data.error || 'Failed to delete stand design');
       const nextRecords = records.filter((item) => String(item.id) !== String(recordId));
       setRecords(nextRecords);
-      if (String(form.id) === String(recordId)) setForm(nextRecords[0] || createDraft());
+      if (String(form.id) === String(recordId)) {
+        if (nextRecords[0]?.id) await loadRecordById(nextRecords[0].id, { closeExpanded: false });
+        else setForm(createDraft());
+      }
       flash('success', 'Stand design deleted');
     } catch (error) {
       flash('error', error.message || 'Failed to delete stand design');
@@ -386,7 +453,7 @@ export default function StandDesignStudio() {
       const nextItem = normalizeDesignRecord(data.item);
       setForm(nextItem);
       setAiStatus(data.ai || aiStatus);
-      setRecords((current) => [nextItem, ...current.filter((item) => String(item.id) !== String(nextItem.id))]);
+      setRecords((current) => [summarizeDesignRecord(nextItem), ...current.filter((item) => String(item.id) !== String(nextItem.id))]);
       flash('success', `Generated all views for ${concept.title || `Concept ${index + 1}`}`);
     } catch (error) {
       flash('error', error.message || 'Failed to generate all views');
@@ -638,7 +705,12 @@ export default function StandDesignStudio() {
                         <div className="stand-design-result-label">{concept.title || `Concept ${index + 1}`}</div>
                         <p className="stand-design-result-summary">{concept.summary || 'Pico-style concept direction'}</p>
                       </div>
-                      <span className="stand-design-mini-pill">{concept.source_variant || `concept-${index + 1}`}</span>
+                      <div className="stand-design-result-header-pills">
+                        <span className="stand-design-mini-pill">{concept.source_variant || `concept-${index + 1}`}</span>
+                        <span className={`stand-design-mini-pill ${concept.scene ? 'is-scene-ready' : ''}`}>
+                          {concept.scene ? '3D Ready' : '3D Pending'}
+                        </span>
+                      </div>
                     </div>
 
                     <RenderImageOrPlaceholder src={concept.path} alt={`Stand concept ${index + 1}`}
@@ -689,6 +761,12 @@ export default function StandDesignStudio() {
                         onClick={() => generateConceptViews(index)}>
                         {viewGenerationIndex === index ? 'Generating views…' : 'Generate all views'}
                       </button>
+
+                      {form.id ? (
+                        <a className="stand-design-inline-link" href={build3DEditorHref(form.id, index)}>
+                          Open in 3D Editor
+                        </a>
+                      ) : null}
                     </div>
 
                     <div className="stand-design-concept-refine">
@@ -856,7 +934,11 @@ export default function StandDesignStudio() {
                         )}
                         <div className="sd-saved-expanded-actions">
                           <button type="button" className="stand-design-primary-btn"
-                            onClick={() => { setForm(normalizeDesignRecord(record)); setActiveConcept(0); setExpandedRecordId(null); }}>
+                            onClick={() => {
+                              loadRecordById(record.id).catch((error) => {
+                                flash('error', error.message || 'Failed to load stand design');
+                              });
+                            }}>
                             Load into Studio
                           </button>
                         </div>
