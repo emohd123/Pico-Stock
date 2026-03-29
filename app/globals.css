@@ -5781,6 +5781,12 @@ input[type="checkbox"] {
   scrollbar-width: thin;
   scrollbar-color: rgba(18, 184, 175, 0.25) transparent;
 }
+.stand-design-controls-body > .stand-design-section-prompt {
+  order: 2;
+}
+.stand-design-controls-body > .stand-design-brief-card-accordion {
+  order: 3;
+}
 .stand-design-controls-body::-webkit-scrollbar { width: 4px; }
 .stand-design-controls-body::-webkit-scrollbar-track { background: transparent; }
 .stand-design-controls-body::-webkit-scrollbar-thumb { background: rgba(18, 184, 175, 0.25); border-radius: 4px; }
@@ -6718,6 +6724,7 @@ input[type="checkbox"] {
 /* Collapsible brief sections */
 .sd-collapsible {
   border-bottom: 1px solid #e8f0f5;
+  padding: 0.2rem 0 0.45rem;
 }
 .sd-section-toggle {
   width: 100%;
@@ -6725,11 +6732,14 @@ input[type="checkbox"] {
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  padding: 0.75rem 0;
-  background: none;
-  border: none;
+  padding: 0.9rem 1rem;
+  background: linear-gradient(180deg, #f8fbfd, #eef5f8);
+  border: 1px solid #dbe7ee;
+  border-radius: 14px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
   cursor: pointer;
   text-align: left;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease, background 0.18s ease;
 }
 .sd-section-toggle h4 {
   margin: 0;
@@ -6737,15 +6747,40 @@ input[type="checkbox"] {
   font-weight: 700;
   color: #1e3a4a;
 }
-.sd-section-toggle:hover h4 { color: #0f7b72; }
+.sd-section-toggle:hover,
+.sd-section-toggle:focus-visible {
+  border-color: rgba(18, 184, 175, 0.4);
+  box-shadow: 0 0 0 3px rgba(18, 184, 175, 0.12);
+  background: linear-gradient(180deg, #f7fffe, #edf8f6);
+}
+.sd-section-toggle:hover h4,
+.sd-section-toggle:focus-visible h4 { color: #0f7b72; }
 .sd-chevron {
-  font-size: 0.78rem;
-  color: #60758a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.6rem;
+  min-height: 1.6rem;
+  border-radius: 999px;
+  background: rgba(18, 184, 175, 0.12);
+  font-size: 0.95rem;
+  color: #0f7b72;
+  font-weight: 800;
   flex-shrink: 0;
   transition: transform 0.15s;
 }
 .sd-collapsible-body {
-  padding-bottom: 0.75rem;
+  padding: 0.7rem 0.15rem 0.3rem;
+}
+.sd-accordion-hint {
+  margin: 0 0 0.85rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px dashed rgba(18, 184, 175, 0.35);
+  border-radius: 14px;
+  background: rgba(18, 184, 175, 0.05);
+  color: #476172;
+  font-size: 0.82rem;
+  line-height: 1.45;
 }
 
 /* Compact meta bar (replaces 3-box record-meta) */

@@ -522,7 +522,7 @@ export default function StandDesignStudio() {
             </div>
 
             {/* Structured Brief with collapsible sections */}
-            <div className="stand-design-brief-card">
+            <div className="stand-design-brief-card stand-design-brief-card-accordion">
               <div className="stand-design-card-header">
                 <div>
                   <h3>Structured Stand Brief</h3>
@@ -536,6 +536,7 @@ export default function StandDesignStudio() {
                   {briefSummary ? <span className="stand-design-mini-pill">{briefSummary}</span> : null}
                 </div>
               </div>
+              <div className="sd-accordion-hint">Open the sidebar bars below any time to fill Project Brief, Branding &amp; Style, and Functional Requirements.</div>
               {getStandDesignBriefSections().map((section) => (
                 <CollapsibleSection key={section.id} id={section.id} title={section.title}
                   collapsedSet={collapsedSections} onToggle={toggleSection}>
@@ -575,7 +576,7 @@ export default function StandDesignStudio() {
               </div>
             </div>
 
-            <div className="stand-design-section">
+            <div className="stand-design-section stand-design-section-prompt">
               <div className="sd-prompt-label-row">
                 <label className="stand-design-section-label" htmlFor="stand-design-prompt">Design Prompt</label>
                 <button type="button" className="sd-parse-btn"
