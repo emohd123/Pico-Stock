@@ -694,9 +694,6 @@ export default function StandDesignStudio() {
                       </div>
                       <div className="stand-design-result-header-pills">
                         <span className="stand-design-mini-pill">{concept.source_variant || `concept-${index + 1}`}</span>
-                        <span className={`stand-design-mini-pill ${concept.scene ? 'is-scene-ready' : ''}`}>
-                          {concept.scene ? '3D Ready' : '3D Pending'}
-                        </span>
                       </div>
                     </div>
 
