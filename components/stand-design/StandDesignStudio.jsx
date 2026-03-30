@@ -27,9 +27,6 @@ function buildDownloadFilename(brief = {}, label = '', suffix = '') {
   const parts = [client, event, slug(label), slug(suffix)].filter(Boolean);
   return (parts.join('-') || 'stand-concept') + '.png';
 }
-function build3DEditorHref(recordId, conceptIndex) {
-  return `/admin/stand-design/${recordId}/3d?concept=${conceptIndex}`;
-}
 function toLocalDate(value) {
   if (!value) return '';
   try { return new Date(value).toLocaleString(); } catch { return ''; }
@@ -46,18 +43,6 @@ function normalizeConcept(concept = {}, index = 0) {
     prompt: concept.prompt || '',
     coverage: Array.isArray(concept.coverage) ? concept.coverage : [],
     views: Array.isArray(concept.views) ? concept.views : [],
-    scene: concept.scene || null,
-    scene_status: concept.scene_status || (concept.scene ? 'ready' : 'idle'),
-    scene_updated_at: concept.scene_updated_at || '',
-    scene_generated_by: concept.scene_generated_by || '',
-    scene_model: concept.scene_model || '',
-    scene_renders: Array.isArray(concept.scene_renders) ? concept.scene_renders : [],
-    reference_analysis: concept.reference_analysis || null,
-    scene_match_camera: concept.scene_match_camera || null,
-    scene_match_score: Number.isFinite(Number(concept.scene_match_score)) ? Number(concept.scene_match_score) : null,
-    scene_match_notes: Array.isArray(concept.scene_match_notes) ? concept.scene_match_notes : [],
-    scene_reference_views_used: Array.isArray(concept.scene_reference_views_used) ? concept.scene_reference_views_used : [],
-    scene_reconstruction_status: concept.scene_reconstruction_status || (concept.scene ? 'ready' : 'idle'),
     created_at: concept.created_at || '',
   };
 }
@@ -84,19 +69,7 @@ function summarizeDesignRecord(raw = {}) {
       prompt: concept.prompt,
       coverage: concept.coverage,
       views: concept.views,
-      scene_status: concept.scene_status,
-      scene_updated_at: concept.scene_updated_at,
-      scene_generated_by: concept.scene_generated_by,
-      scene_model: concept.scene_model,
-      scene_match_score: concept.scene_match_score,
-      scene_match_notes: concept.scene_match_notes,
-      scene_reference_views_used: concept.scene_reference_views_used,
-      scene_reconstruction_status: concept.scene_reconstruction_status,
       created_at: concept.created_at,
-      scene: null,
-      scene_renders: [],
-      reference_analysis: null,
-      scene_match_camera: null,
     })),
   };
 }
@@ -776,11 +749,6 @@ export default function StandDesignStudio() {
                         {viewGenerationIndex === index ? 'Generating views…' : 'Generate all views'}
                       </button>
 
-                      {form.id ? (
-                        <a className="stand-design-inline-link" href={build3DEditorHref(form.id, index)}>
-                          Open in 3D Editor
-                        </a>
-                      ) : null}
                     </div>
 
                     <div className="stand-design-concept-refine">
