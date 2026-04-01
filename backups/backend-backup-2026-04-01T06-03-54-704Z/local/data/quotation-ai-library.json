@@ -1,0 +1,183 @@
+{
+  "meta": {
+    "updated_at": "2026-03-26T13:18:50.523Z",
+    "historical_imported_at": "2026-03-26T13:18:49.946Z",
+    "historical_source_dir": "C:\\Users\\PICO\\Desktop\\New folder (2)"
+  },
+  "records": [
+    {
+      "source_key": "system:qt-1774352947951-qeslea",
+      "source_type": "system",
+      "source_id": "qt-1774352947951-qeslea",
+      "group_key": "qt-11828",
+      "source_path": "",
+      "source_label": "QT-11828",
+      "quote_number": "11828",
+      "ref": "",
+      "quote_date": "24.03.2026",
+      "modified_at": "2026-03-26T13:18:50.516Z",
+      "updated_at": "2026-03-26T13:18:50.516Z",
+      "title": "TEST",
+      "customer_name": "Clear Vison Optical W.L.L",
+      "contact_name": "",
+      "currency_code": "BHD",
+      "status": "Draft",
+      "total_value": 764.5,
+      "sections": [
+        {
+          "name": "STAND",
+          "selling_rule": "0.70",
+          "section_total": 520,
+          "items": [
+            {
+              "description": "Fabricate, supply and install wooden platform with skirting & ramp . Size: 6m x 6m.",
+              "qty": 36,
+              "unit": "sqm",
+              "costs_bhd": 520,
+              "rate": 10
+            }
+          ]
+        },
+        {
+          "name": "AV",
+          "selling_rule": "0.70",
+          "section_total": 175,
+          "items": [
+            {
+              "description": "AV",
+              "qty": 12,
+              "unit": "nos",
+              "costs_bhd": 175,
+              "rate": 10
+            }
+          ]
+        }
+      ],
+      "exclusions": [
+        "Permit and approvals for the organizing the event including any fees payable to government authorities where applicable.",
+        "Approvals and permissions from the venue for all temporary installations / structures, technical visits, and use of venue facilities for installation, event, and dismantling.",
+        "Pre-event and post-event working power supply on site for setup, operation, and dismantling works.",
+        "Main power supply and associated costs.",
+        "Security coverage for personnel and equipment from start of installation to completion of dismantling.",
+        "Cleaning, waste disposal, and maintenance during the event period.",
+        "Event food and beverage service.",
+        "Personnel and vehicle access passes for Pico personnel and designated subcontractors.",
+        "All risk public liability and event cancellation insurance, including materials and equipment on site.",
+        "Content for screens and tablets.",
+        "Any cost payable to the venue.",
+        "Project model transportation and installation.",
+        "Any scope of works not mentioned above."
+      ],
+      "terms": [
+        "Validity: 10 days from the quotation date; subject to re-validation thereafter.",
+        "Order must be confirmed by contract at least 21 days prior to the event date.",
+        "Client to arrange venue, authorizations, utilities, and applicable fees for the duration of installation, event, and dismantling.",
+        "All audiovisual and other show equipment and structures are supplied on rental basis for the stated show duration only. Any extension is chargeable.",
+        "Rental items are subject to ex-stock availability at time of order confirmation. Pico may substitute equivalent stock where necessary.",
+        "Client to provide safe access, storage, and working conditions on site.",
+        "Any additional work or variation requested after confirmation will be charged separately.",
+        "Postponement or cancellation after confirmation may incur applicable cancellation or rescheduling charges.",
+        "Pico is not liable for damage caused by misuse, vandalism, or force majeure.",
+        "Quoted scope takes precedence over drawings in the event of discrepancies."
+      ],
+      "payment_terms": [
+        "Purchase Order and signed quotation are required for order confirmation.",
+        "70% payment on order confirmation.",
+        "30% payment within 30 days from invoice date."
+      ],
+      "provenance": {
+        "quotation_id": "qt-1774352947951-qeslea",
+        "source_type": "manual",
+        "source_order_reference": ""
+      },
+      "search_text": "TEST\nClear Vison Optical W.L.L\n24.03.2026\nSTAND\nFabricate, supply and install wooden platform with skirting & ramp . Size: 6m x 6m.\nAV\nAV\nPermit and approvals for the organizing the event including any fees payable to government authorities where applicable.\nApprovals and permissions from the venue for all temporary installations / structures, technical visits, and use of venue facilities for installation, event, and dismantling.\nPre-event and post-event working power supply on site for setup, operation, and dismantling works.\nMain power supply and associated costs.\nSecurity coverage for personnel and equipment from start of installation to completion of dismantling.\nCleaning, waste disposal, and maintenance during the event period.\nEvent food and beverage service.\nPersonnel and vehicle access passes for Pico personnel and designated subcontractors.\nAll risk public liability and event cancellation insurance, including materials and equipment on site.\nContent for screens and tablets.\nAny cost payable to the venue.\nProject model transportation and installation.\nAny scope of works not mentioned above.\nValidity: 10 days from the quotation date; subject to re-validation thereafter.\nOrder must be confirmed by contract at least 21 days prior to the event date.\nClient to arrange venue, authorizations, utilities, and applicable fees for the duration of installation, event, and dismantling.\nAll audiovisual and other show equipment and structures are supplied on rental basis for the stated show duration only. Any extension is chargeable.\nRental items are subject to ex-stock availability at time of order confirmation. Pico may substitute equivalent stock where necessary.\nClient to provide safe access, storage, and working conditions on site.\nAny additional work or variation requested after confirmation will be charged separately.\nPostponement or cancellation after confirmation may incur applicable cancellation or rescheduling charges.\nPico is not liable for damage caused by misuse, vandalism, or force majeure.\nQuoted scope takes precedence over drawings in the event of discrepancies.\nPurchase Order and signed quotation are required for order confirmation.\n70% payment on order confirmation.\n30% payment within 30 days from invoice date."
+    },
+    {
+      "source_key": "system:qt-1774357167715-1yz1yn",
+      "source_type": "system",
+      "source_id": "qt-1774357167715-1yz1yn",
+      "group_key": "qt-11829",
+      "source_path": "",
+      "source_label": "QT-11829",
+      "quote_number": "11829",
+      "ref": "",
+      "quote_date": "24.03.2026",
+      "modified_at": "2026-03-26T13:18:50.369Z",
+      "updated_at": "2026-03-26T13:18:50.371Z",
+      "title": "TEST (Copy)",
+      "customer_name": "Clear Vison Optical W.L.L",
+      "contact_name": "",
+      "currency_code": "BHD",
+      "status": "Confirmed",
+      "total_value": 764.5,
+      "sections": [
+        {
+          "name": "STAND",
+          "selling_rule": "0.70",
+          "section_total": 520,
+          "items": [
+            {
+              "description": "Fabricate, supply and install wooden platform with skirting & ramp . Size: 6m x 6m.",
+              "qty": 36,
+              "unit": "sqm",
+              "costs_bhd": "",
+              "rate": 10
+            }
+          ]
+        },
+        {
+          "name": "AV",
+          "selling_rule": "0.70",
+          "section_total": 175,
+          "items": [
+            {
+              "description": "AV",
+              "qty": 12,
+              "unit": "nos",
+              "costs_bhd": 175,
+              "rate": 10
+            }
+          ]
+        }
+      ],
+      "exclusions": [
+        "Permit and approvals for the organizing the event including any fees payable to government authorities where applicable.",
+        "Approvals and permissions from the venue for all temporary installations / structures, technical visits, and use of venue facilities for installation, event, and dismantling.",
+        "Pre-event and post-event working power supply on site for setup, operation, and dismantling works.",
+        "Main power supply and associated costs.",
+        "Security coverage for personnel and equipment from start of installation to completion of dismantling.",
+        "Cleaning, waste disposal, and maintenance during the event period.",
+        "Event food and beverage service.",
+        "Personnel and vehicle access passes for Pico personnel and designated subcontractors.",
+        "All risk public liability and event cancellation insurance, including materials and equipment on site.",
+        "Content for screens and tablets.",
+        "Any cost payable to the venue.",
+        "Project model transportation and installation.",
+        "Any scope of works not mentioned above."
+      ],
+      "terms": [
+        "Validity: 10 days from the quotation date; subject to re-validation thereafter.",
+        "Order must be confirmed by contract at least 21 days prior to the event date.",
+        "Client to arrange venue, authorizations, utilities, and applicable fees for the duration of installation, event, and dismantling.",
+        "All audiovisual and other show equipment and structures are supplied on rental basis for the stated show duration only. Any extension is chargeable.",
+        "Rental items are subject to ex-stock availability at time of order confirmation. Pico may substitute equivalent stock where necessary.",
+        "Client to provide safe access, storage, and working conditions on site.",
+        "Any additional work or variation requested after confirmation will be charged separately.",
+        "Postponement or cancellation after confirmation may incur applicable cancellation or rescheduling charges.",
+        "Pico is not liable for damage caused by misuse, vandalism, or force majeure.",
+        "Quoted scope takes precedence over drawings in the event of discrepancies."
+      ],
+      "payment_terms": [
+        "Purchase Order and signed quotation are required for order confirmation.",
+        "70% payment on order confirmation.",
+        "30% payment within 30 days from invoice date."
+      ],
+      "provenance": {
+        "quotation_id": "qt-1774357167715-1yz1yn",
+        "source_type": "manual",
+        "source_order_reference": ""
+      },
+      "search_text": "TEST (Copy)\nClear Vison Optical W.L.L\n24.03.2026\nSTAND\nFabricate, supply and install wooden platform with skirting & ramp . Size: 6m x 6m.\nAV\nAV\nPermit and approvals for the organizing the event including any fees payable to government authorities where applicable.\nApprovals and permissions from the venue for all temporary installations / structures, technical visits, and use of venue facilities for installation, event, and dismantling.\nPre-event and post-event working power supply on site for setup, operation, and dismantling works.\nMain power supply and associated costs.\nSecurity coverage for personnel and equipment from start of installation to completion of dismantling.\nCleaning, waste disposal, and maintenance during the event period.\nEvent food and beverage service.\nPersonnel and vehicle access passes for Pico personnel and designated subcontractors.\nAll risk public liability and event cancellation insurance, including materials and equipment on site.\nContent for screens and tablets.\nAny cost payable to the venue.\nProject model transportation and installation.\nAny scope of works not mentioned above.\nValidity: 10 days from the quotation date; subject to re-validation thereafter.\nOrder must be confirmed by contract at least 21 days prior to the event date.\nClient to arrange venue, authorizations, utilities, and applicable fees for the duration of installation, event, and dismantling.\nAll audiovisual and other show equipment and structures are supplied on rental basis for the stated show duration only. Any extension is chargeable.\nRental items are subject to ex-stock availability at time of order confirmation. Pico may substitute equivalent stock where necessary.\nClient to provide safe access, storage, and working conditions on site.\nAny additional work or variation requested after confirmation will be charged separately.\nPostponement or cancellation after confirmation may incur applicable cancellation or rescheduling charges.\nPico is not liable for damage caused by misuse, vandalism, or force majeure.\nQuoted scope takes precedence over drawings in the event of discrepancies.\nPurchase Order and signed quotation are required for order confirmation.\n70% payment on order confirmation.\n30% payment within 30 days from invoice date."
+    }
+  ]
+}

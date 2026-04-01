@@ -1,0 +1,52 @@
+{
+  "created_at": "2026-04-01T06:03:54.746Z",
+  "source_project": {
+    "cwd": "C:\\Users\\PICO\\Desktop\\New folder\\apps\\Pico Stock",
+    "supabase_url": "https://wldurkxlzkqmcfadpybd.supabase.co"
+  },
+  "supabase": {
+    "available": true,
+    "tables": {
+      "products": {
+        "ok": false,
+        "error": "table products page 0 timed out after 30000ms"
+      },
+      "orders": {
+        "ok": false,
+        "error": "table orders page 0 timed out after 30000ms"
+      },
+      "designers": {
+        "ok": false,
+        "error": "table designers page 0 timed out after 30000ms"
+      },
+      "stand_designs": {
+        "ok": false,
+        "error": "table stand_designs page 0 timed out after 30000ms"
+      }
+    },
+    "buckets": {
+      "list": [
+        "product-images",
+        "stand-design-assets"
+      ],
+      "items": {
+        "product-images": {
+          "ok": false,
+          "error": "The connection to the database timed out"
+        },
+        "stand-design-assets": {
+          "ok": false,
+          "error": "The connection to the database timed out"
+        }
+      }
+    }
+  },
+  "local": {
+    "data": true,
+    "uploads": true,
+    "products_public": true,
+    "schema_sql": true,
+    "env_local": true,
+    "env_production_local": true
+  }
+}
