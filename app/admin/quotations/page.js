@@ -1012,7 +1012,49 @@ function QuotationsAdminPageContent() {
 
     function exportQuotePdf(id = form.id, mode = 'customer') {
         if (!id) return;
-        window.open(`/api/quotations/${id}/export/pdf?mode=${mode}`, '_blank', 'noopener,noreferrer');
+
+        const normalizedSections = form.sections.map((section) => ({
+            ...section,
+            section_selling: sectionTotals(section).client,
+        }));
+        const totals = quoteTotals({ ...form, sections: normalizedSections });
+        const payload = {
+            ...form,
+            sections: normalizedSections,
+            total_selling: totals.client,
+            total_with_vat: totals.grand,
+        };
+
+        fetch(`/api/quotations/${id}/export/pdf`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ quotation: payload, mode }),
+        })
+            .then(async (response) => {
+                if (!response.ok) {
+                    let message = 'Failed to generate quotation PDF';
+                    try {
+                        const data = await response.json();
+                        message = data.error || message;
+                    } catch {}
+                    throw new Error(message);
+                }
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                const safeName = String(form.project_title || 'Quotation').replace(/[^a-z0-9]+/gi, '_');
+                const qtNumber = form.qt_number || id || 'draft';
+                link.href = url;
+                link.download = `QT-${qtNumber}_${safeName}_${mode}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+            })
+            .catch((error) => {
+                flash('error', error.message || 'Failed to generate quotation PDF');
+            });
     }
 
     function exportQuoteExcel(id = form.id) {
