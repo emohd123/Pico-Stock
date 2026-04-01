@@ -53,6 +53,24 @@ async function applyBaseSchema(client) {
 
 async function ensureQuotationSchema(client) {
     await client.query(`
+        CREATE TABLE IF NOT EXISTS customers (
+            id TEXT PRIMARY KEY,
+            display_name TEXT NOT NULL DEFAULT '',
+            contact_to TEXT NOT NULL DEFAULT '',
+            contact_title TEXT NOT NULL DEFAULT '',
+            address TEXT NOT NULL DEFAULT '',
+            trn TEXT NOT NULL DEFAULT '',
+            registration_number TEXT NOT NULL DEFAULT '',
+            email TEXT NOT NULL DEFAULT '',
+            phone TEXT NOT NULL DEFAULT '',
+            extra_contacts JSONB NOT NULL DEFAULT '[]'::jsonb,
+            source TEXT NOT NULL DEFAULT '',
+            created_at TIMESTAMPTZ NOT NULL,
+            updated_at TIMESTAMPTZ NOT NULL
+        )
+    `);
+
+    await client.query(`
         CREATE TABLE IF NOT EXISTS quotation_meta (
             key TEXT PRIMARY KEY,
             value TEXT NOT NULL
@@ -98,6 +116,45 @@ async function ensureQuotationSchema(client) {
             updated_at TIMESTAMPTZ NOT NULL
         )
     `);
+}
+
+async function upsertCustomers(client, items) {
+    for (const item of items) {
+        await client.query(
+            `INSERT INTO customers (
+                id, display_name, contact_to, contact_title, address, trn, registration_number, email, phone, extra_contacts, source, created_at, updated_at
+            ) VALUES (
+                $1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,$11,$12,$13
+            )
+            ON CONFLICT (id) DO UPDATE SET
+                display_name = EXCLUDED.display_name,
+                contact_to = EXCLUDED.contact_to,
+                contact_title = EXCLUDED.contact_title,
+                address = EXCLUDED.address,
+                trn = EXCLUDED.trn,
+                registration_number = EXCLUDED.registration_number,
+                email = EXCLUDED.email,
+                phone = EXCLUDED.phone,
+                extra_contacts = EXCLUDED.extra_contacts,
+                source = EXCLUDED.source,
+                updated_at = EXCLUDED.updated_at`,
+            [
+                String(item.id),
+                String(item.display_name || ''),
+                String(item.contact_to || ''),
+                String(item.contact_title || ''),
+                String(item.address || ''),
+                String(item.trn || ''),
+                String(item.registration_number || ''),
+                String(item.email || ''),
+                String(item.phone || ''),
+                JSON.stringify(Array.isArray(item.extra_contacts) ? item.extra_contacts : []),
+                String(item.source || ''),
+                getTimestamp(item.created_at),
+                getTimestamp(item.updated_at),
+            ],
+        );
+    }
 }
 
 async function upsertProducts(client, items) {
@@ -338,6 +395,7 @@ async function main() {
     try {
         const products = await readJsonFile('products.json', []);
         const orders = await readJsonFile('orders.json', []);
+        const customers = await readJsonFile('customers.json', []);
         const designers = await readJsonFile('designers.json', []);
         const standDesigns = await readJsonFile('stand-designs.json', []);
         const quotations = await readJsonFile('quotations.json', []);
@@ -352,6 +410,8 @@ async function main() {
         await upsertProducts(client, products);
         console.log(`Restoring ${orders.length} orders...`);
         await upsertOrders(client, orders);
+        console.log(`Restoring ${customers.length} customers...`);
+        await upsertCustomers(client, customers);
         console.log(`Restoring ${designers.length} designers...`);
         await upsertDesigners(client, designers);
         console.log(`Restoring ${standDesigns.length} stand designs...`);
