@@ -202,6 +202,9 @@ function QuotationsAdminPageContent() {
     const [dashboardTab, setDashboardTab] = useState('overview');
     const [showManagement, setShowManagement] = useState(true);
     const [showReferenceManager, setShowReferenceManager] = useState(false);
+    const [showQtNumberEditor, setShowQtNumberEditor] = useState(false);
+    const [qtNumberInput, setQtNumberInput] = useState('');
+    const [qtNumberSaving, setQtNumberSaving] = useState(false);
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
     const [referenceSearch, setReferenceSearch] = useState('');
@@ -236,6 +239,40 @@ function QuotationsAdminPageContent() {
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Could not prepare a draft');
         return data.qt_number;
+    }
+
+    async function openQtNumberEditor() {
+        try {
+            const nextNumber = await fetchNextDraftNumber();
+            setQtNumberInput(String(nextNumber));
+            setShowQtNumberEditor(true);
+        } catch (error) {
+            flash('error', error.message || 'Could not load quotation number');
+        }
+    }
+
+    async function saveQtNumber() {
+        const value = parseInt(qtNumberInput, 10);
+        if (!Number.isFinite(value) || value < 1) {
+            flash('error', 'Enter a valid positive number');
+            return;
+        }
+        setQtNumberSaving(true);
+        try {
+            const response = await fetch('/api/quotations/next-number', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ qt_number: value }),
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Failed to update quotation number');
+            setShowQtNumberEditor(false);
+            flash('success', `Next quotation number set to ${data.qt_number}`);
+        } catch (error) {
+            flash('error', error.message || 'Failed to update quotation number');
+        } finally {
+            setQtNumberSaving(false);
+        }
     }
 
     async function loadPriceReferences() {
@@ -1055,6 +1092,9 @@ function QuotationsAdminPageContent() {
                                     </div>
                                 </div>
                                 <div className="quotation-dashboard-toolbar-actions">
+                                    <button type="button" className="quotation-btn quotation-btn-ghost quotation-dashboard-toolbar-btn" onClick={openQtNumberEditor}>
+                                        QT Number
+                                    </button>
                                     <button type="button" className="quotation-btn quotation-btn-ghost quotation-dashboard-toolbar-btn" onClick={() => setShowReferenceManager(true)}>
                                         Price References
                                     </button>
@@ -1225,6 +1265,40 @@ function QuotationsAdminPageContent() {
                                 onSave={savePriceReference}
                                 onDelete={deletePriceReference}
                             />
+                        </div>
+                    </div>
+                </div>
+            ) : null}
+
+            {showQtNumberEditor ? (
+                <div className="modal-overlay" onClick={() => setShowQtNumberEditor(false)}>
+                    <div className="modal-box" style={{ maxWidth: 360 }} onClick={(event) => event.stopPropagation()}>
+                        <button type="button" className="modal-close" onClick={() => setShowQtNumberEditor(false)} aria-label="Close">×</button>
+                        <h3 className="modal-title" style={{ marginBottom: '1rem' }}>Set Next Quotation Number</h3>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+                            The next new quotation will use this number.
+                        </p>
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                            <input
+                                className="quotation-input"
+                                type="number"
+                                min="1"
+                                step="1"
+                                value={qtNumberInput}
+                                onChange={(event) => setQtNumberInput(event.target.value)}
+                                onKeyDown={(event) => { if (event.key === 'Enter') saveQtNumber(); }}
+                                style={{ width: '100%' }}
+                                autoFocus
+                            />
+                            <button
+                                type="button"
+                                className="quotation-btn quotation-btn-primary"
+                                onClick={saveQtNumber}
+                                disabled={qtNumberSaving}
+                                style={{ whiteSpace: 'nowrap' }}
+                            >
+                                {qtNumberSaving ? 'Saving…' : 'Save'}
+                            </button>
                         </div>
                     </div>
                 </div>
