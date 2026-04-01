@@ -498,15 +498,30 @@ function QuotationsAdminPageContent() {
         }
 
         try {
-            const attachments = await Promise.all(files.map(async (file) => ({
-                id: `att-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-                name: file.name,
-                type: file.type || 'application/octet-stream',
-                size: file.size,
+            const formData = new FormData();
+            files.forEach((file) => formData.append('files', file));
+
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+            });
+            const payload = await response.json();
+            if (!response.ok) {
+                throw new Error(payload.error || 'Could not upload those files');
+            }
+
+            const uploadedFiles = Array.isArray(payload.files) ? payload.files : [];
+            const attachments = uploadedFiles.map((file, index) => ({
+                id: `att-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 8)}`,
+                name: file.originalName || file.filename || files[index]?.name || 'Attachment',
+                original_name: file.originalName || file.filename || files[index]?.name || 'Attachment',
+                type: file.type || files[index]?.type || 'application/octet-stream',
+                size: Number(file.size || files[index]?.size || 0),
                 category,
-                data: await toDataUrl(file),
+                data: file.data || '',
+                path: file.path || '',
                 uploaded_at: new Date().toISOString(),
-            })));
+            }));
 
             setForm((current) => ({
                 ...current,

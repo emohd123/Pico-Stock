@@ -31,19 +31,14 @@ export async function POST(request) {
             const bytes = await file.arrayBuffer();
             const buffer = Buffer.from(bytes);
 
-             if (productionReadonlyMode) {
-                if (!isImageFile(file)) {
-                    return NextResponse.json({
-                        error: 'Production file uploads require external storage for non-image files. Upload PNG, JPG, or WEBP images only in the current setup.',
-                    }, { status: 503 });
-                }
-
+            if (productionReadonlyMode) {
                 uploadedFiles.push({
                     filename: file.name,
                     originalName: file.name,
                     size: file.size,
                     type: file.type,
                     path: toInlineDataUrl(file, buffer),
+                    data: toInlineDataUrl(file, buffer),
                 });
                 continue;
             }

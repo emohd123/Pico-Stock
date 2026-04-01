@@ -686,6 +686,7 @@ function QuotationAttachmentsPanel({
                             ref={internalInputRef}
                             type="file"
                             multiple
+                            accept=".pdf,.bdf,.ppt,.pptx,.png,.jpg,.jpeg,.webp,.gif,.svg,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip"
                             className="quotation-hidden-file"
                             style={{ display: 'none' }}
                             onChange={(event) => {
@@ -700,6 +701,7 @@ function QuotationAttachmentsPanel({
                             ref={downloadInputRef}
                             type="file"
                             multiple
+                            accept=".pdf,.bdf,.ppt,.pptx,.png,.jpg,.jpeg,.webp,.gif,.svg,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip"
                             className="quotation-hidden-file"
                             style={{ display: 'none' }}
                             onChange={(event) => {
