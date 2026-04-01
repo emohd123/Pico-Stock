@@ -595,11 +595,24 @@ function QuotationsAdminPageContent() {
             if (!response.ok) throw new Error(data.error || 'Failed to save customer');
             const customerResponse = await fetch('/api/customers', { cache: 'no-store' });
             const customerData = await customerResponse.json();
-            setCustomers(Array.isArray(customerData) ? customerData : []);
+            const nextCustomers = Array.isArray(customerData) ? customerData : [];
+            setCustomers(nextCustomers);
+            const savedCustomer = nextCustomers.find((customer) => String(customer.id) === String(data.id)) || data;
+            if (savedCustomer?.id) {
+                setForm((current) => ({
+                    ...current,
+                    customer_id: String(savedCustomer.id),
+                    client_org: String(savedCustomer.display_name || current.client_org || ''),
+                    client_to: String(savedCustomer.contact_to || current.client_to || ''),
+                    client_location: String(savedCustomer.address || current.client_location || ''),
+                    client_trn: String(savedCustomer.trn || current.client_trn || ''),
+                }));
+            }
             flash('success', existing ? 'Customer updated' : 'Customer saved');
-            return data;
+            return savedCustomer;
         } catch (error) {
             flash('error', error.message || 'Failed to save customer');
+            return null;
         }
     }
 
@@ -798,6 +811,7 @@ function QuotationsAdminPageContent() {
 
     async function saveQuote(nextStatus) {
         if (!form.project_title.trim()) return flash('error', 'Project title is required');
+        if (!form.client_org.trim()) return flash('error', 'Client company/name is required');
         if (!form.created_by.trim()) return flash('error', 'Created by is required');
 
         const normalizedSections = form.sections.map((section) => ({

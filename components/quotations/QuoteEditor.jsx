@@ -166,8 +166,10 @@ function SaveCustomerPanel({ form, customers, onSaveCustomer, onClose }) {
 
     async function handleSave() {
         if (!localForm.display_name.trim()) return;
-        await onSaveCustomer(localForm);
-        onClose();
+        const savedCustomer = await onSaveCustomer(localForm);
+        if (savedCustomer) {
+            onClose();
+        }
     }
 
     return (

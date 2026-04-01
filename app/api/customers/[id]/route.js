@@ -8,7 +8,7 @@ export async function GET(request, { params }) {
         if (!customer) return Response.json({ error: 'Not found' }, { status: 404 });
         return Response.json(customer);
     } catch (error) {
-        return Response.json({ error: 'Failed to load customer' }, { status: 500 });
+        return Response.json({ error: error.message || 'Failed to load customer' }, { status: 500 });
     }
 }
 
@@ -19,7 +19,7 @@ export async function PUT(request, { params }) {
         if (!customer) return Response.json({ error: 'Not found' }, { status: 404 });
         return Response.json(customer);
     } catch (error) {
-        return Response.json({ error: 'Failed to update customer' }, { status: 500 });
+        return Response.json({ error: error.message || 'Failed to update customer' }, { status: 500 });
     }
 }
 
@@ -29,6 +29,6 @@ export async function DELETE(request, { params }) {
         if (!deleted) return Response.json({ error: 'Not found' }, { status: 404 });
         return Response.json({ success: true });
     } catch (error) {
-        return Response.json({ error: 'Failed to delete customer' }, { status: 500 });
+        return Response.json({ error: error.message || 'Failed to delete customer' }, { status: 500 });
     }
 }

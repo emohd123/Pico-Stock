@@ -7,7 +7,7 @@ export async function GET() {
         const customers = await getCustomers();
         return Response.json(customers);
     } catch (error) {
-        return Response.json({ error: 'Failed to load customers' }, { status: 500 });
+        return Response.json({ error: error.message || 'Failed to load customers' }, { status: 500 });
     }
 }
 
@@ -20,6 +20,6 @@ export async function POST(request) {
         const customer = await createCustomer(payload);
         return Response.json(customer, { status: 201 });
     } catch (error) {
-        return Response.json({ error: 'Failed to create customer' }, { status: 500 });
+        return Response.json({ error: error.message || 'Failed to create customer' }, { status: 500 });
     }
 }
