@@ -49,7 +49,7 @@ export async function GET(request) {
     try {
         const [products, orders] = await Promise.all([
             category ? getProductsByCategory(category) : getProducts(),
-            getOrders(),
+            getOrders().catch(() => []),
         ]);
 
         return NextResponse.json(applyReservedStock(products, orders));
