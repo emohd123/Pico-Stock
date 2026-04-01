@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getProducts, getProductsByCategory, getOrders, addProducts, updateProduct, deleteProduct, deleteProducts } from '@/lib/store';
+import { getProducts, getProductsByCategory, getOrders, getOrderStockInfo, addProducts, updateProduct, deleteProduct, deleteProducts } from '@/lib/store';
 
 const STOCK_HOLD_STATUSES = new Set(['confirmed', 'processing']);
 
@@ -49,7 +49,7 @@ export async function GET(request) {
     try {
         const [products, orders] = await Promise.all([
             category ? getProductsByCategory(category) : getProducts(),
-            getOrders().catch(() => []),
+            getOrderStockInfo().catch(() => []),
         ]);
 
         return NextResponse.json(applyReservedStock(products, orders));
