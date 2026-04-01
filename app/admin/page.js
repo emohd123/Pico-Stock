@@ -108,8 +108,10 @@ export default function AdminDashboard() {
                 fetch('/api/products'),
                 fetch('/api/orders'),
             ]);
-            setProducts(await prodRes.json());
-            setOrders(await ordRes.json());
+            const prodData = await prodRes.json();
+            const ordData = await ordRes.json();
+            setProducts(Array.isArray(prodData) ? prodData : []);
+            setOrders(Array.isArray(ordData) ? ordData : []);
         } catch { }
         setLoading(false);
     };
