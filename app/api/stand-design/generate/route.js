@@ -4,6 +4,7 @@ import { createStandDesignMaintenanceResponse, getStandDesignMaintenanceStatus }
 import { createStandDesign, StandDesignStoreError } from '@/lib/standDesignStore';
 
 export const runtime = 'nodejs';
+export const maxDuration = 120;
 
 export async function POST(request) {
     if (getStandDesignMaintenanceStatus().heavy_jobs_paused) {
