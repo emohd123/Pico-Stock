@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/lib/cartContext';
-import FileUploader from '@/components/FileUploader';
+import FileUploader from '@/components/storefront/FileUploader';
 import { extractCleanName } from '@/lib/nameHelpers';
 
 export default function CartPage() {
@@ -14,11 +14,11 @@ export default function CartPage() {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
     const [form, setForm] = useState({
-        name: '', company: '', email: '', phone: '', boothNumber: '', eventName: '', notes: ''
+        name: '', company: '', email: '', phone: '', boothNumber: '', eventName: '', notes: '',
     });
 
     const handleChange = (e) => {
-        setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+        setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     };
 
     const handleSubmit = async (e) => {
@@ -38,11 +38,10 @@ export default function CartPage() {
         setSubmitting(true);
 
         try {
-            // Upload files if any
             let uploadedFiles = [];
             if (files.length > 0) {
                 const formData = new FormData();
-                files.forEach(file => formData.append('files', file));
+                files.forEach((file) => formData.append('files', file));
 
                 const uploadRes = await fetch('/api/upload', {
                     method: 'POST',
@@ -54,9 +53,8 @@ export default function CartPage() {
                 }
             }
 
-            // Create order
             const orderData = {
-                items: cart.map(item => ({
+                items: cart.map((item) => ({
                     id: item.id,
                     name: item.name,
                     price: item.price,
@@ -81,7 +79,6 @@ export default function CartPage() {
             const orderResult = await orderRes.json();
 
             if (orderResult.success) {
-                // Send email
                 try {
                     await fetch('/api/email', {
                         method: 'POST',
@@ -111,7 +108,7 @@ export default function CartPage() {
         return (
             <div className="page-enter">
                 <div className="empty-state" style={{ minHeight: '50vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <div className="empty-state-icon">🛒</div>
+                    <div className="empty-state-icon">{'\u{1F6D2}'}</div>
                     <h3>Your cart is empty</h3>
                     <p>Browse our catalogue and add items to get started.</p>
                     <Link href="/catalogue" className="btn btn-primary" style={{ marginTop: '1rem' }}>
@@ -126,7 +123,7 @@ export default function CartPage() {
         <div className="page-enter cart-page">
             <div className="breadcrumb" style={{ padding: '0 0 1.5rem' }}>
                 <Link href="/">Home</Link>
-                <span>›</span>
+                <span>{'\u203A'}</span>
                 <span className="current">Cart & Checkout</span>
             </div>
 
@@ -136,9 +133,8 @@ export default function CartPage() {
 
             <div className="checkout-grid">
                 <div>
-                    {/* Cart Items */}
                     <div className="cart-items">
-                        {cart.map(item => (
+                        {cart.map((item) => (
                             <div key={item.id} className="cart-item">
                                 <img src={item.image} alt={extractCleanName(item.name)} className="cart-item-image" />
                                 <div className="cart-item-info">
@@ -147,28 +143,27 @@ export default function CartPage() {
                                     <div className="cart-item-price">{item.price} BHD /day</div>
                                     {item.comment && (
                                         <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.2rem', fontStyle: 'italic' }}>
-                                            💬 {item.comment}
+                                            {'\u{1F4AC}'} {item.comment}
                                         </div>
                                     )}
                                 </div>
                                 <div className="quantity-controls">
-                                    <button onClick={() => updateQuantity(item.id, item.quantity - 1)}>−</button>
+                                    <button onClick={() => updateQuantity(item.id, item.quantity - 1)}>{'\u2212'}</button>
                                     <span>{item.quantity}</span>
                                     <button onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</button>
                                 </div>
                                 <button className="btn btn-icon" onClick={() => removeFromCart(item.id)} title="Remove" style={{ color: '#ef4444' }}>
-                                    🗑️
+                                    {'\u{1F5D1}\uFE0F'}
                                 </button>
                             </div>
                         ))}
                     </div>
 
-                    {/* Exhibitor Details Form */}
                     <form className="checkout-form" onSubmit={handleSubmit}>
                         <h3>Exhibitor Details</h3>
 
                         {error && (
-                            <div className="alert alert-error">⚠️ {error}</div>
+                            <div className="alert alert-error">{'\u26A0\uFE0F'} {error}</div>
                         )}
 
                         <div className="form-row">
@@ -209,7 +204,6 @@ export default function CartPage() {
                             <textarea className="form-textarea" name="notes" value={form.notes} onChange={handleChange} placeholder="Any special requirements or notes..." />
                         </div>
 
-                        {/* File Upload */}
                         <div className="form-group">
                             <label className="form-label">Upload Files (Optional)</label>
                             <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '0.75rem' }}>
@@ -230,20 +224,19 @@ export default function CartPage() {
                                     Processing Order...
                                 </>
                             ) : (
-                                `Submit Order — ${grandTotal.toFixed(2)} BHD`
+                                `Submit Order - ${grandTotal.toFixed(2)} BHD`
                             )}
                         </button>
                     </form>
                 </div>
 
-                {/* Order Summary Sidebar */}
                 <div className="order-summary order-summary-panel">
                     <h3>Order Summary</h3>
 
-                    {cart.map(item => (
+                    {cart.map((item) => (
                         <div key={item.id} className="order-row">
                             <span style={{ color: 'var(--text-secondary)' }}>
-                                {extractCleanName(item.name)} × {item.quantity}
+                                {extractCleanName(item.name)} {'\u00D7'} {item.quantity}
                             </span>
                             <span>{(item.price * item.quantity).toFixed(2)} BHD/day</span>
                         </div>
@@ -254,13 +247,17 @@ export default function CartPage() {
                         <span>{cartTotal.toFixed(2)} BHD</span>
                     </div>
 
-                    {/* Rental Days Control */}
-                    <div style={{
-                        background: 'var(--bg-card)', border: '1px solid var(--border-color)',
-                        borderRadius: 'var(--radius-sm)', padding: '0.75rem 1rem', margin: '0.75rem 0'
-                    }}>
+                    <div
+                        style={{
+                            background: 'var(--bg-card)',
+                            border: '1px solid var(--border-color)',
+                            borderRadius: 'var(--radius-sm)',
+                            padding: '0.75rem 1rem',
+                            margin: '0.75rem 0',
+                        }}
+                    >
                         <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.6rem' }}>
-                            📅 Rental Period
+                            {'\u{1F4C5}'} Rental Period
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             <button
@@ -268,13 +265,15 @@ export default function CartPage() {
                                 className="btn btn-secondary"
                                 style={{ width: '34px', height: '34px', padding: 0, fontSize: '1.1rem', flexShrink: 0 }}
                                 onClick={() => setRentalDays(rentalDays - 1)}
-                            >−</button>
+                            >
+                                {'\u2212'}
+                            </button>
                             <input
                                 type="number"
                                 className="form-input"
                                 min={1}
                                 value={rentalDays}
-                                onChange={e => setRentalDays(e.target.value)}
+                                onChange={(e) => setRentalDays(e.target.value)}
                                 style={{ width: '60px', textAlign: 'center', padding: '6px 4px', flex: 'none' }}
                             />
                             <button
@@ -282,7 +281,9 @@ export default function CartPage() {
                                 className="btn btn-secondary"
                                 style={{ width: '34px', height: '34px', padding: 0, fontSize: '1.1rem', flexShrink: 0 }}
                                 onClick={() => setRentalDays(rentalDays + 1)}
-                            >+</button>
+                            >
+                                +
+                            </button>
                             <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>
                                 {rentalDays === 1 ? 'day' : 'days'}
                             </span>
@@ -294,7 +295,7 @@ export default function CartPage() {
                         <div style={{ textAlign: 'right' }}>
                             <span className="order-value">{grandTotal.toFixed(2)} BHD</span>
                             <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                                {cartTotal.toFixed(2)} × {rentalDays} {rentalDays === 1 ? 'day' : 'days'}
+                                {cartTotal.toFixed(2)} {'\u00D7'} {rentalDays} {rentalDays === 1 ? 'day' : 'days'}
                             </div>
                         </div>
                     </div>

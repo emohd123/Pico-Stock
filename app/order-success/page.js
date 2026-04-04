@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useState, useEffect } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { formatOrderReference } from '@/lib/nameHelpers';
 
 function OrderSuccessContent() {
@@ -13,9 +13,10 @@ function OrderSuccessContent() {
 
     useEffect(() => {
         if (!orderId) return;
+
         fetch(`/api/orders?id=${orderId}`)
-            .then(res => res.json())
-            .then(order => {
+            .then((res) => res.json())
+            .then((order) => {
                 if (order && Array.isArray(order.attachments) && order.attachments.length > 0) {
                     setAttachments(order.attachments);
                 }
@@ -26,7 +27,7 @@ function OrderSuccessContent() {
     return (
         <div className="page-enter success-page">
             <div className="success-card">
-                <div className="success-icon">✅</div>
+                <div className="success-icon">{'\u2705'}</div>
                 <h1>Order Submitted!</h1>
                 <p>
                     Thank you for your order. Your request has been received and our team
@@ -34,13 +35,15 @@ function OrderSuccessContent() {
                 </p>
 
                 {orderId && (
-                    <div style={{
-                        background: 'var(--bg-glass)',
-                        border: '1px solid var(--border-subtle)',
-                        borderRadius: 'var(--radius-md)',
-                        padding: '1rem',
-                        marginBottom: '1.5rem'
-                    }}>
+                    <div
+                        style={{
+                            background: 'var(--bg-glass)',
+                            border: '1px solid var(--border-subtle)',
+                            borderRadius: 'var(--radius-md)',
+                            padding: '1rem',
+                            marginBottom: '1.5rem',
+                        }}
+                    >
                         <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '0.25rem' }}>
                             ORDER REFERENCE
                         </div>
@@ -51,21 +54,23 @@ function OrderSuccessContent() {
                 )}
 
                 {attachments.length > 0 && (
-                    <div style={{
-                        background: 'var(--bg-glass)',
-                        border: '1px solid var(--border-subtle)',
-                        borderRadius: 'var(--radius-md)',
-                        padding: '1rem',
-                        marginBottom: '1.5rem',
-                        textAlign: 'left'
-                    }}>
+                    <div
+                        style={{
+                            background: 'var(--bg-glass)',
+                            border: '1px solid var(--border-subtle)',
+                            borderRadius: 'var(--radius-md)',
+                            padding: '1rem',
+                            marginBottom: '1.5rem',
+                            textAlign: 'left',
+                        }}
+                    >
                         <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '0.75rem' }}>
                             UPLOADED FILES
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                            {attachments.map((file, i) => (
+                            {attachments.map((file, index) => (
                                 <a
-                                    key={i}
+                                    key={index}
                                     href={file.path}
                                     download={file.originalName}
                                     style={{
@@ -82,7 +87,7 @@ function OrderSuccessContent() {
                                         fontWeight: 500,
                                     }}
                                 >
-                                    <span>⬇️</span>
+                                    <span>{'\u2B07\uFE0F'}</span>
                                     <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                         {file.originalName}
                                     </span>
@@ -95,15 +100,17 @@ function OrderSuccessContent() {
                     </div>
                 )}
 
-                <div style={{
-                    background: 'rgba(0, 165, 165, 0.08)',
-                    borderRadius: 'var(--radius-md)',
-                    padding: '1.25rem',
-                    marginBottom: '2rem',
-                    textAlign: 'left',
-                    fontSize: '0.85rem',
-                    lineHeight: '1.8'
-                }}>
+                <div
+                    style={{
+                        background: 'rgba(0, 165, 165, 0.08)',
+                        borderRadius: 'var(--radius-md)',
+                        padding: '1.25rem',
+                        marginBottom: '2rem',
+                        textAlign: 'left',
+                        fontSize: '0.85rem',
+                        lineHeight: '1.8',
+                    }}
+                >
                     <strong style={{ color: 'var(--pico-teal)' }}>What happens next?</strong>
                     <ol style={{ marginTop: '0.5rem', paddingLeft: '1.25rem', color: 'var(--text-secondary)' }}>
                         <li>Our team receives your order and reviews it</li>
@@ -128,9 +135,7 @@ function OrderSuccessContent() {
 
 export default function OrderSuccessPage() {
     return (
-        <Suspense fallback={
-            <div className="loading-page"><div className="spinner"></div></div>
-        }>
+        <Suspense fallback={<div className="loading-page"><div className="spinner"></div></div>}>
             <OrderSuccessContent />
         </Suspense>
     );

@@ -455,7 +455,7 @@ export default function AdminDashboard() {
                         className={`admin-sidebar-item ${activeTab === 'overview' ? 'active' : ''}`}
                         onClick={() => setActiveTab('overview')}
                     >
-                        📊 Overview
+                        {'\u{1F4CA}'} Overview
                     </button>
                     <button
                         className={`admin-sidebar-item ${activeTab === 'products' ? 'active' : ''}`}

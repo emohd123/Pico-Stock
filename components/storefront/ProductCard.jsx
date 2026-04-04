@@ -50,15 +50,15 @@ function AddToCartModal({ product, onClose, onConfirm }) {
     const [quantity, setQuantity] = useState(1);
     const [comment, setComment] = useState('');
 
-    const handleQty = (val) => {
-        const n = parseInt(val, 10) || 1;
-        setQuantity(Math.min(Math.max(1, n), maxQty));
+    const handleQty = (value) => {
+        const nextValue = parseInt(value, 10) || 1;
+        setQuantity(Math.min(Math.max(1, nextValue), maxQty));
     };
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-box add-to-cart-modal" onClick={e => e.stopPropagation()}>
-                <button className="modal-close" onClick={onClose}>X</button>
+            <div className="modal-box add-to-cart-modal" onClick={(event) => event.stopPropagation()}>
+                <button className="modal-close" onClick={onClose} type="button">X</button>
 
                 <div className="modal-panel">
                     <h3 className="add-modal-title">{cleanName}</h3>
@@ -83,7 +83,7 @@ function AddToCartModal({ product, onClose, onConfirm }) {
                                     min={1}
                                     max={maxQty}
                                     value={quantity}
-                                    onChange={e => handleQty(e.target.value)}
+                                    onChange={(event) => handleQty(event.target.value)}
                                 />
                                 <button
                                     type="button"
@@ -108,7 +108,7 @@ function AddToCartModal({ product, onClose, onConfirm }) {
                         <textarea
                             className="form-textarea"
                             value={comment}
-                            onChange={e => setComment(e.target.value)}
+                            onChange={(event) => setComment(event.target.value)}
                             placeholder="e.g. Prefer blue colour, need stand included..."
                             rows={3}
                             style={{ resize: 'vertical', minHeight: '80px' }}
@@ -120,7 +120,10 @@ function AddToCartModal({ product, onClose, onConfirm }) {
                         <button
                             type="button"
                             className="btn btn-primary"
-                            onClick={() => { onConfirm(quantity, comment.trim()); onClose(); }}
+                            onClick={() => {
+                                onConfirm(quantity, comment.trim());
+                                onClose();
+                            }}
                         >
                             Add to Cart
                         </button>
@@ -141,17 +144,17 @@ function ProductModal({ product, onClose, onAddToCart }) {
     return (
         <>
             <div className="modal-overlay" onClick={onClose}>
-                <div className="modal-box" onClick={e => e.stopPropagation()}>
-                    <button className="modal-close" onClick={onClose}>X</button>
+                <div className="modal-box" onClick={(event) => event.stopPropagation()}>
+                    <button className="modal-close" onClick={onClose} type="button">X</button>
 
                     <div className="modal-image-wrap">
                         <img
                             src={product.image}
                             alt={cleanName}
                             className="modal-image"
-                            onError={e => {
-                                e.target.src = '';
-                                e.target.style.display = 'none';
+                            onError={(event) => {
+                                event.target.src = '';
+                                event.target.style.display = 'none';
                             }}
                         />
                     </div>
@@ -200,6 +203,7 @@ function ProductModal({ product, onClose, onAddToCart }) {
                                 <button
                                     className="btn btn-primary product-modal-action"
                                     onClick={() => setShowAddModal(true)}
+                                    type="button"
                                 >
                                     Add to Cart
                                 </button>
@@ -251,8 +255,8 @@ export default function ProductCard({ product }) {
                         src={product.image}
                         alt={cleanName}
                         className="card-image"
-                        onError={e => {
-                            e.target.style.display = 'none';
+                        onError={(event) => {
+                            event.target.style.display = 'none';
                         }}
                     />
                 </div>
@@ -284,10 +288,11 @@ export default function ProductCard({ product }) {
                         {!isOutOfStock ? (
                             <button
                                 className="btn btn-primary btn-sm"
-                                onClick={e => {
-                                    e.stopPropagation();
+                                onClick={(event) => {
+                                    event.stopPropagation();
                                     setShowAddModal(true);
                                 }}
+                                type="button"
                             >
                                 Add
                             </button>
@@ -302,7 +307,7 @@ export default function ProductCard({ product }) {
                 <ProductModal
                     product={product}
                     onClose={() => setShowModal(false)}
-                    onAddToCart={(prod, qty, comment) => addToCart(prod, qty, comment)}
+                    onAddToCart={(currentProduct, qty, comment) => addToCart(currentProduct, qty, comment)}
                 />
             )}
 

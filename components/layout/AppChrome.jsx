@@ -1,5 +1,5 @@
-import Navbar from '@/components/Navbar';
 import Image from 'next/image';
+import Navbar from '@/components/layout/Navbar';
 
 export default function AppChrome({ children }) {
     return (
@@ -18,7 +18,7 @@ export default function AppChrome({ children }) {
                             height={38}
                             style={{ opacity: 0.7 }}
                         />
-                        <p className="footer-tagline">Exhibition Booth Extras — Rental &amp; Services</p>
+                        <p className="footer-tagline">Exhibition Booth Extras - Rental &amp; Services</p>
                     </div>
 
                     <div className="footer-links">
@@ -38,7 +38,7 @@ export default function AppChrome({ children }) {
                 </div>
 
                 <div className="footer-bottom">
-                    <span>© {new Date().getFullYear()} Pico International (Bahrain). All rights reserved.</span>
+                    <span>&copy; {new Date().getFullYear()} Pico International (Bahrain). All rights reserved.</span>
                 </div>
             </footer>
         </>

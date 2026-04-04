@@ -1,58 +1,30 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import ProductCard from '@/components/ProductCard';
+import { useMemo } from 'react';
+import ProductCard from '@/components/storefront/ProductCard';
+import { useProducts } from '@/hooks/useProducts';
 import { useCart } from '@/lib/cartContext';
-import { hasMeaningfulProductName } from '@/lib/nameHelpers';
+import { getVisibleProducts, HOME_STEPS, SHOP_CATEGORIES } from '@/lib/storefront/catalogue';
 
 export default function HomePage() {
-    const [products, setProducts] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const { products, loading } = useProducts();
     const { toast } = useCart();
-
-    useEffect(() => {
-        fetch('/api/products')
-            .then(res => res.json())
-            .then(data => {
-                setProducts(Array.isArray(data) ? data : []);
-                setLoading(false);
-            })
-            .catch(() => setLoading(false));
-    }, []);
-
-    const visibleProducts = products.filter(p => hasMeaningfulProductName(p.name));
-
-    const categories = [
-        {
-            slug: 'furniture',
-            icon: '🪑',
-            title: 'Furniture',
-            description: 'Tables, chairs, lounges, display stands and reception counters for your booth.',
-            count: visibleProducts.filter(p => p.category === 'furniture').length
-        },
-        {
-            slug: 'tv-led',
-            icon: '📺',
-            title: 'TV / LED Screens',
-            description: 'High-definition displays, video walls, interactive touch screens and kiosks.',
-            count: visibleProducts.filter(p => p.category === 'tv-led').length
-        },
-        {
-            slug: 'graphics',
-            icon: '🎨',
-            title: 'Graphics',
-            description: 'Backdrops, banners, fascia boards, floor graphics and custom signage.',
-            count: visibleProducts.filter(p => p.category === 'graphics').length
-        }
-    ];
+    const visibleProducts = useMemo(() => getVisibleProducts(products), [products]);
+    const categories = useMemo(() => (
+        SHOP_CATEGORIES
+            .filter((category) => category.value !== 'all')
+            .map((category) => ({
+                ...category,
+                count: visibleProducts.filter((product) => product.category === category.value).length,
+            }))
+    ), [visibleProducts]);
 
     return (
         <div className="page-enter">
-            {/* Hero Section */}
             <section className="hero">
                 <div className="hero-badge">
-                    ✨ Premium Exhibition Services
+                    {'\u2728'} Premium Exhibition Services
                 </div>
                 <h1>
                     Elevate Your <span className="highlight">Exhibition Booth</span>
@@ -63,33 +35,31 @@ export default function HomePage() {
                 </p>
                 <div className="hero-actions">
                     <Link href="/catalogue" className="btn btn-primary btn-lg">
-                        Browse Catalogue →
+                        Browse Catalogue {'\u2192'}
                     </Link>
                     <Link href="/cart" className="btn btn-secondary btn-lg">
-                        🛒 View Cart
+                        {'\u{1F6D2}'} View Cart
                     </Link>
                 </div>
             </section>
 
-            {/* Categories */}
             <section className="section">
                 <div className="section-header">
                     <h2>Rental Categories</h2>
                     <p>Everything you need for a standout exhibition booth</p>
                 </div>
                 <div className="categories-grid">
-                    {categories.map(cat => (
-                        <Link key={cat.slug} href="/catalogue" className="category-card">
-                            <span className="category-icon">{cat.icon}</span>
-                            <h3>{cat.title}</h3>
-                            <p>{cat.description}</p>
-                            <span className="category-count">{cat.count} items available</span>
+                    {categories.map((category) => (
+                        <Link key={category.slug} href={`/catalogue/${category.slug}`} className="category-card">
+                            <span className="category-icon">{category.icon}</span>
+                            <h3>{category.title}</h3>
+                            <p>{category.description}</p>
+                            <span className="category-count">{category.count} items available</span>
                         </Link>
                     ))}
                 </div>
             </section>
 
-            {/* Top Products */}
             {!loading && visibleProducts.length > 0 && (
                 <section className="section">
                     <div className="section-header">
@@ -97,7 +67,7 @@ export default function HomePage() {
                         <p>Browse our popular exhibition booth extras</p>
                     </div>
                     <div className="products-grid">
-                        {[...visibleProducts].reverse().slice(0, 6).map(product => (
+                        {[...visibleProducts].reverse().slice(0, 6).map((product) => (
                             <ProductCard key={product.id} product={product} />
                         ))}
                     </div>
@@ -111,32 +81,25 @@ export default function HomePage() {
                 </section>
             )}
 
-            {/* How it Works */}
             <section className="section">
                 <div className="section-header">
                     <h2>How It Works</h2>
                     <p>Simple 4-step process to get your booth ready</p>
                 </div>
                 <div className="categories-grid" style={{ maxWidth: '1000px' }}>
-                    {[
-                        { icon: '📋', title: 'Browse', desc: 'Explore our catalogue of furniture, screens, and graphics.' },
-                        { icon: '🛒', title: 'Order', desc: 'Add items to your cart and submit your order with booth details.' },
-                        { icon: '📧', title: 'Confirm', desc: 'Receive confirmation email and our team will follow up.' },
-                        { icon: '🚚', title: 'Deliver', desc: 'We deliver, setup, and collect — you focus on your exhibition.' },
-                    ].map((step, i) => (
-                        <div key={i} className="category-card" style={{ cursor: 'default' }}>
+                    {HOME_STEPS.map((step) => (
+                        <div key={step.title} className="category-card" style={{ cursor: 'default' }}>
                             <span className="category-icon">{step.icon}</span>
                             <h3>{step.title}</h3>
-                            <p>{step.desc}</p>
+                            <p>{step.description}</p>
                         </div>
                     ))}
                 </div>
             </section>
 
-            {/* Toast */}
             {toast && (
                 <div className="toast">
-                    ✅ {toast}
+                    {'\u2705'} {toast}
                 </div>
             )}
         </div>

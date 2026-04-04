@@ -1,75 +1,72 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useRef, useState } from 'react';
+
+const ACCEPTED_TYPES = [
+    '.pdf', '.bdf', '.ppt', '.pptx',
+    '.png', '.jpg', '.jpeg', '.gif', '.svg',
+    '.doc', '.docx', '.xls', '.xlsx',
+];
+
+function formatSize(bytes) {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function getFileIcon(name) {
+    const ext = name.split('.').pop()?.toLowerCase();
+    if (['pdf', 'bdf'].includes(ext)) return '\u{1F4C4}';
+    if (['ppt', 'pptx'].includes(ext)) return '\u{1F4CA}';
+    if (['png', 'jpg', 'jpeg', 'gif', 'svg'].includes(ext)) return '\u{1F5BC}\uFE0F';
+    if (['doc', 'docx'].includes(ext)) return '\u{1F4DD}';
+    if (['xls', 'xlsx'].includes(ext)) return '\u{1F4D1}';
+    return '\u{1F4CE}';
+}
 
 export default function FileUploader({ onFilesChange, files = [] }) {
     const [dragOver, setDragOver] = useState(false);
     const fileInputRef = useRef(null);
 
-    const acceptedTypes = [
-        '.pdf', '.bdf', '.ppt', '.pptx',
-        '.png', '.jpg', '.jpeg', '.gif', '.svg',
-        '.doc', '.docx', '.xls', '.xlsx'
-    ];
-
-    const handleDragOver = (e) => {
-        e.preventDefault();
-        setDragOver(true);
+    const appendFiles = (incomingFiles) => {
+        onFilesChange([...files, ...incomingFiles]);
     };
 
-    const handleDragLeave = () => setDragOver(false);
-
-    const handleDrop = (e) => {
-        e.preventDefault();
+    const handleDrop = (event) => {
+        event.preventDefault();
         setDragOver(false);
-        const droppedFiles = Array.from(e.dataTransfer.files);
-        onFilesChange([...files, ...droppedFiles]);
+        appendFiles(Array.from(event.dataTransfer.files));
     };
 
-    const handleFileSelect = (e) => {
-        const selectedFiles = Array.from(e.target.files);
-        onFilesChange([...files, ...selectedFiles]);
-        e.target.value = '';
+    const handleFileSelect = (event) => {
+        appendFiles(Array.from(event.target.files || []));
+        event.target.value = '';
     };
 
     const removeFile = (index) => {
-        const newFiles = files.filter((_, i) => i !== index);
-        onFilesChange(newFiles);
-    };
-
-    const formatSize = (bytes) => {
-        if (bytes < 1024) return bytes + ' B';
-        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-    };
-
-    const getFileIcon = (name) => {
-        const ext = name.split('.').pop().toLowerCase();
-        if (['pdf', 'bdf'].includes(ext)) return '📄';
-        if (['ppt', 'pptx'].includes(ext)) return '📊';
-        if (['png', 'jpg', 'jpeg', 'gif', 'svg'].includes(ext)) return '🖼️';
-        if (['doc', 'docx'].includes(ext)) return '📝';
-        if (['xls', 'xlsx'].includes(ext)) return '📑';
-        return '📎';
+        onFilesChange(files.filter((_, fileIndex) => fileIndex !== index));
     };
 
     return (
         <div>
             <div
                 className={`upload-zone ${dragOver ? 'drag-over' : ''}`}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
+                onDragOver={(event) => {
+                    event.preventDefault();
+                    setDragOver(true);
+                }}
+                onDragLeave={() => setDragOver(false)}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
             >
-                <div className="upload-zone-icon">📁</div>
+                <div className="upload-zone-icon">{'\u{1F4C1}'}</div>
                 <h4>Drop files here or click to upload</h4>
                 <p>Supports PDF, BDF, PowerPoint, Images, Word, Excel</p>
                 <input
                     ref={fileInputRef}
                     type="file"
                     multiple
-                    accept={acceptedTypes.join(',')}
+                    accept={ACCEPTED_TYPES.join(',')}
                     onChange={handleFileSelect}
                     style={{ display: 'none' }}
                 />
@@ -78,7 +75,7 @@ export default function FileUploader({ onFilesChange, files = [] }) {
             {files.length > 0 && (
                 <div className="upload-file-list">
                     {files.map((file, index) => (
-                        <div key={index} className="upload-file-item">
+                        <div key={`${file.name}-${file.size}-${index}`} className="upload-file-item">
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <span style={{ fontSize: '1.2rem' }}>{getFileIcon(file.name)}</span>
                                 <div>
@@ -88,13 +85,14 @@ export default function FileUploader({ onFilesChange, files = [] }) {
                             </div>
                             <button
                                 className="upload-file-remove"
-                                onClick={(e) => {
-                                    e.stopPropagation();
+                                onClick={(event) => {
+                                    event.stopPropagation();
                                     removeFile(index);
                                 }}
                                 title="Remove"
+                                type="button"
                             >
-                                ✕
+                                {'\u2715'}
                             </button>
                         </div>
                     ))}

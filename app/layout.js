@@ -1,5 +1,5 @@
 import './globals.css';
-import AppChrome from '@/components/AppChrome';
+import AppChrome from '@/components/layout/AppChrome';
 import { CartProvider } from '@/lib/cartContext';
 
 export const metadata = {

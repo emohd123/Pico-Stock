@@ -1,86 +1,33 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import ProductCard from '@/components/ProductCard';
+import ProductCard from '@/components/storefront/ProductCard';
+import { useProducts } from '@/hooks/useProducts';
 import { useCart } from '@/lib/cartContext';
 import {
-    extractCatalogNumber,
-    extractCleanName,
-    extractProductCode,
-    hasMeaningfulProductName,
-    inferProductType,
-} from '@/lib/nameHelpers';
-
-const categories = [
-    { value: 'all', label: 'All Products', icon: '📦' },
-    { value: 'furniture', label: 'Furniture', icon: '🪑' },
-    { value: 'tv-led', label: 'TV / LED', icon: '📺' },
-    { value: 'graphics', label: 'Graphics', icon: '🎨' },
-];
-
-function buildSearchText(product) {
-    return [
-        product.name,
-        extractCleanName(product.name),
-        extractCatalogNumber(product.name),
-        extractProductCode(product.name),
-        inferProductType(product),
-        product.category,
-        product.description,
-    ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase();
-}
-
-function isProductInStock(product) {
-    const availableStock = product.availableStock ?? product.stock;
-    return product.inStock !== false && (
-        availableStock === null ||
-        availableStock === undefined ||
-        availableStock > 0
-    );
-}
+    filterProducts,
+    getVisibleProducts,
+    SHOP_CATEGORIES,
+    sortProducts,
+} from '@/lib/storefront/catalogue';
 
 export default function CataloguePage() {
-    const [products, setProducts] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const { products, loading } = useProducts();
     const [activeCategory, setActiveCategory] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [availability, setAvailability] = useState('all');
     const [sortBy, setSortBy] = useState('name');
     const { toast } = useCart();
 
-    useEffect(() => {
-        fetch('/api/products')
-            .then((res) => res.json())
-            .then((data) => {
-                setProducts(Array.isArray(data) ? data : []);
-                setLoading(false);
-            })
-            .catch(() => setLoading(false));
-    }, []);
-
-    const visibleProducts = products.filter((product) => hasMeaningfulProductName(product.name));
+    const visibleProducts = useMemo(() => getVisibleProducts(products), [products]);
     const normalizedQuery = searchQuery.trim().toLowerCase();
-
-    const filtered = visibleProducts.filter((product) => {
-        const matchesCategory = activeCategory === 'all' || product.category === activeCategory;
-        const matchesSearch = !normalizedQuery || buildSearchText(product).includes(normalizedQuery);
-        const inStock = isProductInStock(product);
-        const matchesAvailability = availability === 'all'
-            || (availability === 'in-stock' && inStock)
-            || (availability === 'out-of-stock' && !inStock);
-
-        return matchesCategory && matchesSearch && matchesAvailability;
-    });
-
-    const sorted = [...filtered].sort((a, b) => {
-        if (sortBy === 'price-low') return a.price - b.price;
-        if (sortBy === 'price-high') return b.price - a.price;
-        return extractCleanName(a.name || '').localeCompare(extractCleanName(b.name || ''));
-    });
+    const filtered = useMemo(() => filterProducts(visibleProducts, {
+        category: activeCategory,
+        query: searchQuery,
+        availability,
+    }), [activeCategory, availability, searchQuery, visibleProducts]);
+    const sorted = useMemo(() => sortProducts(filtered, sortBy), [filtered, sortBy]);
 
     const hasActiveFilters = activeCategory !== 'all'
         || Boolean(normalizedQuery)
@@ -98,7 +45,7 @@ export default function CataloguePage() {
         <div className="page-enter">
             <div className="breadcrumb">
                 <Link href="/">Home</Link>
-                <span>›</span>
+                <span>{'\u203A'}</span>
                 <span className="current">Catalogue</span>
             </div>
 
@@ -118,7 +65,7 @@ export default function CataloguePage() {
                                 className="form-input catalogue-search-input"
                                 type="search"
                                 value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onChange={(event) => setSearchQuery(event.target.value)}
                                 placeholder="Search by name, code, ID, type, or keyword"
                             />
                         </label>
@@ -127,7 +74,7 @@ export default function CataloguePage() {
                             <select
                                 className="form-select"
                                 value={availability}
-                                onChange={(e) => setAvailability(e.target.value)}
+                                onChange={(event) => setAvailability(event.target.value)}
                             >
                                 <option value="all">All availability</option>
                                 <option value="in-stock">In stock only</option>
@@ -139,7 +86,7 @@ export default function CataloguePage() {
                             <select
                                 className="form-select"
                                 value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value)}
+                                onChange={(event) => setSortBy(event.target.value)}
                             >
                                 <option value="name">Sort by Name</option>
                                 <option value="price-low">Price: Low to High</option>
@@ -150,7 +97,7 @@ export default function CataloguePage() {
 
                     <div className="catalogue-filter-meta">
                         <div className="filter-bar">
-                            {categories.map((category) => (
+                            {SHOP_CATEGORIES.map((category) => (
                                 <button
                                     key={category.value}
                                     className={`filter-chip ${activeCategory === category.value ? 'active' : ''}`}
@@ -185,7 +132,7 @@ export default function CataloguePage() {
                     </div>
                 ) : sorted.length === 0 ? (
                     <div className="empty-state">
-                        <div className="empty-state-icon">📦</div>
+                        <div className="empty-state-icon">{'\u{1F4E6}'}</div>
                         <h3>No products found</h3>
                         <p>Try a different search or adjust the filters.</p>
                     </div>
@@ -200,7 +147,7 @@ export default function CataloguePage() {
 
             {toast && (
                 <div className="toast">
-                    ✅ {toast}
+                    {'\u2705'} {toast}
                 </div>
             )}
         </div>

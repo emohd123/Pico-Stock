@@ -1,100 +1,35 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import ProductCard from '@/components/ProductCard';
+import ProductCard from '@/components/storefront/ProductCard';
+import { useProducts } from '@/hooks/useProducts';
 import { useCart } from '@/lib/cartContext';
 import {
-    extractCatalogNumber,
-    extractCleanName,
-    extractProductCode,
-    hasMeaningfulProductName,
-    inferProductType,
-} from '@/lib/nameHelpers';
-
-const categoryLabels = {
-    furniture: {
-        title: 'Furniture',
-        icon: '🪑',
-        description: 'Premium tables, chairs, counters and display furniture for your exhibition booth.',
-    },
-    'tv-led': {
-        title: 'TV / LED Screens',
-        icon: '📺',
-        description: 'High-definition displays, video walls, touch screens and digital kiosks.',
-    },
-    graphics: {
-        title: 'Graphics',
-        icon: '🎨',
-        description: 'Custom printed backdrops, banners, signage and floor graphics.',
-    },
-};
-
-function buildSearchText(product) {
-    return [
-        product.name,
-        extractCleanName(product.name),
-        extractCatalogNumber(product.name),
-        extractProductCode(product.name),
-        inferProductType(product),
-        product.category,
-        product.description,
-    ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase();
-}
-
-function isProductInStock(product) {
-    const availableStock = product.availableStock ?? product.stock;
-    return product.inStock !== false && (
-        availableStock === null ||
-        availableStock === undefined ||
-        availableStock > 0
-    );
-}
+    filterProducts,
+    getCategoryDetails,
+    getVisibleProducts,
+    sortProducts,
+} from '@/lib/storefront/catalogue';
 
 export default function CategoryPage() {
     const params = useParams();
     const category = params.category;
-    const [products, setProducts] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const { products, loading } = useProducts(category);
     const [searchQuery, setSearchQuery] = useState('');
     const [availability, setAvailability] = useState('all');
     const [sortBy, setSortBy] = useState('name');
     const { toast } = useCart();
 
-    const catInfo = categoryLabels[category] || { title: category, icon: '📦', description: '' };
-
-    useEffect(() => {
-        fetch(`/api/products?category=${category}`)
-            .then((res) => res.json())
-            .then((data) => {
-                setProducts(Array.isArray(data) ? data : []);
-                setLoading(false);
-            })
-            .catch(() => setLoading(false));
-    }, [category]);
-
-    const visibleProducts = products.filter((product) => hasMeaningfulProductName(product.name));
+    const catInfo = getCategoryDetails(category);
+    const visibleProducts = useMemo(() => getVisibleProducts(products), [products]);
     const normalizedQuery = searchQuery.trim().toLowerCase();
-
-    const filteredProducts = visibleProducts.filter((product) => {
-        const matchesSearch = !normalizedQuery || buildSearchText(product).includes(normalizedQuery);
-        const inStock = isProductInStock(product);
-        const matchesAvailability = availability === 'all'
-            || (availability === 'in-stock' && inStock)
-            || (availability === 'out-of-stock' && !inStock);
-
-        return matchesSearch && matchesAvailability;
-    });
-
-    const sortedProducts = [...filteredProducts].sort((a, b) => {
-        if (sortBy === 'price-low') return a.price - b.price;
-        if (sortBy === 'price-high') return b.price - a.price;
-        return extractCleanName(a.name || '').localeCompare(extractCleanName(b.name || ''));
-    });
+    const filteredProducts = useMemo(() => filterProducts(visibleProducts, {
+        query: searchQuery,
+        availability,
+    }), [availability, searchQuery, visibleProducts]);
+    const sortedProducts = useMemo(() => sortProducts(filteredProducts, sortBy), [filteredProducts, sortBy]);
 
     const hasActiveFilters = Boolean(normalizedQuery) || availability !== 'all' || sortBy !== 'name';
 
@@ -108,7 +43,7 @@ export default function CategoryPage() {
         <div className="page-enter">
             <div className="breadcrumb">
                 <Link href="/">Home</Link>
-                <span>›</span>
+                <span>{'\u203A'}</span>
                 <span className="current">{catInfo.title}</span>
             </div>
 
@@ -129,7 +64,7 @@ export default function CategoryPage() {
                                 className="form-input catalogue-search-input"
                                 type="search"
                                 value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onChange={(event) => setSearchQuery(event.target.value)}
                                 placeholder={`Search within ${catInfo.title}`}
                             />
                         </label>
@@ -138,7 +73,7 @@ export default function CategoryPage() {
                             <select
                                 className="form-select"
                                 value={availability}
-                                onChange={(e) => setAvailability(e.target.value)}
+                                onChange={(event) => setAvailability(event.target.value)}
                             >
                                 <option value="all">All availability</option>
                                 <option value="in-stock">In stock only</option>
@@ -150,7 +85,7 @@ export default function CategoryPage() {
                             <select
                                 className="form-select"
                                 value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value)}
+                                onChange={(event) => setSortBy(event.target.value)}
                             >
                                 <option value="name">Sort by Name</option>
                                 <option value="price-low">Price: Low to High</option>
@@ -183,7 +118,7 @@ export default function CategoryPage() {
                     </div>
                 ) : sortedProducts.length === 0 ? (
                     <div className="empty-state">
-                        <div className="empty-state-icon">📦</div>
+                        <div className="empty-state-icon">{'\u{1F4E6}'}</div>
                         <h3>No products found</h3>
                         <p>Try a different search or adjust the filters.</p>
                     </div>
@@ -198,7 +133,7 @@ export default function CategoryPage() {
 
             {toast && (
                 <div className="toast">
-                    ✅ {toast}
+                    {'\u2705'} {toast}
                 </div>
             )}
         </div>
