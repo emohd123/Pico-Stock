@@ -13,6 +13,7 @@
     "stand-design:migrate-inline": "node scripts/auditStandDesignPayloads.mjs --migrate"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.82.0",
     "@google/genai": "^1.46.0",
     "@supabase/supabase-js": "^2.99.0",
     "dotenv": "^17.3.1",

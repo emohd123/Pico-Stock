@@ -686,7 +686,7 @@ function QuotationAttachmentsPanel({
                             ref={internalInputRef}
                             type="file"
                             multiple
-                            accept=".pdf,.bdf,.ppt,.pptx,.png,.jpg,.jpeg,.webp,.gif,.svg,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip"
+                            accept=".pdf,.ppt,.pptx,.png,.jpg,.jpeg,.webp,.gif,.svg,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip"
                             className="quotation-hidden-file"
                             style={{ display: 'none' }}
                             onChange={(event) => {
@@ -701,7 +701,7 @@ function QuotationAttachmentsPanel({
                             ref={downloadInputRef}
                             type="file"
                             multiple
-                            accept=".pdf,.bdf,.ppt,.pptx,.png,.jpg,.jpeg,.webp,.gif,.svg,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip"
+                            accept=".pdf,.ppt,.pptx,.png,.jpg,.jpeg,.webp,.gif,.svg,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip"
                             className="quotation-hidden-file"
                             style={{ display: 'none' }}
                             onChange={(event) => {
@@ -880,7 +880,6 @@ export default function QuoteEditor({
     const [showAiAssistant, setShowAiAssistant] = useState(false);
     const [showSaveCustomer, setShowSaveCustomer] = useState(false);
     const [showCustomerDirectory, setShowCustomerDirectory] = useState(false);
-    const [isEditingClient, setIsEditingClient] = useState(!form.client_org);
     const [isEditingHeader, setIsEditingHeader] = useState(false);
     const [aiBrief, setAiBrief] = useState('');
     const [aiFiles, setAiFiles] = useState([]);
@@ -933,14 +932,11 @@ export default function QuoteEditor({
         setAiLibraryBusy(true);
         try {
             const response = await fetch('/api/quotations/ai/library/import', { cache: 'no-store' });
+            if (!response.ok) return; // silently skip — don't pollute AI results with background stats errors
             const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Failed to load AI library status');
             setAiLibraryStats(data.stats || null);
-        } catch (error) {
-            setAiResult({
-                type: 'AI Library',
-                error: error.message || 'Failed to load AI library status',
-            });
+        } catch {
+            // silently skip background stats load
         } finally {
             setAiLibraryBusy(false);
         }
@@ -986,9 +982,14 @@ export default function QuoteEditor({
             }
             setAiResult({ type: label, data: result });
         } catch (error) {
+            const raw = error.message || `Failed to ${label.toLowerCase()}`;
+            const isAuthError = raw === 'Unauthorized' || raw.toLowerCase().includes('unauthorized');
             setAiResult({
                 type: label,
-                error: error.message || `Failed to ${label.toLowerCase()}`,
+                error: isAuthError
+                    ? 'Your session has expired. Please refresh the page and log in again to use the AI assistant.'
+                    : raw,
+                sessionExpired: isAuthError,
             });
         } finally {
             setAiBusy(false);
@@ -1119,84 +1120,48 @@ export default function QuoteEditor({
                                 </div>
                             </div>
 
-                            <div className="quotation-pro-field-row" style={{ marginTop: '1.5rem' }}>
-                                <label className="quotation-pro-label">Billing Address</label>
-                                <div className="quotation-pro-input-group">
-                                    <textarea
-                                        className="quotation-pro-input"
-                                        style={{ background: '#fdfdfd' }}
-                                        rows={4}
-                                        placeholder="Address, Location, TRN..."
-                                        value={`${form.client_to}\n${form.client_location}${form.client_trn ? '\nTRN: ' + form.client_trn : ''}`}
-                                        readOnly
-                                    />
-                                    <button type="button" className="quotation-link-btn" onClick={() => setIsEditingClient(!isEditingClient)} style={{ background: 'none', border: 'none', color: '#2563eb', fontSize: '0.8rem', textAlign: 'left', padding: '4px 0', cursor: 'pointer' }}>
-                                        {isEditingClient ? 'Close Details' : 'Edit Address / Contact / TRN'}
-                                    </button>
-                                    {selectedCustomer ? (
-                                        <div style={{ marginTop: '0.75rem', padding: '0.9rem 1rem', border: '1px solid #e2e8f0', borderRadius: '10px', background: '#ffffff' }}>
-                                            <div style={{ display: 'grid', gap: '0.65rem' }}>
-                                                {selectedCustomer.contact_title ? (
-                                                    <div>
-                                                        <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Contact Title</div>
-                                                        <div style={{ marginTop: '0.2rem', color: '#0f172a' }}>{selectedCustomer.contact_title}</div>
-                                                    </div>
-                                                ) : null}
-                                                {selectedCustomer.registration_number ? (
-                                                    <div>
-                                                        <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Registration Number</div>
-                                                        <div style={{ marginTop: '0.2rem', color: '#0f172a' }}>{selectedCustomer.registration_number}</div>
-                                                    </div>
-                                                ) : null}
-                                                {Array.isArray(selectedCustomer.extra_contacts) && selectedCustomer.extra_contacts.length ? (
-                                                    <div>
-                                                        <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Additional Contacts</div>
-                                                        <div style={{ display: 'grid', gap: '0.45rem', marginTop: '0.45rem' }}>
-                                                            {selectedCustomer.extra_contacts.map((contact, index) => (
-                                                                <div key={`${contact.name || 'contact'}-${index}`} style={{ padding: '0.55rem 0.7rem', borderRadius: '8px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                                                                    <div style={{ fontWeight: 700, color: '#0f172a' }}>{contact.name || 'Contact'}</div>
-                                                                    {contact.title ? <div style={{ color: '#475569', fontSize: '0.88rem' }}>{contact.title}</div> : null}
-                                                                    {contact.email ? <div style={{ color: '#2563eb', fontSize: '0.84rem' }}>{contact.email}</div> : null}
-                                                                    {contact.phone ? <div style={{ color: '#475569', fontSize: '0.84rem' }}>{contact.phone}</div> : null}
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                ) : null}
-                                            </div>
+                            <div style={{ marginTop: '1rem', padding: '0.9rem 1rem', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                                <div className="quotation-form-grid" style={{ gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '0.75rem' }}>
+                                    <div className="quotation-field">
+                                        <label style={{ fontSize: '0.7rem' }}>Attention / To</label>
+                                        <input className="quotation-pro-input" style={{ width: '100%' }} value={form.client_to} onChange={e => onFieldChange('client_to', e.target.value)} />
+                                    </div>
+                                    <div className="quotation-field">
+                                        <label style={{ fontSize: '0.7rem' }}>TRN</label>
+                                        <input className="quotation-pro-input" style={{ width: '100%' }} value={form.client_trn} onChange={e => onFieldChange('client_trn', e.target.value)} />
+                                    </div>
+                                    <div className="quotation-field" style={{ gridColumn: 'span 2' }}>
+                                        <label style={{ fontSize: '0.7rem' }}>Location / Address</label>
+                                        <input className="quotation-pro-input" style={{ width: '100%' }} value={form.client_location} onChange={e => onFieldChange('client_location', e.target.value)} />
+                                    </div>
+                                </div>
+                                {Array.isArray(selectedCustomer?.extra_contacts) && selectedCustomer.extra_contacts.length > 0 && (
+                                    <div style={{ marginTop: '0.75rem' }}>
+                                        <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.4rem' }}>Additional Contacts</div>
+                                        <div style={{ display: 'grid', gap: '0.35rem' }}>
+                                            {selectedCustomer.extra_contacts.map((contact, index) => (
+                                                <div key={`${contact.name || 'contact'}-${index}`} style={{ padding: '0.45rem 0.65rem', borderRadius: '7px', background: '#fff', border: '1px solid #e2e8f0', fontSize: '0.83rem' }}>
+                                                    <span style={{ fontWeight: 600, color: '#0f172a' }}>{contact.name || 'Contact'}</span>
+                                                    {contact.title ? <span style={{ color: '#64748b' }}> · {contact.title}</span> : null}
+                                                    {contact.email ? <span style={{ color: '#2563eb' }}> · {contact.email}</span> : null}
+                                                    {contact.phone ? <span style={{ color: '#475569' }}> · {contact.phone}</span> : null}
+                                                </div>
+                                            ))}
                                         </div>
-                                    ) : null}
+                                    </div>
+                                )}
+                                <div style={{ marginTop: '0.9rem', display: 'flex', justifyContent: 'flex-end' }}>
+                                    <button
+                                        type="button"
+                                        className="quotation-btn quotation-btn-primary"
+                                        onClick={onSaveSelectedCustomer}
+                                        disabled={!form.customer_id}
+                                        title={!form.customer_id ? 'Select a customer first' : 'Save contact details to the customer record'}
+                                    >
+                                        Save to Customer Record
+                                    </button>
                                 </div>
                             </div>
-
-                            {isEditingClient && (
-                                <div style={{ marginTop: '1rem', padding: '1rem', background: '#f8fafc', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
-                                    <div className="quotation-form-grid" style={{ gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '1rem' }}>
-                                        <div className="quotation-field">
-                                            <label style={{ fontSize: '0.7rem' }}>Attention / To</label>
-                                            <input className="quotation-pro-input" style={{ width: '100%' }} value={form.client_to} onChange={e => onFieldChange('client_to', e.target.value)} />
-                                        </div>
-                                        <div className="quotation-field">
-                                            <label style={{ fontSize: '0.7rem' }}>TRN</label>
-                                            <input className="quotation-pro-input" style={{ width: '100%' }} value={form.client_trn} onChange={e => onFieldChange('client_trn', e.target.value)} />
-                                        </div>
-                                        <div className="quotation-field" style={{ gridColumn: 'span 2' }}>
-                                            <label style={{ fontSize: '0.7rem' }}>Location / Address</label>
-                                            <input className="quotation-pro-input" style={{ width: '100%' }} value={form.client_location} onChange={e => onFieldChange('client_location', e.target.value)} />
-                                        </div>
-                                    </div>
-                                    <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'flex-end' }}>
-                                        <button
-                                            type="button"
-                                            className="quotation-btn quotation-btn-primary"
-                                            onClick={onSaveSelectedCustomer}
-                                            disabled={!form.customer_id}
-                                        >
-                                            Save Customer Details
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
                         </div>
 
                         {/* Metadata Section */}
@@ -1616,6 +1581,13 @@ export default function QuoteEditor({
                                 ) : aiResult.error ? (
                                     <div style={{ padding: '0.9rem 1rem', borderRadius: '12px', background: '#fff1f2', border: '1px solid #fecdd3', color: '#9f1239' }}>
                                         {aiResult.error}
+                                        {aiResult.sessionExpired && (
+                                            <div style={{ marginTop: '0.65rem' }}>
+                                                <a href="/admin/login" style={{ display: 'inline-block', padding: '0.4rem 0.9rem', background: '#9f1239', color: '#fff', borderRadius: '8px', textDecoration: 'none', fontSize: '0.82rem', fontWeight: 700 }}>
+                                                    Log in again
+                                                </a>
+                                            </div>
+                                        )}
                                     </div>
                                 ) : (
                                     <div style={{ display: 'grid', gap: '0.9rem' }}>
