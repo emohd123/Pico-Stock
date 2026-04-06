@@ -151,13 +151,13 @@ function SaveCustomerPanel({ form, customers, onSaveCustomer, onClose }) {
     );
     const [localForm, setLocalForm] = useState({
         display_name: form.client_org || '',
-        contact_to: form.client_to || '',
+        contact_to: existing?.contact_to || form.client_to || '',
         contact_title: existing?.contact_title || '',
-        address: form.client_location || '',
-        trn: form.client_trn || '',
+        address: existing?.address || form.client_location || '',
+        trn: existing?.trn || form.client_trn || '',
         registration_number: existing?.registration_number || '',
-        email: '',
-        phone: '',
+        email: existing?.email || '',
+        phone: existing?.phone || '',
         extra_contacts: Array.isArray(existing?.extra_contacts) ? existing.extra_contacts : [],
     });
     const duplicate = customers.find(
@@ -1104,7 +1104,7 @@ export default function QuoteEditor({
                                                 <option key={c.id} value={c.id}>{c.display_name}</option>
                                             ))}
                                         </select>
-                                        <button type="button" className="quotation-btn-small" onClick={() => setShowSaveCustomer(true)} style={{ border: '1px solid #cbd5e1', borderRadius: '4px', background: '#fff', padding: '0 10px', fontSize: '12px' }}>+ New</button>
+                                        <button type="button" className="quotation-btn-small" onClick={() => setShowSaveCustomer(true)} style={{ border: '1px solid #cbd5e1', borderRadius: '4px', background: '#fff', padding: '0 10px', fontSize: '12px' }}>New/Edit</button>
                                         <button type="button" className="quotation-btn-small" onClick={() => setShowCustomerDirectory(true)} style={{ border: '1px solid #cbd5e1', borderRadius: '4px', background: '#fff', padding: '0 10px', fontSize: '12px' }}>Manage</button>
                                     </div>
                                     {showSaveCustomer && (
