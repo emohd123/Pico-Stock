@@ -1120,48 +1120,25 @@ export default function QuoteEditor({
                                 </div>
                             </div>
 
-                            <div style={{ marginTop: '1rem', padding: '0.9rem 1rem', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-                                <div className="quotation-form-grid" style={{ gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '0.75rem' }}>
-                                    <div className="quotation-field">
-                                        <label style={{ fontSize: '0.7rem' }}>Attention / To</label>
-                                        <input className="quotation-pro-input" style={{ width: '100%' }} value={form.client_to} onChange={e => onFieldChange('client_to', e.target.value)} />
-                                    </div>
-                                    <div className="quotation-field">
-                                        <label style={{ fontSize: '0.7rem' }}>TRN</label>
-                                        <input className="quotation-pro-input" style={{ width: '100%' }} value={form.client_trn} onChange={e => onFieldChange('client_trn', e.target.value)} />
-                                    </div>
-                                    <div className="quotation-field" style={{ gridColumn: 'span 2' }}>
-                                        <label style={{ fontSize: '0.7rem' }}>Location / Address</label>
-                                        <input className="quotation-pro-input" style={{ width: '100%' }} value={form.client_location} onChange={e => onFieldChange('client_location', e.target.value)} />
-                                    </div>
-                                </div>
-                                {Array.isArray(selectedCustomer?.extra_contacts) && selectedCustomer.extra_contacts.length > 0 && (
-                                    <div style={{ marginTop: '0.75rem' }}>
-                                        <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.4rem' }}>Additional Contacts</div>
-                                        <div style={{ display: 'grid', gap: '0.35rem' }}>
+                            {selectedCustomer && (
+                                <div style={{ marginTop: '0.75rem', padding: '0.8rem 1rem', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '0.88rem', color: '#374151', lineHeight: 1.6 }}>
+                                    {selectedCustomer.contact_to && <div><span style={{ fontWeight: 600 }}>Attn:</span> {selectedCustomer.contact_to}{selectedCustomer.contact_title ? ` · ${selectedCustomer.contact_title}` : ''}</div>}
+                                    {selectedCustomer.address && <div>{selectedCustomer.address}</div>}
+                                    {selectedCustomer.trn && <div><span style={{ fontWeight: 600 }}>TRN:</span> {selectedCustomer.trn}</div>}
+                                    {selectedCustomer.registration_number && <div><span style={{ fontWeight: 600 }}>Reg:</span> {selectedCustomer.registration_number}</div>}
+                                    {selectedCustomer.email && <div style={{ color: '#2563eb' }}>{selectedCustomer.email}</div>}
+                                    {selectedCustomer.phone && <div>{selectedCustomer.phone}</div>}
+                                    {Array.isArray(selectedCustomer.extra_contacts) && selectedCustomer.extra_contacts.length > 0 && (
+                                        <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid #e2e8f0' }}>
                                             {selectedCustomer.extra_contacts.map((contact, index) => (
-                                                <div key={`${contact.name || 'contact'}-${index}`} style={{ padding: '0.45rem 0.65rem', borderRadius: '7px', background: '#fff', border: '1px solid #e2e8f0', fontSize: '0.83rem' }}>
-                                                    <span style={{ fontWeight: 600, color: '#0f172a' }}>{contact.name || 'Contact'}</span>
-                                                    {contact.title ? <span style={{ color: '#64748b' }}> · {contact.title}</span> : null}
-                                                    {contact.email ? <span style={{ color: '#2563eb' }}> · {contact.email}</span> : null}
-                                                    {contact.phone ? <span style={{ color: '#475569' }}> · {contact.phone}</span> : null}
+                                                <div key={`${contact.name || 'contact'}-${index}`} style={{ color: '#64748b', fontSize: '0.83rem' }}>
+                                                    {contact.name}{contact.title ? ` · ${contact.title}` : ''}{contact.email ? ` · ${contact.email}` : ''}{contact.phone ? ` · ${contact.phone}` : ''}
                                                 </div>
                                             ))}
                                         </div>
-                                    </div>
-                                )}
-                                <div style={{ marginTop: '0.9rem', display: 'flex', justifyContent: 'flex-end' }}>
-                                    <button
-                                        type="button"
-                                        className="quotation-btn quotation-btn-primary"
-                                        onClick={onSaveSelectedCustomer}
-                                        disabled={!form.customer_id}
-                                        title={!form.customer_id ? 'Select a customer first' : 'Save contact details to the customer record'}
-                                    >
-                                        Save to Customer Record
-                                    </button>
+                                    )}
                                 </div>
-                            </div>
+                            )}
                         </div>
 
                         {/* Metadata Section */}
