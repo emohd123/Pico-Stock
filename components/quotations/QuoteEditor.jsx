@@ -808,6 +808,10 @@ function QuotationActivityLog({ history = [], onRestoreVersion, disabled }) {
 }
 
 /* ─── Main QuoteEditor ──────────────────────────────────────────────────── */
+// Vercel serverless body limit is ~4.5 MB. Base64 adds ~33% overhead.
+// Keep each file under 3 MB raw so the total payload stays safe.
+const MAX_AI_FILE_BYTES = 3 * 1024 * 1024;
+
 function fileToAiPayload(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -923,9 +927,20 @@ export default function QuoteEditor({
     }
 
     async function handleAiFileChange(event) {
-        const files = Array.from(event.target.files || []);
-        setAiFiles(files);
-        setAiResult(null);
+        const all = Array.from(event.target.files || []);
+        const oversized = all.filter((f) => f.size > MAX_AI_FILE_BYTES);
+        const valid = all.filter((f) => f.size <= MAX_AI_FILE_BYTES);
+        if (oversized.length) {
+            const names = oversized.map((f) => `${f.name} (${(f.size / 1024 / 1024).toFixed(1)} MB)`).join(', ');
+            setAiResult({
+                type: 'File Error',
+                error: `File${oversized.length > 1 ? 's' : ''} too large (max 3 MB each): ${names}. For design PDFs, export the views as PNG/JPG images and upload those instead — Claude reads images directly and they are much smaller.`,
+            });
+        } else {
+            setAiResult(null);
+        }
+        setAiFiles(valid);
+        event.target.value = '';
     }
 
     async function loadAiLibraryStatus() {
@@ -1458,16 +1473,16 @@ export default function QuoteEditor({
                                     <div style={{ fontWeight: 700, color: '#1e293b', marginBottom: '0.55rem' }}>Source Files</div>
                                     <input type="file" multiple accept=".pdf,.ppt,.pptx,.xlsx,.xls,.txt,.png,.jpg,.jpeg,.webp" onChange={handleAiFileChange} />
                                     <div style={{ marginTop: '0.55rem', color: '#64748b', fontSize: '0.82rem' }}>
-                                        Supports PDF, PPT/PPTX, Excel, text, and images for internal draft generation.
+                                        Supports PDF, PPT/PPTX, Excel, text, and images. Max <strong>3 MB per file</strong>.
                                     </div>
-                                    <div style={{ marginTop: '0.35rem', color: '#0f766e', fontSize: '0.8rem', fontWeight: 600 }}>
-                                        Upload an old quotation here to duplicate it into a new draft.
+                                    <div style={{ marginTop: '0.25rem', color: '#0f766e', fontSize: '0.8rem', fontWeight: 600 }}>
+                                        Tip: For design files, export views as PNG/JPG — Claude reads images directly and they stay small.
                                     </div>
                                     {aiFiles.length ? (
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', marginTop: '0.75rem' }}>
                                             {aiFiles.map((file) => (
                                                 <span key={`${file.name}-${file.size}`} style={{ fontSize: '0.78rem', borderRadius: '999px', padding: '0.3rem 0.6rem', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' }}>
-                                                    {file.name}
+                                                    {file.name} · {(file.size / 1024).toFixed(0)} KB
                                                 </span>
                                             ))}
                                         </div>
