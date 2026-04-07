@@ -10,7 +10,10 @@ const XLSX = require('xlsx');
 const { Pool } = require('pg');
 
 const XLSX_PATH = 'C:/Users/PICO/Desktop/New folder (2)/Quotations_Client_Data_Extracted.xlsx';
-const DATABASE_URL = 'postgresql://postgres.iclmzodwmqetoibgmrtz:fSX4PJ52or6sAuLq@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres';
+// Set DATABASE_URL in your environment before running:
+//   $env:DATABASE_URL="postgresql://..." (PowerShell)
+//   export DATABASE_URL="postgresql://..." (bash)
+const DATABASE_URL = process.env.DATABASE_URL;
 
 const pool = new Pool({
     connectionString: DATABASE_URL,
