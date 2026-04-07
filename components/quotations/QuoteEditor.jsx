@@ -810,7 +810,8 @@ function QuotationActivityLog({ history = [], onRestoreVersion, disabled }) {
 /* ─── Main QuoteEditor ──────────────────────────────────────────────────── */
 // Vercel serverless body limit is ~4.5 MB. Base64 adds ~33% overhead.
 // Keep each file under 3 MB raw so the total payload stays safe.
-const MAX_AI_FILE_BYTES = 3 * 1024 * 1024;
+const MAX_AI_FILE_BYTES = 20 * 1024 * 1024; // 20 MB — large files go via Vercel Blob
+const BLOB_THRESHOLD_BYTES = 3 * 1024 * 1024; // files above this upload directly to blob
 
 function fileToAiPayload(file) {
     return new Promise((resolve, reject) => {
@@ -826,6 +827,20 @@ function fileToAiPayload(file) {
         reader.onerror = reject;
         reader.readAsDataURL(file);
     });
+}
+
+async function fileToBlobPayload(file) {
+    const { upload } = await import('@vercel/blob/client');
+    const blob = await upload(file.name, file, {
+        access: 'public',
+        handleUploadUrl: '/api/quotations/ai/blob-upload',
+    });
+    return {
+        name: file.name,
+        type: file.type || 'application/octet-stream',
+        size: Number(file.size || 0),
+        url: blob.url,
+    };
 }
 
 export default function QuoteEditor({
@@ -923,7 +938,9 @@ export default function QuoteEditor({
 
     async function buildAiFilesPayload(fileList) {
         const files = Array.from(fileList || []);
-        return Promise.all(files.map(fileToAiPayload));
+        return Promise.all(files.map((file) =>
+            file.size > BLOB_THRESHOLD_BYTES ? fileToBlobPayload(file) : fileToAiPayload(file)
+        ));
     }
 
     async function handleAiFileChange(event) {
@@ -934,7 +951,7 @@ export default function QuoteEditor({
             const names = oversized.map((f) => `${f.name} (${(f.size / 1024 / 1024).toFixed(1)} MB)`).join(', ');
             setAiResult({
                 type: 'File Error',
-                error: `File${oversized.length > 1 ? 's' : ''} too large (max 3 MB each): ${names}. For design PDFs, export the views as PNG/JPG images and upload those instead — Claude reads images directly and they are much smaller.`,
+                error: `File${oversized.length > 1 ? 's' : ''} too large (max 20 MB each): ${names}.`,
             });
         } else {
             setAiResult(null);
@@ -1473,10 +1490,7 @@ export default function QuoteEditor({
                                     <div style={{ fontWeight: 700, color: '#1e293b', marginBottom: '0.55rem' }}>Source Files</div>
                                     <input type="file" multiple accept=".pdf,.ppt,.pptx,.xlsx,.xls,.txt,.png,.jpg,.jpeg,.webp" onChange={handleAiFileChange} />
                                     <div style={{ marginTop: '0.55rem', color: '#64748b', fontSize: '0.82rem' }}>
-                                        Supports PDF, PPT/PPTX, Excel, text, and images. Max <strong>3 MB per file</strong>.
-                                    </div>
-                                    <div style={{ marginTop: '0.25rem', color: '#0f766e', fontSize: '0.8rem', fontWeight: 600 }}>
-                                        Tip: For design files, export views as PNG/JPG — Claude reads images directly and they stay small.
+                                        Supports PDF, PPT/PPTX, Excel, text, and images. Max <strong>20 MB per file</strong>.
                                     </div>
                                     {aiFiles.length ? (
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', marginTop: '0.75rem' }}>
