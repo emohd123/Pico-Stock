@@ -54,6 +54,30 @@ function normalizeDesignRecord(raw = {}) {
     concepts: Array.isArray(raw?.concepts) ? raw.concepts.map(normalizeConcept) : [],
   };
 }
+function buildMutationPayload(raw = {}) {
+  const normalized = normalizeDesignRecord(raw);
+  return {
+    id: normalized.id,
+    mode: normalized.mode,
+    prompt: normalized.prompt,
+    refinement_prompt: normalized.refinement_prompt,
+    style_preset: normalized.style_preset,
+    angle: normalized.angle,
+    reference_image_path: normalized.reference_image_path,
+    brief: normalized.brief,
+  };
+}
+async function readResponsePayload(response) {
+  const text = await response.text();
+  if (!text) return {};
+  try {
+    return JSON.parse(text);
+  } catch {
+    return {
+      error: text.length > 240 ? `${text.slice(0, 240).trim()}...` : text.trim(),
+    };
+  }
+}
 function summarizeDesignRecord(raw = {}) {
   const normalized = normalizeDesignRecord(raw);
   return {
@@ -211,7 +235,7 @@ export default function StandDesignStudio() {
   async function loadRecordById(recordId, { closeExpanded = true } = {}) {
     if (!recordId) return null;
     const response = await fetch(`/api/stand-design/${recordId}`, { cache: 'no-store' });
-    const data = await response.json();
+    const data = await readResponsePayload(response);
     if (!response.ok) throw new Error(data.error || 'Failed to load stand design');
     const nextItem = normalizeDesignRecord(data);
     setForm(nextItem);
@@ -228,7 +252,7 @@ export default function StandDesignStudio() {
     setLoading(true);
     try {
       const response = await fetch('/api/stand-design', { cache: 'no-store' });
-      const data = await response.json();
+      const data = await readResponsePayload(response);
       if (data.ai) setAiStatus(data.ai);
       if (data.maintenance) setMaintenance(data.maintenance);
       setAiLoading(false);
@@ -268,7 +292,7 @@ export default function StandDesignStudio() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: promptText || form.prompt }),
       });
-      const data = await response.json();
+      const data = await readResponsePayload(response);
       if (!response.ok || !data.brief) return;
       let filled = 0;
       setForm((current) => {
@@ -312,7 +336,7 @@ export default function StandDesignStudio() {
       const body = new FormData();
       body.append('files', file);
       const response = await fetch('/api/upload', { method: 'POST', body });
-      const data = await response.json();
+      const data = await readResponsePayload(response);
       if (!response.ok) throw new Error(data.error || 'Failed to upload image');
       const uploaded = Array.isArray(data.files) ? data.files[0] : null;
       if (!uploaded?.path) throw new Error('Upload did not return an image path');
@@ -339,14 +363,14 @@ export default function StandDesignStudio() {
         regenerate && (payloadOverride?.id || form.id)
           ? `/api/stand-design/${payloadOverride?.id || form.id}/regenerate`
           : '/api/stand-design/generate';
-      const payload = normalizeDesignRecord(payloadOverride || form);
+      const payload = buildMutationPayload(payloadOverride || form);
       const body = conceptIndex === null ? payload : { ...payload, concept_index: conceptIndex };
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
-      const data = await response.json();
+      const data = await readResponsePayload(response);
       if (!response.ok) throw new Error(data.error || 'Failed to generate stand design concepts');
       const nextItem = normalizeDesignRecord(data.item);
       setForm(nextItem);
@@ -369,7 +393,7 @@ export default function StandDesignStudio() {
     setBusy(true);
     try {
       const response = await fetch(`/api/stand-design/${recordId}`, { method: 'DELETE' });
-      const data = await response.json();
+      const data = await readResponsePayload(response);
       if (!response.ok) throw new Error(data.error || 'Failed to delete stand design');
       const nextRecords = records.filter((item) => String(item.id) !== String(recordId));
       setRecords(nextRecords);
@@ -431,7 +455,7 @@ export default function StandDesignStudio() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ concept_index: index, prompt: form.prompt, brief: form.brief, style_preset: form.style_preset }),
       });
-      const data = await response.json();
+      const data = await readResponsePayload(response);
       if (!response.ok) throw new Error(data.error || 'Failed to generate all views');
       const nextItem = normalizeDesignRecord(data.item);
       setForm(nextItem);
