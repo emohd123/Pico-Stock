@@ -194,57 +194,24 @@ function SectionHero() {
     );
 }
 
-// ─── Section 1: Stats ─────────────────────────────────────────────────────
-function SectionStats({ active }) {
-    const stats = [
-        { value: 25, suffix: '+', label: 'Years of Pico Global Presence', sub: 'Internationally trusted brand experience' },
-        { value: 500, suffix: '+', label: 'Projects Delivered', sub: 'Across exhibitions, events, and interiors' },
-        { value: 120, suffix: '+', label: 'Clients Served', sub: 'In Bahrain and across the GCC region' },
-        { value: 6, suffix: '', label: 'Core Capabilities', sub: 'One team, complete solution' },
-    ];
-    return (
-        <div className="cpv2-sec cpv2-sec-stats">
-            <div className="cpv2-stats-bg" />
-            <div className="cpv2-stats-container">
-                <motion.div className="cpv2-stats-label"
-                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-                    <span className="cpv2-section-tag">By The Numbers</span>
-                </motion.div>
-                <div className="cpv2-stats-grid-full">
-                    {stats.map((s, i) => (
-                        <motion.div key={s.label} className="cpv2-stat-block"
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.7, delay: 0.15 + i * 0.12, ease: [0.22, 1, 0.36, 1] }}
-                        >
-                            <div className="cpv2-stat-num">
-                                <Counter to={s.value} suffix={s.suffix} active={active} />
-                            </div>
-                            <div className="cpv2-stat-sep" />
-                            <div className="cpv2-stat-info">
-                                <span className="cpv2-stat-label-big">{s.label}</span>
-                                <span className="cpv2-stat-sub">{s.sub}</span>
-                            </div>
-                        </motion.div>
-                    ))}
-                </div>
-            </div>
-        </div>
-    );
-}
-
-// ─── Section 2: Who We Are ────────────────────────────────────────────────
+// ─── Section 1: About + Numbers (merged) ─────────────────────────────────
 const WHO_GALLERY = [
     { src: '/company-profile/conference-main.jpg', label: 'Conference' },
     { src: '/company-profile/events-alt.jpeg',      label: 'Events' },
     { src: '/company-profile/interior-alt.jpg',     label: 'Interiors' },
 ];
 
-function SectionWho() {
+function SectionAbout({ active }) {
     const [activeImg, setActiveImg] = useState(0);
+    const stats = [
+        { value: 36,  suffix: '',  prefix: '',    label: 'Cities Worldwide',  sub: 'Pico Group global network' },
+        { value: 590, suffix: 'M', prefix: 'US$', label: 'Project Value',     sub: 'Delivered across markets' },
+        { value: 417, suffix: 'M', prefix: 'US$', label: 'Annual Turnover',   sub: 'Group revenue worldwide' },
+        { value: 50,  suffix: '+', prefix: '',    label: 'In-House Experts',  sub: 'Bahrain team + 3,500 sqm' },
+    ];
     return (
-        <div className="cpv2-sec cpv2-sec-who">
-            <div className="cpv2-who-img-side">
+        <div className="cpv2-sec cpv2-sec-about">
+            <div className="cpv2-about-img-side">
                 <AnimatePresence mode="sync">
                     <motion.div key={activeImg} className="cpv2-who-img-frame"
                         initial={{ opacity: 0, scale: 1.04 }}
@@ -252,7 +219,7 @@ function SectionWho() {
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
                     >
-                        <Image src={WHO_GALLERY[activeImg].src} alt="Pico Bahrain" fill sizes="50vw" className="cpv2-img" />
+                        <Image src={WHO_GALLERY[activeImg].src} alt="Pico Bahrain" fill sizes="45vw" className="cpv2-img" />
                     </motion.div>
                 </AnimatePresence>
                 <div className="cpv2-who-img-grad" />
@@ -272,28 +239,55 @@ function SectionWho() {
                 <motion.div className="cpv2-who-badge"
                     initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.5, type: 'spring', stiffness: 180 }}>
-                    <span className="cpv2-badge-big">25+</span>
-                    <span className="cpv2-badge-txt">Years Pico Global</span>
+                    <span className="cpv2-badge-big">1999</span>
+                    <span className="cpv2-badge-txt">Est. in Bahrain</span>
                 </motion.div>
             </div>
-            <div className="cpv2-who-copy-side">
+            <div className="cpv2-about-copy-side">
                 <motion.span className="cpv2-section-tag"
                     initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-                    Who We Are
+                    About Pico Bahrain
                 </motion.span>
-                <motion.h2 className="cpv2-section-title"
+                <motion.h2 className="cpv2-about-title"
                     initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, ease: [0.22, 1, 0.36, 1] }}>
-                    Local execution.<br /><span className="cpv2-accent">Global credibility.</span>
+                    Local roots.<br /><span className="cpv2-accent">Global credibility.</span>
                 </motion.h2>
-                <motion.div className="cpv2-who-texts"
-                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
-                    <p>Pico is internationally known for building branded environments, exhibition experiences, and event-facing spaces. In Bahrain, that translates into locally coordinated support for clients who need reliable execution and professional presentation.</p>
-                    <p>Our work spans exhibition booths, event environments, interior-focused spaces, graphics, and practical booth extras — a complete solution under one team.</p>
+                <motion.p className="cpv2-about-para"
+                    initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+                    Established in May 1999 as the 22nd office in Pico Group&apos;s worldwide network — and the second in the Middle East. Our Bahrain team operates from a 3,500 sqm facility housing a full exhibition, event, and AV inventory.
+                </motion.p>
+                <motion.div className="cpv2-about-vm"
+                    initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.38 }}>
+                    <div className="cpv2-vm-card">
+                        <span className="cpv2-vm-icon">◈</span>
+                        <div>
+                            <h4 className="cpv2-vm-title">Vision</h4>
+                            <p className="cpv2-vm-text">A world-class company reputable for building clients&apos; image.</p>
+                        </div>
+                    </div>
+                    <div className="cpv2-vm-card">
+                        <span className="cpv2-vm-icon">◎</span>
+                        <div>
+                            <h4 className="cpv2-vm-title">Mission</h4>
+                            <p className="cpv2-vm-text">High-quality creative services through efficient deployment of the best global resources.</p>
+                        </div>
+                    </div>
                 </motion.div>
-                <motion.div className="cpv2-who-tags"
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
-                    {['Bahrain-Based','Design-Led','Full-Service','B2B Focused'].map(t => (
-                        <span key={t} className="cpv2-tag">{t}</span>
+                <motion.div className="cpv2-about-stats-grid"
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.46 }}>
+                    {stats.map((s, i) => (
+                        <motion.div key={s.label} className="cpv2-about-stat-block"
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.55, delay: 0.5 + i * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                        >
+                            <div className="cpv2-about-stat-num">
+                                {s.prefix && <span className="cpv2-about-stat-prefix">{s.prefix}</span>}
+                                <Counter to={s.value} suffix={s.suffix} active={active} />
+                            </div>
+                            <div className="cpv2-about-stat-label">{s.label}</div>
+                            <div className="cpv2-about-stat-sub">{s.sub}</div>
+                        </motion.div>
                     ))}
                 </motion.div>
             </div>
@@ -495,7 +489,7 @@ function SectionContact() {
 }
 
 // ─── Section config ───────────────────────────────────────────────────────
-const SECTION_LABELS = ['Home', 'Numbers', 'About', 'Services', 'Portfolio', 'Why Us', 'Contact'];
+const SECTION_LABELS = ['Home', 'About', 'Services', 'Portfolio', 'Why Us', 'Contact'];
 
 // ─── Main page ────────────────────────────────────────────────────────────
 export default function CompanyProfilePage() {
@@ -503,7 +497,7 @@ export default function CompanyProfilePage() {
     const [current, setCurrent] = useState(0);
     const [dir, setDir] = useState(1);
     const [busy, setBusy] = useState(false);
-    const TOTAL = 7;
+    const TOTAL = 6;
     const doneIntro = useCallback(() => setIntro(false), []);
 
     const go = useCallback((next) => {
@@ -550,8 +544,7 @@ export default function CompanyProfilePage() {
 
     const sections = [
         <SectionHero key="hero" />,
-        <SectionStats key="stats" active={current === 1} />,
-        <SectionWho key="who" />,
+        <SectionAbout key="about" active={current === 1} />,
         <SectionServices key="services" />,
         <SectionPortfolio key="portfolio" />,
         <SectionWhy key="why" />,
