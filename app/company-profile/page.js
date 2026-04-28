@@ -274,13 +274,13 @@ function SectionAbout({ active }) {
 
                             {tab === 0 && (
                                 <div className="cpv2-tab-story">
-                                    <p className="cpv2-tab-para">Established <strong>May 1999</strong> — the 22nd office in Pico Group&apos;s global network and the second in the Middle East. Our Bahrain team operates from a <strong>3,500 sqm</strong> facility stocked with exhibition, event, and AV inventory.</p>
+                                    <p className="cpv2-tab-para">Established <strong>May 1999</strong> — the 22nd office in Pico Group&apos;s global network and the second in the Middle East. Operating from a <strong>3,500 sqm</strong> facility with full exhibition, event, and AV inventory.</p>
                                     <div className="cpv2-tab-mini-stats">
                                         {[
-                                            { v: 36,  s: '',  p: '',    l: 'Cities' },
+                                            { v: 36,  s: '',  p: '',    l: 'Cities Worldwide' },
                                             { v: 590, s: 'M', p: 'US$', l: 'Project Value' },
-                                            { v: 417, s: 'M', p: 'US$', l: 'Turnover' },
-                                            { v: 50,  s: '+', p: '',    l: 'Team' },
+                                            { v: 417, s: 'M', p: 'US$', l: 'Group Turnover' },
+                                            { v: 50,  s: '+', p: '',    l: 'Team Members' },
                                         ].map((st, i) => (
                                             <div key={st.l} className="cpv2-tab-mini-stat">
                                                 <span className="cpv2-tab-mini-num">
@@ -290,9 +290,21 @@ function SectionAbout({ active }) {
                                             </div>
                                         ))}
                                     </div>
-                                    <div className="cpv2-tab-tags">
-                                        {['22nd Global Office','2nd in Middle East','50+ Staff','3,500 sqm Facility'].map(t => (
-                                            <span key={t} className="cpv2-tag">{t}</span>
+                                    <div className="cpv2-story-timeline">
+                                        {[
+                                            { year: '1999', event: 'Established in Bahrain' },
+                                            { year: '2001', event: '2nd Middle East office' },
+                                            { year: '2010', event: 'Expanded to 3,500 sqm' },
+                                            { year: 'Now',  event: '25+ years of excellence' },
+                                        ].map((m, i) => (
+                                            <motion.div key={m.year} className="cpv2-timeline-step"
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: 0.3 + i * 0.08 }}>
+                                                <span className="cpv2-tl-year">{m.year}</span>
+                                                <span className="cpv2-tl-dot" />
+                                                <span className="cpv2-tl-event">{m.event}</span>
+                                            </motion.div>
                                         ))}
                                     </div>
                                 </div>
@@ -301,21 +313,30 @@ function SectionAbout({ active }) {
                             {tab === 1 && (
                                 <div className="cpv2-tab-direction">
                                     {[
-                                        { icon: '◈', title: 'Vision',  text: 'A world-class company reputable for building clients’ image.' },
-                                        { icon: '◎', title: 'Mission', text: 'High-quality creative services through the efficient deployment of the best global resources.' },
-                                        { icon: '◉', title: 'Promise', text: 'Total Brand Activation — creating experiences that matter.' },
+                                        { icon: "◈", title: "Vision",  text: "A world-class company reputable for building clients’ image through exceptional brand experiences.", tag: "Where we aim to be" },
+                                        { icon: "◎", title: "Mission", text: "High-quality creative services through the efficient deployment of the best global resources available.", tag: "How we operate" },
+                                        { icon: "◉", title: "Promise", text: "Total Brand Activation — creating immersive experiences that elevate brands and leave lasting impressions.", tag: "What we deliver" },
                                     ].map((item, i) => (
                                         <motion.div key={item.title} className="cpv2-dir-card"
                                             initial={{ opacity: 0, x: -16 }}
                                             animate={{ opacity: 1, x: 0 }}
                                             transition={{ duration: 0.4, delay: i * 0.1, ease: [0.22,1,0.36,1] }}>
                                             <span className="cpv2-dir-icon">{item.icon}</span>
-                                            <div>
-                                                <h4 className="cpv2-dir-title">{item.title}</h4>
+                                            <div className="cpv2-dir-body">
+                                                <div className="cpv2-dir-header">
+                                                    <h4 className="cpv2-dir-title">{item.title}</h4>
+                                                    <span className="cpv2-dir-tag">{item.tag}</span>
+                                                </div>
                                                 <p className="cpv2-dir-text">{item.text}</p>
                                             </div>
                                         </motion.div>
                                     ))}
+                                    <motion.div className="cpv2-dir-footer"
+                                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
+                                        <span className="cpv2-dir-footer-line" />
+                                        <span className="cpv2-dir-footer-txt">Pico Bahrain &mdash; Guiding principles since 1999</span>
+                                        <span className="cpv2-dir-footer-line" />
+                                    </motion.div>
                                 </div>
                             )}
 
@@ -330,15 +351,30 @@ function SectionAbout({ active }) {
                                             <span className="cpv2-presence-sub">Pico Group Worldwide</span>
                                         </div>
                                     </div>
-                                    <p className="cpv2-tab-para" style={{ marginTop: '0.8rem' }}>A global network spanning 5 continents — combining the scale of an international brand with the precision of local execution in every market.</p>
-                                    <div className="cpv2-presence-regions">
-                                        {['Middle East','Asia Pacific','Europe','Americas','Africa'].map((r, i) => (
-                                            <motion.span key={r} className="cpv2-presence-region"
-                                                initial={{ opacity: 0, scale: 0.85 }}
-                                                animate={{ opacity: 1, scale: 1 }}
-                                                transition={{ delay: 0.1 + i * 0.07, duration: 0.35 }}>
-                                                {r}
-                                            </motion.span>
+                                    <p className="cpv2-tab-para" style={{ marginTop: '0.5rem' }}>A global network spanning 5 continents — combining the scale of an international brand with the precision of local execution in every market.</p>
+                                    <div className="cpv2-presence-bars">
+                                        {[
+                                            { region: 'Asia Pacific',  offices: 18, pct: 50 },
+                                            { region: 'Middle East',   offices: 8,  pct: 22 },
+                                            { region: 'Europe',        offices: 5,  pct: 14 },
+                                            { region: 'Americas',      offices: 3,  pct: 8  },
+                                            { region: 'Africa',        offices: 2,  pct: 6  },
+                                        ].map((r, i) => (
+                                            <motion.div key={r.region} className="cpv2-pbar-row"
+                                                initial={{ opacity: 0, x: -10 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                transition={{ delay: 0.15 + i * 0.08 }}>
+                                                <div className="cpv2-pbar-meta">
+                                                    <span className="cpv2-pbar-label">{r.region}</span>
+                                                    <span className="cpv2-pbar-count">{r.offices} offices</span>
+                                                </div>
+                                                <div className="cpv2-pbar-track">
+                                                    <motion.div className="cpv2-pbar-fill"
+                                                        initial={{ width: 0 }}
+                                                        animate={{ width: `${r.pct}%` }}
+                                                        transition={{ duration: 0.7, delay: 0.25 + i * 0.08, ease: [0.22,1,0.36,1] }} />
+                                                </div>
+                                            </motion.div>
                                         ))}
                                     </div>
                                 </div>
@@ -348,28 +384,52 @@ function SectionAbout({ active }) {
                                 <div className="cpv2-tab-expertise">
                                     <div className="cpv2-exp-cols">
                                         <div className="cpv2-exp-col">
-                                            <h5 className="cpv2-exp-heading">Experiences</h5>
-                                            {['Interactive Technology','Brand Strategy','Experiential Marketing','Digital & Social','PR & Communications'].map((s, i) => (
+                                            <h5 className="cpv2-exp-heading">Experience Types</h5>
+                                            {[
+                                                { s: 'Interactive Technology', i: '01' },
+                                                { s: 'Brand Strategy',         i: '02' },
+                                                { s: 'Experiential Marketing', i: '03' },
+                                                { s: 'Digital & Social',       i: '04' },
+                                                { s: 'PR & Communications',    i: '05' },
+                                            ].map(({ s, i: idx }, i) => (
                                                 <motion.div key={s} className="cpv2-exp-item"
                                                     initial={{ opacity: 0, x: -12 }}
                                                     animate={{ opacity: 1, x: 0 }}
                                                     transition={{ delay: i * 0.07, duration: 0.35 }}>
+                                                    <span className="cpv2-exp-idx">{idx}</span>
                                                     <span className="cpv2-exp-dot" />{s}
                                                 </motion.div>
                                             ))}
                                         </div>
                                         <div className="cpv2-exp-col">
-                                            <h5 className="cpv2-exp-heading">Categories</h5>
-                                            {['Visual Branding','World Expo','Sports Events','Exhibition Marketing','Themed Attractions','Interior & Retail','Event Marketing'].map((s, i) => (
+                                            <h5 className="cpv2-exp-heading">Service Categories</h5>
+                                            {[
+                                                { s: 'Visual Branding',       i: '01' },
+                                                { s: 'World Expo',            i: '02' },
+                                                { s: 'Sports Events',         i: '03' },
+                                                { s: 'Exhibition Marketing',  i: '04' },
+                                                { s: 'Themed Attractions',    i: '05' },
+                                                { s: 'Interior & Retail',     i: '06' },
+                                                { s: 'Event Marketing',       i: '07' },
+                                            ].map(({ s, i: idx }, i) => (
                                                 <motion.div key={s} className="cpv2-exp-item"
                                                     initial={{ opacity: 0, x: -12 }}
                                                     animate={{ opacity: 1, x: 0 }}
                                                     transition={{ delay: i * 0.06, duration: 0.35 }}>
+                                                    <span className="cpv2-exp-idx">{idx}</span>
                                                     <span className="cpv2-exp-dot" />{s}
                                                 </motion.div>
                                             ))}
                                         </div>
                                     </div>
+                                    <motion.div className="cpv2-exp-footer"
+                                        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
+                                        <span className="cpv2-exp-footer-stat"><strong>25+</strong> years delivering brand experiences</span>
+                                        <span className="cpv2-exp-footer-divider" />
+                                        <span className="cpv2-exp-footer-stat"><strong>12</strong> service categories</span>
+                                        <span className="cpv2-exp-footer-divider" />
+                                        <span className="cpv2-exp-footer-stat"><strong>36</strong> cities worldwide</span>
+                                    </motion.div>
                                 </div>
                             )}
 
