@@ -194,102 +194,197 @@ function SectionHero() {
     );
 }
 
-// ─── Section 1: About + Numbers (merged) ─────────────────────────────────
-const WHO_GALLERY = [
-    { src: '/company-profile/conference-main.jpg', label: 'Conference' },
-    { src: '/company-profile/events-alt.jpeg',      label: 'Events' },
-    { src: '/company-profile/interior-alt.jpg',     label: 'Interiors' },
+// ─── Section 1: About (tabbed — all PPTX slides) ─────────────────────────
+const ABOUT_TABS = [
+    { id: 'story',    label: 'Our Story',  img: '/company-profile/conference-main.jpg' },
+    { id: 'vision',   label: 'Direction',  img: '/company-profile/interior-alt.jpg' },
+    { id: 'presence', label: 'Presence',   img: '/company-profile/exhibition-main.jpeg' },
+    { id: 'expertise',label: 'Expertise',  img: '/company-profile/events-main.jpeg' },
 ];
 
+const tabVariants = {
+    enter:  { opacity: 0, y: 16 },
+    center: { opacity: 1, y: 0,  transition: { duration: 0.42, ease: [0.22,1,0.36,1] } },
+    exit:   { opacity: 0, y: -10, transition: { duration: 0.22 } },
+};
+
 function SectionAbout({ active }) {
-    const [activeImg, setActiveImg] = useState(0);
-    const stats = [
-        { value: 36,  suffix: '',  prefix: '',    label: 'Cities Worldwide',  sub: 'Pico Group global network' },
-        { value: 590, suffix: 'M', prefix: 'US$', label: 'Project Value',     sub: 'Delivered across markets' },
-        { value: 417, suffix: 'M', prefix: 'US$', label: 'Annual Turnover',   sub: 'Group revenue worldwide' },
-        { value: 50,  suffix: '+', prefix: '',    label: 'In-House Experts',  sub: 'Bahrain team + 3,500 sqm' },
-    ];
+    const [tab, setTab] = useState(0);
+
     return (
         <div className="cpv2-sec cpv2-sec-about">
+            {/* Left — photo changes per tab */}
             <div className="cpv2-about-img-side">
                 <AnimatePresence mode="sync">
-                    <motion.div key={activeImg} className="cpv2-who-img-frame"
-                        initial={{ opacity: 0, scale: 1.04 }}
+                    <motion.div key={tab} className="cpv2-who-img-frame"
+                        initial={{ opacity: 0, scale: 1.06 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                        transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
                     >
-                        <Image src={WHO_GALLERY[activeImg].src} alt="Pico Bahrain" fill sizes="45vw" className="cpv2-img" />
+                        <Image src={ABOUT_TABS[tab].img} alt="Pico Bahrain" fill sizes="45vw" className="cpv2-img" />
                     </motion.div>
                 </AnimatePresence>
                 <div className="cpv2-who-img-grad" />
-                <motion.div className="cpv2-who-thumbs"
-                    initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
-                    {WHO_GALLERY.map((img, i) => (
-                        <button key={img.src}
-                            className={`cpv2-who-thumb ${i === activeImg ? 'cpv2-who-thumb-active' : ''}`}
-                            onClick={() => setActiveImg(i)} aria-label={img.label}>
-                            <div className="cpv2-who-thumb-img">
-                                <Image src={img.src} alt={img.label} fill sizes="100px" className="cpv2-img" />
-                            </div>
-                            <span className="cpv2-who-thumb-label">{img.label}</span>
-                        </button>
-                    ))}
-                </motion.div>
+                {/* Tab indicator overlay */}
+                <AnimatePresence mode="sync">
+                    <motion.div key={`lbl-${tab}`} className="cpv2-about-img-lbl"
+                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }} transition={{ duration: 0.4 }}>
+                        <span className="cpv2-about-img-lbl-num">0{tab + 1}</span>
+                        <span className="cpv2-about-img-lbl-text">{ABOUT_TABS[tab].label}</span>
+                    </motion.div>
+                </AnimatePresence>
                 <motion.div className="cpv2-who-badge"
                     initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.5, type: 'spring', stiffness: 180 }}>
+                    transition={{ delay: 0.45, type: 'spring', stiffness: 180 }}>
                     <span className="cpv2-badge-big">1999</span>
                     <span className="cpv2-badge-txt">Est. in Bahrain</span>
                 </motion.div>
             </div>
+
+            {/* Right — tabs */}
             <div className="cpv2-about-copy-side">
                 <motion.span className="cpv2-section-tag"
                     initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
                     About Pico Bahrain
                 </motion.span>
                 <motion.h2 className="cpv2-about-title"
-                    initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, ease: [0.22, 1, 0.36, 1] }}>
-                    Local roots.<br /><span className="cpv2-accent">Global credibility.</span>
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18, ease: [0.22, 1, 0.36, 1] }}>
+                    Total Brand<br /><span className="cpv2-accent">Activation.</span>
                 </motion.h2>
-                <motion.p className="cpv2-about-para"
-                    initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-                    Established in May 1999 as the 22nd office in Pico Group&apos;s worldwide network — and the second in the Middle East. Our Bahrain team operates from a 3,500 sqm facility housing a full exhibition, event, and AV inventory.
-                </motion.p>
-                <motion.div className="cpv2-about-vm"
-                    initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.38 }}>
-                    <div className="cpv2-vm-card">
-                        <span className="cpv2-vm-icon">◈</span>
-                        <div>
-                            <h4 className="cpv2-vm-title">Vision</h4>
-                            <p className="cpv2-vm-text">A world-class company reputable for building clients&apos; image.</p>
-                        </div>
-                    </div>
-                    <div className="cpv2-vm-card">
-                        <span className="cpv2-vm-icon">◎</span>
-                        <div>
-                            <h4 className="cpv2-vm-title">Mission</h4>
-                            <p className="cpv2-vm-text">High-quality creative services through efficient deployment of the best global resources.</p>
-                        </div>
-                    </div>
-                </motion.div>
-                <motion.div className="cpv2-about-stats-grid"
-                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.46 }}>
-                    {stats.map((s, i) => (
-                        <motion.div key={s.label} className="cpv2-about-stat-block"
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.55, delay: 0.5 + i * 0.08, ease: [0.22, 1, 0.36, 1] }}
-                        >
-                            <div className="cpv2-about-stat-num">
-                                {s.prefix && <span className="cpv2-about-stat-prefix">{s.prefix}</span>}
-                                <Counter to={s.value} suffix={s.suffix} active={active} />
-                            </div>
-                            <div className="cpv2-about-stat-label">{s.label}</div>
-                            <div className="cpv2-about-stat-sub">{s.sub}</div>
-                        </motion.div>
+
+                {/* Tab pill nav */}
+                <motion.div className="cpv2-tab-pills"
+                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28 }}>
+                    {ABOUT_TABS.map((t, i) => (
+                        <button key={t.id}
+                            className={`cpv2-tab-pill ${i === tab ? 'cpv2-tab-pill-active' : ''}`}
+                            onClick={() => setTab(i)}>
+                            {t.label}
+                        </button>
                     ))}
                 </motion.div>
+
+                {/* Animated tab body */}
+                <div className="cpv2-tab-body">
+                    <AnimatePresence mode="sync">
+                        <motion.div key={tab} variants={tabVariants}
+                            initial="enter" animate="center" exit="exit">
+
+                            {tab === 0 && (
+                                <div className="cpv2-tab-story">
+                                    <p className="cpv2-tab-para">Established <strong>May 1999</strong> — the 22nd office in Pico Group&apos;s global network and the second in the Middle East. Our Bahrain team operates from a <strong>3,500 sqm</strong> facility stocked with exhibition, event, and AV inventory.</p>
+                                    <div className="cpv2-tab-mini-stats">
+                                        {[
+                                            { v: 36,  s: '',  p: '',    l: 'Cities' },
+                                            { v: 590, s: 'M', p: 'US$', l: 'Project Value' },
+                                            { v: 417, s: 'M', p: 'US$', l: 'Turnover' },
+                                            { v: 50,  s: '+', p: '',    l: 'Team' },
+                                        ].map((st, i) => (
+                                            <div key={st.l} className="cpv2-tab-mini-stat">
+                                                <span className="cpv2-tab-mini-num">
+                                                    {st.p}<Counter to={st.v} suffix={st.s} active={active} />
+                                                </span>
+                                                <span className="cpv2-tab-mini-lbl">{st.l}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="cpv2-tab-tags">
+                                        {['22nd Global Office','2nd in Middle East','50+ Staff','3,500 sqm Facility'].map(t => (
+                                            <span key={t} className="cpv2-tag">{t}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {tab === 1 && (
+                                <div className="cpv2-tab-direction">
+                                    {[
+                                        { icon: '◈', title: 'Vision',  text: 'A world-class company reputable for building clients’ image.' },
+                                        { icon: '◎', title: 'Mission', text: 'High-quality creative services through the efficient deployment of the best global resources.' },
+                                        { icon: '◉', title: 'Promise', text: 'Total Brand Activation — creating experiences that matter.' },
+                                    ].map((item, i) => (
+                                        <motion.div key={item.title} className="cpv2-dir-card"
+                                            initial={{ opacity: 0, x: -16 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ duration: 0.4, delay: i * 0.1, ease: [0.22,1,0.36,1] }}>
+                                            <span className="cpv2-dir-icon">{item.icon}</span>
+                                            <div>
+                                                <h4 className="cpv2-dir-title">{item.title}</h4>
+                                                <p className="cpv2-dir-text">{item.text}</p>
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {tab === 2 && (
+                                <div className="cpv2-tab-presence">
+                                    <div className="cpv2-presence-hero">
+                                        <span className="cpv2-presence-big">
+                                            <Counter to={36} suffix="" active={active} />
+                                        </span>
+                                        <div className="cpv2-presence-hero-right">
+                                            <span className="cpv2-presence-unit">Cities</span>
+                                            <span className="cpv2-presence-sub">Pico Group Worldwide</span>
+                                        </div>
+                                    </div>
+                                    <p className="cpv2-tab-para" style={{ marginTop: '0.8rem' }}>A global network spanning 5 continents — combining the scale of an international brand with the precision of local execution in every market.</p>
+                                    <div className="cpv2-presence-regions">
+                                        {['Middle East','Asia Pacific','Europe','Americas','Africa'].map((r, i) => (
+                                            <motion.span key={r} className="cpv2-presence-region"
+                                                initial={{ opacity: 0, scale: 0.85 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                transition={{ delay: 0.1 + i * 0.07, duration: 0.35 }}>
+                                                {r}
+                                            </motion.span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {tab === 3 && (
+                                <div className="cpv2-tab-expertise">
+                                    <div className="cpv2-exp-cols">
+                                        <div className="cpv2-exp-col">
+                                            <h5 className="cpv2-exp-heading">Experiences</h5>
+                                            {['Interactive Technology','Brand Strategy','Experiential Marketing','Digital & Social','PR & Communications'].map((s, i) => (
+                                                <motion.div key={s} className="cpv2-exp-item"
+                                                    initial={{ opacity: 0, x: -12 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    transition={{ delay: i * 0.07, duration: 0.35 }}>
+                                                    <span className="cpv2-exp-dot" />{s}
+                                                </motion.div>
+                                            ))}
+                                        </div>
+                                        <div className="cpv2-exp-col">
+                                            <h5 className="cpv2-exp-heading">Categories</h5>
+                                            {['Visual Branding','World Expo','Sports Events','Exhibition Marketing','Themed Attractions','Interior & Retail','Event Marketing'].map((s, i) => (
+                                                <motion.div key={s} className="cpv2-exp-item"
+                                                    initial={{ opacity: 0, x: -12 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    transition={{ delay: i * 0.06, duration: 0.35 }}>
+                                                    <span className="cpv2-exp-dot" />{s}
+                                                </motion.div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                        </motion.div>
+                    </AnimatePresence>
+                </div>
+
+                {/* Progress dots */}
+                <div className="cpv2-tab-progress">
+                    {ABOUT_TABS.map((_, i) => (
+                        <button key={i}
+                            className={`cpv2-tab-prog-dot ${i === tab ? 'cpv2-tab-prog-active' : ''}`}
+                            onClick={() => setTab(i)} aria-label={ABOUT_TABS[i].label} />
+                    ))}
+                </div>
             </div>
         </div>
     );

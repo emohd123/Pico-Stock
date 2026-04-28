@@ -7994,60 +7994,131 @@ input[type="checkbox"] {
 .cpv2-stat-label-big { font-size: 1.15rem; font-weight: 700; }
 .cpv2-stat-sub { font-size: 0.88rem; color: var(--text-secondary); }
 
-/* == SECTION 1: ABOUT + NUMBERS (merged) =========================== */
+/* == SECTION 1: ABOUT (tabbed) ===================================== */
 .cpv2-sec-about { flex-direction: row; overflow: hidden; }
-.cpv2-about-img-side { position: relative; flex: 0 0 45%; overflow: hidden; }
+.cpv2-about-img-side { position: relative; flex: 0 0 44%; overflow: hidden; }
 .cpv2-about-copy-side {
-  flex: 0 0 55%; display: flex; flex-direction: column; justify-content: center;
-  padding: 2.2rem 3rem 2.2rem 2.5rem; overflow-y: auto; scrollbar-width: none; gap: 0;
+  flex: 0 0 56%; display: flex; flex-direction: column; justify-content: center;
+  padding: 2rem 2.8rem 1.5rem 2.4rem; overflow-y: auto; scrollbar-width: none;
 }
 .cpv2-about-copy-side::-webkit-scrollbar { display: none; }
 .cpv2-about-title {
-  font-size: clamp(1.7rem, 2.8vw, 2.4rem); font-weight: 800; line-height: 1.18;
-  letter-spacing: -0.025em; margin: 0.4rem 0 0.6rem;
+  font-size: clamp(1.6rem, 2.6vw, 2.2rem); font-weight: 800; line-height: 1.18;
+  letter-spacing: -0.025em; margin: 0.35rem 0 0.9rem;
 }
-.cpv2-about-para {
-  font-size: 0.9rem; line-height: 1.7; color: rgba(255,255,255,0.58);
-  margin: 0 0 1rem; max-width: 92%;
+/* Image overlay label */
+.cpv2-about-img-lbl {
+  position: absolute; bottom: 5.5rem; left: 2rem; z-index: 3;
+  display: flex; align-items: center; gap: 0.6rem;
 }
-/* Vision / Mission 2-column cards */
-.cpv2-about-vm { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; margin-bottom: 1.1rem; }
-.cpv2-vm-card {
-  display: flex; align-items: flex-start; gap: 0.65rem;
+.cpv2-about-img-lbl-num {
+  font-size: 0.65rem; font-weight: 700; letter-spacing: 0.15em; color: var(--pico-teal);
+  background: rgba(0,199,177,0.12); border: 1px solid rgba(0,199,177,0.25);
+  border-radius: 4px; padding: 0.2rem 0.45rem;
+}
+.cpv2-about-img-lbl-text {
+  font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: rgba(255,255,255,0.7);
+}
+/* Tab pills */
+.cpv2-tab-pills {
+  display: flex; flex-wrap: wrap; gap: 0.45rem; margin-bottom: 1.1rem;
+}
+.cpv2-tab-pill {
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 100px; padding: 0.38rem 0.9rem; font-size: 0.75rem; font-weight: 600;
+  color: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.22s ease;
+  font-family: inherit; letter-spacing: 0.02em;
+}
+.cpv2-tab-pill:hover { border-color: rgba(0,199,177,0.3); color: rgba(255,255,255,0.8); }
+.cpv2-tab-pill-active {
+  background: rgba(0,199,177,0.14); border-color: rgba(0,199,177,0.5);
+  color: #fff; box-shadow: 0 0 16px rgba(0,199,177,0.18);
+}
+/* Tab body container */
+.cpv2-tab-body { flex: 1; min-height: 0; }
+/* Shared tab text */
+.cpv2-tab-para {
+  font-size: 0.88rem; line-height: 1.72; color: rgba(255,255,255,0.58);
+  margin: 0 0 1rem; max-width: 94%;
+}
+.cpv2-tab-para strong { color: rgba(255,255,255,0.85); font-weight: 700; }
+/* Tab: Our Story — mini stats row */
+.cpv2-tab-mini-stats {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; margin-bottom: 1rem;
+}
+.cpv2-tab-mini-stat {
+  background: rgba(0,199,177,0.06); border: 1px solid rgba(0,199,177,0.14);
+  border-radius: 12px; padding: 0.7rem 0.8rem; text-align: center;
+  transition: border-color 0.2s, background 0.2s;
+}
+.cpv2-tab-mini-stat:hover { border-color: rgba(0,199,177,0.3); background: rgba(0,199,177,0.1); }
+.cpv2-tab-mini-num {
+  display: block; font-size: 1.5rem; font-weight: 900; color: var(--pico-teal);
+  line-height: 1; letter-spacing: -0.02em; margin-bottom: 0.22rem;
+}
+.cpv2-tab-mini-lbl {
+  font-size: 0.6rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.1em; color: rgba(255,255,255,0.45);
+}
+.cpv2-tab-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+/* Tab: Direction */
+.cpv2-tab-direction { display: flex; flex-direction: column; gap: 0.65rem; }
+.cpv2-dir-card {
+  display: flex; align-items: flex-start; gap: 0.8rem;
   background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
-  border-radius: 12px; padding: 0.85rem 1rem;
+  border-radius: 14px; padding: 0.9rem 1.1rem;
   transition: border-color 0.25s, background 0.25s;
 }
-.cpv2-vm-card:hover { border-color: rgba(0,199,177,0.2); background: rgba(0,199,177,0.04); }
-.cpv2-vm-icon { color: var(--pico-teal); font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
-.cpv2-vm-title {
-  font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
-  color: var(--pico-teal); margin: 0 0 0.28rem;
+.cpv2-dir-card:hover { border-color: rgba(0,199,177,0.22); background: rgba(0,199,177,0.04); }
+.cpv2-dir-icon { color: var(--pico-teal); font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+.cpv2-dir-title {
+  font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--pico-teal); margin: 0 0 0.3rem;
 }
-.cpv2-vm-text { font-size: 0.78rem; color: rgba(255,255,255,0.55); line-height: 1.55; margin: 0; }
-/* 2×2 stats grid */
-.cpv2-about-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
-.cpv2-about-stat-block {
-  background: rgba(0,199,177,0.05); border: 1px solid rgba(0,199,177,0.13);
-  border-radius: 14px; padding: 0.9rem 1.1rem; position: relative; overflow: hidden;
-  transition: border-color 0.25s, background 0.25s;
+.cpv2-dir-text { font-size: 0.82rem; color: rgba(255,255,255,0.58); line-height: 1.6; margin: 0; }
+/* Tab: Presence */
+.cpv2-presence-hero {
+  display: flex; align-items: baseline; gap: 1rem; margin-bottom: 0.6rem;
 }
-.cpv2-about-stat-block::before {
-  content: ''; position: absolute; inset: 0;
-  background: radial-gradient(circle at top left, rgba(0,199,177,0.07) 0%, transparent 65%);
+.cpv2-presence-big {
+  font-size: clamp(3.5rem, 7vw, 5.5rem); font-weight: 900; color: var(--pico-teal);
+  line-height: 1; letter-spacing: -0.04em;
 }
-.cpv2-about-stat-block:hover { border-color: rgba(0,199,177,0.32); background: rgba(0,199,177,0.09); }
-.cpv2-about-stat-num {
-  font-size: 2rem; font-weight: 900; color: #fff; line-height: 1;
-  letter-spacing: -0.03em; margin-bottom: 0.28rem;
-  display: flex; align-items: baseline; gap: 0.08rem;
+.cpv2-presence-hero-right { display: flex; flex-direction: column; gap: 0.1rem; }
+.cpv2-presence-unit { font-size: 1.3rem; font-weight: 800; color: #fff; line-height: 1; }
+.cpv2-presence-sub { font-size: 0.72rem; color: rgba(255,255,255,0.4); font-weight: 500; letter-spacing: 0.06em; }
+.cpv2-presence-regions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.9rem; }
+.cpv2-presence-region {
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 100px; padding: 0.32rem 0.85rem; font-size: 0.75rem; font-weight: 600;
+  color: rgba(255,255,255,0.65); transition: all 0.22s ease;
 }
-.cpv2-about-stat-prefix { font-size: 0.95rem; font-weight: 700; color: var(--pico-teal); }
-.cpv2-about-stat-label {
-  font-size: 0.68rem; font-weight: 700; color: rgba(255,255,255,0.82);
-  text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.12rem;
+.cpv2-presence-region:hover { border-color: var(--pico-teal); color: #fff; }
+/* Tab: Expertise */
+.cpv2-exp-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+.cpv2-exp-heading {
+  font-size: 0.64rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em;
+  color: var(--pico-teal); margin: 0 0 0.6rem; padding-bottom: 0.4rem;
+  border-bottom: 1px solid rgba(0,199,177,0.2);
 }
-.cpv2-about-stat-sub { font-size: 0.64rem; color: rgba(255,255,255,0.36); }
+.cpv2-exp-item {
+  display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem;
+  color: rgba(255,255,255,0.6); padding: 0.28rem 0; font-weight: 500;
+  transition: color 0.2s;
+}
+.cpv2-exp-item:hover { color: rgba(255,255,255,0.9); }
+.cpv2-exp-dot {
+  width: 5px; height: 5px; border-radius: 50%; background: var(--pico-teal);
+  flex-shrink: 0; opacity: 0.7;
+}
+/* Progress dots */
+.cpv2-tab-progress { display: flex; gap: 0.45rem; margin-top: 1rem; align-items: center; }
+.cpv2-tab-prog-dot {
+  width: 6px; height: 6px; border-radius: 50%; border: none; cursor: pointer;
+  background: rgba(255,255,255,0.2); transition: all 0.25s ease; padding: 0;
+}
+.cpv2-tab-prog-active { background: var(--pico-teal); width: 20px; border-radius: 3px; box-shadow: 0 0 8px rgba(0,199,177,0.5); }
 
 /* == SECTION 2: WHO WE ARE ========================================= */
 .cpv2-sec-who { display: grid; grid-template-columns: 1fr 1fr; }
