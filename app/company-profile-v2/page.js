@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -9,7 +9,7 @@ import CompanyContactForm from '@/components/CompanyContactForm';
 // ─── Intro / Loading screen ────────────────────────────────────────────────
 function IntroScreen({ onDone }) {
     const [progress, setProgress] = useState(0);
-    const [phase, setPhase] = useState('loading');
+    const [phase, setPhase] = useState('loading'); // 'loading' | 'done'
 
     useEffect(() => {
         let raf;
@@ -61,6 +61,8 @@ function IntroScreen({ onDone }) {
     );
 }
 
+
+
 // ─── 3D section transition variants ───────────────────────────────────────
 const sectionVariants = {
     enter: (dir) => ({
@@ -106,7 +108,7 @@ function Counter({ to, suffix = '', active }) {
     return <>{val}{suffix}</>;
 }
 
-// ─── Floating image ────────────────────────────────────────────────────────
+// ─── Floating image (hero physics-feel) ───────────────────────────────────
 function FloatingImg({ src, alt, className, delay = 0, fy = 14, fx = 8 }) {
     return (
         <motion.div
@@ -144,7 +146,9 @@ function SectionHero() {
                 <div className="cpv2-orb cpv2-orb-3" />
                 <div className="cpv2-grid-lines" />
             </div>
+
             <div className="cpv2-hero-inner">
+                {/* Left copy */}
                 <motion.div className="cpv2-hero-copy"
                     initial={{ opacity: 0, x: -30 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -177,6 +181,8 @@ function SectionHero() {
                         ))}
                     </div>
                 </motion.div>
+
+                {/* Right: floating images (3D floating feel like reference) */}
                 <div className="cpv2-float-stage">
                     <FloatingImg src="/company-profile/exhibition-main.jpeg" alt="Exhibition stand" className="cpv2-fimg cpv2-fimg-main" delay={0.3} fy={14} fx={6} />
                     <FloatingImg src="/company-profile/events-main.jpeg" alt="Event" className="cpv2-fimg cpv2-fimg-top" delay={0.55} fy={10} fx={9} />
@@ -185,6 +191,7 @@ function SectionHero() {
                     <div className="cpv2-float-glow" />
                 </div>
             </div>
+
             <motion.div className="cpv2-scroll-hint"
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5 }}>
                 <span className="cpv2-scroll-line" />
@@ -235,15 +242,17 @@ function SectionStats({ active }) {
 
 // ─── Section 2: Who We Are ────────────────────────────────────────────────
 const WHO_GALLERY = [
-    { src: '/company-profile/conference-main.jpg', label: 'Conference' },
-    { src: '/company-profile/events-alt.jpeg',      label: 'Events' },
-    { src: '/company-profile/interior-alt.jpg',     label: 'Interiors' },
+    { src: '/company-profile/conference-main.jpg',  label: 'Conference' },
+    { src: '/company-profile/events-alt.jpeg',       label: 'Events' },
+    { src: '/company-profile/interior-alt.jpg',      label: 'Interiors' },
 ];
 
 function SectionWho() {
     const [activeImg, setActiveImg] = useState(0);
+
     return (
         <div className="cpv2-sec cpv2-sec-who">
+            {/* Left: switchable full-bleed image */}
             <div className="cpv2-who-img-side">
                 <AnimatePresence mode="sync">
                     <motion.div key={activeImg} className="cpv2-who-img-frame"
@@ -252,16 +261,27 @@ function SectionWho() {
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
                     >
-                        <Image src={WHO_GALLERY[activeImg].src} alt="Pico Bahrain" fill sizes="50vw" className="cpv2-img" />
+                        <Image
+                            src={WHO_GALLERY[activeImg].src}
+                            alt="Pico Bahrain"
+                            fill sizes="50vw"
+                            className="cpv2-img"
+                        />
                     </motion.div>
                 </AnimatePresence>
                 <div className="cpv2-who-img-grad" />
+
+                {/* Thumbnail strip at bottom of image */}
                 <motion.div className="cpv2-who-thumbs"
-                    initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
+                    initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}>
                     {WHO_GALLERY.map((img, i) => (
-                        <button key={img.src}
+                        <button
+                            key={img.src}
                             className={`cpv2-who-thumb ${i === activeImg ? 'cpv2-who-thumb-active' : ''}`}
-                            onClick={() => setActiveImg(i)} aria-label={img.label}>
+                            onClick={() => setActiveImg(i)}
+                            aria-label={img.label}
+                        >
                             <div className="cpv2-who-thumb-img">
                                 <Image src={img.src} alt={img.label} fill sizes="100px" className="cpv2-img" />
                             </div>
@@ -269,6 +289,7 @@ function SectionWho() {
                         </button>
                     ))}
                 </motion.div>
+
                 <motion.div className="cpv2-who-badge"
                     initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.5, type: 'spring', stiffness: 180 }}>
@@ -276,6 +297,8 @@ function SectionWho() {
                     <span className="cpv2-badge-txt">Years Pico Global</span>
                 </motion.div>
             </div>
+
+            {/* Right: copy */}
             <div className="cpv2-who-copy-side">
                 <motion.span className="cpv2-section-tag"
                     initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
@@ -314,6 +337,7 @@ function SectionServices() {
     ];
     return (
         <div className="cpv2-sec cpv2-sec-services">
+            {/* Live image panel */}
             <div className="cpv2-svc-image-panel">
                 <AnimatePresence mode="wait">
                     <motion.div key={active} className="cpv2-svc-image-wrap"
@@ -331,6 +355,8 @@ function SectionServices() {
                     <span className="cpv2-svc-panel-desc">{svcs[active].desc}</span>
                 </div>
             </div>
+
+            {/* List panel */}
             <div className="cpv2-svc-list-panel">
                 <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
                     <span className="cpv2-section-tag">What We Do</span>
@@ -374,6 +400,7 @@ function SectionPortfolio() {
                 <h2 className="cpv2-section-title">Work that speaks<br /><span className="cpv2-accent">for itself.</span></h2>
             </motion.div>
             <div className="cpv2-bento">
+                {/* Large left card */}
                 <motion.div className="cpv2-bento-large"
                     initial={{ opacity: 0, scale: 0.93 }} animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
@@ -384,9 +411,10 @@ function SectionPortfolio() {
                         animate={{ y: hovered === 0 ? 0 : 12, opacity: hovered === 0 ? 1 : 0.72 }}>
                         <span className="cpv2-bento-tag">{items[0].title}</span>
                         <h3 className="cpv2-bento-title">{items[0].sub}</h3>
-                        <Link href="/company-profile#contact" className="cpv2-btn cpv2-btn-sm">Request Portfolio</Link>
+                        <Link href="/company-profile#company-contact" className="cpv2-btn cpv2-btn-sm">Request Portfolio</Link>
                     </motion.div>
                 </motion.div>
+                {/* Right stack */}
                 <div className="cpv2-bento-right">
                     {items.slice(1).map((item, i) => (
                         <motion.div key={item.title} className="cpv2-bento-sm"
@@ -399,7 +427,7 @@ function SectionPortfolio() {
                                 animate={{ y: hovered === i + 1 ? 0 : 12, opacity: hovered === i + 1 ? 1 : 0.72 }}>
                                 <span className="cpv2-bento-tag">{item.title}</span>
                                 <h3 className="cpv2-bento-title">{item.sub}</h3>
-                                <Link href="/company-profile#contact" className="cpv2-btn cpv2-btn-sm">Request Portfolio</Link>
+                                <Link href="/company-profile#company-contact" className="cpv2-btn cpv2-btn-sm">Request Portfolio</Link>
                             </motion.div>
                         </motion.div>
                     ))}
@@ -451,7 +479,7 @@ function SectionWhy() {
 // ─── Section 6: Contact ───────────────────────────────────────────────────
 function SectionContact() {
     return (
-        <div id="contact" className="cpv2-sec cpv2-sec-contact">
+        <div className="cpv2-sec cpv2-sec-contact">
             <div className="cpv2-contact-inner">
                 <motion.div className="cpv2-contact-copy"
                     initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }}
@@ -497,8 +525,8 @@ function SectionContact() {
 // ─── Section config ───────────────────────────────────────────────────────
 const SECTION_LABELS = ['Home', 'Numbers', 'About', 'Services', 'Portfolio', 'Why Us', 'Contact'];
 
-// ─── Main page ────────────────────────────────────────────────────────────
-export default function CompanyProfilePage() {
+// ─── Main page with scroll hijacking ─────────────────────────────────────
+export default function CompanyProfileV2() {
     const [intro, setIntro] = useState(true);
     const [current, setCurrent] = useState(0);
     const [dir, setDir] = useState(1);
@@ -514,19 +542,26 @@ export default function CompanyProfilePage() {
         setTimeout(() => setBusy(false), 950);
     }, [busy, current, TOTAL]);
 
+    // Wheel handler
     useEffect(() => {
-        let acc = 0, last = 0;
+        let acc = 0;
+        let last = 0;
         const onWheel = (e) => {
             e.preventDefault();
             const now = Date.now();
-            if (now - last < 60) { acc += e.deltaY; } else { acc = e.deltaY; }
+            if (now - last < 60) { acc += e.deltaY; }
+            else { acc = e.deltaY; }
             last = now;
-            if (Math.abs(acc) > 80) { go(current + (acc > 0 ? 1 : -1)); acc = 0; }
+            if (Math.abs(acc) > 80) {
+                go(current + (acc > 0 ? 1 : -1));
+                acc = 0;
+            }
         };
         window.addEventListener('wheel', onWheel, { passive: false });
         return () => window.removeEventListener('wheel', onWheel);
     }, [go, current]);
 
+    // Keyboard handler
     useEffect(() => {
         const onKey = (e) => {
             if (e.key === 'ArrowDown' || e.key === 'PageDown') go(current + 1);
@@ -536,6 +571,7 @@ export default function CompanyProfilePage() {
         return () => window.removeEventListener('keydown', onKey);
     }, [go, current]);
 
+    // Touch swipe
     useEffect(() => {
         let startY = 0;
         const onTouchStart = (e) => { startY = e.touches[0].clientY; };
@@ -560,41 +596,55 @@ export default function CompanyProfilePage() {
 
     return (
         <>
-            <AnimatePresence>
-                {intro && <IntroScreen key="intro" onDone={doneIntro} />}
-            </AnimatePresence>
-            <div className="cpv2-root">
-                <div className="cpv2-stage">
-                    <AnimatePresence mode="wait" custom={dir}>
-                        <motion.div
-                            key={current}
-                            custom={dir}
-                            variants={sectionVariants}
-                            initial="enter"
-                            animate="center"
-                            exit="exit"
-                            className="cpv2-motion-wrap"
-                            style={{ perspective: '1200px' }}
-                        >
-                            {sections[current]}
-                        </motion.div>
-                    </AnimatePresence>
-                </div>
-                <nav className="cpv2-nav-dots" aria-label="Section navigation">
-                    {SECTION_LABELS.map((label, i) => (
-                        <button key={label}
-                            className={`cpv2-dot ${i === current ? 'cpv2-dot-active' : ''}`}
-                            onClick={() => go(i)} aria-label={label} title={label}>
-                            <span className="cpv2-dot-inner" />
-                            <span className="cpv2-dot-label">{label}</span>
-                        </button>
-                    ))}
-                </nav>
-                <div className="cpv2-arrows">
-                    <button className="cpv2-arrow" onClick={() => go(current - 1)} disabled={current === 0} aria-label="Previous">↑</button>
-                    <button className="cpv2-arrow" onClick={() => go(current + 1)} disabled={current === TOTAL - 1} aria-label="Next">↓</button>
-                </div>
+        <AnimatePresence>
+            {intro && <IntroScreen key="intro" onDone={doneIntro} />}
+        </AnimatePresence>
+        <div className="cpv2-root">
+            {/* 3D perspective wrapper */}
+            <div className="cpv2-stage">
+                <AnimatePresence mode="wait" custom={dir}>
+                    <motion.div
+                        key={current}
+                        custom={dir}
+                        variants={sectionVariants}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        className="cpv2-motion-wrap"
+                        style={{ perspective: '1200px' }}
+                    >
+                        {sections[current]}
+                    </motion.div>
+                </AnimatePresence>
             </div>
+
+            {/* Side navigation dots */}
+            <nav className="cpv2-nav-dots" aria-label="Section navigation">
+                {SECTION_LABELS.map((label, i) => (
+                    <button
+                        key={label}
+                        className={`cpv2-dot ${i === current ? 'cpv2-dot-active' : ''}`}
+                        onClick={() => go(i)}
+                        aria-label={label}
+                        title={label}
+                    >
+                        <span className="cpv2-dot-inner" />
+                        <span className="cpv2-dot-label">{label}</span>
+                    </button>
+                ))}
+            </nav>
+
+            {/* Prev / Next arrows */}
+            <div className="cpv2-arrows">
+                <button className="cpv2-arrow" onClick={() => go(current - 1)} disabled={current === 0} aria-label="Previous section">↑</button>
+                <button className="cpv2-arrow" onClick={() => go(current + 1)} disabled={current === TOTAL - 1} aria-label="Next section">↓</button>
+            </div>
+
+            {/* Test notice */}
+            <div className="cpv2-test-notice">
+                🧪 Test — <Link href="/company-profile">Live page</Link>
+            </div>
+        </div>
         </>
     );
 }
