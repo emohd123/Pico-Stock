@@ -57,6 +57,9 @@ out/
 *.png
 !/public/branding/pico-logo.png
 !/public/branding/Pico logo horizontal 3265c.png
+!/public/company-profile/furn-lounge1.png
+!/public/company-profile/furn-lounge2.png
+!/public/company-profile/furn-lounge3.png
 
 # dotnet install script
 dotnet-install.ps1
