@@ -457,9 +457,9 @@ function SectionServices() {
         { title: 'Exhibition Stands',    img: '/company-profile/exhibition-main.jpeg', desc: 'Design-led stands for trade shows and live events.' },
         { title: 'Event Environments',   img: '/company-profile/events-main.jpeg',     desc: 'Hospitality, feature areas, and presentation spaces.' },
         { title: 'Interiors & Fit-Out',  img: '/company-profile/interior-main.jpeg',   desc: 'Branded receptions, lounges, and functional spaces.' },
-        { title: 'Booth Furniture',      img: '/company-profile/conference-main.jpg',  desc: 'Flexible rental to complete exhibition spaces.' },
+        { title: 'Booth Furniture',      imgs: ['/company-profile/furn-armchair.jpg', '/company-profile/furn-chair.jpg', '/company-profile/furn-table.jpg', '/company-profile/furn-sofa.jpg'], desc: 'Flexible rental to complete exhibition spaces.' },
         { title: 'Graphics & Signage',   img: '/company-profile/events-alt.jpeg',      desc: 'Booth graphics, surfaces, and wayfinding.' },
-        { title: 'AV & Digital Display', img: '/company-profile/interior-alt.jpg',     desc: 'Screens, digital content, and display moments.' },
+        { title: 'AV & Digital Display', img: '/company-profile/av-digital-main.jpg',  desc: 'Screens, digital content, and display moments.' },
     ];
     return (
         <div className="cpv2-sec cpv2-sec-services">
@@ -471,7 +471,17 @@ function SectionServices() {
                         exit={{ opacity: 0, scale: 0.97 }}
                         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                     >
-                        <Image src={svcs[active].img} alt={svcs[active].title} fill sizes="50vw" className="cpv2-img" />
+                        {svcs[active].imgs ? (
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', width: '100%', height: '100%', gap: '4px' }}>
+                                {svcs[active].imgs.map((src, i) => (
+                                    <div key={i} style={{ position: 'relative', overflow: 'hidden' }}>
+                                        <Image src={src} alt={svcs[active].title} fill sizes="25vw" className="cpv2-img" />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <Image src={svcs[active].img} alt={svcs[active].title} fill sizes="50vw" className="cpv2-img" />
+                        )}
                         <div className="cpv2-svc-panel-grad" />
                     </motion.div>
                 </AnimatePresence>
@@ -514,6 +524,7 @@ function SectionPortfolio() {
         { title: 'Events Portfolio', sub: 'Live Event Environments', img: '/company-profile/events-main.jpeg' },
         { title: 'Exhibition Stands', sub: 'Stand Design & Build', img: '/company-profile/exhibition-main.jpeg' },
         { title: 'Interiors', sub: 'Interior & Fit-Out', img: '/company-profile/interior-main.jpeg' },
+        { title: 'AV & Digital Display', sub: 'Graduation Ceremonies', img: '/company-profile/av-digital-main.jpg' },
     ];
     return (
         <div className="cpv2-sec cpv2-sec-portfolio">
@@ -533,7 +544,7 @@ function SectionPortfolio() {
                         animate={{ y: hovered === 0 ? 0 : 12, opacity: hovered === 0 ? 1 : 0.72 }}>
                         <span className="cpv2-bento-tag">{items[0].title}</span>
                         <h3 className="cpv2-bento-title">{items[0].sub}</h3>
-                        <Link href="/company-profile#contact" className="cpv2-btn cpv2-btn-sm">Request Portfolio</Link>
+                        <button onClick={() => window.dispatchEvent(new CustomEvent('cp-go-contact'))} className="cpv2-btn cpv2-btn-sm">Request Portfolio</button>
                     </motion.div>
                 </motion.div>
                 <div className="cpv2-bento-right">
@@ -548,7 +559,7 @@ function SectionPortfolio() {
                                 animate={{ y: hovered === i + 1 ? 0 : 12, opacity: hovered === i + 1 ? 1 : 0.72 }}>
                                 <span className="cpv2-bento-tag">{item.title}</span>
                                 <h3 className="cpv2-bento-title">{item.sub}</h3>
-                                <Link href="/company-profile#contact" className="cpv2-btn cpv2-btn-sm">Request Portfolio</Link>
+                                <button onClick={() => window.dispatchEvent(new CustomEvent('cp-go-contact'))} className="cpv2-btn cpv2-btn-sm">Request Portfolio</button>
                             </motion.div>
                         </motion.div>
                     ))}
@@ -696,6 +707,12 @@ export default function CompanyProfilePage() {
         window.addEventListener('touchend', onTouchEnd, { passive: true });
         return () => { window.removeEventListener('touchstart', onTouchStart); window.removeEventListener('touchend', onTouchEnd); };
     }, [go, current]);
+
+    useEffect(() => {
+        const handler = () => go(5);
+        window.addEventListener('cp-go-contact', handler);
+        return () => window.removeEventListener('cp-go-contact', handler);
+    }, [go]);
 
     const sections = [
         <SectionHero key="hero" />,
