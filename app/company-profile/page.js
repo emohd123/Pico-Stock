@@ -472,11 +472,23 @@ function SectionServices() {
                         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                     >
                         {svcs[active].imgs ? (
-                            <div className="cpv2-float-stage" style={{ position: 'absolute', inset: 0, height: '100%' }}>
-                                <div className="cpv2-fimg cpv2-fimg-main"><Image src={svcs[active].imgs[0]} alt="Booth Furniture" fill sizes="35vw" className="cpv2-img" /></div>
-                                <div className="cpv2-fimg cpv2-fimg-top"><Image src={svcs[active].imgs[1]} alt="Booth Furniture" fill sizes="22vw" className="cpv2-img" /></div>
-                                <div className="cpv2-fimg cpv2-fimg-bot"><Image src={svcs[active].imgs[2]} alt="Booth Furniture" fill sizes="20vw" className="cpv2-img" /></div>
-                                <div className="cpv2-fimg cpv2-fimg-far"><Image src={svcs[active].imgs[3]} alt="Booth Furniture" fill sizes="16vw" className="cpv2-img" /></div>
+                            <div style={{ position: 'absolute', inset: 0, background: '#080c14' }}>
+                                {/* Main — left centre */}
+                                <div style={{ position:'absolute', left:'6%', top:'10%', width:'44%', height:'52%', borderRadius:'18px', overflow:'hidden', background:'#f5f5f5', boxShadow:'0 20px 56px rgba(0,0,0,0.55)', border:'1px solid rgba(255,255,255,0.08)', zIndex:3 }}>
+                                    <Image src={svcs[active].imgs[0]} alt="Booth Furniture" fill sizes="22vw" style={{ objectFit:'contain', padding:'12px' }} />
+                                </div>
+                                {/* Top right */}
+                                <div style={{ position:'absolute', right:'4%', top:'5%', width:'38%', height:'44%', borderRadius:'16px', overflow:'hidden', background:'#f5f5f5', boxShadow:'0 16px 44px rgba(0,0,0,0.5)', border:'1px solid rgba(255,255,255,0.08)', zIndex:4 }}>
+                                    <Image src={svcs[active].imgs[1]} alt="Booth Furniture" fill sizes="20vw" style={{ objectFit:'contain', padding:'12px' }} />
+                                </div>
+                                {/* Bottom left */}
+                                <div style={{ position:'absolute', left:'2%', bottom:'5%', width:'34%', height:'38%', borderRadius:'16px', overflow:'hidden', background:'#f5f5f5', boxShadow:'0 14px 40px rgba(0,0,0,0.45)', border:'1px solid rgba(255,255,255,0.08)', zIndex:2, opacity:0.9 }}>
+                                    <Image src={svcs[active].imgs[3]} alt="Booth Furniture" fill sizes="18vw" style={{ objectFit:'contain', padding:'10px' }} />
+                                </div>
+                                {/* Bottom right */}
+                                <div style={{ position:'absolute', right:'4%', bottom:'5%', width:'38%', height:'40%', borderRadius:'16px', overflow:'hidden', background:'#f5f5f5', boxShadow:'0 16px 44px rgba(0,0,0,0.5)', border:'1px solid rgba(255,255,255,0.08)', zIndex:2 }}>
+                                    <Image src={svcs[active].imgs[2]} alt="Booth Furniture" fill sizes="20vw" style={{ objectFit:'contain', padding:'10px' }} />
+                                </div>
                             </div>
                         ) : (
                             <Image src={svcs[active].img} alt={svcs[active].title} fill sizes="50vw" className="cpv2-img" />
