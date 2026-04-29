@@ -472,23 +472,11 @@ function SectionServices() {
                         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                     >
                         {svcs[active].imgs ? (
-                            <div style={{ position: 'relative', width: '100%', height: '100%', background: '#080c14' }}>
-                                {/* Main large card — left */}
-                                <div style={{ position: 'absolute', left: '4%', top: '6%', width: '58%', height: '88%', borderRadius: '18px', overflow: 'hidden', boxShadow: '0 28px 72px rgba(0,0,0,0.6)' }}>
-                                    <Image src={svcs[active].imgs[0]} alt="Booth Furniture" fill sizes="30vw" style={{ objectFit: 'cover' }} />
-                                </div>
-                                {/* Card — top right */}
-                                <div style={{ position: 'absolute', right: '3%', top: '5%', width: '34%', height: '29%', borderRadius: '14px', overflow: 'hidden', boxShadow: '0 16px 40px rgba(0,0,0,0.5)' }}>
-                                    <Image src={svcs[active].imgs[1]} alt="Booth Furniture" fill sizes="18vw" style={{ objectFit: 'cover' }} />
-                                </div>
-                                {/* Card — middle right */}
-                                <div style={{ position: 'absolute', right: '3%', top: '37%', width: '34%', height: '29%', borderRadius: '14px', overflow: 'hidden', boxShadow: '0 16px 40px rgba(0,0,0,0.5)' }}>
-                                    <Image src={svcs[active].imgs[2]} alt="Booth Furniture" fill sizes="18vw" style={{ objectFit: 'cover' }} />
-                                </div>
-                                {/* Card — bottom right */}
-                                <div style={{ position: 'absolute', right: '3%', bottom: '5%', width: '34%', height: '29%', borderRadius: '14px', overflow: 'hidden', boxShadow: '0 16px 40px rgba(0,0,0,0.5)' }}>
-                                    <Image src={svcs[active].imgs[3]} alt="Booth Furniture" fill sizes="18vw" style={{ objectFit: 'cover' }} />
-                                </div>
+                            <div className="cpv2-float-stage" style={{ position: 'absolute', inset: 0, height: '100%' }}>
+                                <div className="cpv2-fimg cpv2-fimg-main"><Image src={svcs[active].imgs[0]} alt="Booth Furniture" fill sizes="35vw" className="cpv2-img" /></div>
+                                <div className="cpv2-fimg cpv2-fimg-top"><Image src={svcs[active].imgs[1]} alt="Booth Furniture" fill sizes="22vw" className="cpv2-img" /></div>
+                                <div className="cpv2-fimg cpv2-fimg-bot"><Image src={svcs[active].imgs[2]} alt="Booth Furniture" fill sizes="20vw" className="cpv2-img" /></div>
+                                <div className="cpv2-fimg cpv2-fimg-far"><Image src={svcs[active].imgs[3]} alt="Booth Furniture" fill sizes="16vw" className="cpv2-img" /></div>
                             </div>
                         ) : (
                             <Image src={svcs[active].img} alt={svcs[active].title} fill sizes="50vw" className="cpv2-img" />
