@@ -457,7 +457,7 @@ function SectionServices() {
         { title: 'Exhibition Stands',    img: '/company-profile/exhibition-main.jpeg', desc: 'Design-led stands for trade shows and live events.' },
         { title: 'Event Environments',   img: '/company-profile/events-main.jpeg',     desc: 'Hospitality, feature areas, and presentation spaces.' },
         { title: 'Interiors & Fit-Out',  img: '/company-profile/interior-main.jpeg',   desc: 'Branded receptions, lounges, and functional spaces.' },
-        { title: 'Booth Furniture',      imgs: ['/company-profile/furn-armchair.jpg', '/company-profile/furn-chair.jpg', '/company-profile/furn-table.jpg', '/company-profile/furn-sofa.jpg'], desc: 'Flexible rental to complete exhibition spaces.' },
+        { title: 'Booth Furniture',      imgs: ['/company-profile/furn-a.jpg', '/company-profile/furn-b.jpg', '/company-profile/furn-c.jpg', '/company-profile/furn-d.jpg'], desc: 'Flexible rental to complete exhibition spaces.' },
         { title: 'Graphics & Signage',   img: '/company-profile/events-alt.jpeg',      desc: 'Booth graphics, surfaces, and wayfinding.' },
         { title: 'AV & Digital Display', img: '/company-profile/av-digital-main.jpg',  desc: 'Screens, digital content, and display moments.' },
     ];
@@ -472,22 +472,14 @@ function SectionServices() {
                         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                     >
                         {svcs[active].imgs ? (
-                            <div style={{ position: 'absolute', inset: 0, background: '#080c14' }}>
-                                {/* Main — left centre */}
-                                <div style={{ position:'absolute', left:'6%', top:'10%', width:'44%', height:'52%', borderRadius:'18px', overflow:'hidden', background:'#f5f5f5', boxShadow:'0 20px 56px rgba(0,0,0,0.55)', border:'1px solid rgba(255,255,255,0.08)', zIndex:3 }}>
-                                    <Image src={svcs[active].imgs[0]} alt="Booth Furniture" fill sizes="22vw" style={{ objectFit:'contain', padding:'12px' }} />
-                                </div>
-                                {/* Top right */}
-                                <div style={{ position:'absolute', right:'4%', top:'5%', width:'38%', height:'44%', borderRadius:'16px', overflow:'hidden', background:'#f5f5f5', boxShadow:'0 16px 44px rgba(0,0,0,0.5)', border:'1px solid rgba(255,255,255,0.08)', zIndex:4 }}>
-                                    <Image src={svcs[active].imgs[1]} alt="Booth Furniture" fill sizes="20vw" style={{ objectFit:'contain', padding:'12px' }} />
-                                </div>
-                                {/* Bottom left */}
-                                <div style={{ position:'absolute', left:'2%', bottom:'5%', width:'34%', height:'38%', borderRadius:'16px', overflow:'hidden', background:'#f5f5f5', boxShadow:'0 14px 40px rgba(0,0,0,0.45)', border:'1px solid rgba(255,255,255,0.08)', zIndex:2, opacity:0.9 }}>
-                                    <Image src={svcs[active].imgs[3]} alt="Booth Furniture" fill sizes="18vw" style={{ objectFit:'contain', padding:'10px' }} />
-                                </div>
-                                {/* Bottom right */}
-                                <div style={{ position:'absolute', right:'4%', bottom:'5%', width:'38%', height:'40%', borderRadius:'16px', overflow:'hidden', background:'#f5f5f5', boxShadow:'0 16px 44px rgba(0,0,0,0.5)', border:'1px solid rgba(255,255,255,0.08)', zIndex:2 }}>
-                                    <Image src={svcs[active].imgs[2]} alt="Booth Furniture" fill sizes="20vw" style={{ objectFit:'contain', padding:'10px' }} />
+                            <div style={{ position:'absolute', inset:0, background:'#080c14', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                                {/* 2×2 product grid — cards sized to images, no stretching */}
+                                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gridTemplateRows:'1fr 1fr', gap:'12px', width:'86%', height:'82%' }}>
+                                    {svcs[active].imgs.map((src, i) => (
+                                        <div key={i} style={{ borderRadius:'16px', overflow:'hidden', background:'#f7f7f7', boxShadow:'0 12px 36px rgba(0,0,0,0.5)', border:'1px solid rgba(255,255,255,0.07)', position:'relative' }}>
+                                            <Image src={src} alt="Booth Furniture" fill sizes="12vw" style={{ objectFit:'contain', padding:'10%' }} />
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         ) : (
