@@ -77,8 +77,8 @@ async function fetchOsfamAssets() {
         const imgMatch = rawRow.match(/src="(\.\/images\/[^"]+)"/);
         const imgPath = imgMatch ? imgMatch[1].replace(/^\.\//, '') : null;
 
-        // Numeric asset ID from the gallery link: asset-images.php?edit=5121
-        const assetIdMatch = rawRow.match(/asset-images\.php\?edit=(\d+)/i);
+        // Numeric asset ID from the edit link: edit-asset.php?edit=5121
+        const assetIdMatch = rawRow.match(/edit-asset\.php\?edit=(\d+)/i);
         const assetId = assetIdMatch ? assetIdMatch[1] : null;
 
         // Text cells
@@ -116,11 +116,17 @@ async function fetchAssetGalleryPaths(assetId, cookieHeader) {
         if (!res.ok) return [];
         const html = await res.text();
 
-        // Parse all image srcs — OSFam gallery uses src="./images/..." or src="./uploads/..."
-        const matches = [...html.matchAll(/src="(\.[/\\][^"]+\.(jpg|jpeg|png|gif|webp))"/gi)];
+        // Parse all image srcs — gallery images use src="./images/ASSETID-TIMESTAMP.jpg"
+        const matches = [...html.matchAll(/src="([^"]+\.(?:jpg|jpeg|png|gif|webp))"/gi)];
         const paths = matches
             .map(m => m[1].replace(/^\.[\\/]/, '').replace(/\\/g, '/'))
-            .filter(p => !p.startsWith('assets/') && !p.includes('logo') && !p.includes('icon'));
+            .filter(p =>
+                !p.startsWith('img/') &&
+                !p.startsWith('template/') &&
+                !p.includes('logo') &&
+                !p.includes('icon') &&
+                !p.includes('gravatar')
+            );
 
         // Deduplicate while preserving order
         return [...new Set(paths)];
