@@ -18,12 +18,11 @@ function extractAssetCode(name) {
 
 /**
  * Ensure the Supabase Storage bucket exists (public access).
- * Safe to call on every sync — ignores "already exists" errors.
  */
 async function ensureBucket() {
     const { error } = await supabase.storage.createBucket(STORAGE_BUCKET, {
         public: true,
-        fileSizeLimit: 10485760, // 10 MB
+        fileSizeLimit: 10485760,
     });
     if (error && !error.message.toLowerCase().includes('already exist')) {
         console.warn('[sync-stock] Bucket create warning:', error.message);
@@ -31,8 +30,8 @@ async function ensureBucket() {
 }
 
 /**
- * Log into OSFam and return asset map:
- * { ASSETCODE: { available: number, imgPath: string|null } }
+ * Log into OSFam and return the asset map plus the session cookie.
+ * { assetMap: { ASSETCODE: { available, imgPath, assetId } }, cookieHeader }
  */
 async function fetchOsfamAssets() {
     // 1. Get initial session cookie
@@ -66,7 +65,7 @@ async function fetchOsfamAssets() {
     if (!assetRes.ok) throw new Error(`OSFam returned HTTP ${assetRes.status}`);
     const html = await assetRes.text();
 
-    // 4. Parse rows — extract assetCode, available qty, and image path
+    // 4. Parse rows — extract assetCode, available qty, primary image, and numeric asset ID
     const assetMap = {};
     const rowRegex = /<tr\s+data-category[^>]*>([\s\S]*?)<\/tr>/g;
     let match;
@@ -74,10 +73,13 @@ async function fetchOsfamAssets() {
     while ((match = rowRegex.exec(html)) !== null) {
         const rawRow = match[1];
 
-        // All image srcs from this row (gallery support)
-        const imgMatches = [...rawRow.matchAll(/src="(\.\/images\/[^"]+)"/g)];
-        const imgPaths = imgMatches.map(m => m[1].replace(/^\.\//, ''));
-        const imgPath = imgPaths[0] || null;
+        // Primary image src
+        const imgMatch = rawRow.match(/src="(\.\/images\/[^"]+)"/);
+        const imgPath = imgMatch ? imgMatch[1].replace(/^\.\//, '') : null;
+
+        // Numeric asset ID from the gallery link: asset-images.php?edit=5121
+        const assetIdMatch = rawRow.match(/asset-images\.php\?edit=(\d+)/i);
+        const assetId = assetIdMatch ? assetIdMatch[1] : null;
 
         // Text cells
         const cells = [...rawRow.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map(m =>
@@ -88,7 +90,7 @@ async function fetchOsfamAssets() {
             const assetCode = (cells[2] || '').toUpperCase().trim();
             const available = parseInt(cells[8], 10);
             if (assetCode && !isNaN(available)) {
-                assetMap[assetCode] = { available, imgPath, imgPaths };
+                assetMap[assetCode] = { available, imgPath, assetId };
             }
         }
     }
@@ -97,79 +99,90 @@ async function fetchOsfamAssets() {
         throw new Error('No assets parsed — login may have failed or page structure changed');
     }
 
-    return assetMap;
+    return { assetMap, cookieHeader };
+}
+
+/**
+ * Fetch the OSFam gallery page for a numeric asset ID and return all image paths.
+ * e.g. /asset-images.php?edit=5121 → ['images/upload/abc.jpg', ...]
+ */
+async function fetchAssetGalleryPaths(assetId, cookieHeader) {
+    if (!assetId) return [];
+    try {
+        const res = await fetch(`${OSFAM_URL}/asset-images.php?edit=${assetId}`, {
+            headers: { ...(cookieHeader ? { Cookie: cookieHeader } : {}) },
+            redirect: 'follow',
+        });
+        if (!res.ok) return [];
+        const html = await res.text();
+
+        // Parse all image srcs — OSFam gallery uses src="./images/..." or src="./uploads/..."
+        const matches = [...html.matchAll(/src="(\.[/\\][^"]+\.(jpg|jpeg|png|gif|webp))"/gi)];
+        const paths = matches
+            .map(m => m[1].replace(/^\.[\\/]/, '').replace(/\\/g, '/'))
+            .filter(p => !p.startsWith('assets/') && !p.includes('logo') && !p.includes('icon'));
+
+        // Deduplicate while preserving order
+        return [...new Set(paths)];
+    } catch (err) {
+        console.warn(`[sync-stock] Gallery fetch failed for asset ${assetId}:`, err.message);
+        return [];
+    }
 }
 
 /**
  * Download an OSFam image and upload it to Supabase Storage.
- * Returns the Supabase Storage public URL, or null on failure.
- * Skips the upload if the file already exists in Storage.
- *
- * @param {string|null} imgPath   - OSFam relative path, e.g. "images/FGCTBL3.jpg"
- * @param {string}      assetCode - e.g. "FGCTBL3"
- * @param {string|null} currentImage - current value of product.image in Supabase
+ * Returns the public URL, or null on failure.
+ * Uses upsert:false — skips upload if already stored.
  */
-async function uploadImageToSupabase(imgPath, assetCode, currentImage) {
+async function uploadImageToSupabase(imgPath, storageKey, currentUrl) {
     try {
         if (!imgPath) return null;
 
-        // Derive file extension from imgPath
-        const extMatch = imgPath.match(/\.[^.]+$/);
+        const extMatch = imgPath.match(/\.[^./?#]+$/);
         const ext = extMatch ? extMatch[0].toLowerCase() : '.jpg';
-        const filename = `${assetCode}${ext}`;
-        const storagePath = `osfam/${filename}`;
+        const storagePath = `osfam/${storageKey}${ext}`;
 
-        // Build the expected public URL for this file
         const { data: urlData } = supabase.storage
             .from(STORAGE_BUCKET)
             .getPublicUrl(storagePath);
         const publicUrl = urlData?.publicUrl;
 
-        // If the product already points to this Supabase Storage URL → nothing to do
-        if (currentImage && publicUrl && currentImage === publicUrl) {
+        // Already stored and product points to it — nothing to do
+        if (currentUrl && publicUrl && currentUrl === publicUrl) {
             return publicUrl;
         }
 
-        // Download the image from OSFam
         const res = await fetch(`${OSFAM_URL}/${imgPath}`);
         if (!res.ok) return null;
         const buffer = await res.arrayBuffer();
 
-        // Determine content type
         const contentType = ext === '.png' ? 'image/png'
             : ext === '.gif' ? 'image/gif'
             : 'image/jpeg';
 
-        // Upload to Supabase Storage (upsert: false → skip if already exists)
         const { error: uploadErr } = await supabase.storage
             .from(STORAGE_BUCKET)
-            .upload(storagePath, Buffer.from(buffer), {
-                contentType,
-                upsert: false,
-            });
+            .upload(storagePath, Buffer.from(buffer), { contentType, upsert: false });
 
-        if (uploadErr) {
-            // "already exists" is fine — we still return the public URL
-            if (!uploadErr.message.toLowerCase().includes('already exist')) {
-                console.warn(`[sync-stock] Upload failed for ${assetCode}:`, uploadErr.message);
-                return null;
-            }
+        if (uploadErr && !uploadErr.message.toLowerCase().includes('already exist')) {
+            console.warn(`[sync-stock] Upload failed for ${storageKey}:`, uploadErr.message);
+            return null;
         }
 
         return publicUrl || null;
     } catch (err) {
-        console.warn(`[sync-stock] Image error for ${assetCode}:`, err.message);
+        console.warn(`[sync-stock] Image error for ${storageKey}:`, err.message);
         return null;
     }
 }
 
 export async function POST() {
     try {
-        // Ensure the storage bucket exists before uploading
         await ensureBucket();
 
-        // Fetch OSFam asset map
-        const assetMap = await fetchOsfamAssets();
+        // Login once and reuse the session for all subsequent requests
+        const { assetMap, cookieHeader } = await fetchOsfamAssets();
 
         // Get all Pico products
         const { data: products, error: fetchErr } = await supabase
@@ -177,7 +190,6 @@ export async function POST() {
             .select('id, name, stock, image, gallery');
         if (fetchErr) throw fetchErr;
 
-        // Match products and plan updates
         const toUpdate = [];
         const skipped = [];
 
@@ -188,23 +200,24 @@ export async function POST() {
                 continue;
             }
 
-            const { available: newStock, imgPath, imgPaths = [] } = assetMap[code];
+            const { available: newStock, imgPath, assetId } = assetMap[code];
 
-            // Upload primary image to Supabase Storage (skips if already there)
+            // Upload primary image
             let newImage = product.image;
             if (imgPath) {
                 const uploaded = await uploadImageToSupabase(imgPath, code, product.image);
                 if (uploaded) newImage = uploaded;
             }
 
-            // Upload all gallery images and collect their public URLs
+            // Fetch the real gallery from asset-images.php and upload each image
+            const galleryPaths = await fetchAssetGalleryPaths(assetId, cookieHeader);
             const galleryUrls = [];
-            for (let i = 0; i < imgPaths.length; i++) {
-                const gPath = imgPaths[i];
-                const extMatch = gPath.match(/\.[^.]+$/);
-                const ext = extMatch ? extMatch[0].toLowerCase() : '.jpg';
-                const galCode = i === 0 ? code : `${code}_${i}`;
-                const uploaded = await uploadImageToSupabase(gPath, galCode, null);
+            for (let i = 0; i < galleryPaths.length; i++) {
+                const gPath = galleryPaths[i];
+                // Use a stable key based on asset code + index so reruns skip re-uploads
+                const fileBasename = gPath.split('/').pop().replace(/\.[^.]+$/, '');
+                const storageKey = `${code}_gallery_${fileBasename}`;
+                const uploaded = await uploadImageToSupabase(gPath, storageKey, null);
                 if (uploaded) galleryUrls.push(uploaded);
             }
 
@@ -230,7 +243,7 @@ export async function POST() {
             });
         }
 
-        // Apply updates where something changed
+        // Apply updates
         const changed = toUpdate.filter(u => u.changed);
         let updatedCount = 0;
         const errors = [];
