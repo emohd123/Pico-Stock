@@ -74,10 +74,10 @@ async function fetchOsfamAssets() {
     while ((match = rowRegex.exec(html)) !== null) {
         const rawRow = match[1];
 
-        // Image src from raw HTML (before stripping tags)
-        const imgMatch = rawRow.match(/src="(\.\/images\/[^"]+)"/);
-        // e.g. "./images/FGCTBL3.jpg"  →  "images/FGCTBL3.jpg"
-        const imgPath = imgMatch ? imgMatch[1].replace(/^\.\//, '') : null;
+        // All image srcs from this row (gallery support)
+        const imgMatches = [...rawRow.matchAll(/src="(\.\/images\/[^"]+)"/g)];
+        const imgPaths = imgMatches.map(m => m[1].replace(/^\.\//, ''));
+        const imgPath = imgPaths[0] || null;
 
         // Text cells
         const cells = [...rawRow.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map(m =>
@@ -88,7 +88,7 @@ async function fetchOsfamAssets() {
             const assetCode = (cells[2] || '').toUpperCase().trim();
             const available = parseInt(cells[8], 10);
             if (assetCode && !isNaN(available)) {
-                assetMap[assetCode] = { available, imgPath };
+                assetMap[assetCode] = { available, imgPath, imgPaths };
             }
         }
     }
@@ -174,7 +174,7 @@ export async function POST() {
         // Get all Pico products
         const { data: products, error: fetchErr } = await supabase
             .from('products')
-            .select('id, name, stock, image');
+            .select('id, name, stock, image, gallery');
         if (fetchErr) throw fetchErr;
 
         // Match products and plan updates
@@ -188,17 +188,31 @@ export async function POST() {
                 continue;
             }
 
-            const { available: newStock, imgPath } = assetMap[code];
+            const { available: newStock, imgPath, imgPaths = [] } = assetMap[code];
 
-            // Upload image to Supabase Storage (skips if already there)
+            // Upload primary image to Supabase Storage (skips if already there)
             let newImage = product.image;
             if (imgPath) {
                 const uploaded = await uploadImageToSupabase(imgPath, code, product.image);
                 if (uploaded) newImage = uploaded;
             }
 
+            // Upload all gallery images and collect their public URLs
+            const galleryUrls = [];
+            for (let i = 0; i < imgPaths.length; i++) {
+                const gPath = imgPaths[i];
+                const extMatch = gPath.match(/\.[^.]+$/);
+                const ext = extMatch ? extMatch[0].toLowerCase() : '.jpg';
+                const galCode = i === 0 ? code : `${code}_${i}`;
+                const uploaded = await uploadImageToSupabase(gPath, galCode, null);
+                if (uploaded) galleryUrls.push(uploaded);
+            }
+
+            const currentGallery = Array.isArray(product.gallery) ? product.gallery : [];
             const stockChanged = newStock !== product.stock;
             const imageChanged = newImage !== product.image;
+            const galleryChanged = galleryUrls.length > 0 &&
+                JSON.stringify(galleryUrls) !== JSON.stringify(currentGallery);
 
             toUpdate.push({
                 id: product.id,
@@ -210,7 +224,9 @@ export async function POST() {
                 oldImage: product.image,
                 newImage,
                 imageChanged,
-                changed: stockChanged || imageChanged,
+                newGallery: galleryUrls,
+                galleryChanged,
+                changed: stockChanged || imageChanged || galleryChanged,
             });
         }
 
@@ -228,6 +244,9 @@ export async function POST() {
             if (u.imageChanged) {
                 updatePayload.image = u.newImage;
             }
+            if (u.galleryChanged) {
+                updatePayload.gallery = u.newGallery;
+            }
 
             const { error } = await supabase
                 .from('products')
@@ -240,6 +259,7 @@ export async function POST() {
 
         const stockUpdates = changed.filter(u => u.stockChanged).length;
         const imageUpdates = changed.filter(u => u.imageChanged).length;
+        const galleryUpdates = changed.filter(u => u.galleryChanged).length;
 
         return NextResponse.json({
             success: true,
@@ -250,6 +270,7 @@ export async function POST() {
             updated: updatedCount,
             stockUpdates,
             imageUpdates,
+            galleryUpdates,
             errors,
             details: toUpdate,
         });

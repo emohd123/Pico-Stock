@@ -136,6 +136,10 @@ function AddToCartModal({ product, onClose, onConfirm }) {
 
 function ProductModal({ product, onClose, onAddToCart }) {
     const [showAddModal, setShowAddModal] = useState(false);
+    const gallery = Array.isArray(product.gallery) && product.gallery.length > 0
+        ? product.gallery
+        : (product.image ? [product.image] : []);
+    const [activeImg, setActiveImg] = useState(gallery[0] || product.image);
     const effectiveStock = product.availableStock ?? product.stock;
     const isOutOfStock = effectiveStock === 0 || product.inStock === false;
     const cleanName = extractCleanName(product.name);
@@ -149,7 +153,7 @@ function ProductModal({ product, onClose, onAddToCart }) {
 
                     <div className="modal-image-wrap">
                         <img
-                            src={product.image}
+                            src={activeImg}
                             alt={cleanName}
                             className="modal-image"
                             onError={(event) => {
@@ -158,6 +162,47 @@ function ProductModal({ product, onClose, onAddToCart }) {
                             }}
                         />
                     </div>
+
+                    {gallery.length > 1 && (
+                        <div style={{
+                            display: 'flex',
+                            gap: '6px',
+                            padding: '8px 16px',
+                            overflowX: 'auto',
+                            background: 'var(--bg-glass)',
+                            borderBottom: '1px solid var(--border-subtle)',
+                        }}>
+                            {gallery.map((url, i) => (
+                                <button
+                                    key={i}
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); setActiveImg(url); }}
+                                    style={{
+                                        padding: 0,
+                                        border: url === activeImg
+                                            ? '2px solid var(--pico-teal)'
+                                            : '2px solid transparent',
+                                        borderRadius: '5px',
+                                        background: 'transparent',
+                                        cursor: 'pointer',
+                                        flexShrink: 0,
+                                    }}
+                                >
+                                    <img
+                                        src={url}
+                                        alt=""
+                                        style={{
+                                            width: '48px',
+                                            height: '38px',
+                                            objectFit: 'cover',
+                                            borderRadius: '4px',
+                                            display: 'block',
+                                        }}
+                                    />
+                                </button>
+                            ))}
+                        </div>
+                    )}
 
                     <div className="modal-body">
                         <div className="modal-header-row">

@@ -637,6 +637,7 @@ export default function AdminDashboard() {
                                     <span>🔗 Matched: <strong>{syncResult.matched}</strong></span>
                                     <span>📊 Stock updated: <strong>{syncResult.stockUpdates ?? syncResult.changed}</strong></span>
                                     <span>🖼️ Images updated: <strong>{syncResult.imageUpdates ?? 0}</strong></span>
+                                    <span>🗂️ Galleries updated: <strong>{syncResult.galleryUpdates ?? 0}</strong></span>
                                     <span>✅ Total: <strong>{syncResult.updated}</strong></span>
                                     <button
                                         style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
@@ -659,6 +660,7 @@ export default function AdminDashboard() {
                                             </label>
                                         </th>
                                         <th>Image</th>
+                                        <th>Asset Gallery</th>
                                         <th>Product</th>
                                         <th>Details</th>
                                         <th>Category</th>
@@ -696,6 +698,35 @@ export default function AdminDashboard() {
                                                         borderRadius: '6px', background: 'var(--bg-glass)'
                                                     }} />
                                                 </button>
+                                            </td>
+                                            <td data-label="Asset Gallery">
+                                                {Array.isArray(product.gallery) && product.gallery.length > 0 ? (
+                                                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', maxWidth: '120px' }}>
+                                                        {product.gallery.slice(0, 4).map((url, i) => (
+                                                            <img
+                                                                key={i}
+                                                                src={url}
+                                                                alt=""
+                                                                style={{
+                                                                    width: '30px',
+                                                                    height: '24px',
+                                                                    objectFit: 'cover',
+                                                                    borderRadius: '4px',
+                                                                    border: '1px solid var(--border-subtle)',
+                                                                    cursor: 'pointer',
+                                                                }}
+                                                                onClick={() => setPreviewProduct({ ...product, image: url })}
+                                                            />
+                                                        ))}
+                                                        {product.gallery.length > 4 && (
+                                                            <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', alignSelf: 'center' }}>
+                                                                +{product.gallery.length - 4}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>—</span>
+                                                )}
                                             </td>
                                             <td data-label="Product">
                                                 {(() => {

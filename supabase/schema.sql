@@ -17,11 +17,15 @@ CREATE TABLE IF NOT EXISTS products (
     price       NUMERIC     NOT NULL DEFAULT 0,
     currency    TEXT        NOT NULL DEFAULT 'BHD',
     image       TEXT        NOT NULL DEFAULT '/products/table.svg',
+    gallery     JSONB       NOT NULL DEFAULT '[]'::jsonb,
     stock       INTEGER,
     in_stock    BOOLEAN     NOT NULL DEFAULT true,
     featured    BOOLEAN     NOT NULL DEFAULT false,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Run this if the table already exists:
+-- ALTER TABLE products ADD COLUMN IF NOT EXISTS gallery JSONB NOT NULL DEFAULT '[]'::jsonb;
 
 CREATE INDEX IF NOT EXISTS products_category_idx ON products (category);
 
