@@ -490,6 +490,13 @@ export default function AdminDashboard() {
                         Stand Design
                     </Link>
                     <Link
+                        href="/admin/grid-measure"
+                        className="admin-sidebar-item"
+                        style={{ display: 'block', textDecoration: 'none' }}
+                    >
+                        Grid Measure
+                    </Link>
+                    <Link
                         href="/admin/quotations"
                         className="admin-sidebar-item"
                         style={{ display: 'block', textDecoration: 'none' }}

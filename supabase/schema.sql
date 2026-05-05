@@ -224,6 +224,24 @@ CREATE TABLE IF NOT EXISTS stand_designs (
 CREATE INDEX IF NOT EXISTS stand_designs_updated_at_idx ON stand_designs (updated_at DESC);
 
 -- ============================================================
+-- GRID MEASURE PROJECTS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS grid_measure_projects (
+    id          TEXT        PRIMARY KEY,
+    name        TEXT        NOT NULL,
+    image       JSONB,
+    grid        JSONB       NOT NULL DEFAULT '{}'::jsonb,
+    view        JSONB       NOT NULL DEFAULT '{}'::jsonb,
+    groups      JSONB       NOT NULL DEFAULT '[]'::jsonb,
+    checklist   JSONB       NOT NULL DEFAULT '[]'::jsonb,
+    scale_mode  TEXT        NOT NULL DEFAULT 'plan',
+    created_at  TIMESTAMPTZ NOT NULL,
+    updated_at  TIMESTAMPTZ NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS grid_measure_projects_updated_at_idx ON grid_measure_projects (updated_at DESC);
+
+-- ============================================================
 -- ROW LEVEL SECURITY
 -- ============================================================
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
@@ -236,6 +254,7 @@ ALTER TABLE news_source_snapshots ENABLE ROW LEVEL SECURITY;
 ALTER TABLE news_automation_runs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE news_automation_actions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE stand_designs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE grid_measure_projects ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "service_role_all_products" ON products FOR ALL TO service_role USING (true) WITH CHECK (true);
 CREATE POLICY "service_role_all_orders" ON orders FOR ALL TO service_role USING (true) WITH CHECK (true);
@@ -247,5 +266,6 @@ CREATE POLICY "service_role_all_news_source_snapshots" ON news_source_snapshots 
 CREATE POLICY "service_role_all_news_automation_runs" ON news_automation_runs FOR ALL TO service_role USING (true) WITH CHECK (true);
 CREATE POLICY "service_role_all_news_automation_actions" ON news_automation_actions FOR ALL TO service_role USING (true) WITH CHECK (true);
 CREATE POLICY "service_role_all_stand_designs" ON stand_designs FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY "service_role_all_grid_measure_projects" ON grid_measure_projects FOR ALL TO service_role USING (true) WITH CHECK (true);
 
 CREATE POLICY "anon_read_products" ON products FOR SELECT TO anon USING (true);
