@@ -250,6 +250,10 @@ function loadImage(src, options = {}) {
     state.cornerClicks = [];
     resetView();
     emptyState.classList.add("hidden");
+    if (options.resetGrid !== false) {
+      inputs.cols.value = 58;
+      inputs.rows.value = 20;
+    }
     if (!autoFitGrid({ updateCounts: true, allowUncertain: true })) {
       setGridPreset({ cols: numberValue(inputs.cols, 58), rows: numberValue(inputs.rows, 20), left: 0, top: 0, right: 0, bottom: 0 });
       if (!outputs.fitStatus.textContent.startsWith("Auto fit uncertain")) {
@@ -1698,6 +1702,23 @@ function detectGridTwoAxis(data, width, height, scale, expectedCols, expectedRow
   };
 }
 
+function normalizeSquareGridCandidate(candidate) {
+  const xSpacing = (candidate.right - candidate.left) / Math.max(1, candidate.cols);
+  const ySpacing = (candidate.bottom - candidate.top) / Math.max(1, candidate.rows);
+  if (!Number.isFinite(xSpacing) || !Number.isFinite(ySpacing) || xSpacing <= 0 || ySpacing <= 0) return candidate;
+  const ratio = ySpacing / xSpacing;
+  if (ratio >= 0.82 && ratio <= 1.22) return candidate;
+
+  const squareRows = Math.max(1, Math.round((candidate.bottom - candidate.top) / xSpacing));
+  if (!Number.isFinite(squareRows) || squareRows === candidate.rows) return candidate;
+  const rowDelta = Math.abs(squareRows - candidate.rows);
+  return {
+    ...candidate,
+    rows: squareRows,
+    squareAdjusted: rowDelta >= 5,
+  };
+}
+
 function detectGridFromImage() {
   if (!state.image) return null;
   const offscreen = document.createElement("canvas");
@@ -1721,10 +1742,12 @@ function detectGridFromImage() {
   const candidates = [
     detectGridTwoAxis(data, width, height, scale, expectedCols, expectedRows),
     ...ranges.map((range) => detectGridWithRange(data, width, height, scale, range, expectedCols, expectedRows)),
-  ].filter(Boolean);
+  ].filter(Boolean).map(normalizeSquareGridCandidate);
   if (!candidates.length) return null;
   candidates.forEach((candidate) => {
-    const countPenalty = (Math.abs(candidate.cols - expectedCols) + Math.abs(candidate.rows - expectedRows)) * 1800;
+    const rowDiff = Math.abs(candidate.rows - expectedRows);
+    const rowPenalty = candidate.squareAdjusted && candidate.rows < expectedRows * 0.6 ? Math.min(rowDiff, 3) : rowDiff;
+    const countPenalty = (Math.abs(candidate.cols - expectedCols) + rowPenalty) * 1800;
     const area = Math.max(1, (candidate.right - candidate.left) * (candidate.bottom - candidate.top));
     const areaBonus = Math.min(area / (state.image.naturalWidth * state.image.naturalHeight), 1) * 1200;
     candidate.fitScore = candidate.score + areaBonus - countPenalty;
@@ -2323,6 +2346,7 @@ window.GridMeasureAPI = {
       loadImage(image.path, {
         label: image.originalName ? `Loaded: ${image.originalName}` : "Loaded saved project",
         imageRecord: image,
+        resetGrid: false,
         afterLoad: () => {
           restoreProjectState(project);
           state.imageRecord = image;
