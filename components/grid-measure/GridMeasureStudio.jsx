@@ -165,9 +165,6 @@ export default function GridMeasureStudio() {
                     padding: 0.65rem 0.8rem;
                 }
                 .grid-measure-shell {
-                    display: grid;
-                    grid-template-columns: minmax(0, 1fr) 240px;
-                    gap: 1rem;
                     min-height: 820px;
                 }
                 .grid-measure-frame-wrap {
@@ -183,15 +180,48 @@ export default function GridMeasureStudio() {
                     height: 880px;
                     border: 0;
                 }
-                .grid-measure-side {
-                    display: grid;
-                    align-content: start;
-                    gap: 0.75rem;
+                .saved-projects-menu {
+                    border: 1px solid var(--border-subtle);
+                    border-radius: var(--radius-md);
+                    background: var(--bg-glass);
+                    overflow: hidden;
+                }
+                .saved-projects-menu summary {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 1rem;
+                    min-height: 42px;
+                    padding: 0.65rem 0.85rem;
+                    cursor: pointer;
+                    color: var(--text-primary);
+                    font-weight: 700;
+                    list-style: none;
+                }
+                .saved-projects-menu summary::-webkit-details-marker {
+                    display: none;
+                }
+                .saved-projects-menu summary::after {
+                    content: '+';
+                    color: var(--text-muted);
+                    font-size: 1.1rem;
+                    font-weight: 400;
+                }
+                .saved-projects-menu[open] summary::after {
+                    content: '-';
+                }
+                .saved-projects-menu summary span {
+                    color: var(--text-muted);
+                    font-size: 0.82rem;
+                    font-weight: 500;
+                }
+                .saved-projects-body {
+                    padding: 0 0.85rem 0.85rem;
                 }
                 .project-list {
                     display: grid;
                     gap: 0.5rem;
-                    max-height: 620px;
+                    max-height: 260px;
                     overflow: auto;
                 }
                 .project-item {
@@ -226,9 +256,6 @@ export default function GridMeasureStudio() {
                     font-size: 0.85rem;
                 }
                 @media (max-width: 1100px) {
-                    .grid-measure-shell {
-                        grid-template-columns: 1fr;
-                    }
                     .grid-measure-frame {
                         height: 820px;
                     }
@@ -258,18 +285,12 @@ export default function GridMeasureStudio() {
 
             <div className="message">{message}</div>
 
-            <div className="grid-measure-shell">
-                <div className="grid-measure-frame-wrap">
-                    <iframe
-                        ref={iframeRef}
-                        className="grid-measure-frame"
-                        title="Grid Measure Tool"
-                        src="/admin/grid-measure/tool"
-                    />
-                </div>
-
-                <aside className="grid-measure-side">
-                    <h2 style={{ margin: 0 }}>Saved Projects</h2>
+            <details className="saved-projects-menu">
+                <summary>
+                    Saved Projects
+                    <span>{loading ? 'Loading...' : projects.length ? `${projects.length} saved` : 'No saved grid measurements yet'}</span>
+                </summary>
+                <div className="saved-projects-body">
                     {loading ? (
                         <div className="message">Loading projects...</div>
                     ) : (
@@ -292,7 +313,18 @@ export default function GridMeasureStudio() {
                             ))}
                         </div>
                     )}
-                </aside>
+                </div>
+            </details>
+
+            <div className="grid-measure-shell">
+                <div className="grid-measure-frame-wrap">
+                    <iframe
+                        ref={iframeRef}
+                        className="grid-measure-frame"
+                        title="Grid Measure Tool"
+                        src="/admin/grid-measure/tool"
+                    />
+                </div>
             </div>
         </div>
     );
