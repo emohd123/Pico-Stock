@@ -61,6 +61,7 @@ const buttons = {
   editShape: document.getElementById("editShapeMode"),
   startCorners: document.getElementById("startCorners"),
   resetCorners: document.getElementById("resetCorners"),
+  groupActions: document.getElementById("groupActionsPanel"),
   newPaint: document.getElementById("newPaintGroup"),
   undo: document.getElementById("undoGroup"),
   clear: document.getElementById("clearSelection"),
@@ -793,6 +794,10 @@ function createPaintGroup() {
   state.selectedGroupId = id;
   state.pendingShapeGroup = false;
   return state.groups.at(-1);
+}
+
+function ensurePaintGroup() {
+  return activePaintGroup() || createPaintGroup();
 }
 
 function preparePendingShapeGroup(mode) {
@@ -2020,7 +2025,10 @@ buttons.rotateLeft.addEventListener("click", () => setRotation(state.view.rotati
 buttons.rotateRight.addEventListener("click", () => setRotation(state.view.rotation + (5 * Math.PI) / 180));
 buttons.rotateReset.addEventListener("click", () => setRotation(0));
 buttons.pan.addEventListener("click", () => setMode("pan"));
-buttons.rect.addEventListener("click", () => setMode("rect"));
+buttons.rect.addEventListener("click", () => {
+  setMode("rect");
+  if (buttons.groupActions) buttons.groupActions.open = true;
+});
 buttons.paint.addEventListener("click", () => setMode("paint"));
 buttons.align.addEventListener("click", () => setMode("align"));
 buttons.corner.addEventListener("click", () => setMode("corner"));
@@ -2030,7 +2038,7 @@ buttons.quad.addEventListener("click", () => {
   if (activePaintGroup()) {
     preparePendingShapeGroup("quad");
   } else {
-    setFitStatus("4pt measure: click Add group, then click object corners TL, TR, BR, BL.");
+    setFitStatus("4pt measure: click object corners TL, TR, BR, BL.");
   }
 });
 buttons.ellipse.addEventListener("click", () => {
@@ -2039,7 +2047,7 @@ buttons.ellipse.addEventListener("click", () => {
   if (activePaintGroup()) {
     preparePendingShapeGroup("ellipse");
   } else {
-    setFitStatus("Ellipse: click Add group, then drag the outside box around the circle.");
+    setFitStatus("Ellipse: drag the outside box around the circle.");
   }
 });
 buttons.curve.addEventListener("click", () => {
@@ -2048,7 +2056,7 @@ buttons.curve.addEventListener("click", () => {
   if (activePaintGroup()) {
     preparePendingShapeGroup("curve");
   } else {
-    setFitStatus("Curve: choose type, click Add group, then drag the curve box.");
+    setFitStatus("Curve: choose type, then drag the curve box.");
   }
 });
 buttons.editShape.addEventListener("click", () => {
@@ -2072,7 +2080,7 @@ buttons.newPaint.addEventListener("click", () => {
   } else {
     setMode(state.mode === "rect" ? "rect" : "paint");
     createPaintGroup();
-    setFitStatus("Group ready. Select grid cells now. Click Add group again for a separate group.");
+    setFitStatus("Group ready. Select grid cells now. Use Group actions > Add group for a separate group.");
   }
   updateOutput();
 });
@@ -2179,13 +2187,9 @@ canvas.addEventListener("pointerdown", (event) => {
   }
 
   if (state.mode === "rect") {
-    const group = activePaintGroup();
-    if (!group) {
-      setFitStatus("Click Add group first, then select grid area.");
-      return;
-    }
     const uv = pointToGridUv(grid, point);
     if (!uv) return;
+    ensurePaintGroup();
     canvas.setPointerCapture(event.pointerId);
     state.dragStart = uv;
     state.previewRect = normalizeUvRect(uv, uv);
@@ -2196,8 +2200,7 @@ canvas.addEventListener("pointerdown", (event) => {
 
   if (state.mode === "ellipse") {
     if (!state.pendingShapeGroup) {
-      setFitStatus("Click Add group first, then draw the ellipse.");
-      return;
+      preparePendingShapeGroup("ellipse");
     }
     const uv = pointToGridUv(grid, point);
     if (!uv) return;
@@ -2211,8 +2214,7 @@ canvas.addEventListener("pointerdown", (event) => {
 
   if (state.mode === "curve") {
     if (!state.pendingShapeGroup) {
-      setFitStatus("Click Add group first, then draw the curve.");
-      return;
+      preparePendingShapeGroup("curve");
     }
     const uv = pointToGridUv(grid, point);
     if (!uv) return;
@@ -2226,15 +2228,14 @@ canvas.addEventListener("pointerdown", (event) => {
 
   if (state.mode === "quad") {
     if (!state.pendingShapeGroup) {
-      setFitStatus("Click Add group first, then click the 4 corners.");
-      return;
+      preparePendingShapeGroup("quad");
     }
     if (!pointToGridUv(grid, point)) return;
     state.quadClicks.push(point);
     if (state.quadClicks.length === 4) {
       addQuadGroup([...state.quadClicks]);
       state.quadClicks = [];
-      setFitStatus("4pt measure added. Click Add group to measure another 4pt shape.");
+      setFitStatus("4pt measure added. Use Group actions > Add group to measure another 4pt shape.");
     }
     draw();
     updateOutput();
@@ -2266,13 +2267,7 @@ canvas.addEventListener("pointerdown", (event) => {
   state.dragStart = state.mode === "align" ? point : cell;
 
   if (state.mode === "paint") {
-    const group = activePaintGroup();
-    if (!group) {
-      setFitStatus("Click Add group first, then paint cells.");
-      if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
-      state.dragStart = null;
-      return;
-    }
+    const group = ensurePaintGroup();
     const key = cellKey(cell);
     state.paintingValue = !group.cells.has(key);
     if (state.paintingValue) group.cells.add(key);
@@ -2354,7 +2349,8 @@ canvas.addEventListener("pointerup", (event) => {
 
   if (state.mode === "rect" && state.previewRect) {
     if (!addRectToActiveGroup(state.previewRect)) {
-      setFitStatus("Click Add group first, then select grid cells.");
+      ensurePaintGroup();
+      addRectToActiveGroup(state.previewRect);
     }
     state.previewRect = null;
   }

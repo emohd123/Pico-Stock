@@ -130,6 +130,44 @@ button:hover {
   gap: 8px;
 }
 
+.tool-menu {
+  border: 1px solid var(--line);
+  background: #12110f;
+}
+
+.tool-menu summary {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  cursor: pointer;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+  list-style: none;
+}
+
+.tool-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.tool-menu summary::after {
+  content: "+";
+  color: var(--muted);
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.tool-menu[open] summary::after {
+  content: "-";
+}
+
+.tool-menu .sample-row {
+  padding: 8px;
+  border-top: 1px solid var(--line);
+}
+
 .upload-panel {
   display: grid;
   grid-template-columns: 1fr auto;

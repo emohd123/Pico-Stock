@@ -37,10 +37,13 @@ export function GET() {
               <button id="alignMode" type="button">Align</button>
               <button id="cornerMode" type="button">Corners</button>
             </div>
-            <div class="sample-row">
-              <button id="newPaintGroup" type="button">Add group</button>
-              <button id="undoGroup" type="button">Undo group</button>
-            </div>
+            <details id="groupActionsPanel" class="tool-menu">
+              <summary>Group actions</summary>
+              <div class="sample-row">
+                <button id="newPaintGroup" type="button">Add group</button>
+                <button id="undoGroup" type="button">Undo group</button>
+              </div>
+            </details>
             <div class="sample-row">
               <button id="quadMeasureMode" type="button">4pt measure</button>
               <button id="ellipseMeasureMode" type="button">Ellipse</button>
