@@ -250,7 +250,7 @@ function loadImage(src, options = {}) {
     state.cornerClicks = [];
     resetView();
     emptyState.classList.add("hidden");
-    if (!autoFitGrid()) {
+    if (!autoFitGrid({ allowUncertain: true })) {
       setGridPreset({ cols: numberValue(inputs.cols, 58), rows: numberValue(inputs.rows, 20), left: 0, top: 0, right: 0, bottom: 0 });
       if (!outputs.fitStatus.textContent.startsWith("Auto fit uncertain")) {
         setFitStatus("Auto fit could not find a grid. Use Set 4 corners.");
@@ -1671,17 +1671,7 @@ function detectGridFromImage() {
   return tooDifferent ? { ...best, uncertain: true } : best;
 }
 
-function autoFitGrid({ updateCounts = false } = {}) {
-  const detected = detectGridFromImage();
-  if (!detected || !state.image) {
-    setFitStatus("Auto fit could not find enough grid lines. Use Align.");
-    return false;
-  }
-  if (detected.uncertain) {
-    setFitStatus(`Auto fit uncertain: detected ${detected.cols} x ${detected.rows}, current scale is ${numberValue(inputs.cols, 0)} x ${numberValue(inputs.rows, 0)}. Use Set 4 corners or adjust rows/columns.`);
-    return false;
-  }
-
+function applyDetectedGrid(detected, { updateCounts = false } = {}) {
   const imgWidth = state.image.naturalWidth;
   const imgHeight = state.image.naturalHeight;
   if (updateCounts) {
@@ -1693,6 +1683,27 @@ function autoFitGrid({ updateCounts = false } = {}) {
   inputs.right.value = (((imgWidth - detected.right) / imgWidth) * 100).toFixed(1);
   inputs.bottom.value = (((imgHeight - detected.bottom) / imgHeight) * 100).toFixed(1);
   setGridCornersFromImageRect(detected.left, detected.top, detected.right, detected.bottom);
+}
+
+function autoFitGrid({ updateCounts = false, allowUncertain = false } = {}) {
+  const detected = detectGridFromImage();
+  if (!detected || !state.image) {
+    setFitStatus("Auto fit could not find enough grid lines. Use Align.");
+    return false;
+  }
+  if (detected.uncertain) {
+    if (allowUncertain) {
+      applyDetectedGrid(detected, { updateCounts: false });
+      setFitStatus(`Auto fit draft: detected ${detected.cols} x ${detected.rows}, keeping current scale ${numberValue(inputs.cols, 0)} x ${numberValue(inputs.rows, 0)}. Use Corners for final accuracy.`);
+      draw();
+      updateOutput();
+      return true;
+    }
+    setFitStatus(`Auto fit uncertain: detected ${detected.cols} x ${detected.rows}, current scale is ${numberValue(inputs.cols, 0)} x ${numberValue(inputs.rows, 0)}. Click Auto fit again with updated rows/columns, or use Corners.`);
+    return false;
+  }
+
+  applyDetectedGrid(detected, { updateCounts });
   const countNote = detected.cols !== numberValue(inputs.cols, detected.cols) || detected.rows !== numberValue(inputs.rows, detected.rows)
     ? `, detected ${detected.cols} x ${detected.rows} lines`
     : "";
@@ -1767,7 +1778,7 @@ buttons.upload.addEventListener("click", () => {
   inputs.image.click();
 });
 
-buttons.autoFit.addEventListener("click", () => autoFitGrid());
+buttons.autoFit.addEventListener("click", () => autoFitGrid({ allowUncertain: true }));
 buttons.planScale.addEventListener("click", () => setScaleMode("plan"));
 buttons.elevScale.addEventListener("click", () => setScaleMode("elevation"));
 buttons.zoomOut.addEventListener("click", () => setZoom(state.view.scale / 1.25));
