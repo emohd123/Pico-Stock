@@ -250,7 +250,7 @@ function loadImage(src, options = {}) {
     state.cornerClicks = [];
     resetView();
     emptyState.classList.add("hidden");
-    if (!autoFitGrid({ allowUncertain: true })) {
+    if (!autoFitGrid({ updateCounts: true, allowUncertain: true })) {
       setGridPreset({ cols: numberValue(inputs.cols, 58), rows: numberValue(inputs.rows, 20), left: 0, top: 0, right: 0, bottom: 0 });
       if (!outputs.fitStatus.textContent.startsWith("Auto fit uncertain")) {
         setFitStatus("Auto fit could not find a grid. Use Set 4 corners.");
@@ -1693,8 +1693,10 @@ function autoFitGrid({ updateCounts = false, allowUncertain = false } = {}) {
   }
   if (detected.uncertain) {
     if (allowUncertain) {
-      applyDetectedGrid(detected, { updateCounts: false });
-      setFitStatus(`Auto fit draft: detected ${detected.cols} x ${detected.rows}, keeping current scale ${numberValue(inputs.cols, 0)} x ${numberValue(inputs.rows, 0)}. Use Corners for final accuracy.`);
+      applyDetectedGrid(detected, { updateCounts });
+      setFitStatus(updateCounts
+        ? `Auto fit: detected image grid ${detected.cols} x ${detected.rows}.`
+        : `Auto fit: grid box aligned to detected ${detected.cols} x ${detected.rows}.`);
       draw();
       updateOutput();
       return true;
@@ -1778,7 +1780,7 @@ buttons.upload.addEventListener("click", () => {
   inputs.image.click();
 });
 
-buttons.autoFit.addEventListener("click", () => autoFitGrid({ allowUncertain: true }));
+buttons.autoFit.addEventListener("click", () => autoFitGrid({ updateCounts: true, allowUncertain: true }));
 buttons.planScale.addEventListener("click", () => setScaleMode("plan"));
 buttons.elevScale.addEventListener("click", () => setScaleMode("elevation"));
 buttons.zoomOut.addEventListener("click", () => setZoom(state.view.scale / 1.25));
