@@ -1755,10 +1755,41 @@ function refineGridLines(lines, scores) {
   return refined.length >= lines.length - 2 ? refined : lines;
 }
 
+// Fit a line series at a fixed spacing by finding the offset that maximises total score.
+function fitLinesAtSpacing(spacing, scores) {
+  if (spacing < 2) return [];
+  let bestOffset = 0, bestVal = -Infinity;
+  const step = Math.max(0.25, spacing / 200);
+  for (let o = 0; o < spacing; o += step) {
+    let val = 0;
+    for (let pos = o; pos < scores.length; pos += spacing) val += localScore(scores, pos);
+    if (val > bestVal) { bestVal = val; bestOffset = o; }
+  }
+  const lines = [];
+  for (let pos = bestOffset; pos < scores.length; pos += spacing) lines.push(pos);
+  return lines;
+}
+
+// When one axis has drifted spacing (≠ the other axis for square cells), re-derive it.
+function enforceSquareCells(xLines, yLines, colScores, rowScores) {
+  const colSpacing = estimateGridSpacing(xLines);
+  const rowSpacing = estimateGridSpacing(yLines);
+  if (!colSpacing || !rowSpacing) return { xLines, yLines };
+  const ratio = rowSpacing / colSpacing;
+  // If spacings agree within 35% the grid is already square-ish — keep both.
+  if (ratio >= 0.65 && ratio <= 1.55) return { xLines, yLines };
+  // Columns are typically more reliable (vertical lines run full image height).
+  // Re-fit rows at column spacing.
+  const refitted = fitLinesAtSpacing(colSpacing, rowScores);
+  if (refitted.length >= 3) return { xLines, yLines: refitted };
+  return { xLines, yLines };
+}
+
 function detectGridWithRange(data, width, height, scale, range, expectedCols, expectedRows) {
   const scan = scoreGridPixels(data, width, height, range);
   let xLines = refineGridLines(filterRegularLines(lineCentersFromScores(scan.colScores, expectedCols + 1), scan.colScores), scan.colScores);
   let yLines = refineGridLines(filterRegularLines(lineCentersFromScores(scan.rowScores, expectedRows + 1), scan.rowScores), scan.rowScores);
+  ({ xLines, yLines } = enforceSquareCells(xLines, yLines, scan.colScores, scan.rowScores));
   if (xLines.length < 4 || yLines.length < 4) return null;
   const score =
     xLines.reduce((sum, line) => sum + localScore(scan.colScores, line), 0) / xLines.length +
@@ -1787,6 +1818,7 @@ function detectGridTwoAxis(data, width, height, scale, expectedCols, expectedRow
   });
   let xLines = refineGridLines(filterRegularLines(lineCentersFromScores(verticalScan.colScores, expectedCols + 1), verticalScan.colScores), verticalScan.colScores);
   let yLines = refineGridLines(filterRegularLines(lineCentersFromScores(horizontalScan.rowScores, expectedRows + 1), horizontalScan.rowScores), horizontalScan.rowScores);
+  ({ xLines, yLines } = enforceSquareCells(xLines, yLines, verticalScan.colScores, horizontalScan.rowScores));
   if (xLines.length < 4 || yLines.length < 4) return null;
   const score =
     xLines.reduce((sum, line) => sum + localScore(verticalScan.colScores, line), 0) / xLines.length +
