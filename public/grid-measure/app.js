@@ -1479,21 +1479,37 @@ function median(values) {
   return sorted[Math.floor(sorted.length / 2)];
 }
 
-function lineCentersFromScores(scores) {
+function lineCentersFromScores(scores, preferredCount = 0) {
   const max = Math.max(...scores);
   if (max <= 0) return [];
-  let runs = groupLineRuns(scores, max * 0.42);
-  if (runs.length < 8) runs = groupLineRuns(scores, max * 0.28);
+  const thresholds = [0.42, 0.28, 0.18, 0.12, 0.08, 0.05];
+  let best = [];
+  let bestScore = -Infinity;
 
-  const centers = runs
-    .filter((run) => run.end - run.start <= 8)
-    .sort((a, b) => a.center - b.center)
-    .map((run) => run.center);
+  thresholds.forEach((threshold) => {
+    const centers = groupLineRuns(scores, max * threshold)
+      .filter((run) => run.end - run.start <= 8)
+      .sort((a, b) => a.center - b.center)
+      .map((run) => run.center);
 
+    if (centers.length < 3) return;
+    const spacing = estimateGridSpacing(centers);
+    const regularDiffs = spacing
+      ? centers.slice(1).map((center, index) => center - centers[index]).filter((diff) => diff >= spacing * 0.72 && diff <= spacing * 1.35).length
+      : 0;
+    const countScore = preferredCount
+      ? -Math.abs(centers.length - preferredCount) * 6 + (centers.length >= preferredCount * 0.85 ? 60 : 0)
+      : centers.length;
+    const score = regularDiffs * 12 + countScore - threshold * 8;
+    if (score > bestScore) {
+      bestScore = score;
+      best = centers;
+    }
+  });
+
+  const centers = best;
   if (centers.length < 3) return centers;
-
-  const diffs = centers.slice(1).map((center, index) => center - centers[index]).filter((diff) => diff > 2);
-  const spacing = median(diffs);
+  const spacing = estimateGridSpacing(centers);
   if (!spacing) return centers;
 
   return centers.filter((center, index) => {
@@ -1521,7 +1537,7 @@ function scoreGridPixels(data, width, height, range) {
       const bright = (r + g + b) / 3;
       const colorSpread = Math.max(r, g, b) - Math.min(r, g, b);
       const neutral = colorSpread < 95;
-      const lineStrength = bright > 90 ? bright - 70 : bright < 42 && neutral ? 42 - bright : 0;
+      const lineStrength = bright > 95 && neutral ? bright - 80 : 0;
       if (lineStrength > 0) {
         colScores[x] += lineStrength;
         rowScores[y] += lineStrength;
@@ -1566,31 +1582,77 @@ function uniformLineSeries(centers, scores) {
   return extended;
 }
 
-function filterRegularLines(lines, scores) {
-  if (lines.length < 4) return lines;
+function estimateGridSpacing(lines) {
+  if (lines.length < 3) return 0;
   const diffs = lines.slice(1).map((value, index) => value - lines[index]).filter((diff) => diff > 3);
-  const base = median(diffs.filter((diff) => diff < median(diffs) * 1.7));
-  if (!base) return lines;
-  const best = [];
-  let current = [lines[0]];
-  for (let index = 1; index < lines.length; index += 1) {
-    const diff = lines[index] - lines[index - 1];
-    if (diff >= base * 0.55 && diff <= base * 1.6) current.push(lines[index]);
-    else {
-      if (current.length > best.length) best.splice(0, best.length, ...current);
-      current = [lines[index]];
-    }
-  }
-  if (current.length > best.length) best.splice(0, best.length, ...current);
-  const kept = best.length >= 4 ? best : lines;
-  const threshold = Math.max(...scores) * 0.05;
-  return uniformLineSeries(kept, scores).filter((line) => localScore(scores, line) >= threshold);
+  if (!diffs.length) return 0;
+  const rough = median(diffs);
+  const regularDiffs = diffs.filter((diff) => diff >= rough * 0.72 && diff <= rough * 1.35);
+  return median(regularDiffs.length ? regularDiffs : diffs);
 }
 
-function detectGridWithRange(data, width, height, scale, range) {
+function fittedLineSeries(lines, scores, spacing) {
+  if (!spacing) return lines;
+  const maxScore = Math.max(...scores);
+  const threshold = maxScore * 0.045;
+  const tolerance = Math.max(3, spacing * 0.18);
+  let best = [];
+  let bestScore = -Infinity;
+
+  lines.forEach((anchor) => {
+    const start = anchor - Math.floor(anchor / spacing) * spacing;
+    const series = [];
+    for (let value = start; value < scores.length; value += spacing) {
+      const score = localScore(scores, value);
+      if (score >= threshold && lines.some((line) => Math.abs(line - value) <= tolerance)) {
+        series.push(value);
+      }
+    }
+    if (series.length < 4) return;
+    const lineScore = series.reduce((sum, line) => sum + localScore(scores, line), 0);
+    const spanScore = series.at(-1) - series[0];
+    const score = series.length * 100000 + spanScore * 8 + lineScore / series.length;
+    if (score > bestScore) {
+      bestScore = score;
+      best = series;
+    }
+  });
+
+  if (best.length < 4) return lines;
+  const first = best[0];
+  const last = best.at(-1);
+  const cleaned = best.filter((line) => localScore(scores, line) >= threshold);
+
+  for (let value = first - spacing; value >= 0; value -= spacing) {
+    if (localScore(scores, value) < threshold) break;
+    cleaned.unshift(value);
+  }
+
+  for (let value = last + spacing; value <= scores.length - 1; value += spacing) {
+    if (localScore(scores, value) < threshold) break;
+    cleaned.push(value);
+  }
+
+  const complete = [];
+  for (let value = cleaned[0]; value <= cleaned.at(-1) + spacing * 0.25; value += spacing) {
+    complete.push(value);
+  }
+  return complete;
+}
+
+function filterRegularLines(lines, scores) {
+  if (lines.length < 4) return lines;
+  const base = estimateGridSpacing(lines);
+  if (!base) return lines;
+  const fitted = fittedLineSeries(lines, scores, base);
+  const threshold = Math.max(...scores) * 0.045;
+  return uniformLineSeries(fitted, scores).filter((line) => localScore(scores, line) >= threshold);
+}
+
+function detectGridWithRange(data, width, height, scale, range, expectedCols, expectedRows) {
   const scan = scoreGridPixels(data, width, height, range);
-  let xLines = filterRegularLines(lineCentersFromScores(scan.colScores), scan.colScores);
-  let yLines = filterRegularLines(lineCentersFromScores(scan.rowScores), scan.rowScores);
+  let xLines = filterRegularLines(lineCentersFromScores(scan.colScores, expectedCols + 1), scan.colScores);
+  let yLines = filterRegularLines(lineCentersFromScores(scan.rowScores, expectedRows + 1), scan.rowScores);
   if (xLines.length < 4 || yLines.length < 4) return null;
   const score =
     xLines.reduce((sum, line) => sum + localScore(scan.colScores, line), 0) / xLines.length +
@@ -1608,7 +1670,7 @@ function detectGridWithRange(data, width, height, scale, range) {
   };
 }
 
-function detectGridTwoAxis(data, width, height, scale) {
+function detectGridTwoAxis(data, width, height, scale, expectedCols, expectedRows) {
   const verticalScan = scoreGridPixels(data, width, height, {
     yStart: height * 0.42,
     yEnd: height * 0.96,
@@ -1617,8 +1679,8 @@ function detectGridTwoAxis(data, width, height, scale) {
     xStart: width * 0.02,
     xEnd: width * 0.98,
   });
-  let xLines = filterRegularLines(lineCentersFromScores(verticalScan.colScores), verticalScan.colScores);
-  let yLines = filterRegularLines(lineCentersFromScores(horizontalScan.rowScores), horizontalScan.rowScores);
+  let xLines = filterRegularLines(lineCentersFromScores(verticalScan.colScores, expectedCols + 1), verticalScan.colScores);
+  let yLines = filterRegularLines(lineCentersFromScores(horizontalScan.rowScores, expectedRows + 1), horizontalScan.rowScores);
   if (xLines.length < 4 || yLines.length < 4) return null;
   const score =
     xLines.reduce((sum, line) => sum + localScore(verticalScan.colScores, line), 0) / xLines.length +
@@ -1654,10 +1716,13 @@ function detectGridFromImage() {
     { xStart: width * 0.02, xEnd: width * 0.98, yStart: height * 0.35, yEnd: height * 0.98 },
     { xStart: width * 0.02, xEnd: width * 0.98, yStart: height * 0.02, yEnd: height * 0.65 },
   ];
-  const candidates = [detectGridTwoAxis(data, width, height, scale), ...ranges.map((range) => detectGridWithRange(data, width, height, scale, range))].filter(Boolean);
-  if (!candidates.length) return null;
   const expectedCols = Math.max(1, Math.round(numberValue(inputs.cols, 58)));
   const expectedRows = Math.max(1, Math.round(numberValue(inputs.rows, 20)));
+  const candidates = [
+    detectGridTwoAxis(data, width, height, scale, expectedCols, expectedRows),
+    ...ranges.map((range) => detectGridWithRange(data, width, height, scale, range, expectedCols, expectedRows)),
+  ].filter(Boolean);
+  if (!candidates.length) return null;
   candidates.forEach((candidate) => {
     const countPenalty = (Math.abs(candidate.cols - expectedCols) + Math.abs(candidate.rows - expectedRows)) * 1800;
     const area = Math.max(1, (candidate.right - candidate.left) * (candidate.bottom - candidate.top));
