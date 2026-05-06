@@ -1531,6 +1531,10 @@ function scoreGridPixels(data, width, height, range) {
   const xEnd = Math.min(width, Math.ceil(range?.xEnd ?? width));
   const yStart = Math.max(0, Math.floor(range?.yStart ?? 0));
   const yEnd = Math.min(height, Math.ceil(range?.yEnd ?? height));
+  // Two contrast distances: d1 catches fine structure, d2 catches broad shapes.
+  // Both must see dark neighbors for a pixel to be treated as a true grid line.
+  // min(contrast_d1, contrast_d2) is high only when the pixel is isolated on both scales.
+  const d1 = 3, d2 = 7;
 
   for (let y = yStart; y < yEnd; y += 1) {
     for (let x = xStart; x < xEnd; x += 1) {
@@ -1541,10 +1545,41 @@ function scoreGridPixels(data, width, height, range) {
       const bright = (r + g + b) / 3;
       const colorSpread = Math.max(r, g, b) - Math.min(r, g, b);
       const neutral = colorSpread < 95;
-      const lineStrength = bright > 95 && neutral ? bright - 80 : 0;
+      // Lower floor (85 vs 95) captures slightly dim/anti-aliased grid lines.
+      const lineStrength = bright > 85 && neutral ? bright - 70 : 0;
       if (lineStrength > 0) {
-        colScores[x] += lineStrength;
-        rowScores[y] += lineStrength;
+        // Horizontal contrast for colScores (vertical line detection).
+        let colWeight = 1;
+        if (x >= d2 && x < width - d2) {
+          const l1 = (y * width + x - d1) * 4, r1 = (y * width + x + d1) * 4;
+          const l2 = (y * width + x - d2) * 4, r2 = (y * width + x + d2) * 4;
+          const hc1 = Math.max(0, bright - Math.max((data[l1] + data[l1 + 1] + data[l1 + 2]) / 3, (data[r1] + data[r1 + 1] + data[r1 + 2]) / 3));
+          const hc2 = Math.max(0, bright - Math.max((data[l2] + data[l2 + 1] + data[l2 + 2]) / 3, (data[r2] + data[r2 + 1] + data[r2 + 2]) / 3));
+          const hContrast = Math.min(hc1, hc2);
+          colWeight = hContrast > 15 ? 2.5 + hContrast / 50 : 0.15;
+        } else if (x >= d1 && x < width - d1) {
+          const l1 = (y * width + x - d1) * 4, r1 = (y * width + x + d1) * 4;
+          const hc1 = Math.max(0, bright - Math.max((data[l1] + data[l1 + 1] + data[l1 + 2]) / 3, (data[r1] + data[r1 + 1] + data[r1 + 2]) / 3));
+          colWeight = hc1 > 15 ? 2.0 : 0.2;
+        }
+
+        // Vertical contrast for rowScores (horizontal line detection).
+        let rowWeight = 1;
+        if (y >= d2 && y < height - d2) {
+          const t1 = ((y - d1) * width + x) * 4, b1 = ((y + d1) * width + x) * 4;
+          const t2 = ((y - d2) * width + x) * 4, b2 = ((y + d2) * width + x) * 4;
+          const vc1 = Math.max(0, bright - Math.max((data[t1] + data[t1 + 1] + data[t1 + 2]) / 3, (data[b1] + data[b1 + 1] + data[b1 + 2]) / 3));
+          const vc2 = Math.max(0, bright - Math.max((data[t2] + data[t2 + 1] + data[t2 + 2]) / 3, (data[b2] + data[b2 + 1] + data[b2 + 2]) / 3));
+          const vContrast = Math.min(vc1, vc2);
+          rowWeight = vContrast > 15 ? 2.5 + vContrast / 50 : 0.15;
+        } else if (y >= d1 && y < height - d1) {
+          const t1 = ((y - d1) * width + x) * 4, b1 = ((y + d1) * width + x) * 4;
+          const vc1 = Math.max(0, bright - Math.max((data[t1] + data[t1 + 1] + data[t1 + 2]) / 3, (data[b1] + data[b1 + 1] + data[b1 + 2]) / 3));
+          rowWeight = vc1 > 15 ? 2.0 : 0.2;
+        }
+
+        colScores[x] += lineStrength * colWeight;
+        rowScores[y] += lineStrength * rowWeight;
       }
     }
   }
@@ -1653,10 +1688,77 @@ function filterRegularLines(lines, scores) {
   return uniformLineSeries(fitted, scores).filter((line) => localScore(scores, line) >= threshold);
 }
 
+// Precision refinement: exhaustive (spacing, offset) search ±18% around the estimated
+// spacing to eliminate accumulated drift, followed by sub-pixel peak snapping per line
+// and outward boundary extension.
+function refineGridLines(lines, scores) {
+  if (lines.length < 4) return lines;
+  const estSpacing = estimateGridSpacing(lines);
+  if (!estSpacing || estSpacing < 4) return lines;
+  const maxScore = Math.max(...scores);
+  if (maxScore <= 0) return lines;
+
+  const minS = estSpacing * 0.82;
+  const maxS = estSpacing * 1.18;
+  let bestS = estSpacing;
+  let bestO = lines[0] % estSpacing;
+  let bestVal = -Infinity;
+
+  // Coarse pass: 0.3px spacing step, 0.6px offset step
+  for (let s = minS; s <= maxS; s += 0.3) {
+    for (let o = 0; o < s; o += 0.6) {
+      let val = 0;
+      for (let x = o; x < scores.length; x += s) val += localScore(scores, x);
+      if (val > bestVal) { bestVal = val; bestS = s; bestO = o; }
+    }
+  }
+
+  // Fine pass: ±0.15px around winner, 0.05px steps
+  const s0 = bestS, o0 = bestO;
+  bestVal = -Infinity;
+  for (let s = s0 - 0.15; s <= s0 + 0.15; s += 0.05) {
+    for (let o = o0 - 0.4; o <= o0 + 0.4; o += 0.08) {
+      const off = ((o % s) + s) % s;
+      let val = 0;
+      for (let x = off; x < scores.length; x += s) val += localScore(scores, x);
+      if (val > bestVal) { bestVal = val; bestS = s; bestO = off; }
+    }
+  }
+
+  const threshold = maxScore * 0.035;
+
+  // Build line series with sub-pixel peak snapping:
+  // for each expected position snap to the highest raw score within ±2px.
+  const refined = [];
+  for (let x = bestO; x < scores.length; x += bestS) {
+    let peakPos = x, peakVal = 0;
+    for (let dx = -2; dx <= 2; dx += 0.5) {
+      const idx = Math.round(x + dx);
+      if (idx >= 0 && idx < scores.length && scores[idx] > peakVal) {
+        peakVal = scores[idx];
+        peakPos = x + dx;
+      }
+    }
+    if (peakVal >= threshold) refined.push(peakPos);
+  }
+
+  // Extend outward along the series beyond the first/last detected position.
+  if (refined.length >= 2) {
+    for (let x = refined[0] - bestS; x >= 0; x -= bestS) {
+      if (localScore(scores, x) >= threshold) refined.unshift(x); else break;
+    }
+    for (let x = refined.at(-1) + bestS; x < scores.length; x += bestS) {
+      if (localScore(scores, x) >= threshold) refined.push(x); else break;
+    }
+  }
+
+  return refined.length >= lines.length - 2 ? refined : lines;
+}
+
 function detectGridWithRange(data, width, height, scale, range, expectedCols, expectedRows) {
   const scan = scoreGridPixels(data, width, height, range);
-  let xLines = filterRegularLines(lineCentersFromScores(scan.colScores, expectedCols + 1), scan.colScores);
-  let yLines = filterRegularLines(lineCentersFromScores(scan.rowScores, expectedRows + 1), scan.rowScores);
+  let xLines = refineGridLines(filterRegularLines(lineCentersFromScores(scan.colScores, expectedCols + 1), scan.colScores), scan.colScores);
+  let yLines = refineGridLines(filterRegularLines(lineCentersFromScores(scan.rowScores, expectedRows + 1), scan.rowScores), scan.rowScores);
   if (xLines.length < 4 || yLines.length < 4) return null;
   const score =
     xLines.reduce((sum, line) => sum + localScore(scan.colScores, line), 0) / xLines.length +
@@ -1683,8 +1785,8 @@ function detectGridTwoAxis(data, width, height, scale, expectedCols, expectedRow
     xStart: width * 0.02,
     xEnd: width * 0.98,
   });
-  let xLines = filterRegularLines(lineCentersFromScores(verticalScan.colScores, expectedCols + 1), verticalScan.colScores);
-  let yLines = filterRegularLines(lineCentersFromScores(horizontalScan.rowScores, expectedRows + 1), horizontalScan.rowScores);
+  let xLines = refineGridLines(filterRegularLines(lineCentersFromScores(verticalScan.colScores, expectedCols + 1), verticalScan.colScores), verticalScan.colScores);
+  let yLines = refineGridLines(filterRegularLines(lineCentersFromScores(horizontalScan.rowScores, expectedRows + 1), horizontalScan.rowScores), horizontalScan.rowScores);
   if (xLines.length < 4 || yLines.length < 4) return null;
   const score =
     xLines.reduce((sum, line) => sum + localScore(verticalScan.colScores, line), 0) / xLines.length +
@@ -1719,6 +1821,11 @@ function detectGridFromImage() {
     { xStart: width * 0.02, xEnd: width * 0.98, yStart: height * 0.18, yEnd: height * 0.92 },
     { xStart: width * 0.02, xEnd: width * 0.98, yStart: height * 0.35, yEnd: height * 0.98 },
     { xStart: width * 0.02, xEnd: width * 0.98, yStart: height * 0.02, yEnd: height * 0.65 },
+    // Extra bands to improve coverage for off-centre and tightly-cropped grids.
+    { xStart: width * 0.05, xEnd: width * 0.95, yStart: height * 0.10, yEnd: height * 0.90 },
+    { xStart: width * 0.10, xEnd: width * 0.90, yStart: height * 0.05, yEnd: height * 0.95 },
+    { xStart: width * 0.02, xEnd: width * 0.98, yStart: height * 0.25, yEnd: height * 0.75 },
+    { xStart: width * 0.15, xEnd: width * 0.85, yStart: height * 0.02, yEnd: height * 0.98 },
   ];
   const expectedCols = Math.max(1, Math.round(numberValue(inputs.cols, 58)));
   const expectedRows = Math.max(1, Math.round(numberValue(inputs.rows, 20)));
@@ -1728,7 +1835,7 @@ function detectGridFromImage() {
   ].filter(Boolean);
   if (!candidates.length) return null;
   candidates.forEach((candidate) => {
-    const countPenalty = (Math.abs(candidate.cols - expectedCols) + Math.abs(candidate.rows - expectedRows)) * 1800;
+    const countPenalty = (Math.abs(candidate.cols - expectedCols) + Math.abs(candidate.rows - expectedRows)) * 1000;
     const area = Math.max(1, (candidate.right - candidate.left) * (candidate.bottom - candidate.top));
     const areaBonus = Math.min(area / (state.image.naturalWidth * state.image.naturalHeight), 1) * 1200;
     candidate.fitScore = candidate.score + areaBonus - countPenalty;
