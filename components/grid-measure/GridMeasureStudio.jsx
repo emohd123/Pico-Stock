@@ -132,7 +132,8 @@ export default function GridMeasureStudio() {
                 .grid-measure-admin {
                     display: grid;
                     gap: 1rem;
-                    min-height: calc(100vh - 3rem);
+                    min-height: calc(100vh - 1rem);
+                    margin-inline: -0.75rem;
                 }
                 .grid-measure-header {
                     display: flex;
@@ -165,21 +166,21 @@ export default function GridMeasureStudio() {
                 }
                 .grid-measure-shell {
                     display: grid;
-                    grid-template-columns: minmax(0, 1fr) 280px;
+                    grid-template-columns: minmax(0, 1fr) 240px;
                     gap: 1rem;
-                    min-height: 720px;
+                    min-height: 820px;
                 }
                 .grid-measure-frame-wrap {
                     overflow: hidden;
                     border: 1px solid var(--border-subtle);
                     border-radius: var(--radius-lg);
                     background: #050505;
-                    min-height: 720px;
+                    min-height: 820px;
                 }
                 .grid-measure-frame {
                     display: block;
                     width: 100%;
-                    height: 780px;
+                    height: 880px;
                     border: 0;
                 }
                 .grid-measure-side {
@@ -229,7 +230,7 @@ export default function GridMeasureStudio() {
                         grid-template-columns: 1fr;
                     }
                     .grid-measure-frame {
-                        height: 760px;
+                        height: 820px;
                     }
                 }
             `}</style>

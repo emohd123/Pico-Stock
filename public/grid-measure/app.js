@@ -194,6 +194,23 @@ function resetView() {
   updateZoomOutput();
 }
 
+function fitViewToGrid(padding = 28) {
+  const grid = gridBounds();
+  if (!grid || grid.width <= 0 || grid.height <= 0) return;
+  const rect = canvas.getBoundingClientRect();
+  const availableWidth = Math.max(1, rect.width - padding * 2);
+  const availableHeight = Math.max(1, rect.height - padding * 2);
+  const scale = clamp(Math.min(availableWidth / grid.width, availableHeight / grid.height), 0.25, 8);
+  const centerX = rect.width / 2;
+  const centerY = rect.height / 2;
+  const gridCenterX = grid.x + grid.width / 2;
+  const gridCenterY = grid.y + grid.height / 2;
+  state.view.scale = scale;
+  state.view.offsetX = -(gridCenterX - centerX) * scale;
+  state.view.offsetY = -(gridCenterY - centerY) * scale;
+  updateZoomOutput();
+}
+
 function setZoom(nextScale, anchor = null) {
   const scale = clamp(nextScale, 0.25, 8);
   const screen = anchor || {
@@ -1867,7 +1884,7 @@ function detectGridFromImage() {
   ].filter(Boolean);
   if (!candidates.length) return null;
   candidates.forEach((candidate) => {
-    const countPenalty = (Math.abs(candidate.cols - expectedCols) + Math.abs(candidate.rows - expectedRows)) * 1000;
+    const countPenalty = (Math.abs(candidate.cols - expectedCols) + Math.abs(candidate.rows - expectedRows)) * 16000;
     const area = Math.max(1, (candidate.right - candidate.left) * (candidate.bottom - candidate.top));
     const areaBonus = Math.min(area / (state.image.naturalWidth * state.image.naturalHeight), 1) * 1200;
     candidate.fitScore = candidate.score + areaBonus - countPenalty;
@@ -1905,6 +1922,7 @@ function autoFitGrid({ updateCounts = false, allowUncertain = false } = {}) {
       setFitStatus(updateCounts
         ? `Auto fit: detected image grid ${detected.cols} x ${detected.rows}.`
         : `Auto fit: grid box aligned to detected ${detected.cols} x ${detected.rows}.`);
+      fitViewToGrid();
       draw();
       updateOutput();
       return true;
@@ -1918,6 +1936,7 @@ function autoFitGrid({ updateCounts = false, allowUncertain = false } = {}) {
     ? `, detected ${detected.cols} x ${detected.rows} lines`
     : "";
   setFitStatus(updateCounts ? `Auto fit: ${detected.cols} x ${detected.rows} grid` : `Auto fit: grid box aligned${countNote}`);
+  fitViewToGrid();
   draw();
   updateOutput();
   return true;
