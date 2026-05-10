@@ -1858,6 +1858,75 @@ function detectGridTwoAxis(data, width, height, scale, expectedCols, expectedRow
   };
 }
 
+function mergePersistentScores(primaryScores, secondaryScores, supportWeight = 0.18) {
+  return primaryScores.map((score, index) => {
+    const secondary = secondaryScores[index] || 0;
+    return Math.min(score, secondary) + Math.max(score, secondary) * supportWeight;
+  });
+}
+
+function detectGridTopAndSides(data, width, height, scale, expectedCols, expectedRows) {
+  const topScan = scoreGridPixels(data, width, height, {
+    yStart: height * 0.10,
+    yEnd: height * 0.34,
+  });
+  const leftScan = scoreGridPixels(data, width, height, {
+    xStart: width * 0.02,
+    xEnd: width * 0.24,
+  });
+  const rightScan = scoreGridPixels(data, width, height, {
+    xStart: width * 0.76,
+    xEnd: width * 0.98,
+  });
+
+  const colScores = topScan.colScores;
+  const rowScores = mergePersistentScores(leftScan.rowScores, rightScan.rowScores);
+  let xLines = refineGridLines(filterRegularLines(lineCentersFromScores(colScores, expectedCols + 1), colScores), colScores);
+  let yLines = refineGridLines(filterRegularLines(lineCentersFromScores(rowScores, expectedRows + 1), rowScores), rowScores);
+  ({ xLines, yLines } = enforceSquareCells(xLines, yLines, colScores, rowScores));
+  if (xLines.length < 4 || yLines.length < 4) return null;
+  const score =
+    xLines.reduce((sum, line) => sum + localScore(colScores, line), 0) / xLines.length +
+    yLines.reduce((sum, line) => sum + localScore(rowScores, line), 0) / yLines.length +
+    Math.min(xLines.length, 80) * 150 +
+    Math.min(yLines.length, 60) * 150;
+  return {
+    left: xLines[0] / scale,
+    right: xLines.at(-1) / scale,
+    top: yLines[0] / scale,
+    bottom: yLines.at(-1) / scale,
+    cols: Math.max(1, xLines.length - 1),
+    rows: Math.max(1, yLines.length - 1),
+    score,
+  };
+}
+
+function analyzeDetectedGrid(candidate, expectedCols, expectedRows) {
+  const width = Math.max(1, candidate.right - candidate.left);
+  const height = Math.max(1, candidate.bottom - candidate.top);
+  const cellWidth = width / Math.max(1, candidate.cols);
+  const cellHeight = height / Math.max(1, candidate.rows);
+  const minCellPixels = Math.min(cellWidth, cellHeight);
+  const maxCellPixels = Math.max(cellWidth, cellHeight);
+  const squareRatio = maxCellPixels / Math.max(1, minCellPixels);
+  const countDiff = Math.abs(candidate.cols - expectedCols) + Math.abs(candidate.rows - expectedRows);
+  const denseThreshold = Math.max(8, Math.min(state.image.naturalWidth, state.image.naturalHeight) / 140);
+  const suspiciouslyDense = minCellPixels < denseThreshold;
+  const distortedCells = squareRatio > 1.45;
+  const wildlyDifferentCounts = countDiff > Math.max(4, Math.min(expectedCols, expectedRows) * 0.25);
+  return {
+    ...candidate,
+    cellWidth,
+    cellHeight,
+    minCellPixels,
+    squareRatio,
+    countDiff,
+    suspiciouslyDense,
+    distortedCells,
+    uncertain: suspiciouslyDense || distortedCells || wildlyDifferentCounts,
+  };
+}
+
 function detectGridFromImage() {
   if (!state.image) return null;
   const offscreen = document.createElement("canvas");
@@ -1884,21 +1953,21 @@ function detectGridFromImage() {
   const expectedCols = Math.max(1, Math.round(numberValue(inputs.cols, 58)));
   const expectedRows = Math.max(1, Math.round(numberValue(inputs.rows, 20)));
   const candidates = [
+    detectGridTopAndSides(data, width, height, scale, expectedCols, expectedRows),
     detectGridTwoAxis(data, width, height, scale, expectedCols, expectedRows),
     ...ranges.map((range) => detectGridWithRange(data, width, height, scale, range, expectedCols, expectedRows)),
-  ].filter(Boolean);
+  ].filter(Boolean).map((candidate) => analyzeDetectedGrid(candidate, expectedCols, expectedRows));
   if (!candidates.length) return null;
   candidates.forEach((candidate) => {
-    const countPenalty = (Math.abs(candidate.cols - expectedCols) + Math.abs(candidate.rows - expectedRows)) * 16000;
+    const countPenalty = candidate.countDiff * 16000;
     const area = Math.max(1, (candidate.right - candidate.left) * (candidate.bottom - candidate.top));
     const areaBonus = Math.min(area / (state.image.naturalWidth * state.image.naturalHeight), 1) * 1200;
-    candidate.fitScore = candidate.score + areaBonus - countPenalty;
+    const squarePenalty = candidate.distortedCells ? (candidate.squareRatio - 1.45) * 9000 : 0;
+    const densityPenalty = candidate.suspiciouslyDense ? (Math.max(0, 12 - candidate.minCellPixels) * 12000) : 0;
+    candidate.fitScore = candidate.score + areaBonus - countPenalty - squarePenalty - densityPenalty;
   });
   candidates.sort((a, b) => b.fitScore - a.fitScore);
-  const best = candidates[0];
-  const countDiff = Math.abs(best.cols - expectedCols) + Math.abs(best.rows - expectedRows);
-  const tooDifferent = countDiff > Math.max(4, Math.min(expectedCols, expectedRows) * 0.25);
-  return tooDifferent ? { ...best, uncertain: true } : best;
+  return candidates[0];
 }
 
 function applyDetectedGrid(detected, { updateCounts = false } = {}) {
@@ -1921,23 +1990,25 @@ function autoFitGrid({ updateCounts = false, allowUncertain = false } = {}) {
     setFitStatus("Auto fit could not find enough grid lines. Use Align.");
     return false;
   }
+  const currentCols = Math.max(1, Math.round(numberValue(inputs.cols, 58)));
+  const currentRows = Math.max(1, Math.round(numberValue(inputs.rows, 20)));
   if (detected.uncertain) {
     if (allowUncertain) {
-      applyDetectedGrid(detected, { updateCounts });
-      setFitStatus(updateCounts
-        ? `Auto fit: detected image grid ${detected.cols} x ${detected.rows}.`
-        : `Auto fit: grid box aligned to detected ${detected.cols} x ${detected.rows}.`);
+      applyDetectedGrid(detected, { updateCounts: false });
+      setFitStatus(
+        `Auto fit aligned the grid box, but kept the current ${currentCols} x ${currentRows} scale because detection looked uncertain (${detected.cols} x ${detected.rows}). Use Corners if needed.`,
+      );
       fitViewToGrid();
       draw();
       updateOutput();
       return true;
     }
-    setFitStatus(`Auto fit uncertain: detected ${detected.cols} x ${detected.rows}, current scale is ${numberValue(inputs.cols, 0)} x ${numberValue(inputs.rows, 0)}. Click Auto fit again with updated rows/columns, or use Corners.`);
+    setFitStatus(`Auto fit uncertain: detected ${detected.cols} x ${detected.rows}, current scale is ${currentCols} x ${currentRows}. Use Corners or Align.`);
     return false;
   }
 
   applyDetectedGrid(detected, { updateCounts });
-  const countNote = detected.cols !== numberValue(inputs.cols, detected.cols) || detected.rows !== numberValue(inputs.rows, detected.rows)
+  const countNote = detected.cols !== currentCols || detected.rows !== currentRows
     ? `, detected ${detected.cols} x ${detected.rows} lines`
     : "";
   setFitStatus(updateCounts ? `Auto fit: ${detected.cols} x ${detected.rows} grid` : `Auto fit: grid box aligned${countNote}`);
