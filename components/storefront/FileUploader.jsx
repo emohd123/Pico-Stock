@@ -90,6 +90,7 @@ export default function FileUploader({ onFilesChange, files = [] }) {
                                     removeFile(index);
                                 }}
                                 title="Remove"
+                                aria-label="Remove file"
                                 type="button"
                             >
                                 {'\u2715'}
