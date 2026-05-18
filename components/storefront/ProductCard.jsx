@@ -58,7 +58,7 @@ function AddToCartModal({ product, onClose, onConfirm }) {
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-box add-to-cart-modal" onClick={(event) => event.stopPropagation()}>
-                <button className="modal-close" onClick={onClose} type="button">X</button>
+                <button className="modal-close" onClick={onClose} type="button" aria-label="Close modal">X</button>
 
                 <div className="modal-panel">
                     <h3 className="add-modal-title">{cleanName}</h3>
@@ -149,7 +149,7 @@ function ProductModal({ product, onClose, onAddToCart }) {
         <>
             <div className="modal-overlay" onClick={onClose}>
                 <div className="modal-box" onClick={(event) => event.stopPropagation()}>
-                    <button className="modal-close" onClick={onClose} type="button">X</button>
+                    <button className="modal-close" onClick={onClose} type="button" aria-label="Close modal">X</button>
 
                     <div className="modal-image-wrap">
                         <img

@@ -134,7 +134,7 @@ function Modal({ title, onClose, children }) {
       <div className="sd-modal" onClick={(e) => e.stopPropagation()}>
         <div className="sd-modal-header">
           <strong>{title}</strong>
-          <button type="button" className="sd-modal-close" onClick={onClose}>✕</button>
+          <button type="button" className="sd-modal-close" onClick={onClose} aria-label="Close modal">✕</button>
         </div>
         <div className="sd-modal-body">{children}</div>
       </div>
