@@ -2223,7 +2223,12 @@ buttons.rect.addEventListener("click", () => {
 });
 buttons.paint.addEventListener("click", () => setMode("paint"));
 buttons.align.addEventListener("click", () => setMode("align"));
-buttons.corner.addEventListener("click", () => setMode("corner"));
+buttons.corner.addEventListener("click", () => {
+  state.cornerClicks = [];
+  state.gridCorners = null;
+  setMode("corner");
+  setFitStatus("Corner calibration: click TL, TR, BR, BL of the 1m grid.");
+});
 buttons.quad.addEventListener("click", () => {
   state.quadClicks = [];
   setMode("quad");
