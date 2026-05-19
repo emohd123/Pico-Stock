@@ -274,7 +274,7 @@ function loadImage(src, options = {}) {
     }
     if (!autoFitGrid({ updateCounts: true, allowUncertain: true })) {
       setGridPreset({ cols: numberValue(inputs.cols, 58), rows: numberValue(inputs.rows, 20), left: 0, top: 0, right: 0, bottom: 0 });
-      if (!outputs.fitStatus.textContent.startsWith("Auto fit uncertain")) {
+      if (!outputs.fitStatus.textContent.startsWith("Auto fit uncertain") && !outputs.fitStatus.textContent.startsWith("Auto fit rejected")) {
         setFitStatus("Auto fit could not find a grid. Use Set 4 corners.");
       }
     }
@@ -1499,10 +1499,15 @@ function normalizeCornerGridCounts() {
     next.cols = Math.max(1, Math.min(maxCount, Math.round(widthPixels / cellHeight)));
   }
 
+  if (!isPlausibleGridCount(next.cols, next.rows)) return null;
   if (next.cols === cols && next.rows === rows) return null;
   inputs.cols.value = next.cols;
   inputs.rows.value = next.rows;
   return { from: { cols, rows }, to: next, squareRatio };
+}
+
+function isPlausibleGridCount(cols, rows) {
+  return Number.isFinite(cols) && Number.isFinite(rows) && cols >= 8 && rows >= 4 && cols <= 300 && rows <= 200;
 }
 
 function groupLineRuns(scores, threshold) {
@@ -2113,11 +2118,21 @@ function autoFitGrid({ updateCounts = false, allowUncertain = false } = {}) {
   }
   const currentCols = Math.max(1, Math.round(numberValue(inputs.cols, 58)));
   const currentRows = Math.max(1, Math.round(numberValue(inputs.rows, 20)));
+  const detectedCountIsPlausible = isPlausibleGridCount(detected.cols, detected.rows);
+  if (!detectedCountIsPlausible) {
+    setFitStatus(
+      `Auto fit rejected an unsafe ${detected.cols} x ${detected.rows} detection. Keep/enter the real columns and rows, then use Corners for exact calibration.`,
+    );
+    return false;
+  }
   if (detected.uncertain) {
     if (allowUncertain) {
-      applyDetectedGrid(detected, { updateCounts: false });
+      const useDetectedCounts = updateCounts && detectedCountIsPlausible;
+      applyDetectedGrid(detected, { updateCounts: useDetectedCounts });
       setFitStatus(
-        `Auto fit aligned the grid box, but kept the current ${currentCols} x ${currentRows} scale because detection looked uncertain (${detected.cols} x ${detected.rows}). Use Corners if needed.`,
+        useDetectedCounts
+          ? `Auto fit: ${detected.cols} x ${detected.rows} grid. Detection confidence is lower on this image; use Corners if the overlay is not exactly on the 1m grid.`
+          : `Auto fit aligned the grid box, but kept the current ${currentCols} x ${currentRows} scale because detection looked uncertain (${detected.cols} x ${detected.rows}). Enter the real columns/rows and use Corners for exact calibration.`,
       );
       fitViewToGrid();
       draw();
@@ -2182,6 +2197,7 @@ inputs.image.addEventListener("change", async (event) => {
   }
   const url = URL.createObjectURL(file);
   setUploadStatus(`Loading ${file.name}`);
+  setFitStatus("Loading image...");
   setMode("rect");
   let imageRecord = { path: url, originalName: file.name, type: file.type, size: file.size };
   try {
