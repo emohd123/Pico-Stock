@@ -1473,6 +1473,38 @@ function syncCropInputsFromCorners() {
   inputs.bottom.value = (((state.image.naturalHeight - bottom) / state.image.naturalHeight) * 100).toFixed(1);
 }
 
+function distancePixels(a, b) {
+  return Math.hypot(b.x - a.x, b.y - a.y);
+}
+
+function normalizeCornerGridCounts() {
+  if (!state.gridCorners || state.gridCorners.length !== 4) return null;
+  const [tl, tr, br, bl] = state.gridCorners;
+  const widthPixels = (distancePixels(tl, tr) + distancePixels(bl, br)) / 2;
+  const heightPixels = (distancePixels(tl, bl) + distancePixels(tr, br)) / 2;
+  const cols = Math.max(1, Math.round(numberValue(inputs.cols, 58)));
+  const rows = Math.max(1, Math.round(numberValue(inputs.rows, 20)));
+  const cellWidth = widthPixels / cols;
+  const cellHeight = heightPixels / rows;
+  if (!Number.isFinite(cellWidth) || !Number.isFinite(cellHeight) || cellWidth <= 0 || cellHeight <= 0) return null;
+
+  const squareRatio = Math.max(cellWidth, cellHeight) / Math.min(cellWidth, cellHeight);
+  if (squareRatio < 1.28) return null;
+
+  const maxCount = 250;
+  const next = { cols, rows };
+  if (cellWidth > cellHeight) {
+    next.rows = Math.max(1, Math.min(maxCount, Math.round(heightPixels / cellWidth)));
+  } else {
+    next.cols = Math.max(1, Math.min(maxCount, Math.round(widthPixels / cellHeight)));
+  }
+
+  if (next.cols === cols && next.rows === rows) return null;
+  inputs.cols.value = next.cols;
+  inputs.rows.value = next.rows;
+  return { from: { cols, rows }, to: next, squareRatio };
+}
+
 function groupLineRuns(scores, threshold) {
   const runs = [];
   let start = -1;
@@ -1777,6 +1809,40 @@ function refineGridLines(lines, scores) {
   return refined.length >= lines.length - 2 ? refined : lines;
 }
 
+function trimDetectedLines(lines, scores, spacing) {
+  if (!lines.length || !spacing) return lines;
+  const maxScore = Math.max(...scores);
+  const minStrength = maxScore * 0.18;
+  const tolerance = Math.max(4, spacing * 0.28);
+  const collapsed = [];
+  for (const line of lines) {
+    const previous = collapsed.at(-1);
+    if (previous && Math.abs(line - previous) < spacing * 0.45) {
+      if (localScore(scores, line) > localScore(scores, previous)) {
+        collapsed[collapsed.length - 1] = line;
+      }
+    } else {
+      collapsed.push(line);
+    }
+  }
+  const kept = collapsed.filter((line) => localScore(scores, line) >= minStrength);
+  if (kept.length < 4) return lines;
+
+  let bestRun = [];
+  let currentRun = [kept[0]];
+  for (let index = 1; index < kept.length; index += 1) {
+    const diff = kept[index] - kept[index - 1];
+    if (Math.abs(diff - spacing) <= tolerance) {
+      currentRun.push(kept[index]);
+    } else {
+      if (currentRun.length > bestRun.length) bestRun = currentRun;
+      currentRun = [kept[index]];
+    }
+  }
+  if (currentRun.length > bestRun.length) bestRun = currentRun;
+  return bestRun.length >= 4 ? bestRun : kept;
+}
+
 // Fit a line series at a fixed spacing by finding the offset that maximises total score.
 function fitLinesAtSpacing(spacing, scores) {
   if (spacing < 2) return [];
@@ -1790,6 +1856,34 @@ function fitLinesAtSpacing(spacing, scores) {
   const lines = [];
   for (let pos = bestOffset; pos < scores.length; pos += spacing) lines.push(pos);
   return lines;
+}
+
+function dominantSpacingFromScores(scores, { minSpacing = 24, maxSpacing = 160 } = {}) {
+  const usableMax = Math.min(maxSpacing, Math.floor(scores.length / 2));
+  if (usableMax <= minSpacing) return 0;
+  let bestSpacing = 0;
+  let bestScore = -Infinity;
+
+  for (let spacing = minSpacing; spacing <= usableMax; spacing += 1) {
+    let correlation = 0;
+    let samples = 0;
+    for (let index = 0; index + spacing < scores.length; index += 1) {
+      correlation += scores[index] * scores[index + spacing];
+      samples += 1;
+    }
+    if (!samples) continue;
+    const normalized = correlation / samples;
+    const fitted = fitLinesAtSpacing(spacing, scores);
+    if (fitted.length < 4) continue;
+    const lineStrength = fitted.reduce((sum, line) => sum + localScore(scores, line), 0) / fitted.length;
+    const score = normalized + fitted.length * 120 + lineStrength * 8;
+    if (score > bestScore) {
+      bestScore = score;
+      bestSpacing = spacing;
+    }
+  }
+
+  return bestSpacing;
 }
 
 // When one axis has drifted spacing (≠ the other axis for square cells), re-derive it.
@@ -1881,24 +1975,51 @@ function detectGridTopAndSides(data, width, height, scale, expectedCols, expecte
 
   const colScores = topScan.colScores;
   const rowScores = mergePersistentScores(leftScan.rowScores, rightScan.rowScores);
-  let xLines = refineGridLines(filterRegularLines(lineCentersFromScores(colScores, expectedCols + 1), colScores), colScores);
-  let yLines = refineGridLines(filterRegularLines(lineCentersFromScores(rowScores, expectedRows + 1), rowScores), rowScores);
-  ({ xLines, yLines } = enforceSquareCells(xLines, yLines, colScores, rowScores));
-  if (xLines.length < 4 || yLines.length < 4) return null;
-  const score =
-    xLines.reduce((sum, line) => sum + localScore(colScores, line), 0) / xLines.length +
-    yLines.reduce((sum, line) => sum + localScore(rowScores, line), 0) / yLines.length +
-    Math.min(xLines.length, 80) * 150 +
-    Math.min(yLines.length, 60) * 150;
-  return {
-    left: xLines[0] / scale,
-    right: xLines.at(-1) / scale,
-    top: yLines[0] / scale,
-    bottom: yLines.at(-1) / scale,
-    cols: Math.max(1, xLines.length - 1),
-    rows: Math.max(1, yLines.length - 1),
-    score,
-  };
+  const spacingX = dominantSpacingFromScores(colScores, { minSpacing: 16, maxSpacing: 120 });
+  const spacingY = dominantSpacingFromScores(rowScores, { minSpacing: 16, maxSpacing: 120 });
+  const baseSpacings = [spacingX, spacingY]
+    .filter((value) => Number.isFinite(value) && value > 0)
+    .flatMap((value) => [value, value * 2, value * 3])
+    .filter((value) => value >= 24 && value <= 180)
+    .filter((value, index, array) => array.findIndex((candidate) => Math.abs(candidate - value) < 1) === index);
+
+  const rawXLines = refineGridLines(filterRegularLines(lineCentersFromScores(colScores, 0), colScores), colScores);
+  const rawYLines = refineGridLines(filterRegularLines(lineCentersFromScores(rowScores, 0), rowScores), rowScores);
+  const rawXSpacing = estimateGridSpacing(rawXLines);
+  const rawYSpacing = estimateGridSpacing(rawYLines);
+  if (rawXLines.length >= 4 && rawYLines.length >= 4 && rawXSpacing && rawYSpacing) {
+    baseSpacings.push((rawXSpacing + rawYSpacing) / 2);
+  }
+
+  let best = null;
+  for (const spacing of baseSpacings) {
+    let xLines = rawXLines.length >= 4 ? trimDetectedLines(rawXLines, colScores, rawXSpacing || spacing) : refineGridLines(fitLinesAtSpacing(spacing, colScores), colScores);
+    let yLines = rawYLines.length >= 4 ? trimDetectedLines(rawYLines, rowScores, rawYSpacing || spacing) : trimDetectedLines(refineGridLines(fitLinesAtSpacing(spacing, rowScores), rowScores), rowScores, spacing);
+    ({ xLines, yLines } = enforceSquareCells(xLines, yLines, colScores, rowScores));
+    if (xLines.length < 4 || yLines.length < 4) continue;
+    const cols = Math.max(1, xLines.length - 1);
+    const rows = Math.max(1, yLines.length - 1);
+    const maxPlausibleCols = Math.max(8, Math.floor(width / 24));
+    const maxPlausibleRows = Math.max(4, Math.floor(height / 24));
+    if (cols > maxPlausibleCols || rows > maxPlausibleRows) continue;
+    const spacingStrength =
+      xLines.reduce((sum, line) => sum + localScore(colScores, line), 0) / xLines.length +
+      yLines.reduce((sum, line) => sum + localScore(rowScores, line), 0) / yLines.length;
+    const countPenalty = (Math.abs(cols - expectedCols) + Math.abs(rows - expectedRows)) * 12;
+    const harmonicPenalty = spacing < 30 ? 1200 : 0;
+    const score = spacingStrength + Math.min(cols, 80) * 150 + Math.min(rows, 60) * 150 - countPenalty - harmonicPenalty;
+    const candidate = {
+      left: xLines[0] / scale,
+      right: xLines.at(-1) / scale,
+      top: yLines[0] / scale,
+      bottom: yLines.at(-1) / scale,
+      cols,
+      rows,
+      score,
+    };
+    if (!best || candidate.score > best.score) best = candidate;
+  }
+  return best;
 }
 
 function analyzeDetectedGrid(candidate, expectedCols, expectedRows) {
@@ -1910,7 +2031,7 @@ function analyzeDetectedGrid(candidate, expectedCols, expectedRows) {
   const maxCellPixels = Math.max(cellWidth, cellHeight);
   const squareRatio = maxCellPixels / Math.max(1, minCellPixels);
   const countDiff = Math.abs(candidate.cols - expectedCols) + Math.abs(candidate.rows - expectedRows);
-  const denseThreshold = Math.max(8, Math.min(state.image.naturalWidth, state.image.naturalHeight) / 140);
+  const denseThreshold = Math.max(24, Math.min(state.image.naturalWidth, state.image.naturalHeight) / 40);
   const suspiciouslyDense = minCellPixels < denseThreshold;
   const distortedCells = squareRatio > 1.45;
   const wildlyDifferentCounts = countDiff > Math.max(4, Math.min(expectedCols, expectedRows) * 0.25);
@@ -2324,7 +2445,12 @@ canvas.addEventListener("pointerdown", (event) => {
       state.gridCorners = [...state.cornerClicks];
       state.cornerClicks = [];
       syncCropInputsFromCorners();
-      setFitStatus("Corner calibration active");
+      const normalized = normalizeCornerGridCounts();
+      setFitStatus(
+        normalized
+          ? `Corner calibration active. Grid corrected to ${normalized.to.cols} x ${normalized.to.rows} so each cell stays 1m x 1m.`
+          : "Corner calibration active",
+      );
     }
     updateCornerStatus();
     draw();
