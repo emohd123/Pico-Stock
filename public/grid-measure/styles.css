@@ -237,6 +237,15 @@ button:hover {
   font-size: 14px;
 }
 
+.control-group .check-control {
+  grid-template-columns: 1fr auto;
+}
+
+.check-control input {
+  width: auto;
+  min-height: auto;
+}
+
 .control-group input,
 .control-group select,
 #curveTypeInput {
@@ -316,6 +325,32 @@ button.quiet.active {
   min-height: 18px;
   color: var(--muted);
   font-size: 12px;
+}
+
+.confidence-status {
+  grid-column: 1 / -1;
+  min-height: 22px;
+  display: flex;
+  align-items: center;
+  padding: 4px 7px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.confidence-status.high {
+  border-color: rgba(50, 184, 132, 0.7);
+  color: #9ee0c6;
+}
+
+.confidence-status.medium {
+  border-color: rgba(226, 183, 46, 0.72);
+  color: #f2d77d;
+}
+
+.confidence-status.low {
+  border-color: rgba(226, 77, 46, 0.72);
+  color: #ffad9d;
 }
 
 .groups-panel {

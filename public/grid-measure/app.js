@@ -9,6 +9,8 @@ const inputs = {
   cols: document.getElementById("colsInput"),
   rows: document.getElementById("rowsInput"),
   cellSize: document.getElementById("cellSizeInput"),
+  knownDistance: document.getElementById("knownDistanceInput"),
+  lockScale: document.getElementById("lockScaleInput"),
   left: document.getElementById("leftInput"),
   top: document.getElementById("topInput"),
   right: document.getElementById("rightInput"),
@@ -27,6 +29,7 @@ const outputs = {
   wasteArea: document.getElementById("wasteAreaValue"),
   groups: document.getElementById("groupList"),
   fitStatus: document.getElementById("fitStatus"),
+  confidenceStatus: document.getElementById("confidenceStatus"),
   uploadStatus: document.getElementById("uploadStatus"),
   cornerStatus: document.getElementById("cornerStatus"),
   zoomValue: document.getElementById("zoomValue"),
@@ -61,6 +64,10 @@ const buttons = {
   editShape: document.getElementById("editShapeMode"),
   startCorners: document.getElementById("startCorners"),
   resetCorners: document.getElementById("resetCorners"),
+  distance: document.getElementById("distanceMode"),
+  straighten: document.getElementById("straightenMode"),
+  linePicker: document.getElementById("linePickerMode"),
+  unlockScale: document.getElementById("unlockScale"),
   groupActions: document.getElementById("groupActionsPanel"),
   newPaint: document.getElementById("newPaintGroup"),
   undo: document.getElementById("undoGroup"),
@@ -95,7 +102,11 @@ const state = {
   editDrag: null,
   gridCorners: null,
   cornerClicks: [],
+  distanceClicks: [],
+  straightenClicks: [],
+  linePickerClicks: [],
   quadClicks: [],
+  calibrationConfidence: { level: "low", message: "not calibrated" },
   view: {
     scale: 1,
     offsetX: 0,
@@ -252,10 +263,25 @@ function clearGroups() {
   state.editDrag = null;
   state.activePaintGroupId = null;
   state.pendingShapeGroup = false;
+  state.distanceClicks = [];
+  state.straightenClicks = [];
+  state.linePickerClicks = [];
 }
 
 function setUploadStatus(message) {
   outputs.uploadStatus.textContent = message;
+}
+
+function setConfidence(level, message) {
+  state.calibrationConfidence = { level, message };
+  if (!outputs.confidenceStatus) return;
+  outputs.confidenceStatus.classList.remove("high", "medium", "low");
+  outputs.confidenceStatus.classList.add(level);
+  outputs.confidenceStatus.textContent = `Confidence: ${level} - ${message}`;
+}
+
+function isScaleLocked() {
+  return Boolean(inputs.lockScale?.checked);
 }
 
 function loadImage(src, options = {}) {
@@ -268,9 +294,10 @@ function loadImage(src, options = {}) {
     state.cornerClicks = [];
     resetView();
     emptyState.classList.add("hidden");
-    if (options.resetGrid !== false) {
+    if (options.resetGrid !== false && !isScaleLocked()) {
       inputs.cols.value = 58;
       inputs.rows.value = 20;
+      inputs.cellSize.value = 1;
     }
     if (!autoFitGrid({ updateCounts: true, allowUncertain: true })) {
       setGridPreset({ cols: numberValue(inputs.cols, 58), rows: numberValue(inputs.rows, 20), left: 0, top: 0, right: 0, bottom: 0 });
@@ -1269,6 +1296,29 @@ function drawAlignPreview() {
   ctx.restore();
 }
 
+function drawToolMarkers(grid) {
+  const markers = [];
+  state.distanceClicks.forEach((uv, index) => markers.push({ point: gridPoint(grid, uv.u, uv.v), label: `D${index + 1}`, color: "#32b884" }));
+  state.straightenClicks.forEach((point, index) => markers.push({ point, label: `S${index + 1}`, color: "#e2b72e" }));
+  state.linePickerClicks.forEach((point, index) => markers.push({ point: imageToCanvasPoint(point), label: ["L", "R", "T", "B"][index] || String(index + 1), color: "#77a7ff" }));
+
+  if (!markers.length) return;
+  ctx.save();
+  markers.forEach(({ point, label, color }) => {
+    ctx.fillStyle = color;
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "12px Segoe UI, Arial";
+    ctx.fillText(label, point.x + 8, point.y - 8);
+  });
+  ctx.restore();
+}
+
 function drawCornerMarkers() {
   if (!state.image) return;
   const saved = state.gridCorners || [];
@@ -1310,6 +1360,7 @@ function draw() {
   drawGrid(grid);
   drawSelection(grid);
   drawAlignPreview();
+  drawToolMarkers(grid);
   drawCornerMarkers();
   ctx.restore();
 }
@@ -1404,10 +1455,16 @@ function setScaleMode(mode) {
 function setMode(mode) {
   state.mode = mode;
   if (mode !== "quad" && mode !== "ellipse" && mode !== "curve") state.pendingShapeGroup = false;
+  if (mode !== "distance") state.distanceClicks = [];
+  if (mode !== "straighten") state.straightenClicks = [];
+  if (mode !== "line-picker") state.linePickerClicks = [];
   buttons.rect.classList.toggle("active", mode === "rect");
   buttons.paint.classList.toggle("active", mode === "paint");
   buttons.align.classList.toggle("active", mode === "align");
   buttons.corner.classList.toggle("active", mode === "corner");
+  buttons.distance.classList.toggle("active", mode === "distance");
+  buttons.straighten.classList.toggle("active", mode === "straighten");
+  buttons.linePicker.classList.toggle("active", mode === "line-picker");
   buttons.pan.classList.toggle("active", mode === "pan");
   buttons.quad.classList.toggle("active", mode === "quad");
   buttons.ellipse.classList.toggle("active", mode === "ellipse");
@@ -1415,7 +1472,7 @@ function setMode(mode) {
   buttons.editShape.classList.toggle("active", mode === "edit");
   if (mode === "pan") canvas.style.cursor = "grab";
   else if (mode === "edit") canvas.style.cursor = "pointer";
-  else canvas.style.cursor = mode === "align" || mode === "corner" || mode === "quad" || mode === "ellipse" || mode === "curve" ? "copy" : "crosshair";
+  else canvas.style.cursor = mode === "align" || mode === "corner" || mode === "distance" || mode === "straighten" || mode === "line-picker" || mode === "quad" || mode === "ellipse" || mode === "curve" ? "copy" : "crosshair";
   updateCornerStatus();
   draw();
   updateOutput();
@@ -1473,12 +1530,119 @@ function syncCropInputsFromCorners() {
   inputs.bottom.value = (((state.image.naturalHeight - bottom) / state.image.naturalHeight) * 100).toFixed(1);
 }
 
+function isPointInsideImage(point) {
+  if (!state.image) return false;
+  const bounds = imageBounds();
+  return point.x >= bounds.x && point.x <= bounds.x + bounds.width && point.y >= bounds.y && point.y <= bounds.y + bounds.height;
+}
+
+function applyKnownDistanceClick(point, grid) {
+  const uv = pointToGridUv(grid, point);
+  if (!uv) {
+    setFitStatus("📏 Known distance: click two points inside the calibrated grid.");
+    return;
+  }
+  state.distanceClicks.push(uv);
+  if (state.distanceClicks.length === 1) {
+    setFitStatus("📏 Known distance: click the second point.");
+    draw();
+    return;
+  }
+
+  const [first, second] = state.distanceClicks;
+  const cols = Math.max(1, Math.round(numberValue(inputs.cols, 58)));
+  const rows = Math.max(1, Math.round(numberValue(inputs.rows, 20)));
+  const gridDistance = Math.hypot((second.u - first.u) * cols, (second.v - first.v) * rows);
+  const knownMeters = numberValue(inputs.knownDistance, 0);
+  state.distanceClicks = [];
+
+  if (!Number.isFinite(gridDistance) || gridDistance < 0.01 || !Number.isFinite(knownMeters) || knownMeters <= 0) {
+    setFitStatus("📏 Known distance needs a real meter value and two separated points.");
+    setConfidence("low", "known distance calibration incomplete");
+    draw();
+    return;
+  }
+
+  const nextCellSize = knownMeters / gridDistance;
+  inputs.cellSize.value = formatNumber(nextCellSize);
+  inputs.lockScale.checked = true;
+  setFitStatus(`📏 Known distance calibrated: ${formatNumber(knownMeters)}m over ${formatNumber(gridDistance)} grid cells. Scale locked.`);
+  setConfidence("high", `known ${formatNumber(knownMeters)}m distance`);
+  draw();
+  updateOutput();
+}
+
+function applyStraightenClick(point) {
+  if (!isPointInsideImage(point)) {
+    setFitStatus("🧭 Straighten: click two points on the same horizontal grid line.");
+    return;
+  }
+  state.straightenClicks.push(point);
+  if (state.straightenClicks.length === 1) {
+    setFitStatus("🧭 Straighten: click the second point on the same line.");
+    draw();
+    return;
+  }
+
+  const [first, second] = state.straightenClicks;
+  state.straightenClicks = [];
+  const dx = second.x - first.x;
+  const dy = second.y - first.y;
+  if (Math.hypot(dx, dy) < 8) {
+    setFitStatus("🧭 Straighten: points are too close. Pick a longer grid line.");
+    setConfidence("low", "straighten points too close");
+    draw();
+    return;
+  }
+
+  const angle = Math.atan2(dy, dx);
+  setRotation(state.view.rotation - angle);
+  setFitStatus(`🧭 Image straightened by ${formatNumber((angle * 180) / Math.PI)} deg. Run auto fit or corners after straightening.`);
+  setConfidence("medium", "image straightened; confirm grid calibration");
+  updateOutput();
+}
+
+function applyLinePickerClick(point) {
+  if (!isPointInsideImage(point)) {
+    setFitStatus("#️⃣ Grid lines: click inside the image.");
+    return;
+  }
+  state.linePickerClicks.push(canvasToImagePoint(point));
+  const labels = ["right vertical line", "top horizontal line", "bottom horizontal line"];
+  if (state.linePickerClicks.length < 4) {
+    setFitStatus(`#️⃣ Grid lines: click ${labels[state.linePickerClicks.length - 1]}.`);
+    draw();
+    return;
+  }
+
+  const [leftPick, rightPick, topPick, bottomPick] = state.linePickerClicks;
+  state.linePickerClicks = [];
+  const left = Math.min(leftPick.x, rightPick.x);
+  const right = Math.max(leftPick.x, rightPick.x);
+  const top = Math.min(topPick.y, bottomPick.y);
+  const bottom = Math.max(topPick.y, bottomPick.y);
+  if (right - left < 20 || bottom - top < 20) {
+    setFitStatus("#️⃣ Grid lines: selected box is too small. Pick left, right, top, bottom grid boundary lines.");
+    setConfidence("low", "grid line picker box too small");
+    draw();
+    return;
+  }
+
+  setGridCornersFromImageRect(left, top, right, bottom);
+  syncCropInputsFromCorners();
+  setFitStatus("#️⃣ Grid lines applied. Columns/rows stay as entered so every square remains 1m.");
+  setConfidence("high", "grid box picked from real grid lines");
+  draw();
+  updateOutput();
+}
+
 function distancePixels(a, b) {
   return Math.hypot(b.x - a.x, b.y - a.y);
 }
 
 function normalizeCornerGridCounts() {
   if (!state.gridCorners || state.gridCorners.length !== 4) return null;
+  if (isScaleLocked()) return null;
   const [tl, tr, br, bl] = state.gridCorners;
   const widthPixels = (distancePixels(tl, tr) + distancePixels(bl, br)) / 2;
   const heightPixels = (distancePixels(tl, bl) + distancePixels(tr, br)) / 2;
@@ -2114,6 +2278,7 @@ function autoFitGrid({ updateCounts = false, allowUncertain = false } = {}) {
   const detected = detectGridFromImage();
   if (!detected || !state.image) {
     setFitStatus("Auto fit could not find enough grid lines. Use Align.");
+    setConfidence("low", "auto-fit could not find enough grid lines");
     return false;
   }
   const currentCols = Math.max(1, Math.round(numberValue(inputs.cols, 58)));
@@ -2123,31 +2288,42 @@ function autoFitGrid({ updateCounts = false, allowUncertain = false } = {}) {
     setFitStatus(
       `Auto fit rejected an unsafe ${detected.cols} x ${detected.rows} detection. Keep/enter the real columns and rows, then use Corners for exact calibration.`,
     );
+    setConfidence("low", `rejected unsafe ${detected.cols} x ${detected.rows} detection`);
     return false;
   }
   if (detected.uncertain) {
     if (allowUncertain) {
-      const useDetectedCounts = updateCounts && detectedCountIsPlausible;
+      const useDetectedCounts = updateCounts && detectedCountIsPlausible && !isScaleLocked();
       applyDetectedGrid(detected, { updateCounts: useDetectedCounts });
       setFitStatus(
         useDetectedCounts
           ? `Auto fit: ${detected.cols} x ${detected.rows} grid. Detection confidence is lower on this image; use Corners if the overlay is not exactly on the 1m grid.`
           : `Auto fit aligned the grid box, but kept the current ${currentCols} x ${currentRows} scale because detection looked uncertain (${detected.cols} x ${detected.rows}). Enter the real columns/rows and use Corners for exact calibration.`,
       );
+      setConfidence("medium", `detected ${detected.cols} x ${detected.rows}; verify overlay or use calibration tools`);
       fitViewToGrid();
       draw();
       updateOutput();
       return true;
     }
     setFitStatus(`Auto fit uncertain: detected ${detected.cols} x ${detected.rows}, current scale is ${currentCols} x ${currentRows}. Use Corners or Align.`);
+    setConfidence("low", `uncertain ${detected.cols} x ${detected.rows} detection`);
     return false;
   }
 
-  applyDetectedGrid(detected, { updateCounts });
+  const countsWereUpdated = updateCounts && !isScaleLocked();
+  applyDetectedGrid(detected, { updateCounts: countsWereUpdated });
   const countNote = detected.cols !== currentCols || detected.rows !== currentRows
     ? `, detected ${detected.cols} x ${detected.rows} lines`
     : "";
-  setFitStatus(updateCounts ? `Auto fit: ${detected.cols} x ${detected.rows} grid` : `Auto fit: grid box aligned${countNote}`);
+  setFitStatus(
+    isScaleLocked()
+      ? `Auto fit: grid box aligned; locked scale kept ${currentCols} x ${currentRows}.`
+      : countsWereUpdated
+        ? `Auto fit: ${detected.cols} x ${detected.rows} grid`
+        : `Auto fit: grid box aligned${countNote}`,
+  );
+  setConfidence("high", `auto-fit found ${detected.cols} x ${detected.rows} grid`);
   fitViewToGrid();
   draw();
   updateOutput();
@@ -2245,6 +2421,21 @@ buttons.corner.addEventListener("click", () => {
   setMode("corner");
   setFitStatus("Corner calibration: click TL, TR, BR, BL of the 1m grid.");
 });
+buttons.distance.addEventListener("click", () => {
+  state.distanceClicks = [];
+  setMode("distance");
+  setFitStatus("📏 Known distance: enter meters, then click the two ends of that known line.");
+});
+buttons.straighten.addEventListener("click", () => {
+  state.straightenClicks = [];
+  setMode("straighten");
+  setFitStatus("🧭 Straighten: click two points on the same horizontal grid line.");
+});
+buttons.linePicker.addEventListener("click", () => {
+  state.linePickerClicks = [];
+  setMode("line-picker");
+  setFitStatus("#️⃣ Grid lines: click left vertical line, then right, top, bottom.");
+});
 buttons.quad.addEventListener("click", () => {
   state.quadClicks = [];
   setMode("quad");
@@ -2280,12 +2471,18 @@ buttons.startCorners.addEventListener("click", () => {
   state.cornerClicks = [];
   state.gridCorners = null;
   setMode("corner");
+  setFitStatus("🎯 Corner calibration: click TL, TR, BR, BL of the 1m grid.");
 });
 buttons.resetCorners.addEventListener("click", () => {
   state.cornerClicks = [];
   state.gridCorners = null;
   updateCornerStatus();
+  setConfidence("low", "corners reset");
   draw();
+});
+buttons.unlockScale.addEventListener("click", () => {
+  inputs.lockScale.checked = false;
+  setFitStatus("Scale unlocked. Auto fit may update columns and rows.");
 });
 buttons.newPaint.addEventListener("click", () => {
   if (state.mode === "quad" || state.mode === "ellipse" || state.mode === "curve") {
@@ -2358,7 +2555,7 @@ nudgeButtons.bottomDown.addEventListener("click", () => nudgeInput(inputs.bottom
 Object.values(inputs).forEach((input) => {
   if (input.type !== "file" && input.tagName !== "SELECT") {
     input.addEventListener("input", () => {
-      if (input !== inputs.cols && input !== inputs.rows && input !== inputs.cellSize) {
+      if (input !== inputs.cols && input !== inputs.rows && input !== inputs.cellSize && input !== inputs.knownDistance && input !== inputs.lockScale) {
         state.gridCorners = null;
         state.cornerClicks = [];
         updateCornerStatus();
@@ -2457,10 +2654,7 @@ canvas.addEventListener("pointerdown", (event) => {
 
   if (state.mode === "corner") {
     if (!state.image) return;
-    const bounds = imageBounds();
-    const insideImage =
-      point.x >= bounds.x && point.x <= bounds.x + bounds.width && point.y >= bounds.y && point.y <= bounds.y + bounds.height;
-    if (!insideImage) return;
+    if (!isPointInsideImage(point)) return;
     state.cornerClicks.push(canvasToImagePoint(point));
     if (state.cornerClicks.length === 4) {
       state.gridCorners = [...state.cornerClicks];
@@ -2472,10 +2666,26 @@ canvas.addEventListener("pointerdown", (event) => {
           ? `Corner calibration active. Grid corrected to ${normalized.to.cols} x ${normalized.to.rows} so each cell stays 1m x 1m.`
           : "Corner calibration active",
       );
+      setConfidence("high", "4 corner grid calibration");
     }
     updateCornerStatus();
     draw();
     updateOutput();
+    return;
+  }
+
+  if (state.mode === "distance") {
+    applyKnownDistanceClick(point, grid);
+    return;
+  }
+
+  if (state.mode === "straighten") {
+    applyStraightenClick(point);
+    return;
+  }
+
+  if (state.mode === "line-picker") {
+    applyLinePickerClick(point);
     return;
   }
 
@@ -2622,6 +2832,7 @@ resizeCanvas();
 updateZoomOutput();
 renderGroupList();
 setFitStatus("Upload an image to auto fit the grid.");
+setConfidence("low", "not calibrated");
 
 function serializeGroups() {
   return state.groups.map((group) => ({
@@ -2652,6 +2863,9 @@ function serializeProjectState() {
       right: numberValue(inputs.right, 0),
       bottom: numberValue(inputs.bottom, 0),
       corners: state.gridCorners,
+      lockScale: isScaleLocked(),
+      knownDistance: numberValue(inputs.knownDistance, 10),
+      confidence: state.calibrationConfidence,
     },
     view: {
       scale: state.view.scale,
@@ -2674,7 +2888,10 @@ function restoreProjectState(project = {}) {
   inputs.top.value = grid.top ?? 0;
   inputs.right.value = grid.right ?? 0;
   inputs.bottom.value = grid.bottom ?? 0;
+  inputs.lockScale.checked = Boolean(grid.lockScale);
+  inputs.knownDistance.value = grid.knownDistance ?? 10;
   state.gridCorners = Array.isArray(grid.corners) ? grid.corners : null;
+  setConfidence(grid.confidence?.level || (state.gridCorners ? "high" : "low"), grid.confidence?.message || (state.gridCorners ? "saved calibration" : "not calibrated"));
   state.imageRecord = project.image || null;
   state.scaleMode = project.scale_mode || "plan";
   const nextView = project.view || {};
@@ -2714,10 +2931,24 @@ window.GridMeasureAPI = {
     clearGroups();
     state.image = null;
     state.imageRecord = null;
+    state.gridCorners = null;
+    state.cornerClicks = [];
+    inputs.cols.value = 58;
+    inputs.rows.value = 20;
+    inputs.cellSize.value = 1;
+    inputs.knownDistance.value = 10;
+    inputs.lockScale.checked = false;
+    inputs.left.value = 0;
+    inputs.top.value = 0;
+    inputs.right.value = 0;
+    inputs.bottom.value = 0;
+    resetView();
     emptyState.classList.remove("hidden");
     draw();
     updateOutput();
+    updateCornerStatus();
     setUploadStatus("No uploaded image");
     setFitStatus("Upload an image to auto fit the grid.");
+    setConfidence("low", "not calibrated");
   },
 };

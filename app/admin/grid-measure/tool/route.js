@@ -27,6 +27,7 @@ export function GET() {
           <button id="autoFitGrid" type="button" class="quiet">Auto fit grid</button>
           <div id="uploadStatus" class="fit-status">No uploaded image</div>
           <div id="fitStatus" class="fit-status">Ready</div>
+          <div id="confidenceStatus" class="confidence-status low">Confidence: not calibrated</div>
         </section>
         <details class="panel-section" open>
           <summary>Measure</summary>
@@ -45,11 +46,11 @@ export function GET() {
               </div>
             </details>
             <div class="sample-row">
-              <button id="quadMeasureMode" type="button">4pt measure</button>
-              <button id="ellipseMeasureMode" type="button">Ellipse</button>
+              <button id="quadMeasureMode" type="button" title="Measure a four-corner surface">◰ 4pt measure</button>
+              <button id="ellipseMeasureMode" type="button" title="Measure circle or oval surfaces">⭕ Ellipse</button>
             </div>
             <div class="sample-row">
-              <button id="curveMeasureMode" type="button">Curve</button>
+              <button id="curveMeasureMode" type="button" title="Measure curved or ring surfaces">◜ Curve</button>
               <select id="curveTypeInput" aria-label="Curve shape type">
                 <option value="half">Half circle</option>
                 <option value="quarter">Quarter circle</option>
@@ -100,12 +101,22 @@ export function GET() {
         <details class="panel-section">
           <summary>Grid Setup</summary>
           <section class="control-group" aria-label="Grid setup">
+            <label class="check-control">🔒 Lock scale<input id="lockScaleInput" type="checkbox" /></label>
             <label>Columns<input id="colsInput" type="number" min="1" max="300" value="58" /></label>
             <label>Rows<input id="rowsInput" type="number" min="1" max="200" value="20" /></label>
             <label>Cell size m<input id="cellSizeInput" type="number" min="0.01" max="100" step="0.01" value="1" /></label>
             <div class="sample-row">
-              <button id="startCorners" type="button">Set 4 corners</button>
+              <button id="startCorners" type="button" title="Click the four outside corners of the real 1m grid">🎯 4 corners</button>
+              <button id="linePickerMode" type="button" title="Click left, right, top, bottom grid lines">#️⃣ Grid lines</button>
+            </div>
+            <div class="sample-row">
+              <button id="distanceMode" type="button" title="Click two points and enter their real distance">📏 Known distance</button>
+              <button id="straightenMode" type="button" title="Click two points along a horizontal grid line to straighten the view">🧭 Straighten</button>
+            </div>
+            <label>Known distance m<input id="knownDistanceInput" type="number" min="0.01" max="1000" step="0.01" value="10" /></label>
+            <div class="sample-row">
               <button id="resetCorners" type="button">Reset corners</button>
+              <button id="unlockScale" type="button">Unlock scale</button>
             </div>
             <div id="cornerStatus" class="fit-status">Corners not set</div>
           </section>
