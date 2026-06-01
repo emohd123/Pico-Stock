@@ -327,6 +327,43 @@ button.quiet.active {
   font-size: 12px;
 }
 
+/* --- reorganized toolbar helpers --- */
+.tool-label {
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-weight: 700;
+  margin: 0.55rem 0 0.3rem;
+}
+.panel-hint {
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.45;
+  margin: 0.1rem 0 0.6rem;
+}
+.primary-action {
+  width: 100%;
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: 700;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  min-height: 40px;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+}
+.primary-action:hover {
+  filter: brightness(1.08);
+}
+.measurement .metric-key dt {
+  font-weight: 700;
+  color: var(--text);
+}
+.measurement .metric-key dd {
+  font-weight: 800;
+}
+
 .confidence-status {
   grid-column: 1 / -1;
   min-height: 22px;

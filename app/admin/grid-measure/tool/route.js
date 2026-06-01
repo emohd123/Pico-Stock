@@ -32,24 +32,18 @@ export function GET() {
         <details class="panel-section" open>
           <summary>Measure</summary>
           <section class="control-group" aria-label="Measurement tools">
-            <div class="segmented" role="group" aria-label="Selection mode">
-              <button id="rectMode" class="active" type="button">Group</button>
-              <button id="paintMode" type="button">Paint</button>
-              <button id="alignMode" type="button">Align</button>
-              <button id="cornerMode" type="button">Corners</button>
+            <div class="tool-label">Select cells</div>
+            <div class="segmented two" role="group" aria-label="Cell selection mode">
+              <button id="rectMode" class="active" type="button" title="Drag a rectangle of 1m cells">▭ Rectangle</button>
+              <button id="paintMode" type="button" title="Paint individual cells on/off">🖌 Paint</button>
             </div>
-            <details id="groupActionsPanel" class="tool-menu">
-              <summary>Group actions</summary>
-              <div class="sample-row">
-                <button id="newPaintGroup" type="button">Add group</button>
-                <button id="undoGroup" type="button">Undo group</button>
-              </div>
-            </details>
+            <div class="tool-label">Draw a shape</div>
             <div class="sample-row">
-              <button id="quadMeasureMode" type="button" title="Measure a four-corner surface">◰ 4pt measure</button>
+              <button id="quadMeasureMode" type="button" title="Measure a four-corner surface">◰ 4-point</button>
+              <button id="polygonMeasureMode" type="button" title="Measure any irregular area — click each corner, double-click or click the first point to finish">⬟ Polygon</button>
+            </div>
+            <div class="sample-row">
               <button id="ellipseMeasureMode" type="button" title="Measure circle or oval surfaces">⭕ Ellipse</button>
-            </div>
-            <div class="sample-row">
               <button id="curveMeasureMode" type="button" title="Measure curved or ring surfaces">◜ Curve</button>
               <select id="curveTypeInput" aria-label="Curve shape type">
                 <option value="half">Half circle</option>
@@ -58,18 +52,22 @@ export function GET() {
                 <option value="half-ring">Half ring</option>
               </select>
             </div>
-            <div class="sample-row">
-              <button id="polygonMeasureMode" type="button" title="Measure any irregular area — click each corner, double-click or click the first point to finish">⬟ Polygon area</button>
+            <div class="tool-label">Areas</div>
+            <div id="groupActionsPanel" class="sample-row">
+              <button id="newPaintGroup" type="button" title="Start a new, separate area">+ New area</button>
+              <button id="undoGroup" type="button" title="Remove the last area">↶ Undo</button>
             </div>
-            <button id="editShapeMode" type="button" class="quiet">Edit selected shape</button>
-            <button id="clearSelection" type="button" class="quiet">Clear all</button>
+            <div class="sample-row">
+              <button id="editShapeMode" type="button" class="quiet">Edit selected</button>
+              <button id="clearSelection" type="button" class="quiet">Clear all</button>
+            </div>
           </section>
         </details>
         <details class="panel-section" open>
-          <summary>Calculated</summary>
+          <summary>Results</summary>
           <section class="measurement" aria-live="polite">
             <label class="waste-control">
-              Waste
+              Waste allowance
               <select id="wasteInput">
                 <option value="0">0%</option>
                 <option value="5">5%</option>
@@ -79,50 +77,59 @@ export function GET() {
               </select>
             </label>
             <dl>
-              <div><dt>Cell scale</dt><dd><span id="cellScaleValue">1m x 1m</span></dd></div>
-              <div><dt>Groups</dt><dd id="groupCountValue">0</dd></div>
-              <div><dt>Selected cells</dt><dd id="cellCount">0</dd></div>
-              <div><dt id="areaLabel">Selected area</dt><dd><span id="areaValue">0</span> m2</dd></div>
+              <div class="metric-key"><dt id="areaLabel">Selected area</dt><dd><span id="areaValue">0</span> m2</dd></div>
+              <div class="metric-key"><dt id="wasteLabel">With 10% waste</dt><dd><span id="wasteAreaValue">0</span> m2</dd></div>
+              <div class="metric-key"><dt>Perimeter</dt><dd><span id="perimeterValue">0</span> m</dd></div>
+              <div class="tool-label">Details</div>
               <div><dt id="widthLabel">Total span width</dt><dd><span id="widthValue">0</span> m</dd></div>
               <div><dt id="heightLabel">Total span height</dt><dd><span id="heightValue">0</span> m</dd></div>
               <div><dt id="boxAreaLabel">Bounding area</dt><dd><span id="boxAreaValue">0</span> m2</dd></div>
-              <div><dt>Perimeter</dt><dd><span id="perimeterValue">0</span> m</dd></div>
-              <div><dt id="wasteLabel">With 10% waste</dt><dd><span id="wasteAreaValue">0</span> m2</dd></div>
+              <div><dt>Selected cells</dt><dd id="cellCount">0</dd></div>
+              <div><dt>Areas drawn</dt><dd id="groupCountValue">0</dd></div>
+              <div><dt>Cell scale</dt><dd><span id="cellScaleValue">1m x 1m</span></dd></div>
             </dl>
           </section>
         </details>
         <details class="panel-section" open>
-          <summary>Groups & Checklist</summary>
+          <summary>Areas &amp; Checklist</summary>
           <section class="groups-panel" aria-label="Selection groups">
             <div id="groupList" class="group-list"></div>
             <div class="quantity-summary">
-              <h3>Checklist</h3>
+              <h3>Material checklist</h3>
               <div id="quantitySummary" class="quantity-list">No quantities yet</div>
             </div>
           </section>
         </details>
         <details class="panel-section">
-          <summary>Grid Setup</summary>
-          <section class="control-group" aria-label="Grid setup">
-            <label class="check-control">🔒 Lock scale<input id="lockScaleInput" type="checkbox" /></label>
-            <label class="check-control">🧲 Snap shapes to grid<input id="snapToGridInput" type="checkbox" /></label>
+          <summary>Calibrate grid</summary>
+          <section class="control-group" aria-label="Calibrate grid">
+            <p class="panel-hint">Each cell = 1m. If the overlay isn&apos;t exactly on the real grid, set the four corners:</p>
+            <button id="startCorners" type="button" class="primary-action" title="Click the four outside corners of the real 1m grid">🎯 Set 4 corners</button>
             <label>Columns<input id="colsInput" type="number" min="1" max="300" value="58" /></label>
             <label>Rows<input id="rowsInput" type="number" min="1" max="200" value="20" /></label>
             <label>Cell size m<input id="cellSizeInput" type="number" min="0.01" max="100" step="0.01" value="1" /></label>
-            <div class="sample-row">
-              <button id="startCorners" type="button" title="Click the four outside corners of the real 1m grid">🎯 4 corners</button>
-              <button id="linePickerMode" type="button" title="Click left, right, top, bottom grid lines">#️⃣ Grid lines</button>
-            </div>
-            <div class="sample-row">
-              <button id="distanceMode" type="button" title="Click two points and enter their real distance">📏 Known distance</button>
-              <button id="straightenMode" type="button" title="Click two points along a horizontal grid line to straighten the view">🧭 Straighten</button>
-            </div>
-            <label>Known distance m<input id="knownDistanceInput" type="number" min="0.01" max="1000" step="0.01" value="10" /></label>
-            <div class="sample-row">
-              <button id="resetCorners" type="button">Reset corners</button>
-              <button id="unlockScale" type="button">Unlock scale</button>
-            </div>
+            <label class="check-control">🔒 Lock scale<input id="lockScaleInput" type="checkbox" /></label>
+            <label class="check-control">🧲 Snap shapes to grid<input id="snapToGridInput" type="checkbox" /></label>
             <div id="cornerStatus" class="fit-status">Corners not set</div>
+            <details class="tool-menu">
+              <summary>More calibration ways</summary>
+              <div class="sample-row">
+                <button id="cornerMode" type="button" title="Click TL, TR, BR, BL of the 1m grid">Pick corners</button>
+                <button id="alignMode" type="button" title="Drag a box around the full grid to set its bounds">Align box</button>
+              </div>
+              <div class="sample-row">
+                <button id="linePickerMode" type="button" title="Click left, right, top, bottom grid lines">#️⃣ Grid lines</button>
+                <button id="straightenMode" type="button" title="Click two points along a horizontal grid line to straighten the view">🧭 Straighten</button>
+              </div>
+              <div class="sample-row">
+                <button id="distanceMode" type="button" title="Click two points and enter their real distance">📏 Known distance</button>
+                <input id="knownDistanceInput" type="number" min="0.01" max="1000" step="0.01" value="10" aria-label="Known distance in metres" />
+              </div>
+              <div class="sample-row">
+                <button id="resetCorners" type="button">Reset corners</button>
+                <button id="unlockScale" type="button">Unlock scale</button>
+              </div>
+            </details>
           </section>
         </details>
         <details class="panel-section">
