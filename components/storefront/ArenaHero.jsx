@@ -189,7 +189,7 @@ export default function ArenaHero() {
                 cg.setAttribute('position', new THREE.Float32BufferAttribute(cPos, 3));
                 const colAttr = new THREE.Float32BufferAttribute(cBase.slice(), 3);
                 cg.setAttribute('color', colAttr);
-                const crowd = new THREE.Points(cg, new THREE.PointsMaterial({ size: 0.18, vertexColors: true, transparent: true, opacity: 0.95, depthWrite: false }));
+                const crowd = new THREE.Points(cg, new THREE.PointsMaterial({ size: 0.12, vertexColors: true, transparent: true, opacity: 0.6, depthWrite: false }));
                 arena.add(crowd);
                 const cN = cAng.length;
 
@@ -198,6 +198,15 @@ export default function ArenaHero() {
                 const beamList = [];
                 const NB = Math.round(18 * QUALITY);
                 const DOWN = new THREE.Vector3(0, -1, 0);
+                // soft radial glow texture for the spotlight floor pools
+                const poolTex = tex((x, w, h) => {
+                    const g = x.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2);
+                    g.addColorStop(0, 'rgba(255,180,120,0.9)');
+                    g.addColorStop(0.35, 'rgba(0,201,201,0.4)');
+                    g.addColorStop(1, 'rgba(0,0,0,0)');
+                    x.fillStyle = g; x.fillRect(0, 0, w, h);
+                }, 128, 128);
+                const poolList = [];
                 for (let i = 0; i < NB; i++) {
                     const a = (i / NB) * Math.PI * 2;
                     const fpos = new THREE.Vector3(Math.cos(a) * (R - 0.4), RIM + 0.3, Math.sin(a) * (R - 0.4));
@@ -213,6 +222,12 @@ export default function ArenaHero() {
                     beams.add(cone); beamList.push(cone);
                     const fix = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), new THREE.MeshBasicMaterial({ color: EMBER2 }));
                     fix.position.copy(fpos); arena.add(fix);
+                    // glowing light pool where the beam lands on the floor (sweeps with the beam group)
+                    const pool = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 3.6), new THREE.MeshBasicMaterial({ map: poolTex, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false }));
+                    pool.rotation.x = -Math.PI / 2;
+                    pool.position.set(Math.cos(a) * 2.5, 0.06, Math.sin(a) * 2.5);
+                    pool.userData = { phase: cone.userData.phase, spd: cone.userData.spd };
+                    beams.add(pool); poolList.push(pool);
                 }
 
                 /* ---- falling sparks ---- */
@@ -252,6 +267,7 @@ export default function ArenaHero() {
                     warm.color.copy(tmpC); beams.children.forEach((b) => b.material.color.copy(tmpC));
                     warm.intensity = 2.0 + Math.sin(t * 1.6) * 0.7;
                     beamList.forEach((b) => { b.material.opacity = b.userData.base + Math.sin(t * b.userData.spd + b.userData.phase) * 0.09; });
+                    poolList.forEach((p) => { p.material.opacity = 0.42 + Math.sin(t * p.userData.spd + p.userData.phase) * 0.18; });
                     beams.rotation.y = t * 0.18;
 
                     if (t - lastStrobe > 7) lastStrobe = t;
@@ -325,6 +341,7 @@ export default function ArenaHero() {
             <div className="arena-header">
                 <div className="arena-badge"><span className="arena-pulse" /> &#10024; Premium Exhibition &amp; Event Services &middot; Bahrain</div>
             </div>
+            <div className="arena-text-scrim" aria-hidden="true" />
             <div className="arena-inner">
                 <h1 className="arena-title">We Build the <span className="arena-highlight">Show</span></h1>
                 <p className="arena-sub">
@@ -333,11 +350,11 @@ export default function ArenaHero() {
                 </p>
                 <div className="arena-actions">
                     <Link href="/catalogue" className="btn btn-primary btn-lg">Browse Catalogue &#8594;</Link>
-                    <Link href="/cart" className="btn btn-secondary btn-lg">&#128722; View Cart</Link>
+                    <Link href="/cart" className="btn btn-secondary btn-lg arena-cta-ghost">&#128722; View Cart</Link>
                 </div>
             </div>
             <div className="arena-credit">Inspired by our build for the FIBA 3x3 World Tour Finals — Manama, Bahrain.</div>
-            <div className="arena-scroll">Scroll</div>
+            <div className="arena-scroll"><span className="arena-scroll-txt">Scroll</span><span className="arena-scroll-arrow" aria-hidden="true">&#8595;</span></div>
         </header>
     );
 }

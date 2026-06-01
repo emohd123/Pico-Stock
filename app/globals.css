@@ -8521,8 +8521,19 @@ input[type="checkbox"] {
   font-size:.75rem;letter-spacing:.18em;text-transform:uppercase;animation:arenaBob 2.4s ease-in-out infinite}
 @keyframes arenaRise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
 @keyframes arenaBob{0%,100%{transform:translateX(-50%) translateY(0);opacity:.6}50%{transform:translateX(-50%) translateY(8px);opacity:1}}
+/* soft radial scrim so the headline/subtext stay crisp over the busy 3D scene */
+.arena-text-scrim{position:absolute;top:46%;left:50%;transform:translate(-50%,-50%);z-index:1;pointer-events:none;
+  width:min(920px,88vw);height:min(540px,68vh);filter:blur(8px);
+  background:radial-gradient(ellipse 60% 54% at 50% 50%, rgba(8,12,20,0.74) 0%, rgba(8,12,20,0.46) 46%, transparent 76%)}
+/* brighter secondary CTA so both buttons read over the scene */
+.arena-cta-ghost{background:rgba(255,255,255,0.1)!important;border-color:rgba(255,255,255,0.42)!important;color:#fff!important;backdrop-filter:blur(6px)}
+.arena-cta-ghost:hover{background:rgba(255,255,255,0.18)!important;border-color:rgba(0,201,201,0.75)!important;color:#fff!important}
+/* animated scroll cue */
+.arena-scroll{display:flex;flex-direction:column;align-items:center;gap:.35rem}
+.arena-scroll-arrow{font-size:1.05rem;line-height:1;animation:arenaArrow 1.7s ease-in-out infinite}
+@keyframes arenaArrow{0%,100%{transform:translateY(0);opacity:.45}50%{transform:translateY(6px);opacity:1}}
 @media (max-width:760px){.arena-credit{display:none}}
 @media (prefers-reduced-motion: reduce){
   .arena-badge,.arena-title,.arena-sub,.arena-actions{animation:none}
-  .arena-pulse,.arena-scroll{animation:none}
+  .arena-pulse,.arena-scroll,.arena-scroll-arrow{animation:none}
 }
