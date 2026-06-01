@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import Navbar from '@/components/layout/Navbar';
 
 export default function AppChrome({ children }) {
@@ -11,12 +10,11 @@ export default function AppChrome({ children }) {
             <footer className="footer">
                 <div className="footer-inner">
                     <div className="footer-brand">
-                        <Image
+                        {/* plain img like the header logo — fixed height, auto width, true aspect ratio (no stretch) */}
+                        <img
                             src="/branding/pico-logo.png"
                             alt="Pico Stock"
-                            width={140}
-                            height={38}
-                            style={{ opacity: 0.7 }}
+                            style={{ height: '40px', width: 'auto', opacity: 0.7, display: 'block', alignSelf: 'flex-start' }}
                         />
                         <p className="footer-tagline">Exhibition Booth Extras - Rental &amp; Services</p>
                     </div>

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import CompanyContactForm from '@/components/CompanyContactForm';
+import ContactScene from '@/components/storefront/ContactScene';
 
 // ─── Intro / Loading screen ────────────────────────────────────────────────
 function IntroScreen({ onDone }) {
@@ -592,17 +593,34 @@ function SectionWhy() {
                     <span className="cpv2-section-tag">Why Pico Bahrain</span>
                     <h2 className="cpv2-section-title">The difference is<br /><span className="cpv2-accent">in the delivery.</span></h2>
                 </motion.div>
-                <div className="cpv2-why-grid">
+
+                {/* Glassmorphic stats band */}
+                <motion.div
+                    className="mx-auto mb-8 grid w-full max-w-5xl grid-cols-2 gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-2 backdrop-blur-md sm:grid-cols-4 sm:gap-0 sm:p-0"
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+                >
+                    {[['25+', 'Years Global'], ['500+', 'Projects'], ['120+', 'Clients'], ['36', 'Cities Worldwide']].map(([n, l], i) => (
+                        <div key={l} className={`flex flex-col items-center justify-center px-4 py-5 text-center ${i > 0 ? 'sm:border-l sm:border-white/10' : ''}`}>
+                            <span className="bg-gradient-to-r from-[#00C9C9] to-[#00A5A5] bg-clip-text text-3xl font-extrabold text-transparent sm:text-4xl">{n}</span>
+                            <span className="mt-1 text-xs font-medium uppercase tracking-[0.12em] text-[#9CA3AF]">{l}</span>
+                        </div>
+                    ))}
+                </motion.div>
+
+                {/* Glass why-cards */}
+                <div className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     {items.map((b, i) => (
-                        <motion.div key={b.num} className="cpv2-why-card"
+                        <motion.div key={b.num}
+                            className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/[0.05] p-6 backdrop-blur-md transition-all duration-300 hover:-translate-y-1.5 hover:border-[#00A5A5]/50 hover:bg-white/[0.08] hover:shadow-teal-lg"
                             initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.65, delay: 0.2 + i * 0.1, ease: [0.22, 1, 0.36, 1] }}
+                            transition={{ duration: 0.65, delay: 0.25 + i * 0.1, ease: [0.22, 1, 0.36, 1] }}
                         >
-                            <span className="cpv2-why-num">{b.num}</span>
-                            <div className="cpv2-why-line" />
-                            <h3 className="cpv2-why-title">{b.title}</h3>
-                            <p className="cpv2-why-desc">{b.desc}</p>
+                            <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-[#00A5A5]/15 opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-100" />
+                            <span className="bg-gradient-to-r from-[#00C9C9] to-[#00A5A5] bg-clip-text text-3xl font-extrabold text-transparent">{b.num}</span>
+                            <div className="my-3 h-px w-10 bg-gradient-to-r from-[#00A5A5] to-transparent transition-all duration-300 group-hover:w-16" />
+                            <h3 className="m-0 text-base font-bold text-white">{b.title}</h3>
+                            <p className="mb-0 mt-2 text-sm leading-relaxed text-[#9CA3AF]">{b.desc}</p>
                         </motion.div>
                     ))}
                 </div>
@@ -615,7 +633,8 @@ function SectionWhy() {
 function SectionContact() {
     return (
         <div id="contact" className="cpv2-sec cpv2-sec-contact">
-            <div className="cpv2-contact-inner">
+            <ContactScene />
+            <div className="cpv2-contact-inner" style={{ position: 'relative', zIndex: 2 }}>
                 <motion.div className="cpv2-contact-copy"
                     initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.8, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}>

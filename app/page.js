@@ -35,26 +35,19 @@ export default function HomePage() {
                     <h2>Rental Categories</h2>
                     <p>Everything you need for a standout exhibition booth</p>
                 </div>
-                <div className="mx-auto grid max-w-6xl grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="mx-auto grid max-w-[1560px] grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-3">
                     {categories.map((category) => (
-                        <Link
+                        <div
                             key={category.slug}
-                            href={`/catalogue/${category.slug}`}
-                            className="group relative flex flex-col overflow-hidden rounded-[20px] border border-white/10 bg-gradient-to-b from-white/[0.05] to-white/[0.01] p-7 no-underline transition-all duration-300 hover:-translate-y-1 hover:border-[#00A5A5]/50 hover:shadow-teal-lg"
+                            className="group relative flex flex-col overflow-hidden rounded-[24px] border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.01] p-9 transition-all duration-300 hover:-translate-y-1.5 hover:border-[#00A5A5]/50 hover:shadow-teal-lg lg:p-11"
                         >
-                            <div className="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full bg-[#00A5A5]/15 opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-100" />
-                            <div className="mb-5 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-[#00A5A5]/10 text-3xl ring-1 ring-[#00A5A5]/25 transition-transform duration-300 group-hover:scale-110">
+                            <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#00A5A5]/15 opacity-0 blur-3xl transition-opacity duration-300 group-hover:opacity-100" />
+                            <div className="mb-6 inline-flex h-[72px] w-[72px] items-center justify-center rounded-3xl bg-[#00A5A5]/10 text-4xl ring-1 ring-[#00A5A5]/25 transition-transform duration-300 group-hover:scale-110">
                                 {category.icon}
                             </div>
-                            <h3 className="m-0 text-xl font-extrabold text-white">{category.title}</h3>
-                            <p className="mb-0 mt-2 flex-1 text-sm leading-relaxed text-[#9CA3AF]">{category.description}</p>
-                            <div className="mt-6 flex items-center justify-between">
-                                <span className="inline-flex items-center rounded-full bg-[#00A5A5]/10 px-3 py-1 text-xs font-bold text-[#00C9C9] ring-1 ring-[#00A5A5]/25">
-                                    {category.count} {category.count === 1 ? 'item' : 'items'} available
-                                </span>
-                                <span className="translate-x-0 text-lg text-[#00C9C9] opacity-0 transition-all duration-300 group-hover:translate-x-1 group-hover:opacity-100">→</span>
-                            </div>
-                        </Link>
+                            <h3 className="m-0 text-2xl font-extrabold text-white">{category.title}</h3>
+                            <p className="mb-0 mt-3 text-[0.95rem] leading-relaxed text-[#9CA3AF]">{category.description}</p>
+                        </div>
                     ))}
                 </div>
               </Reveal>
@@ -70,7 +63,7 @@ export default function HomePage() {
                         <h2>Catalogue Highlights</h2>
                         <p>Browse our popular exhibition booth extras</p>
                     </div>
-                    <div className="products-grid">
+                    <div className="mx-auto grid max-w-[1560px] grid-flow-col auto-cols-[minmax(220px,1fr)] gap-6 overflow-x-auto pb-3">
                         {[...visibleProducts].reverse().slice(0, 6).map((product) => (
                             <ProductCard key={product.id} product={product} />
                         ))}
@@ -95,20 +88,20 @@ export default function HomePage() {
                     <h2>From Order to Booth</h2>
                     <p>Simple 4-step process to get your booth ready</p>
                 </div>
-                <div className="mx-auto grid max-w-5xl grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="mx-auto grid max-w-[1560px] grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-4">
                     {HOME_STEPS.map((step, i) => (
                         <div
                             key={step.title}
-                            className="relative rounded-[20px] border border-white/10 bg-white/[0.03] p-6 transition-all duration-300 hover:border-[#00A5A5]/40 hover:bg-white/[0.05]"
+                            className="relative rounded-[24px] border border-white/10 bg-white/[0.03] p-9 transition-all duration-300 hover:-translate-y-1.5 hover:border-[#00A5A5]/40 hover:bg-white/[0.05] hover:shadow-teal-lg"
                         >
-                            <div className="mb-4 flex items-center gap-3">
-                                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#00C9C9] to-[#008585] text-sm font-extrabold text-white shadow-teal">
+                            <div className="mb-6 flex items-center gap-4">
+                                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#00C9C9] to-[#008585] text-lg font-extrabold text-white shadow-teal">
                                     {i + 1}
                                 </span>
-                                <span className="text-2xl">{step.icon}</span>
+                                <span className="text-3xl">{step.icon}</span>
                             </div>
-                            <h3 className="m-0 text-base font-bold text-white">{step.title}</h3>
-                            <p className="mb-0 mt-1.5 text-sm leading-relaxed text-[#9CA3AF]">{step.description}</p>
+                            <h3 className="m-0 text-xl font-bold text-white">{step.title}</h3>
+                            <p className="mb-0 mt-2.5 text-[0.95rem] leading-relaxed text-[#9CA3AF]">{step.description}</p>
                         </div>
                     ))}
                 </div>

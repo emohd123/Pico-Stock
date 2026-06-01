@@ -295,7 +295,7 @@ export default function ProductCard({ product }) {
     return (
         <>
             <div className="card product-card" onClick={() => setShowModal(true)}>
-                <div className="card-image-wrap">
+                <div className="card-image-wrap" style={{ position: 'relative' }}>
                     <img
                         src={product.image}
                         alt={cleanName}
@@ -304,6 +304,7 @@ export default function ProductCard({ product }) {
                             event.target.style.display = 'none';
                         }}
                     />
+                    <div className="card-view-hint"><span>View details →</span></div>
                 </div>
                 <div className="card-body">
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '0.35rem' }}>

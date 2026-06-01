@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import ProductCard from '@/components/storefront/ProductCard';
+import CatalogueScene from '@/components/storefront/CatalogueScene';
 import { useProducts } from '@/hooks/useProducts';
 import { useCart } from '@/lib/cartContext';
 import {
@@ -42,7 +43,13 @@ export default function CataloguePage() {
     };
 
     return (
-        <div className="page-enter">
+        <>
+            <div className="catalogue-bg" aria-hidden="true">
+                <div className="cat-orb cat-orb-1" />
+                <div className="cat-orb cat-orb-2" />
+                <CatalogueScene />
+            </div>
+            <div className="page-enter" style={{ position: 'relative', zIndex: 1 }}>
             <div className="breadcrumb">
                 <Link href="/">Home</Link>
                 <span>{'\u203A'}</span>
@@ -51,7 +58,10 @@ export default function CataloguePage() {
 
             <section className="section" style={{ paddingBottom: '0.5rem' }}>
                 <div className="section-header">
-                    <h2>Rental Catalogue</h2>
+                    <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#00A5A5]/30 bg-[#00A5A5]/10 px-3 py-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-[#00C9C9]">
+                        Rental Catalogue
+                    </span>
+                    <h2>Everything for your booth</h2>
                     <p>Browse our complete collection of exhibition booth extras</p>
                 </div>
             </section>
@@ -150,6 +160,7 @@ export default function CataloguePage() {
                     {'\u2705'} {toast}
                 </div>
             )}
-        </div>
+            </div>
+        </>
     );
 }

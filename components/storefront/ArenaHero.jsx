@@ -197,15 +197,22 @@ export default function ArenaHero() {
                 const beams = new THREE.Group(); arena.add(beams);
                 const beamList = [];
                 const NB = Math.round(18 * QUALITY);
+                const DOWN = new THREE.Vector3(0, -1, 0);
                 for (let i = 0; i < NB; i++) {
                     const a = (i / NB) * Math.PI * 2;
-                    const cone = new THREE.Mesh(new THREE.ConeGeometry(1.1, 7, 16, 1, true), new THREE.MeshBasicMaterial({ color: EMBER, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
-                    cone.position.set(Math.cos(a) * (R - 0.4), RIM + 0.3, Math.sin(a) * (R - 0.4));
-                    cone.lookAt(0, APEX - 1, 0); cone.rotateX(Math.PI / 2);
+                    const fpos = new THREE.Vector3(Math.cos(a) * (R - 0.4), RIM + 0.3, Math.sin(a) * (R - 0.4));
+                    // geometry offset so the narrow apex is at the fixture and the cone hangs DOWN (-Y), wide pool at the floor
+                    const geo = new THREE.ConeGeometry(1.7, 7, 16, 1, true);
+                    geo.translate(0, -3.5, 0);
+                    const cone = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: EMBER, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+                    cone.position.copy(fpos);
+                    // aim the downward beam inward toward a point on the court floor (spotlight on the floor)
+                    const target = new THREE.Vector3(Math.cos(a) * 2.5, 0.1, Math.sin(a) * 2.5);
+                    cone.quaternion.setFromUnitVectors(DOWN, target.clone().sub(fpos).normalize());
                     cone.userData = { base: 0.12, phase: Math.random() * 6.28, spd: 0.6 + Math.random() * 0.8 };
                     beams.add(cone); beamList.push(cone);
                     const fix = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), new THREE.MeshBasicMaterial({ color: EMBER2 }));
-                    fix.position.copy(cone.position); arena.add(fix);
+                    fix.position.copy(fpos); arena.add(fix);
                 }
 
                 /* ---- falling sparks ---- */
@@ -315,8 +322,10 @@ export default function ArenaHero() {
             <canvas ref={canvasRef} className="arena-canvas" />
             <div className="arena-vignette" />
             <div className="arena-fade" />
-            <div className="arena-inner">
+            <div className="arena-header">
                 <div className="arena-badge"><span className="arena-pulse" /> &#10024; Premium Exhibition &amp; Event Services &middot; Bahrain</div>
+            </div>
+            <div className="arena-inner">
                 <h1 className="arena-title">We Build the <span className="arena-highlight">Show</span></h1>
                 <p className="arena-sub">
                     From a single booth to a full arena — furniture, LED displays, graphics, and structures,

@@ -354,11 +354,33 @@ a:hover {
 
 .product-card {
   cursor: pointer;
+  transition: transform 0.35s cubic-bezier(0.22,1,0.36,1), border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(0,165,165,0.5);
+  box-shadow: 0 18px 48px rgba(0,0,0,0.42), 0 0 0 1px rgba(0,165,165,0.15);
 }
 
 .product-card:hover .card-image {
-  transform: scale(1.05);
+  transform: scale(1.07);
 }
+
+/* Hover-reveal "View details" overlay on the product image */
+.card-view-hint {
+  position: absolute; inset: 0; display: flex; align-items: flex-end; justify-content: center;
+  padding-bottom: 0.9rem; pointer-events: none; opacity: 0;
+  background: linear-gradient(to top, rgba(8,12,20,0.55), transparent 55%);
+  transition: opacity 0.3s ease;
+}
+.product-card:hover .card-view-hint { opacity: 1; }
+.card-view-hint span {
+  background: rgba(0,165,165,0.92); color: #fff; font-size: 0.72rem; font-weight: 700;
+  letter-spacing: 0.02em; padding: 0.4rem 0.9rem; border-radius: 999px;
+  transform: translateY(6px); transition: transform 0.3s ease; backdrop-filter: blur(4px);
+}
+.product-card:hover .card-view-hint span { transform: translateY(0); }
 
 .card-body {
   padding: 1.25rem;
@@ -590,9 +612,28 @@ a:hover {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.5rem;
-  max-width: 1200px;
+  max-width: 1560px;
   margin: 0 auto;
 }
+
+/* Catalogue uses the full width too */
+.catalogue-filter-shell { max-width: 1560px; }
+
+/* Catalogue ambient animated background (viewport-fixed so the 3D canvas stays light) */
+.catalogue-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.catalogue-3d-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.catalogue-bg .cat-orb { position: absolute; border-radius: 50%; filter: blur(120px); }
+.catalogue-bg .cat-orb-1 { width: 620px; height: 620px; top: -160px; left: -120px;
+  background: radial-gradient(circle, rgba(0,199,177,0.18) 0%, transparent 70%); animation: cat-drift 16s ease-in-out infinite alternate; }
+.catalogue-bg .cat-orb-2 { width: 520px; height: 520px; top: 38%; right: -140px;
+  background: radial-gradient(circle, rgba(0,165,165,0.14) 0%, transparent 70%); animation: cat-drift 13s ease-in-out infinite alternate-reverse; }
+.catalogue-bg .cat-orb-3 { width: 460px; height: 460px; bottom: -160px; left: 30%;
+  background: radial-gradient(circle, rgba(124,77,255,0.10) 0%, transparent 70%); animation: cat-drift 20s ease-in-out infinite alternate; }
+.catalogue-bg .cat-dots { position: absolute; inset: 0; opacity: 0.5;
+  background-image: radial-gradient(rgba(0,201,201,0.10) 1px, transparent 1px);
+  background-size: 38px 38px; animation: cat-pan 40s linear infinite; }
+@keyframes cat-drift { from { transform: translate(0,0) scale(1); } to { transform: translate(34px,22px) scale(1.08); } }
+@keyframes cat-pan { from { background-position: 0 0; } to { background-position: 38px 38px; } }
 
 /* ==================== FORMS ==================== */
 .form-group {
@@ -8282,6 +8323,12 @@ input[type="checkbox"] {
 
 /* == SECTION 6: CONTACT =========================================== */
 .cpv2-sec-contact { align-items: center; justify-content: center; }
+.cpv2-contact-3d { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.cpv2-contact-3d-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.cpv2-contact-3d-vignette { position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse 72% 72% at 50% 45%, transparent 42%, rgba(11,17,32,0.6) 100%); }
+.cpv2-contact-3d-fade { position: absolute; left: 0; right: 0; bottom: 0; height: 34%; pointer-events: none;
+  background: linear-gradient(transparent, #0B1120); }
 .cpv2-contact-inner { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 3.5rem; align-items: center; width: 100%; max-width: 1200px; padding: 0 2.5rem; }
 .cpv2-contact-copy { display: flex; flex-direction: column; gap: 1.2rem; }
 .cpv2-contact-title { font-size: clamp(1.8rem, 3.2vw, 2.6rem); font-weight: 800; line-height: 1.2; letter-spacing: -0.025em; }
@@ -8460,6 +8507,9 @@ input[type="checkbox"] {
   box-shadow:0 4px 24px rgba(0,201,201,.12);animation:arenaRise .8s ease both}
 .arena-pulse{width:10px;height:10px;border-radius:50%;background:#00C9C9;animation:arenaPulse 2s infinite;flex:none}
 @keyframes arenaPulse{0%{box-shadow:0 0 0 0 rgba(0,201,201,.55)}70%{box-shadow:0 0 0 10px rgba(0,201,201,0)}100%{box-shadow:0 0 0 0 rgba(0,201,201,0)}}
+.arena-header{position:absolute;top:0;left:0;right:0;z-index:3;display:flex;justify-content:center;
+  padding-top:clamp(84px,11vh,120px);pointer-events:none}
+.arena-header .arena-badge{margin-bottom:0;pointer-events:auto}
 .arena-title{font-size:clamp(2.7rem,7vw,5.4rem);line-height:1.02;font-weight:900;letter-spacing:-.035em;
   margin-bottom:1.2rem;color:#F9FAFB;animation:arenaRise .9s .05s ease both;text-shadow:0 8px 44px rgba(0,0,0,.6)}
 .arena-highlight{background:linear-gradient(120deg,#00C9C9,#FF8A3D 95%);-webkit-background-clip:text;background-clip:text;color:transparent}
