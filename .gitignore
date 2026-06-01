@@ -60,6 +60,8 @@ out/
 !/public/company-profile/furn-lounge1.png
 !/public/company-profile/furn-lounge2.png
 !/public/company-profile/furn-lounge3.png
+!/public/company-profile/team-khalid.png
+!/public/company-profile/team-sufyan.png
 
 # dotnet install script
 dotnet-install.ps1

@@ -197,6 +197,7 @@ function SectionHero() {
 
 // ─── Section 1: About (tabbed — all PPTX slides) ─────────────────────────
 const ABOUT_TABS = [
+    { id: 'team',     label: 'Team',       img: '/company-profile/events-main.jpeg' },
     { id: 'story',    label: 'Our Story',  img: '/company-profile/conference-main.jpg' },
     { id: 'vision',   label: 'Direction',  img: '/company-profile/interior-alt.jpg' },
     { id: 'presence', label: 'Presence',   img: '/company-profile/exhibition-main.jpeg' },
@@ -256,24 +257,31 @@ function SectionAbout({ active }) {
                 </motion.h2>
 
                 {/* Tab pill nav */}
-                <motion.div className="cpv2-tab-pills"
+                <motion.div className="cpv2-tab-pills" role="tablist" aria-label="About Pico Bahrain"
                     initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28 }}>
                     {ABOUT_TABS.map((t, i) => (
-                        <button key={t.id}
+                        <button key={t.id} type="button" role="tab"
+                            id={`cpv2-tab-${t.id}`} aria-controls="cpv2-tabpanel"
+                            aria-selected={i === tab}
                             className={`cpv2-tab-pill ${i === tab ? 'cpv2-tab-pill-active' : ''}`}
-                            onClick={() => setTab(i)}>
+                            onClick={() => setTab(i)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'ArrowRight') { e.preventDefault(); setTab((tab + 1) % ABOUT_TABS.length); }
+                                if (e.key === 'ArrowLeft')  { e.preventDefault(); setTab((tab - 1 + ABOUT_TABS.length) % ABOUT_TABS.length); }
+                            }}>
                             {t.label}
                         </button>
                     ))}
                 </motion.div>
 
                 {/* Animated tab body */}
-                <div className="cpv2-tab-body">
+                <div className="cpv2-tab-body" id="cpv2-tabpanel" role="tabpanel"
+                    aria-labelledby={`cpv2-tab-${ABOUT_TABS[tab]?.id}`}>
                     <AnimatePresence mode="sync">
                         <motion.div key={tab} variants={tabVariants}
                             initial="enter" animate="center" exit="exit">
 
-                            {tab === 0 && (
+                            {ABOUT_TABS[tab]?.id === 'story' && (
                                 <div className="cpv2-tab-story">
                                     <p className="cpv2-tab-para">Established <strong>May 1999</strong> — the 22nd office in Pico Group&apos;s global network and the second in the Middle East. Operating from a <strong>3,500 sqm</strong> facility with full exhibition, event, and AV inventory.</p>
                                     <div className="cpv2-tab-mini-stats">
@@ -311,7 +319,7 @@ function SectionAbout({ active }) {
                                 </div>
                             )}
 
-                            {tab === 1 && (
+                            {ABOUT_TABS[tab]?.id === 'vision' && (
                                 <div className="cpv2-tab-direction">
                                     {[
                                         { icon: "◈", title: "Vision",  text: "A world-class company reputable for building clients’ image through exceptional brand experiences.", tag: "Where we aim to be" },
@@ -341,7 +349,7 @@ function SectionAbout({ active }) {
                                 </div>
                             )}
 
-                            {tab === 2 && (
+                            {ABOUT_TABS[tab]?.id === 'presence' && (
                                 <div className="cpv2-tab-presence">
                                     <div className="cpv2-presence-hero">
                                         <span className="cpv2-presence-big">
@@ -381,7 +389,7 @@ function SectionAbout({ active }) {
                                 </div>
                             )}
 
-                            {tab === 3 && (
+                            {ABOUT_TABS[tab]?.id === 'expertise' && (
                                 <div className="cpv2-tab-expertise">
                                     <div className="cpv2-exp-cols">
                                         <div className="cpv2-exp-col">
@@ -431,6 +439,36 @@ function SectionAbout({ active }) {
                                         <span className="cpv2-exp-footer-divider" />
                                         <span className="cpv2-exp-footer-stat"><strong>36</strong> cities worldwide</span>
                                     </motion.div>
+                                </div>
+                            )}
+
+                            {ABOUT_TABS[tab]?.id === 'team' && (
+                                <div className="cpv2-tab-team flex flex-col gap-6">
+                                    {[
+                                        {
+                                            name: 'Khalid Juman', role: 'Chairman', img: '/company-profile/team-khalid.png',
+                                            bio: "25+ years in the events industry. Leads Pico International Bahrain through Total Brand Activation — experience design, brand engagement and digital enablement — growing Pico into a respected force delivering innovative solutions in Bahrain and worldwide.",
+                                        },
+                                        {
+                                            name: 'Sufyan Alshafei', role: 'General Manager', img: '/company-profile/team-sufyan.png',
+                                            bio: "10+ years conceptualizing and delivering unique event experiences. Known for close client coordination and a sharp eye for detail, turning concepts into reality and driving Pico's continued growth.",
+                                        },
+                                    ].map((m, i) => (
+                                        <motion.div key={m.name}
+                                            className="cpv2-team-row flex items-center gap-5"
+                                            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                                            transition={{ duration: 0.45, delay: i * 0.12, ease: [0.22, 1, 0.36, 1] }}>
+                                            <span className="cpv2-team-photo shrink-0">
+                                                <img src={m.img} alt={`${m.name}, ${m.role} of Pico Bahrain`}
+                                                    className="h-28 w-28 rounded-full object-cover object-top sm:h-32 sm:w-32" />
+                                            </span>
+                                            <div className="max-w-[34rem]">
+                                                <h4 className="m-0 text-lg font-extrabold text-white">{m.name}</h4>
+                                                <span className="text-xs font-bold uppercase tracking-[0.1em] text-[#00C9C9]">{m.role}</span>
+                                                <p className="mb-0 mt-2 text-[0.88rem] leading-relaxed text-[#B4BDC9]">{m.bio}</p>
+                                            </div>
+                                        </motion.div>
+                                    ))}
                                 </div>
                             )}
 
