@@ -58,6 +58,9 @@ export function GET() {
                 <option value="half-ring">Half ring</option>
               </select>
             </div>
+            <div class="sample-row">
+              <button id="polygonMeasureMode" type="button" title="Measure any irregular area — click each corner, double-click or click the first point to finish">⬟ Polygon area</button>
+            </div>
             <button id="editShapeMode" type="button" class="quiet">Edit selected shape</button>
             <button id="clearSelection" type="button" class="quiet">Clear all</button>
           </section>

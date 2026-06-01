@@ -60,6 +60,7 @@ const buttons = {
   align: document.getElementById("alignMode"),
   corner: document.getElementById("cornerMode"),
   quad: document.getElementById("quadMeasureMode"),
+  polygon: document.getElementById("polygonMeasureMode"),
   ellipse: document.getElementById("ellipseMeasureMode"),
   curve: document.getElementById("curveMeasureMode"),
   editShape: document.getElementById("editShapeMode"),
@@ -107,6 +108,7 @@ const state = {
   straightenClicks: [],
   linePickerClicks: [],
   quadClicks: [],
+  polygonClicks: [],
   calibrationConfidence: { level: "low", message: "not calibrated" },
   view: {
     scale: 1,
@@ -260,6 +262,7 @@ function clearGroups() {
   state.ellipsePreview = null;
   state.curvePreview = null;
   state.quadClicks = [];
+  state.polygonClicks = [];
   state.selectedGroupId = null;
   state.editDrag = null;
   state.activePaintGroupId = null;
@@ -557,7 +560,7 @@ function rectCells(rect) {
 }
 
 function cellsFromGroup(group) {
-  if (group.type === "quad" || group.type === "ellipse") return [];
+  if (group.type === "quad" || group.type === "ellipse" || group.type === "polygon") return [];
 
   if (group.type === "paint") {
     return [...group.cells].map((key) => {
@@ -578,7 +581,7 @@ function selectedCells() {
 }
 
 function nonEmptyGroups() {
-  return state.groups.filter((group) => group.type === "quad" || group.type === "ellipse" || group.type === "curve" || cellsFromGroup(group).length > 0 || group.rects?.length > 0);
+  return state.groups.filter((group) => group.type === "quad" || group.type === "ellipse" || group.type === "curve" || group.type === "polygon" || cellsFromGroup(group).length > 0 || group.rects?.length > 0);
 }
 
 function statsForCells(cells) {
@@ -827,8 +830,39 @@ function curveStats(group) {
   };
 }
 
+function polygonStats(group) {
+  const grid = gridBounds();
+  const cellSize = gridConfig().cellSize;
+  const empty = { count: 0, widthCells: 0, heightCells: 0, width: 0, height: 0, area: 0, boxArea: 0, perimeter: 0 };
+  if (!grid || !group.points || group.points.length < 3) return empty;
+  const uv = group.points.map((p) => pointToGridUv(grid, p)).filter(Boolean);
+  if (uv.length < 3) return empty;
+  // work in rectified grid-cell space (uv is homography-corrected, so cell units == metres/cellSize)
+  const cellPoints = uv.map((p) => ({ x: p.u * grid.cols, y: p.v * grid.rows }));
+  let shoelace = 0, perimeter = 0;
+  cellPoints.forEach((p, i) => {
+    const n = cellPoints[(i + 1) % cellPoints.length];
+    shoelace += p.x * n.y - n.x * p.y;
+    perimeter += Math.hypot(n.x - p.x, n.y - p.y) * cellSize;
+  });
+  const areaCells = Math.abs(shoelace) / 2;
+  const xs = cellPoints.map((p) => p.x), ys = cellPoints.map((p) => p.y);
+  const widthCells = Math.max(...xs) - Math.min(...xs);
+  const heightCells = Math.max(...ys) - Math.min(...ys);
+  return {
+    count: areaCells,
+    widthCells, heightCells,
+    width: widthCells * cellSize,
+    height: heightCells * cellSize,
+    area: areaCells * cellSize * cellSize,
+    boxArea: widthCells * heightCells * cellSize * cellSize,
+    perimeter,
+  };
+}
+
 function statsForGroup(group) {
   if (group.type === "quad") return quadStats(group);
+  if (group.type === "polygon") return polygonStats(group);
   if (group.type === "ellipse") return ellipseStats(group);
   if (group.type === "curve") return curveStats(group);
   if (group.type === "paint") return combineStats([statsForCells(cellsFromGroup(group)), ...(group.rects || []).map(rectStats)]);
@@ -938,6 +972,23 @@ function addQuadGroup(points) {
     color: nextGroupColor(),
     category: "flooring",
     label: `4pt ${state.groups.length + 1}`,
+  });
+  state.selectedGroupId = id;
+  state.pendingShapeGroup = false;
+  state.activePaintGroupId = null;
+  return true;
+}
+
+function addPolygonGroup(points) {
+  if (!state.pendingShapeGroup || !points || points.length < 3) return false;
+  const id = makeGroupId();
+  state.groups.push({
+    id,
+    type: "polygon",
+    points: [...points],
+    color: nextGroupColor(),
+    category: "flooring",
+    label: `Area ${state.groups.length + 1}`,
   });
   state.selectedGroupId = id;
   state.pendingShapeGroup = false;
@@ -1245,6 +1296,16 @@ function drawQuadGroup(group) {
   ctx.restore();
 }
 
+function drawPolygonGroup(group) {
+  if (!group.points || group.points.length < 2) return;
+  ctx.save();
+  ctx.fillStyle = `${group.color}55`;
+  ctx.strokeStyle = group.color;
+  ctx.lineWidth = 2;
+  drawPolygon(group.points, group.points.length >= 3);
+  ctx.restore();
+}
+
 function ellipsePoints(grid, ellipse) {
   const cx = (ellipse.u1 + ellipse.u2) / 2;
   const cy = (ellipse.v1 + ellipse.v2) / 2;
@@ -1332,6 +1393,7 @@ function drawSelection(grid) {
 
   state.groups.forEach((group) => {
     if (group.type === "quad") drawQuadGroup(group);
+    else if (group.type === "polygon") drawPolygonGroup(group);
     else if (group.type === "ellipse") drawEllipseGroup(grid, group);
     else if (group.type === "curve") drawCurveGroup(grid, group);
     else {
@@ -1350,6 +1412,21 @@ function drawSelection(grid) {
     ctx.fillStyle = "rgba(255, 255, 255, 0.18)";
     ctx.lineWidth = 2;
     drawPolygon(state.quadClicks, state.quadClicks.length === 4);
+    ctx.restore();
+  }
+
+  if (state.polygonClicks.length) {
+    ctx.save();
+    ctx.strokeStyle = "#ffffff";
+    ctx.fillStyle = "rgba(255, 255, 255, 0.16)";
+    ctx.lineWidth = 2;
+    drawPolygon(state.polygonClicks, state.polygonClicks.length >= 3);
+    state.polygonClicks.forEach((p, i) => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, i === 0 ? 6 : 4, 0, Math.PI * 2);
+      ctx.fillStyle = i === 0 ? "#32b884" : "#ffffff";
+      ctx.fill();
+    });
     ctx.restore();
   }
 
@@ -1473,6 +1550,8 @@ function renderGroupList() {
       const groupMetric =
         group.type === "quad"
           ? `${formatNumber(stats.width)}m x ${formatNumber(stats.height)}m, ${formatNumber(stats.area)} m2`
+          : group.type === "polygon"
+            ? `Area ${formatNumber(stats.area)} m2, ${group.points?.length || 0} pts`
           : group.type === "ellipse"
             ? `Ellipse ${formatNumber(stats.width)}m x ${formatNumber(stats.height)}m, ${formatNumber(stats.area)} m2`
             : group.type === "curve"
@@ -1544,7 +1623,8 @@ function setScaleMode(mode) {
 
 function setMode(mode) {
   state.mode = mode;
-  if (mode !== "quad" && mode !== "ellipse" && mode !== "curve") state.pendingShapeGroup = false;
+  if (mode !== "quad" && mode !== "ellipse" && mode !== "curve" && mode !== "polygon") state.pendingShapeGroup = false;
+  if (mode !== "polygon") state.polygonClicks = [];
   if (mode !== "distance") state.distanceClicks = [];
   if (mode !== "straighten") state.straightenClicks = [];
   if (mode !== "line-picker") state.linePickerClicks = [];
@@ -1557,6 +1637,7 @@ function setMode(mode) {
   buttons.linePicker.classList.toggle("active", mode === "line-picker");
   buttons.pan.classList.toggle("active", mode === "pan");
   buttons.quad.classList.toggle("active", mode === "quad");
+  buttons.polygon.classList.toggle("active", mode === "polygon");
   buttons.ellipse.classList.toggle("active", mode === "ellipse");
   buttons.curve.classList.toggle("active", mode === "curve");
   buttons.editShape.classList.toggle("active", mode === "edit");
@@ -2535,6 +2616,12 @@ buttons.quad.addEventListener("click", () => {
     setFitStatus("4pt measure: click object corners TL, TR, BR, BL.");
   }
 });
+buttons.polygon.addEventListener("click", () => {
+  state.polygonClicks = [];
+  setMode("polygon");
+  preparePendingShapeGroup("polygon");
+  setFitStatus("Polygon: click each corner of the area; double-click or click the first point to finish.");
+});
 buttons.ellipse.addEventListener("click", () => {
   state.ellipsePreview = null;
   setMode("ellipse");
@@ -2742,6 +2829,30 @@ canvas.addEventListener("pointerdown", (event) => {
     return;
   }
 
+  if (state.mode === "polygon") {
+    if (!state.pendingShapeGroup) {
+      preparePendingShapeGroup("polygon");
+    }
+    if (!pointToGridUv(grid, point)) return;
+    // clicking near the first point closes the polygon
+    if (state.polygonClicks.length >= 3) {
+      const first = state.polygonClicks[0];
+      if (Math.hypot(point.x - first.x, point.y - first.y) < 12) {
+        addPolygonGroup([...state.polygonClicks]);
+        state.polygonClicks = [];
+        setFitStatus("Polygon area added. Pick a tool, or keep clicking to draw another.");
+        draw();
+        updateOutput();
+        return;
+      }
+    }
+    state.polygonClicks.push(point);
+    setFitStatus(`Polygon: ${state.polygonClicks.length} point${state.polygonClicks.length === 1 ? "" : "s"} — double-click or click the first point to finish.`);
+    draw();
+    updateOutput();
+    return;
+  }
+
   if (state.mode === "corner") {
     if (!state.image) return;
     if (!isPointInsideImage(point)) return;
@@ -2904,6 +3015,24 @@ canvas.addEventListener("pointerleave", () => {
   if (state.mode === "pan" && state.view.panStart) return;
   state.hoverCell = null;
   draw();
+});
+
+canvas.addEventListener("dblclick", (event) => {
+  if (state.mode !== "polygon") return;
+  event.preventDefault();
+  // drop the stray duplicate point the double-click's two down-events added
+  const pts = state.polygonClicks;
+  if (pts.length >= 2) {
+    const a = pts[pts.length - 1], b = pts[pts.length - 2];
+    if (Math.hypot(a.x - b.x, a.y - b.y) < 6) pts.pop();
+  }
+  if (state.polygonClicks.length >= 3) {
+    addPolygonGroup([...state.polygonClicks]);
+    state.polygonClicks = [];
+    setFitStatus("Polygon area added.");
+    draw();
+    updateOutput();
+  }
 });
 
 canvas.addEventListener(
