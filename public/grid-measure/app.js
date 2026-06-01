@@ -1631,7 +1631,7 @@ function setMode(mode) {
   buttons.rect.classList.toggle("active", mode === "rect");
   buttons.paint.classList.toggle("active", mode === "paint");
   buttons.align.classList.toggle("active", mode === "align");
-  buttons.corner.classList.toggle("active", mode === "corner");
+  if (buttons.corner) buttons.corner.classList.toggle("active", mode === "corner");
   buttons.distance.classList.toggle("active", mode === "distance");
   buttons.straighten.classList.toggle("active", mode === "straighten");
   buttons.linePicker.classList.toggle("active", mode === "line-picker");
@@ -2586,12 +2586,6 @@ buttons.rect.addEventListener("click", () => {
 });
 buttons.paint.addEventListener("click", () => setMode("paint"));
 buttons.align.addEventListener("click", () => setMode("align"));
-buttons.corner.addEventListener("click", () => {
-  state.cornerClicks = [];
-  state.gridCorners = null;
-  setMode("corner");
-  setFitStatus("Corner calibration: click TL, TR, BR, BL of the 1m grid.");
-});
 buttons.distance.addEventListener("click", () => {
   state.distanceClicks = [];
   setMode("distance");

@@ -114,7 +114,6 @@ export function GET() {
             <details class="tool-menu">
               <summary>More calibration ways</summary>
               <div class="sample-row">
-                <button id="cornerMode" type="button" title="Click TL, TR, BR, BL of the 1m grid">Pick corners</button>
                 <button id="alignMode" type="button" title="Drag a box around the full grid to set its bounds">Align box</button>
               </div>
               <div class="sample-row">
