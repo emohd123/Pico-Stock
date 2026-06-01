@@ -272,12 +272,44 @@ function setUploadStatus(message) {
   outputs.uploadStatus.textContent = message;
 }
 
+// Quantitative calibration quality, sampled from the (homography) grid at its
+// centre: real px-per-metre, how far cell edges deviate from 90 deg (skew), and
+// the horizontal/vertical cell-size mismatch (aspect). Lets the user SEE how
+// trustworthy a measurement is rather than a vague high/medium/low.
+function calibrationMetrics() {
+  if (!state.image) return null;
+  let grid;
+  try { grid = gridBounds(); } catch { return null; }
+  if (!grid || !grid.corners) return null;
+  const cellSize = gridConfig().cellSize || 1;
+  const du = 1 / grid.cols, dv = 1 / grid.rows;
+  const c = gridPoint(grid, 0.5, 0.5);
+  const cR = gridPoint(grid, 0.5 + du, 0.5);
+  const cD = gridPoint(grid, 0.5, 0.5 + dv);
+  const ex = { x: cR.x - c.x, y: cR.y - c.y };
+  const ey = { x: cD.x - c.x, y: cD.y - c.y };
+  const exLen = Math.hypot(ex.x, ex.y);
+  const eyLen = Math.hypot(ey.x, ey.y);
+  if (!(exLen > 0) || !(eyLen > 0)) return null;
+  const pxPerM = ((exLen + eyLen) / 2) / cellSize;
+  const angle = (Math.acos(clamp((ex.x * ey.x + ex.y * ey.y) / (exLen * eyLen), -1, 1)) * 180) / Math.PI;
+  const skewPct = (Math.abs(90 - angle) / 90) * 100;
+  const aspectPct = (Math.abs(exLen - eyLen) / ((exLen + eyLen) / 2)) * 100;
+  return { pxPerM, skewPct, aspectPct };
+}
+
 function setConfidence(level, message) {
   state.calibrationConfidence = { level, message };
   if (!outputs.confidenceStatus) return;
+  const m = calibrationMetrics();
+  let extra = "";
+  if (m && Number.isFinite(m.pxPerM) && m.pxPerM > 0.5) {
+    extra = ` · ${Math.round(m.pxPerM)} px/m · ${m.skewPct.toFixed(1)}% skew`;
+    if (m.aspectPct > 1.5) extra += ` · ${m.aspectPct.toFixed(0)}% aspect`;
+  }
   outputs.confidenceStatus.classList.remove("high", "medium", "low");
   outputs.confidenceStatus.classList.add(level);
-  outputs.confidenceStatus.textContent = `Confidence: ${level} - ${message}`;
+  outputs.confidenceStatus.textContent = `Confidence: ${level} - ${message}${extra}`;
 }
 
 function isScaleLocked() {
@@ -410,19 +442,67 @@ function pointToCell(point) {
   };
 }
 
+// Perspective (homography) mapping between the unit grid square and the four
+// calibration corners. A photo of a flat plan taken at an angle is a projective
+// view, so this is geometrically exact — unlike bilinear interpolation, which
+// gets interior grid spacing wrong under perspective. For a straight-on
+// rectangle/parallelogram it reduces to the old affine map (no regression).
+let _gmHomo = { key: null, fwd: null, inv: null, ok: false };
+function gridHomography(corners) {
+  const [tl, tr, br, bl] = corners;
+  const key = `${tl.x.toFixed(2)},${tl.y.toFixed(2)};${tr.x.toFixed(2)},${tr.y.toFixed(2)};${br.x.toFixed(2)},${br.y.toFixed(2)};${bl.x.toFixed(2)},${bl.y.toFixed(2)}`;
+  if (_gmHomo.key === key) return _gmHomo;
+  // unit square (0,0)(1,0)(1,1)(0,1) -> tl,tr,br,bl  (Heckbert projective mapping)
+  const x0 = tl.x, y0 = tl.y, x1 = tr.x, y1 = tr.y, x2 = br.x, y2 = br.y, x3 = bl.x, y3 = bl.y;
+  const sx = x0 - x1 + x2 - x3;
+  const sy = y0 - y1 + y2 - y3;
+  let fwd;
+  if (Math.abs(sx) < 1e-9 && Math.abs(sy) < 1e-9) {
+    fwd = { a: x1 - x0, b: x3 - x0, c: x0, d: y1 - y0, e: y3 - y0, f: y0, g: 0, h: 0 };
+  } else {
+    const dx1 = x1 - x2, dx2 = x3 - x2, dy1 = y1 - y2, dy2 = y3 - y2;
+    const den = dx1 * dy2 - dx2 * dy1;
+    const g = den !== 0 ? (sx * dy2 - dx2 * sy) / den : 0;
+    const h = den !== 0 ? (dx1 * sy - sx * dy1) / den : 0;
+    fwd = { a: x1 - x0 + g * x1, b: x3 - x0 + h * x3, c: x0, d: y1 - y0 + g * y1, e: y3 - y0 + h * y3, f: y0, g, h };
+  }
+  const { a, b, c, d, e, f, g, h } = fwd;
+  // adjugate of [[a,b,c],[d,e,f],[g,h,1]] (det cancels in the perspective divide)
+  const inv = {
+    A: e - f * h, B: c * h - b, C: b * f - c * e,
+    D: f * g - d, E: a - c * g, F: c * d - a * f,
+    G: d * h - e * g, H: b * g - a * h, I: a * e - b * d,
+  };
+  const det = a * inv.A + b * inv.D + c * inv.G;
+  _gmHomo = { key, fwd, inv, ok: Math.abs(det) > 1e-9 };
+  return _gmHomo;
+}
+
 function gridPoint(grid, u, v) {
-  const [tl, tr, br, bl] = grid.corners;
-  const topX = tl.x + (tr.x - tl.x) * u;
-  const topY = tl.y + (tr.y - tl.y) * u;
-  const bottomX = bl.x + (br.x - bl.x) * u;
-  const bottomY = bl.y + (br.y - bl.y) * u;
+  const { fwd } = gridHomography(grid.corners);
+  const w = fwd.g * u + fwd.h * v + 1;
   return {
-    x: topX + (bottomX - topX) * v,
-    y: topY + (bottomY - topY) * v,
+    x: (fwd.a * u + fwd.b * v + fwd.c) / w,
+    y: (fwd.d * u + fwd.e * v + fwd.f) / w,
   };
 }
 
 function pointToGridUv(grid, point) {
+  // Exact inverse via the homography (matches gridPoint). Falls back to Newton
+  // iteration only if the transform is degenerate.
+  const homo = gridHomography(grid.corners);
+  if (homo.ok) {
+    const { A, B, C, D, E, F, G, H, I } = homo.inv;
+    const w = G * point.x + H * point.y + I;
+    if (Math.abs(w) > 1e-9) {
+      const u = (A * point.x + B * point.y + C) / w;
+      const v = (D * point.x + E * point.y + F) / w;
+      const padH = 0.000001;
+      if (u < -padH || v < -padH || u > 1 + padH || v > 1 + padH) return null;
+      return { u: clamp(u, 0, 1), v: clamp(v, 0, 1) };
+    }
+  }
+
   let u = (point.x - grid.x) / Math.max(1, grid.width);
   let v = (point.y - grid.y) / Math.max(1, grid.height);
 
