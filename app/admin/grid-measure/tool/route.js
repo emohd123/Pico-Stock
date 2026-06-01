@@ -102,6 +102,7 @@ export function GET() {
           <summary>Grid Setup</summary>
           <section class="control-group" aria-label="Grid setup">
             <label class="check-control">🔒 Lock scale<input id="lockScaleInput" type="checkbox" /></label>
+            <label class="check-control">🧲 Snap shapes to grid<input id="snapToGridInput" type="checkbox" /></label>
             <label>Columns<input id="colsInput" type="number" min="1" max="300" value="58" /></label>
             <label>Rows<input id="rowsInput" type="number" min="1" max="200" value="20" /></label>
             <label>Cell size m<input id="cellSizeInput" type="number" min="0.01" max="100" step="0.01" value="1" /></label>

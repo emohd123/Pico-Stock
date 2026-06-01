@@ -11,6 +11,7 @@ const inputs = {
   cellSize: document.getElementById("cellSizeInput"),
   knownDistance: document.getElementById("knownDistanceInput"),
   lockScale: document.getElementById("lockScaleInput"),
+  snapToGrid: document.getElementById("snapToGridInput"),
   left: document.getElementById("leftInput"),
   top: document.getElementById("topInput"),
   right: document.getElementById("rightInput"),
@@ -669,11 +670,20 @@ function orderQuadPoints(points) {
 }
 
 function normalizeUvRect(a, b) {
+  let au = a.u, av = a.v, bu = b.u, bv = b.v;
+  // Optional snap: round shape corners to the nearest 1m grid intersection so
+  // rect/ellipse/curve measurements land exactly on whole-metre grid lines.
+  if (inputs.snapToGrid && inputs.snapToGrid.checked) {
+    const { cols, rows } = gridConfig();
+    const sU = (u) => Math.round(u * cols) / cols;
+    const sV = (v) => Math.round(v * rows) / rows;
+    au = sU(au); bu = sU(bu); av = sV(av); bv = sV(bv);
+  }
   return {
-    u1: Math.min(a.u, b.u),
-    v1: Math.min(a.v, b.v),
-    u2: Math.max(a.u, b.u),
-    v2: Math.max(a.v, b.v),
+    u1: Math.min(au, bu),
+    v1: Math.min(av, bv),
+    u2: Math.max(au, bu),
+    v2: Math.max(av, bv),
   };
 }
 
