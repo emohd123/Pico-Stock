@@ -1,0 +1,334 @@
+'use client';
+
+import { useEffect, useRef } from 'react';
+import Link from 'next/link';
+
+/**
+ * Pico cinematic arena hero (Three.js).
+ * Inspired by the FIBA 3x3 World Tour arena build in Manama.
+ * - Lazy-loads three only on the client.
+ * - Respects prefers-reduced-motion (renders a static frame, no animation).
+ * - Scales crowd/beam counts down on small / low-power devices.
+ */
+export default function ArenaHero() {
+    const canvasRef = useRef(null);
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        let renderer, cleanupFns = [];
+        let rafId = null;
+        let disposed = false;
+
+        const reduceMotion =
+            typeof window !== 'undefined' &&
+            window.matchMedia &&
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const isMobile = typeof window !== 'undefined' && window.innerWidth < 760;
+        const QUALITY = isMobile ? 0.6 : 1;
+
+        import('three')
+            .then((THREE) => {
+                if (disposed) return;
+
+                const TEAL = 0x00c9c9, EMBER = 0xff5a1f, EMBER2 = 0xff8a3d, FABRIC = 0xc9b6ad;
+                const scene = new THREE.Scene();
+                scene.fog = new THREE.FogExp2(0x0b0e16, 0.03);
+
+                const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 400);
+                renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, alpha: true });
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
+
+                function size() {
+                    const w = canvas.clientWidth || window.innerWidth;
+                    const h = canvas.clientHeight || window.innerHeight;
+                    camera.aspect = w / h;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(w, h, false);
+                }
+
+                const arena = new THREE.Group();
+                scene.add(arena);
+                arena.position.y = -2;
+
+                /* ---- canvas-texture engine (redraws when logo loads) ---- */
+                const texList = [];
+                function tex(draw, w, h) {
+                    const c = document.createElement('canvas');
+                    c.width = w; c.height = h;
+                    const ctx = c.getContext('2d');
+                    const t = new THREE.CanvasTexture(c);
+                    t.anisotropy = 4;
+                    t._redraw = () => { ctx.clearRect(0, 0, w, h); draw(ctx, w, h); t.needsUpdate = true; };
+                    t._redraw();
+                    texList.push(t);
+                    return t;
+                }
+                const logoImg = new Image();
+                let logoReady = false;
+                logoImg.onload = () => { logoReady = true; texList.forEach((t) => t._redraw()); };
+                logoImg.src = '/branding/pico-logo.png';
+                function drawLogo(x, cx, cy, tw) {
+                    if (!logoReady) return;
+                    const ar = logoImg.width / logoImg.height;
+                    x.drawImage(logoImg, cx - tw / 2, cy - tw / ar / 2, tw, tw / ar);
+                }
+                function roundRect(x, X, Y, W, H, r) {
+                    x.beginPath(); x.moveTo(X + r, Y);
+                    x.arcTo(X + W, Y, X + W, Y + H, r); x.arcTo(X + W, Y + H, X, Y + H, r);
+                    x.arcTo(X, Y + H, X, Y, r); x.arcTo(X, Y, X + W, Y, r); x.closePath();
+                }
+                const scoreTex = tex((x, w, h) => {
+                    roundRect(x, 6, 6, w - 12, h - 12, 22); x.fillStyle = '#f5f8f9'; x.fill();
+                    x.lineWidth = 6; x.strokeStyle = 'rgba(0,165,165,.55)'; x.stroke();
+                    drawLogo(x, w / 2, h / 2 - 22, 300);
+                    x.fillStyle = 'rgba(60,70,78,.7)'; x.font = '700 26px Inter,Arial';
+                    x.textAlign = 'center'; x.textBaseline = 'alphabetic';
+                    x.fillText('TOTAL BRAND ACTIVATION', w / 2, h - 44);
+                }, 512, 256);
+                const ledTex = tex((x, w, h) => {
+                    x.fillStyle = '#ffffff'; x.fillRect(0, 0, w, h);
+                    drawLogo(x, w / 2, h / 2 - 12, 330);
+                    x.fillStyle = 'rgba(60,70,78,.7)'; x.font = '700 28px Inter,Arial';
+                    x.textAlign = 'center'; x.textBaseline = 'alphabetic';
+                    x.fillText('TOTAL BRAND ACTIVATION', w / 2, h - 46);
+                }, 512, 256);
+                const courtTex = tex((x, w, h) => {
+                    x.clearRect(0, 0, w, h);
+                    const g = x.createRadialGradient(w / 2, h / 2, 40, w / 2, h / 2, h * 0.62);
+                    g.addColorStop(0, 'rgba(255,255,255,.16)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+                    x.fillStyle = g; x.fillRect(0, 0, w, h);
+                    drawLogo(x, w / 2, h / 2 - 30, 520);
+                    x.fillStyle = 'rgba(220,230,236,.8)'; x.font = '800 44px Inter,Arial';
+                    x.textAlign = 'center'; x.textBaseline = 'alphabetic';
+                    x.fillText('TOTAL BRAND ACTIVATION', w / 2, h / 2 + 150);
+                }, 1024, 512);
+
+                /* ---- lighting ---- */
+                scene.add(new THREE.AmbientLight(0x20242e, 0.85));
+                const moon = new THREE.DirectionalLight(0x8aa0c0, 0.32); moon.position.set(10, 30, 10); scene.add(moon);
+                const warm = new THREE.PointLight(EMBER, 2.4, 70); warm.position.set(0, 4, 0); arena.add(warm);
+                const warm2 = new THREE.PointLight(EMBER2, 1.4, 90); warm2.position.set(0, 14, 0); arena.add(warm2);
+                const tealKey = new THREE.PointLight(TEAL, 1.3, 80); tealKey.position.set(-18, 10, 8); arena.add(tealKey);
+                const strobe = new THREE.PointLight(0xffffff, 0, 120); strobe.position.set(0, 18, 0); arena.add(strobe);
+
+                const R = 12, RIM = 6.2, APEX = 11.5;
+
+                /* ---- canopy ---- */
+                const canopyGeo = new THREE.ConeGeometry(R, APEX - RIM, 60, 1, true);
+                const canopy = new THREE.Mesh(canopyGeo, new THREE.MeshStandardMaterial({ color: FABRIC, emissive: 0x140a06, side: THREE.DoubleSide, metalness: 0.1, roughness: 0.92 }));
+                canopy.position.y = RIM + (APEX - RIM) / 2; arena.add(canopy);
+                const spokes = new THREE.Mesh(canopyGeo, new THREE.MeshBasicMaterial({ color: 0x2a1c14, wireframe: true, transparent: true, opacity: 0.22 }));
+                spokes.position.copy(canopy.position); arena.add(spokes);
+                const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.7, 0.8, 16), new THREE.MeshStandardMaterial({ color: 0x10151d, metalness: 0.8, roughness: 0.4 }));
+                hub.position.y = APEX - 0.2; arena.add(hub);
+                const hubGlow = new THREE.Mesh(new THREE.SphereGeometry(0.35, 16, 16), new THREE.MeshBasicMaterial({ color: 0xfff0d0 }));
+                hubGlow.position.y = APEX - 0.5; arena.add(hubGlow);
+
+                /* ---- scoreboard ---- */
+                const sbGroup = new THREE.Group(); arena.add(sbGroup);
+                const sb = new THREE.Mesh(new THREE.BoxGeometry(3, 1.6, 3), new THREE.MeshBasicMaterial({ map: scoreTex }));
+                sb.position.y = RIM + 1.4; sbGroup.add(sb);
+                const sbTop = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.18, 3.2), new THREE.MeshStandardMaterial({ color: 0x10151d, metalness: 0.7, roughness: 0.4 }));
+                sbTop.position.y = RIM + 2.3; sbGroup.add(sbTop);
+                const cable = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, APEX - (RIM + 2.3), 6), new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.6 }));
+                cable.position.y = (APEX + RIM + 2.3) / 2; sbGroup.add(cable);
+
+                /* ---- truss ring + posts ---- */
+                const ring = new THREE.Mesh(new THREE.TorusGeometry(R, 0.22, 10, 80), new THREE.MeshStandardMaterial({ color: 0xb8c3d2, metalness: 0.95, roughness: 0.3 }));
+                ring.rotation.x = Math.PI / 2; ring.position.y = RIM; arena.add(ring);
+                const ring2 = new THREE.Mesh(new THREE.TorusGeometry(R - 0.45, 0.12, 8, 80), new THREE.MeshStandardMaterial({ color: 0x8b97a8, metalness: 0.9, roughness: 0.35 }));
+                ring2.rotation.x = Math.PI / 2; ring2.position.y = RIM - 0.5; arena.add(ring2);
+                const postMat = new THREE.MeshStandardMaterial({ color: 0x9fb0c2, metalness: 0.9, roughness: 0.35 });
+                for (let i = 0; i < 28; i++) {
+                    const a = (i / 28) * Math.PI * 2;
+                    const p = new THREE.Mesh(new THREE.BoxGeometry(0.16, RIM, 0.16), postMat);
+                    p.position.set(Math.cos(a) * R, RIM / 2, Math.sin(a) * R); arena.add(p);
+                }
+
+                /* ---- court + logo ---- */
+                const court = new THREE.Mesh(new THREE.CircleGeometry(R - 1.3, 64), new THREE.MeshStandardMaterial({ color: 0x14233b, metalness: 0.3, roughness: 0.7, emissive: 0x06121f, emissiveIntensity: 0.5 }));
+                court.rotation.x = -Math.PI / 2; court.position.y = 0.02; arena.add(court);
+                const courtLogo = new THREE.Mesh(new THREE.PlaneGeometry(12, 6), new THREE.MeshBasicMaterial({ map: courtTex, transparent: true, depthWrite: false }));
+                courtLogo.rotation.x = -Math.PI / 2; courtLogo.position.y = 0.06; arena.add(courtLogo);
+                const mk = new THREE.LineBasicMaterial({ color: 0x8fb6d6, transparent: true, opacity: 0.5 });
+                const cp = [];
+                for (let i = 0; i <= 64; i++) { const a = i / 64 * Math.PI * 2; cp.push(new THREE.Vector3(Math.cos(a) * 2.2, 0.05, Math.sin(a) * 2.2)); }
+                arena.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(cp), mk));
+
+                /* ---- grandstands + crowd ---- */
+                const standMat = new THREE.MeshStandardMaterial({ color: 0x0e1828, metalness: 0.4, roughness: 0.7 });
+                const cPos = [], cBase = [], cAng = [];
+                const pal = [0x2f6fb0, 0x3b8fd0, 0x59b0e0, 0x7fd0e8, 0x244e7a, 0x9fe0ee];
+                const perRow = Math.round(72 * QUALITY);
+                function stand(angle) {
+                    const g = new THREE.Group(); const rows = 6, seatW = 11;
+                    for (let r = 0; r < rows; r++) {
+                        const depth = 0.9, hh = 0.55 + r * 0.55;
+                        const tier = new THREE.Mesh(new THREE.BoxGeometry(seatW, hh, depth), standMat);
+                        tier.position.set(0, hh / 2, R + 0.6 + r * depth); g.add(tier);
+                        for (let c = 0; c < perRow; c++) {
+                            const lx = (Math.random() - 0.5) * seatW;
+                            const lz = R + 0.6 + r * depth + (Math.random() - 0.5) * depth * 0.6;
+                            const ly = hh + 0.12 + Math.random() * 0.12;
+                            const wx = Math.cos(angle) * lz - Math.sin(angle) * lx;
+                            const wz = Math.sin(angle) * lz + Math.cos(angle) * lx;
+                            cPos.push(wx, ly, wz);
+                            const col = new THREE.Color(pal[(Math.random() * pal.length) | 0]);
+                            cBase.push(col.r, col.g, col.b);
+                            cAng.push(Math.atan2(wz, wx));
+                        }
+                    }
+                    const screen = new THREE.Mesh(new THREE.BoxGeometry(6, 2.2, 0.2), new THREE.MeshBasicMaterial({ map: ledTex }));
+                    screen.position.set(0, RIM + 1.5, R + 1.2); g.add(screen);
+                    g.rotation.y = angle; return g;
+                }
+                [0, Math.PI / 2, Math.PI, Math.PI * 1.5].forEach((a) => arena.add(stand(a)));
+                const cg = new THREE.BufferGeometry();
+                cg.setAttribute('position', new THREE.Float32BufferAttribute(cPos, 3));
+                const colAttr = new THREE.Float32BufferAttribute(cBase.slice(), 3);
+                cg.setAttribute('color', colAttr);
+                const crowd = new THREE.Points(cg, new THREE.PointsMaterial({ size: 0.18, vertexColors: true, transparent: true, opacity: 0.95, depthWrite: false }));
+                arena.add(crowd);
+                const cN = cAng.length;
+
+                /* ---- sweeping beams ---- */
+                const beams = new THREE.Group(); arena.add(beams);
+                const beamList = [];
+                const NB = Math.round(18 * QUALITY);
+                for (let i = 0; i < NB; i++) {
+                    const a = (i / NB) * Math.PI * 2;
+                    const cone = new THREE.Mesh(new THREE.ConeGeometry(1.1, 7, 16, 1, true), new THREE.MeshBasicMaterial({ color: EMBER, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+                    cone.position.set(Math.cos(a) * (R - 0.4), RIM + 0.3, Math.sin(a) * (R - 0.4));
+                    cone.lookAt(0, APEX - 1, 0); cone.rotateX(Math.PI / 2);
+                    cone.userData = { base: 0.12, phase: Math.random() * 6.28, spd: 0.6 + Math.random() * 0.8 };
+                    beams.add(cone); beamList.push(cone);
+                    const fix = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), new THREE.MeshBasicMaterial({ color: EMBER2 }));
+                    fix.position.copy(cone.position); arena.add(fix);
+                }
+
+                /* ---- falling sparks ---- */
+                const sCount = Math.round(160 * QUALITY);
+                const sg = new THREE.BufferGeometry(), sp = new Float32Array(sCount * 3), sv = [];
+                for (let i = 0; i < sCount; i++) { const a = Math.random() * 6.28, rr = Math.random() * R * 0.9; sp[i * 3] = Math.cos(a) * rr; sp[i * 3 + 1] = Math.random() * APEX; sp[i * 3 + 2] = Math.sin(a) * rr; sv.push(0.01 + Math.random() * 0.04); }
+                sg.setAttribute('position', new THREE.BufferAttribute(sp, 3));
+                const sparks = new THREE.Points(sg, new THREE.PointsMaterial({ color: EMBER2, size: 0.09, transparent: true, opacity: 0.85, depthWrite: false, blending: THREE.AdditiveBlending }));
+                arena.add(sparks);
+
+                /* ---- interaction ---- */
+                let mx = 0, my = 0, tmx = 0, tmy = 0, scrollY = 0;
+                const onMove = (e) => { tmx = (e.clientX / window.innerWidth - 0.5); tmy = (e.clientY / window.innerHeight - 0.5); };
+                const onScroll = () => { scrollY = window.scrollY; };
+                const onResize = () => size();
+                window.addEventListener('pointermove', onMove);
+                window.addEventListener('scroll', onScroll, { passive: true });
+                window.addEventListener('resize', onResize);
+                cleanupFns.push(() => window.removeEventListener('pointermove', onMove));
+                cleanupFns.push(() => window.removeEventListener('scroll', onScroll));
+                cleanupFns.push(() => window.removeEventListener('resize', onResize));
+                size();
+
+                const clock = new THREE.Clock();
+                const start = performance.now();
+                let lastStrobe = 0;
+                const smooth = (x) => x * x * (3 - 2 * x);
+                const cA = new THREE.Color(EMBER), cB = new THREE.Color(TEAL), tmpC = new THREE.Color();
+
+                function frame() {
+                    const t = clock.getElapsedTime();
+                    const el = (performance.now() - start) / 1000;
+                    mx += (tmx - mx) * 0.05; my += (tmy - my) * 0.05;
+
+                    const mix = (Math.sin(t * 0.5) * 0.5 + 0.5);
+                    tmpC.copy(cA).lerp(cB, mix);
+                    warm.color.copy(tmpC); beams.children.forEach((b) => b.material.color.copy(tmpC));
+                    warm.intensity = 2.0 + Math.sin(t * 1.6) * 0.7;
+                    beamList.forEach((b) => { b.material.opacity = b.userData.base + Math.sin(t * b.userData.spd + b.userData.phase) * 0.09; });
+                    beams.rotation.y = t * 0.18;
+
+                    if (t - lastStrobe > 7) lastStrobe = t;
+                    const sPhase = t - lastStrobe;
+                    strobe.intensity = (sPhase < 0.18 ? (1 - sPhase / 0.18) : 0) * 7;
+
+                    sbGroup.rotation.y = t * 0.25; sb.position.y = RIM + 1.4 + Math.sin(t * 0.8) * 0.12;
+
+                    const colArr = colAttr.array, wave = t * 1.1;
+                    for (let i = 0; i < cN; i++) {
+                        const d = Math.cos(cAng[i] - wave);
+                        const b = 0.7 + Math.max(0, d) * Math.max(0, d) * 1.7;
+                        colArr[i * 3] = Math.min(1, cBase[i * 3] * b);
+                        colArr[i * 3 + 1] = Math.min(1, cBase[i * 3 + 1] * b);
+                        colArr[i * 3 + 2] = Math.min(1, cBase[i * 3 + 2] * b);
+                    }
+                    colAttr.needsUpdate = true;
+
+                    const sa = sg.attributes.position.array;
+                    for (let i = 0; i < sCount; i++) { sa[i * 3 + 1] -= sv[i] * 6; if (sa[i * 3 + 1] < 0.1) { const a = Math.random() * 6.28, rr = Math.random() * R * 0.9; sa[i * 3] = Math.cos(a) * rr; sa[i * 3 + 1] = APEX - 0.5; sa[i * 3 + 2] = Math.sin(a) * rr; } }
+                    sg.attributes.position.needsUpdate = true;
+                    courtLogo.material.opacity = 0.85 + Math.sin(t * 1.2) * 0.1;
+
+                    const intro = smooth(Math.min(el / 4.8, 1));
+                    const f = Math.min(scrollY / (window.innerHeight || 800), 1);
+                    const orbit = t * 0.05;
+                    const radius = THREE.MathUtils.lerp(2, 27, intro) + mx * 3;
+                    const camY = THREE.MathUtils.lerp(46, 11, intro) - my * 2.4 + f * 5;
+                    camera.position.set(Math.sin(orbit) * radius, camY, Math.cos(orbit) * radius);
+                    camera.lookAt(0, THREE.MathUtils.lerp(8, 4.5, intro) - f * 1.2, 0);
+
+                    renderer.render(scene, camera);
+                }
+
+                if (reduceMotion) {
+                    // single settled frame, no animation loop
+                    const t = 3, el = 6;
+                    void t; void el;
+                    camera.position.set(0, 11, 27);
+                    camera.lookAt(0, 4.5, 0);
+                    // give crowd a neutral brightness
+                    renderer.render(scene, camera);
+                } else {
+                    const loop = () => { if (disposed) return; frame(); rafId = requestAnimationFrame(loop); };
+                    const onVis = () => { if (document.hidden) { if (rafId) cancelAnimationFrame(rafId); rafId = null; } else if (!rafId && !disposed) loop(); };
+                    document.addEventListener('visibilitychange', onVis);
+                    cleanupFns.push(() => document.removeEventListener('visibilitychange', onVis));
+                    loop();
+                }
+            })
+            .catch(() => {
+                // three failed to load — leave the CSS gradient fallback visible
+            });
+
+        return () => {
+            disposed = true;
+            if (rafId) cancelAnimationFrame(rafId);
+            cleanupFns.forEach((fn) => fn());
+            if (renderer) {
+                renderer.dispose();
+                renderer.forceContextLoss && renderer.forceContextLoss();
+            }
+        };
+    }, []);
+
+    return (
+        <header className="arena-hero">
+            <canvas ref={canvasRef} className="arena-canvas" />
+            <div className="arena-vignette" />
+            <div className="arena-fade" />
+            <div className="arena-inner">
+                <div className="arena-badge"><span className="arena-pulse" /> &#10024; Premium Exhibition &amp; Event Services &middot; Bahrain</div>
+                <h1 className="arena-title">We Build the <span className="arena-highlight">Show</span></h1>
+                <p className="arena-sub">
+                    From a single booth to a full arena — furniture, LED displays, graphics, and structures,
+                    designed and installed by Pico. Order online and we&apos;ll handle the rest.
+                </p>
+                <div className="arena-actions">
+                    <Link href="/catalogue" className="btn btn-primary btn-lg">Browse Catalogue &#8594;</Link>
+                    <Link href="/cart" className="btn btn-secondary btn-lg">&#128722; View Cart</Link>
+                </div>
+            </div>
+            <div className="arena-credit">Inspired by our build for the FIBA 3x3 World Tour Finals — Manama, Bahrain.</div>
+            <div className="arena-scroll">Scroll</div>
+        </header>
+    );
+}

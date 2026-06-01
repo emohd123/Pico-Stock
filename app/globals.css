@@ -2,6 +2,12 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
+/* Tailwind utilities for new/enhanced sections. Preflight is disabled in
+   tailwind.config.js so existing hand-written styles below are untouched. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @font-face {
   font-family: 'Noto Sans Arabic Local';
   src: url('/fonts/NotoSansArabic-Regular.ttf') format('truetype');
@@ -8438,3 +8444,35 @@ input[type="checkbox"] {
   .cpv2-bento-right { grid-template-columns: 1fr; }
 }
 
+
+/* ===================== Arena 3D Hero ===================== */
+.arena-hero{position:relative;height:100vh;min-height:660px;display:grid;place-items:center;text-align:center;overflow:hidden;
+  background:radial-gradient(ellipse at 50% 38%, #14233b, #0B1120 72%);}
+.arena-canvas{position:absolute;inset:0;z-index:0;display:block;width:100%;height:100%}
+.arena-vignette{position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(ellipse 90% 80% at 50% 42%,transparent 30%,rgba(11,17,32,.45) 74%,#0B1120 100%)}
+.arena-fade{position:absolute;left:0;right:0;bottom:0;height:210px;z-index:1;pointer-events:none;
+  background:linear-gradient(transparent,#0B1120)}
+.arena-inner{position:relative;z-index:2;padding:0 1.5rem;transform:translateY(-4px)}
+.arena-badge{display:inline-flex;align-items:center;gap:.6rem;padding:.62rem 1.4rem;border-radius:999px;
+  background:rgba(255,255,255,.1);border:1px solid rgba(0,201,201,.4);font-size:1.02rem;font-weight:700;
+  letter-spacing:.01em;color:#F9FAFB;margin-bottom:1.6rem;backdrop-filter:blur(6px);
+  box-shadow:0 4px 24px rgba(0,201,201,.12);animation:arenaRise .8s ease both}
+.arena-pulse{width:10px;height:10px;border-radius:50%;background:#00C9C9;animation:arenaPulse 2s infinite;flex:none}
+@keyframes arenaPulse{0%{box-shadow:0 0 0 0 rgba(0,201,201,.55)}70%{box-shadow:0 0 0 10px rgba(0,201,201,0)}100%{box-shadow:0 0 0 0 rgba(0,201,201,0)}}
+.arena-title{font-size:clamp(2.7rem,7vw,5.4rem);line-height:1.02;font-weight:900;letter-spacing:-.035em;
+  margin-bottom:1.2rem;color:#F9FAFB;animation:arenaRise .9s .05s ease both;text-shadow:0 8px 44px rgba(0,0,0,.6)}
+.arena-highlight{background:linear-gradient(120deg,#00C9C9,#FF8A3D 95%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.arena-sub{max-width:620px;margin:0 auto 2rem;color:#cdd6e2;font-size:1.12rem;animation:arenaRise .9s .14s ease both}
+.arena-actions{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;animation:arenaRise .9s .22s ease both}
+.arena-credit{position:absolute;bottom:24px;left:24px;z-index:2;font-size:.72rem;letter-spacing:.06em;color:#6B7280;
+  max-width:230px;text-align:left;line-height:1.4;border-left:2px solid #FF5A1F;padding-left:.6rem}
+.arena-scroll{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);z-index:2;color:#6B7280;
+  font-size:.75rem;letter-spacing:.18em;text-transform:uppercase;animation:arenaBob 2.4s ease-in-out infinite}
+@keyframes arenaRise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes arenaBob{0%,100%{transform:translateX(-50%) translateY(0);opacity:.6}50%{transform:translateX(-50%) translateY(8px);opacity:1}}
+@media (max-width:760px){.arena-credit{display:none}}
+@media (prefers-reduced-motion: reduce){
+  .arena-badge,.arena-title,.arena-sub,.arena-actions{animation:none}
+  .arena-pulse,.arena-scroll{animation:none}
+}
