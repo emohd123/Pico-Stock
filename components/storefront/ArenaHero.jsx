@@ -41,7 +41,7 @@ export default function ArenaHero() {
                 renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
                 renderer.setClearColor(0x000000, 0);
 
-                let composer = null, bloomPass = null;
+                let composer = null, bloomPass = null, ReflectorCls = null;
                 const useBloom = !isMobile && !reduceMotion;
                 function renderFrame() { if (composer) composer.render(); else renderer.render(scene, camera); }
 
@@ -124,13 +124,15 @@ export default function ArenaHero() {
                 /* ---- bloom post-processing (desktop only) ---- */
                 if (useBloom) {
                     try {
-                        const [{ EffectComposer }, { RenderPass }, { UnrealBloomPass }, { OutputPass }] = await Promise.all([
+                        const [{ EffectComposer }, { RenderPass }, { UnrealBloomPass }, { OutputPass }, { Reflector }] = await Promise.all([
                             import('three/examples/jsm/postprocessing/EffectComposer.js'),
                             import('three/examples/jsm/postprocessing/RenderPass.js'),
                             import('three/examples/jsm/postprocessing/UnrealBloomPass.js'),
                             import('three/examples/jsm/postprocessing/OutputPass.js'),
+                            import('three/examples/jsm/objects/Reflector.js'),
                         ]);
                         if (disposed) return;
+                        ReflectorCls = Reflector;
                         const w0 = canvas.clientWidth || window.innerWidth;
                         const h0 = canvas.clientHeight || window.innerHeight;
                         const dpr = renderer.getPixelRatio();
@@ -183,7 +185,15 @@ export default function ArenaHero() {
                 }
 
                 /* ---- court + logo ---- */
-                const court = new THREE.Mesh(new THREE.CircleGeometry(R - 1.3, 64), new THREE.MeshStandardMaterial({ color: 0x14233b, metalness: 0.3, roughness: 0.7, emissive: 0x06121f, emissiveIntensity: 0.5 }));
+                // reflective glossy floor (desktop) — mirrors beams/logo/crowd like a real arena court
+                if (ReflectorCls) {
+                    const mirror = new ReflectorCls(new THREE.CircleGeometry(R - 1.25, 64), {
+                        textureWidth: 1024, textureHeight: 1024, color: 0x2b3a4c, clipBias: 0.003,
+                    });
+                    mirror.rotation.x = -Math.PI / 2; mirror.position.y = 0.0; arena.add(mirror);
+                }
+                // court tint laid over the mirror — translucent so reflections read through it (wet-court look)
+                const court = new THREE.Mesh(new THREE.CircleGeometry(R - 1.3, 64), new THREE.MeshStandardMaterial({ color: 0x14233b, metalness: 0.3, roughness: 0.7, emissive: 0x06121f, emissiveIntensity: 0.5, transparent: !!ReflectorCls, opacity: ReflectorCls ? 0.5 : 1, depthWrite: !ReflectorCls }));
                 court.rotation.x = -Math.PI / 2; court.position.y = 0.02; arena.add(court);
                 const courtLogo = new THREE.Mesh(new THREE.PlaneGeometry(12, 6), new THREE.MeshBasicMaterial({ map: courtTex, transparent: true, depthWrite: false }));
                 courtLogo.rotation.x = -Math.PI / 2; courtLogo.position.y = 0.06; arena.add(courtLogo);
@@ -204,7 +214,7 @@ export default function ArenaHero() {
 
                 /* ---- grandstands + crowd ---- */
                 const standMat = new THREE.MeshStandardMaterial({ color: 0x182c44, metalness: 0.4, roughness: 0.7, emissive: 0x0a1d30, emissiveIntensity: 0.6 });
-                const cPos = [], cBase = [], cAng = [];
+                const cPos = [], cBase = [], cAng = [], screenList = [];
                 const pal = [0x2f6fb0, 0x3b8fd0, 0x59b0e0, 0x7fd0e8, 0x244e7a, 0x9fe0ee];
                 const perRow = Math.round(96 * QUALITY);
                 function stand(angle) {
@@ -227,6 +237,7 @@ export default function ArenaHero() {
                     }
                     const screen = new THREE.Mesh(new THREE.BoxGeometry(6, 2.2, 0.2), new THREE.MeshBasicMaterial({ map: ledTex }));
                     screen.position.set(0, RIM + 1.5, R + 1.2); g.add(screen);
+                    screen.userData = { phase: Math.random() * 6.28 }; screenList.push(screen);
                     g.rotation.y = angle; return g;
                 }
                 [0, Math.PI / 2, Math.PI, Math.PI * 1.5].forEach((a) => arena.add(stand(a)));
@@ -290,6 +301,43 @@ export default function ArenaHero() {
                 const sparks = new THREE.Points(sg, new THREE.PointsMaterial({ color: EMBER2, size: 0.09, transparent: true, opacity: 0.85, depthWrite: false, blending: THREE.AdditiveBlending }));
                 arena.add(sparks);
 
+                /* ---- drifting air haze (dust motes the beams cut through) ---- */
+                const moteCount = Math.round(120 * QUALITY);
+                const mg = new THREE.BufferGeometry(), mPos = new Float32Array(moteCount * 3), mRise = [], mPhase = [];
+                for (let i = 0; i < moteCount; i++) {
+                    const a = Math.random() * 6.28, rr = Math.random() * (R - 0.5);
+                    mPos[i * 3] = Math.cos(a) * rr; mPos[i * 3 + 1] = Math.random() * APEX; mPos[i * 3 + 2] = Math.sin(a) * rr;
+                    mRise.push(0.1 + Math.random() * 0.22); mPhase.push(Math.random() * 6.28);
+                }
+                mg.setAttribute('position', new THREE.BufferAttribute(mPos, 3));
+                const motes = new THREE.Points(mg, new THREE.PointsMaterial({ color: 0x9fe0ee, size: 0.06, transparent: true, opacity: 0.3, depthWrite: false, blending: THREE.AdditiveBlending }));
+                arena.add(motes);
+
+                /* ---- signature firework bursts above the canopy ---- */
+                const FW = Math.round(90 * QUALITY);
+                const fwG = new THREE.BufferGeometry();
+                const fwPos = new Float32Array(FW * 3), fwCol = new Float32Array(FW * 3), fwVel = new Float32Array(FW * 3);
+                for (let i = 0; i < FW; i++) fwPos[i * 3 + 1] = -80; // parked off-screen until launch
+                fwG.setAttribute('position', new THREE.BufferAttribute(fwPos, 3));
+                fwG.setAttribute('color', new THREE.BufferAttribute(fwCol, 3));
+                const fwMat = new THREE.PointsMaterial({ size: 0.18, vertexColors: true, transparent: true, opacity: 0.95, depthWrite: false, blending: THREE.AdditiveBlending });
+                const fireworks = new THREE.Points(fwG, fwMat); arena.add(fireworks);
+                const fwPalette = [new THREE.Color(TEAL), new THREE.Color(0xffd27a), new THREE.Color(EMBER2), new THREE.Color(0xffffff)];
+                const fwBase = new THREE.Color();
+                let fwLife = 0, nextFw = 3.5;
+                function launchFw() {
+                    fwBase.copy(fwPalette[(Math.random() * fwPalette.length) | 0]);
+                    const ox = (Math.random() - 0.5) * 10, oy = APEX + 2.5 + Math.random() * 3, oz = (Math.random() - 0.5) * 10;
+                    for (let i = 0; i < FW; i++) {
+                        fwPos[i * 3] = ox; fwPos[i * 3 + 1] = oy; fwPos[i * 3 + 2] = oz;
+                        const u = Math.random() * 2 - 1, th = Math.random() * 6.28, sp = 2.4 + Math.random() * 3.4, sq = Math.sqrt(1 - u * u);
+                        fwVel[i * 3] = Math.cos(th) * sq * sp; fwVel[i * 3 + 1] = u * sp; fwVel[i * 3 + 2] = Math.sin(th) * sq * sp;
+                        fwCol[i * 3] = fwBase.r; fwCol[i * 3 + 1] = fwBase.g; fwCol[i * 3 + 2] = fwBase.b;
+                    }
+                    fwLife = 1;
+                    fwG.attributes.position.needsUpdate = true; fwG.attributes.color.needsUpdate = true;
+                }
+
                 /* ---- interaction ---- */
                 let mx = 0, my = 0, tmx = 0, tmy = 0, scrollY = 0;
                 const onMove = (e) => { tmx = (e.clientX / window.innerWidth - 0.5); tmy = (e.clientY / window.innerHeight - 0.5); };
@@ -305,12 +353,13 @@ export default function ArenaHero() {
 
                 const clock = new THREE.Clock();
                 const start = performance.now();
-                let lastStrobe = 0;
+                let lastStrobe = 0, lastT = 0;
                 const smooth = (x) => x * x * (3 - 2 * x);
                 const cA = new THREE.Color(EMBER), cB = new THREE.Color(TEAL), tmpC = new THREE.Color();
 
                 function frame() {
                     const t = clock.getElapsedTime();
+                    const dt = Math.min(0.05, t - lastT); lastT = t;
                     const el = (performance.now() - start) / 1000;
                     mx += (tmx - mx) * 0.05; my += (tmy - my) * 0.05;
 
@@ -345,6 +394,36 @@ export default function ArenaHero() {
                     for (let i = 0; i < sCount; i++) { sa[i * 3 + 1] -= sv[i] * 6; if (sa[i * 3 + 1] < 0.1) { const a = Math.random() * 6.28, rr = Math.random() * R * 0.9; sa[i * 3] = Math.cos(a) * rr; sa[i * 3 + 1] = APEX - 0.5; sa[i * 3 + 2] = Math.sin(a) * rr; } }
                     sg.attributes.position.needsUpdate = true;
                     courtLogo.material.opacity = 0.85 + Math.sin(t * 1.2) * 0.1;
+
+                    // LED screen sheen — subtle brightness breathing so the boards read as live screens
+                    for (let i = 0; i < screenList.length; i++) {
+                        const s = 0.82 + Math.sin(t * 1.8 + screenList[i].userData.phase) * 0.14;
+                        screenList[i].material.color.setScalar(s);
+                    }
+
+                    // drifting air haze
+                    const ma = mg.attributes.position.array;
+                    for (let i = 0; i < moteCount; i++) {
+                        ma[i * 3 + 1] += mRise[i] * dt;
+                        ma[i * 3] += Math.sin(t * 0.3 + mPhase[i]) * 0.004;
+                        if (ma[i * 3 + 1] > APEX) ma[i * 3 + 1] = 0.1;
+                    }
+                    mg.attributes.position.needsUpdate = true;
+
+                    // signature fireworks
+                    if (t > nextFw) { launchFw(); nextFw = t + 4.5 + Math.random() * 3.5; }
+                    if (fwLife > 0) {
+                        fwLife = Math.max(0, fwLife - dt * 0.5);
+                        for (let i = 0; i < FW; i++) {
+                            fwVel[i * 3 + 1] -= dt * 3.2; // gravity
+                            fwPos[i * 3] += fwVel[i * 3] * dt;
+                            fwPos[i * 3 + 1] += fwVel[i * 3 + 1] * dt;
+                            fwPos[i * 3 + 2] += fwVel[i * 3 + 2] * dt;
+                            fwCol[i * 3] = fwBase.r * fwLife; fwCol[i * 3 + 1] = fwBase.g * fwLife; fwCol[i * 3 + 2] = fwBase.b * fwLife;
+                        }
+                        fwMat.opacity = 0.95 * fwLife;
+                        fwG.attributes.position.needsUpdate = true; fwG.attributes.color.needsUpdate = true;
+                    }
 
                     const intro = smooth(Math.min(el / 4.8, 1));
                     const f = Math.min(scrollY / (window.innerHeight || 800), 1);
