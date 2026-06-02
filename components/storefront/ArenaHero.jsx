@@ -29,7 +29,7 @@ export default function ArenaHero() {
         const QUALITY = isMobile ? 0.6 : 1;
 
         import('three')
-            .then((THREE) => {
+            .then(async (THREE) => {
                 if (disposed) return;
 
                 const TEAL = 0x00c9c9, EMBER = 0xff5a1f, EMBER2 = 0xff8a3d, FABRIC = 0xc9b6ad;
@@ -39,6 +39,11 @@ export default function ArenaHero() {
                 const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 400);
                 renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, alpha: true });
                 renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
+                renderer.setClearColor(0x000000, 0);
+
+                let composer = null, bloomPass = null;
+                const useBloom = !isMobile && !reduceMotion;
+                function renderFrame() { if (composer) composer.render(); else renderer.render(scene, camera); }
 
                 function size() {
                     const w = canvas.clientWidth || window.innerWidth;
@@ -46,6 +51,7 @@ export default function ArenaHero() {
                     camera.aspect = w / h;
                     camera.updateProjectionMatrix();
                     renderer.setSize(w, h, false);
+                    if (composer) composer.setSize(w, h);
                 }
 
                 const arena = new THREE.Group();
@@ -80,7 +86,7 @@ export default function ArenaHero() {
                     x.arcTo(X, Y + H, X, Y, r); x.arcTo(X, Y, X + W, Y, r); x.closePath();
                 }
                 const scoreTex = tex((x, w, h) => {
-                    roundRect(x, 6, 6, w - 12, h - 12, 22); x.fillStyle = '#f5f8f9'; x.fill();
+                    roundRect(x, 6, 6, w - 12, h - 12, 22); x.fillStyle = '#cfd8de'; x.fill();
                     x.lineWidth = 6; x.strokeStyle = 'rgba(0,165,165,.55)'; x.stroke();
                     drawLogo(x, w / 2, h / 2 - 22, 300);
                     x.fillStyle = 'rgba(60,70,78,.7)'; x.font = '700 26px Inter,Arial';
@@ -88,7 +94,7 @@ export default function ArenaHero() {
                     x.fillText('TOTAL BRAND ACTIVATION', w / 2, h - 44);
                 }, 512, 256);
                 const ledTex = tex((x, w, h) => {
-                    x.fillStyle = '#ffffff'; x.fillRect(0, 0, w, h);
+                    x.fillStyle = '#c2ccd3'; x.fillRect(0, 0, w, h);
                     drawLogo(x, w / 2, h / 2 - 12, 330);
                     x.fillStyle = 'rgba(60,70,78,.7)'; x.font = '700 28px Inter,Arial';
                     x.textAlign = 'center'; x.textBaseline = 'alphabetic';
@@ -107,11 +113,36 @@ export default function ArenaHero() {
 
                 /* ---- lighting ---- */
                 scene.add(new THREE.AmbientLight(0x20242e, 0.85));
+                scene.add(new THREE.HemisphereLight(0x0d2c3e, 0x05070c, 0.55)); // teal night sky lift so stands read
                 const moon = new THREE.DirectionalLight(0x8aa0c0, 0.32); moon.position.set(10, 30, 10); scene.add(moon);
                 const warm = new THREE.PointLight(EMBER, 2.4, 70); warm.position.set(0, 4, 0); arena.add(warm);
                 const warm2 = new THREE.PointLight(EMBER2, 1.4, 90); warm2.position.set(0, 14, 0); arena.add(warm2);
                 const tealKey = new THREE.PointLight(TEAL, 1.3, 80); tealKey.position.set(-18, 10, 8); arena.add(tealKey);
+                const tealRim = new THREE.PointLight(TEAL, 0.9, 120); tealRim.position.set(16, 15, -12); arena.add(tealRim);
                 const strobe = new THREE.PointLight(0xffffff, 0, 120); strobe.position.set(0, 18, 0); arena.add(strobe);
+
+                /* ---- bloom post-processing (desktop only) ---- */
+                if (useBloom) {
+                    try {
+                        const [{ EffectComposer }, { RenderPass }, { UnrealBloomPass }, { OutputPass }] = await Promise.all([
+                            import('three/examples/jsm/postprocessing/EffectComposer.js'),
+                            import('three/examples/jsm/postprocessing/RenderPass.js'),
+                            import('three/examples/jsm/postprocessing/UnrealBloomPass.js'),
+                            import('three/examples/jsm/postprocessing/OutputPass.js'),
+                        ]);
+                        if (disposed) return;
+                        const w0 = canvas.clientWidth || window.innerWidth;
+                        const h0 = canvas.clientHeight || window.innerHeight;
+                        const dpr = renderer.getPixelRatio();
+                        const rt = new THREE.WebGLRenderTarget(Math.round(w0 * dpr), Math.round(h0 * dpr), { type: THREE.HalfFloatType, samples: 2 });
+                        composer = new EffectComposer(renderer, rt);
+                        composer.addPass(new RenderPass(scene, camera));
+                        // (resolution, strength, radius, threshold) — higher threshold so only the brightest sources bloom (no central white-out)
+                        bloomPass = new UnrealBloomPass(new THREE.Vector2(w0, h0), 0.55, 0.5, 0.7);
+                        composer.addPass(bloomPass);
+                        composer.addPass(new OutputPass());
+                    } catch (e) { composer = null; bloomPass = null; }
+                }
 
                 const R = 12, RIM = 6.2, APEX = 11.5;
 
@@ -140,6 +171,10 @@ export default function ArenaHero() {
                 ring.rotation.x = Math.PI / 2; ring.position.y = RIM; arena.add(ring);
                 const ring2 = new THREE.Mesh(new THREE.TorusGeometry(R - 0.45, 0.12, 8, 80), new THREE.MeshStandardMaterial({ color: 0x8b97a8, metalness: 0.9, roughness: 0.35 }));
                 ring2.rotation.x = Math.PI / 2; ring2.position.y = RIM - 0.5; arena.add(ring2);
+                // glowing teal LED ribbon on the rim — defines the arena silhouette and blooms
+                const ledRimMat = new THREE.MeshStandardMaterial({ color: 0x002525, emissive: TEAL, emissiveIntensity: 1.7, metalness: 0.2, roughness: 0.5 });
+                const ledRim = new THREE.Mesh(new THREE.TorusGeometry(R + 0.06, 0.11, 10, 140), ledRimMat);
+                ledRim.rotation.x = Math.PI / 2; ledRim.position.y = RIM + 0.06; arena.add(ledRim);
                 const postMat = new THREE.MeshStandardMaterial({ color: 0x9fb0c2, metalness: 0.9, roughness: 0.35 });
                 for (let i = 0; i < 28; i++) {
                     const a = (i / 28) * Math.PI * 2;
@@ -156,12 +191,22 @@ export default function ArenaHero() {
                 const cp = [];
                 for (let i = 0; i <= 64; i++) { const a = i / 64 * Math.PI * 2; cp.push(new THREE.Vector3(Math.cos(a) * 2.2, 0.05, Math.sin(a) * 2.2)); }
                 arena.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(cp), mk));
+                // ground haze — soft teal glow beneath the arena so it sits in a space, not a void
+                const hazeTex = tex((x, w, h) => {
+                    const g = x.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2);
+                    g.addColorStop(0, 'rgba(0,201,201,0.5)');
+                    g.addColorStop(0.5, 'rgba(0,120,140,0.18)');
+                    g.addColorStop(1, 'rgba(0,0,0,0)');
+                    x.fillStyle = g; x.fillRect(0, 0, w, h);
+                }, 256, 256);
+                const haze = new THREE.Mesh(new THREE.PlaneGeometry(74, 74), new THREE.MeshBasicMaterial({ map: hazeTex, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false }));
+                haze.rotation.x = -Math.PI / 2; haze.position.y = -0.04; arena.add(haze);
 
                 /* ---- grandstands + crowd ---- */
-                const standMat = new THREE.MeshStandardMaterial({ color: 0x0e1828, metalness: 0.4, roughness: 0.7 });
+                const standMat = new THREE.MeshStandardMaterial({ color: 0x182c44, metalness: 0.4, roughness: 0.7, emissive: 0x0a1d30, emissiveIntensity: 0.6 });
                 const cPos = [], cBase = [], cAng = [];
                 const pal = [0x2f6fb0, 0x3b8fd0, 0x59b0e0, 0x7fd0e8, 0x244e7a, 0x9fe0ee];
-                const perRow = Math.round(72 * QUALITY);
+                const perRow = Math.round(96 * QUALITY);
                 function stand(angle) {
                     const g = new THREE.Group(); const rows = 6, seatW = 11;
                     for (let r = 0; r < rows; r++) {
@@ -189,7 +234,7 @@ export default function ArenaHero() {
                 cg.setAttribute('position', new THREE.Float32BufferAttribute(cPos, 3));
                 const colAttr = new THREE.Float32BufferAttribute(cBase.slice(), 3);
                 cg.setAttribute('color', colAttr);
-                const crowd = new THREE.Points(cg, new THREE.PointsMaterial({ size: 0.12, vertexColors: true, transparent: true, opacity: 0.6, depthWrite: false }));
+                const crowd = new THREE.Points(cg, new THREE.PointsMaterial({ size: 0.17, vertexColors: true, transparent: true, opacity: 0.85, depthWrite: false }));
                 arena.add(crowd);
                 const cN = cAng.length;
 
@@ -220,6 +265,13 @@ export default function ArenaHero() {
                     cone.quaternion.setFromUnitVectors(DOWN, target.clone().sub(fpos).normalize());
                     cone.userData = { base: 0.12, phase: Math.random() * 6.28, spd: 0.6 + Math.random() * 0.8 };
                     beams.add(cone); beamList.push(cone);
+                    // bright inner core shaft (blooms into a crisp light beam)
+                    const coreGeo = new THREE.ConeGeometry(0.5, 7, 12, 1, true);
+                    coreGeo.translate(0, -3.5, 0);
+                    const core = new THREE.Mesh(coreGeo, new THREE.MeshBasicMaterial({ color: 0xfff4e6, transparent: true, opacity: 0.15, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+                    core.position.copy(fpos); core.quaternion.copy(cone.quaternion);
+                    core.userData = { base: 0.15, phase: cone.userData.phase, spd: cone.userData.spd };
+                    beams.add(core); beamList.push(core);
                     const fix = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), new THREE.MeshBasicMaterial({ color: EMBER2 }));
                     fix.position.copy(fpos); arena.add(fix);
                     // glowing light pool where the beam lands on the floor (sweeps with the beam group)
@@ -266,6 +318,7 @@ export default function ArenaHero() {
                     tmpC.copy(cA).lerp(cB, mix);
                     warm.color.copy(tmpC); beams.children.forEach((b) => b.material.color.copy(tmpC));
                     warm.intensity = 2.0 + Math.sin(t * 1.6) * 0.7;
+                    ledRimMat.emissiveIntensity = 1.5 + Math.sin(t * 1.4) * 0.5;
                     beamList.forEach((b) => { b.material.opacity = b.userData.base + Math.sin(t * b.userData.spd + b.userData.phase) * 0.09; });
                     poolList.forEach((p) => { p.material.opacity = 0.42 + Math.sin(t * p.userData.spd + p.userData.phase) * 0.18; });
                     beams.rotation.y = t * 0.18;
@@ -284,6 +337,8 @@ export default function ArenaHero() {
                         colArr[i * 3 + 1] = Math.min(1, cBase[i * 3 + 1] * b);
                         colArr[i * 3 + 2] = Math.min(1, cBase[i * 3 + 2] * b);
                     }
+                    // camera-flash twinkles in the crowd
+                    for (let k = 0; k < 6; k++) { const idx = (Math.random() * cN) | 0; colArr[idx * 3] = 1; colArr[idx * 3 + 1] = 1; colArr[idx * 3 + 2] = 1; }
                     colAttr.needsUpdate = true;
 
                     const sa = sg.attributes.position.array;
@@ -293,13 +348,16 @@ export default function ArenaHero() {
 
                     const intro = smooth(Math.min(el / 4.8, 1));
                     const f = Math.min(scrollY / (window.innerHeight || 800), 1);
+                    // cinematic settle: bloom flash as the camera lands + FOV ease-in
+                    if (bloomPass) bloomPass.strength = 0.55 + Math.max(0, 0.2 - Math.abs(intro - 0.92) * 4);
+                    if (intro < 1) { camera.fov = THREE.MathUtils.lerp(58, 50, intro); camera.updateProjectionMatrix(); }
                     const orbit = t * 0.05;
                     const radius = THREE.MathUtils.lerp(2, 27, intro) + mx * 3;
                     const camY = THREE.MathUtils.lerp(46, 11, intro) - my * 2.4 + f * 5;
                     camera.position.set(Math.sin(orbit) * radius, camY, Math.cos(orbit) * radius);
                     camera.lookAt(0, THREE.MathUtils.lerp(8, 4.5, intro) - f * 1.2, 0);
 
-                    renderer.render(scene, camera);
+                    renderFrame();
                 }
 
                 if (reduceMotion) {
@@ -309,7 +367,7 @@ export default function ArenaHero() {
                     camera.position.set(0, 11, 27);
                     camera.lookAt(0, 4.5, 0);
                     // give crowd a neutral brightness
-                    renderer.render(scene, camera);
+                    renderFrame();
                 } else {
                     const loop = () => { if (disposed) return; frame(); rafId = requestAnimationFrame(loop); };
                     const onVis = () => { if (document.hidden) { if (rafId) cancelAnimationFrame(rafId); rafId = null; } else if (!rafId && !disposed) loop(); };

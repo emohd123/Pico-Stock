@@ -8558,7 +8558,7 @@ input[type="checkbox"] {
 .arena-header .arena-badge{margin-bottom:0;pointer-events:auto}
 .arena-title{font-size:clamp(2.7rem,7vw,5.4rem);line-height:1.02;font-weight:900;letter-spacing:-.035em;
   margin-bottom:1.2rem;color:#F9FAFB;animation:arenaRise .9s .05s ease both;text-shadow:0 8px 44px rgba(0,0,0,.6)}
-.arena-highlight{background:linear-gradient(120deg,#00C9C9,#FF8A3D 95%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.arena-highlight{background:linear-gradient(105deg,#00C9C9 0%,#7FEAD8 32%,#FFE2A6 64%,#FFAE57 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 18px rgba(0,201,201,.28))}
 .arena-sub{max-width:620px;margin:0 auto 2rem;color:#cdd6e2;font-size:1.12rem;animation:arenaRise .9s .14s ease both}
 .arena-actions{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;animation:arenaRise .9s .22s ease both}
 .arena-credit{position:absolute;bottom:24px;left:24px;z-index:2;font-size:.72rem;letter-spacing:.06em;color:#6B7280;
