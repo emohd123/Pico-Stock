@@ -80,3 +80,11 @@ temp-rates.pdf
 PicoExhibitorPortal.Web/wwwroot/uploads/imports/
 PicoExhibitorPortal.Web/wwwroot/uploads/source/
 PicoExhibitorPortal.Web/wwwroot/uploads/manual-catalog/
+
+# Local scratch — env backups, browser automation, HTML prototypes, test scripts
+.env.local.backup-*
+.playwright-mcp/
+pico-home-*.html
+scripts/test_*.mjs
+scripts/brand_update.py
+scripts/replace_css.py
