@@ -133,7 +133,7 @@ export default function HomePage() {
                             href="https://wa.me/97336357377"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 rounded-full border border-white/20 px-8 py-4 text-base font-bold text-white no-underline transition-colors duration-300 hover:border-[#00C7B1]/60 hover:text-[#1FD8C2]"
+                            className="inline-flex items-center gap-2 rounded-full bg-[#FF8200] px-8 py-4 text-base font-bold text-white no-underline shadow-lg transition-transform duration-300 hover:scale-105"
                         >
                             WhatsApp Us
                         </a>

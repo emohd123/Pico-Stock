@@ -8369,6 +8369,11 @@ input[type="checkbox"] {
 .cpv2-portfolio-head { position: absolute; top: 2.5rem; left: 3rem; z-index: 2; }
 .cpv2-bento { position: absolute; inset: 0; display: grid; grid-template-columns: 56% 44%; }
 .cpv2-bento-large, .cpv2-bento-sm { position: relative; overflow: hidden; cursor: pointer; }
+/* Brand colour-block accent on the featured portfolio image (Guideline 2022) */
+.cpv2-bento-large::before {
+  content: ''; position: absolute; left: 0; bottom: 0; width: 34%; height: 8px;
+  background: var(--pico-gradient); z-index: 3; pointer-events: none;
+}
 .cpv2-bento-right { display: grid; grid-template-rows: 1fr 1fr; }
 .cpv2-bento-sm { border-left: 2px solid var(--cpv2-bg); }
 .cpv2-bento-sm:last-child { border-top: 2px solid var(--cpv2-bg); }
