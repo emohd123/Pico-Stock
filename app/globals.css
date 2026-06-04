@@ -1243,11 +1243,10 @@ select.form-input option {
 }
 
 .footer-brand-tagline {
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--pico-grey); /* Cool Gray 9 C per brand guideline */
+  letter-spacing: 0.02em;
+  color: var(--pico-grey); /* Cool Gray 9 C per brand guideline; initial caps per tagline rule */
   margin-top: -0.2rem;
 }
 .footer-tagline {
