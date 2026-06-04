@@ -1528,11 +1528,16 @@ select.form-input option {
   transition: all var(--transition-fast);
 }
 
-.filter-chip:hover,
-.filter-chip.active {
+.filter-chip:hover {
   background: rgba(0, 199, 177, 0.1);
   border-color: var(--pico-teal);
   color: var(--pico-teal);
+}
+.filter-chip.active {
+  background: var(--pico-gradient); /* official 3265C -> 310C */
+  border-color: transparent;
+  color: #fff;
+  box-shadow: var(--shadow-teal);
 }
 
 /* ==================== ALERT ==================== */
