@@ -10,13 +10,15 @@ export default function AppChrome({ children }) {
             <footer className="footer">
                 <div className="footer-inner">
                     <div className="footer-brand">
-                        {/* plain img like the header logo — fixed height, auto width, true aspect ratio (no stretch) */}
+                        {/* Logo per brand guideline: full opacity (never alter glyph opacity),
+                            clear space around the mark, official file, no recolor. */}
                         <img
                             src="/branding/pico-logo.png"
-                            alt="Pico Stock"
-                            style={{ height: '40px', width: 'auto', opacity: 0.7, display: 'block', alignSelf: 'flex-start' }}
+                            alt="Pico"
+                            style={{ height: '40px', width: 'auto', opacity: 1, display: 'block', alignSelf: 'flex-start', padding: '4px 0' }}
                         />
-                        <p className="footer-tagline">Exhibition Booth Extras - Rental &amp; Services</p>
+                        <span className="footer-brand-tagline">Total Brand Activation</span>
+                        <p className="footer-tagline">Exhibition Booth Extras — Rental &amp; Services</p>
                     </div>
 
                     <div className="footer-links">
@@ -36,6 +38,7 @@ export default function AppChrome({ children }) {
                 </div>
 
                 <div className="footer-bottom">
+                    <span className="footer-signature">Where there&rsquo;s an audience, there&rsquo;s a mission for Total Brand Activation.</span>
                     <span>&copy; {new Date().getFullYear()} Pico International (Bahrain). All rights reserved.</span>
                 </div>
             </footer>

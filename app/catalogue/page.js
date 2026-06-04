@@ -61,7 +61,7 @@ export default function CataloguePage() {
                     <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#00C7B1]/30 bg-[#00C7B1]/10 px-3 py-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-[#1FD8C2]">
                         Rental Catalogue
                     </span>
-                    <h2>Everything for your booth</h2>
+                    <h2>Everything for your <span className="brand-tick">booth</span></h2>
                     <p>Browse our complete collection of exhibition booth extras</p>
                 </div>
             </section>

@@ -39,7 +39,7 @@ export default function HomePage() {
                     {categories.map((category) => (
                         <div
                             key={category.slug}
-                            className="brand-corners group relative flex flex-col overflow-hidden rounded-[24px] border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.01] p-9 transition-all duration-300 hover:-translate-y-1.5 hover:border-[#00C7B1]/50 hover:shadow-teal-lg lg:p-11"
+                            className="group relative flex flex-col overflow-hidden rounded-[24px] border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.01] p-9 transition-all duration-300 hover:-translate-y-1.5 hover:border-[#00C7B1]/50 hover:shadow-teal-lg lg:p-11"
                         >
                             <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#00C7B1]/15 opacity-0 blur-3xl transition-opacity duration-300 group-hover:opacity-100" />
                             <div className="mb-6 inline-flex h-[72px] w-[72px] items-center justify-center rounded-3xl bg-[#00C7B1]/10 text-4xl ring-1 ring-[#00C7B1]/25 transition-transform duration-300 group-hover:scale-110">

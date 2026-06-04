@@ -89,16 +89,16 @@ export default function ArenaHero() {
                     roundRect(x, 6, 6, w - 12, h - 12, 22); x.fillStyle = '#cfd8de'; x.fill();
                     x.lineWidth = 6; x.strokeStyle = 'rgba(0,199,177,.55)'; x.stroke();
                     drawLogo(x, w / 2, h / 2 - 22, 300);
-                    x.fillStyle = 'rgba(60,70,78,.7)'; x.font = '700 26px Inter,Arial';
+                    x.fillStyle = 'rgba(60,70,78,.7)'; x.font = '700 26px "Source Sans 3", Arial';
                     x.textAlign = 'center'; x.textBaseline = 'alphabetic';
-                    x.fillText('TOTAL BRAND ACTIVATION', w / 2, h - 44);
+                    x.fillText('Total Brand Activation', w / 2, h - 44);
                 }, 512, 256);
                 const ledTex = tex((x, w, h) => {
                     x.fillStyle = '#c2ccd3'; x.fillRect(0, 0, w, h);
                     drawLogo(x, w / 2, h / 2 - 12, 330);
-                    x.fillStyle = 'rgba(60,70,78,.7)'; x.font = '700 28px Inter,Arial';
+                    x.fillStyle = 'rgba(60,70,78,.7)'; x.font = '700 28px "Source Sans 3", Arial';
                     x.textAlign = 'center'; x.textBaseline = 'alphabetic';
-                    x.fillText('TOTAL BRAND ACTIVATION', w / 2, h - 46);
+                    x.fillText('Total Brand Activation', w / 2, h - 46);
                 }, 512, 256);
                 const courtTex = tex((x, w, h) => {
                     x.clearRect(0, 0, w, h);
@@ -106,9 +106,9 @@ export default function ArenaHero() {
                     g.addColorStop(0, 'rgba(255,255,255,.16)'); g.addColorStop(1, 'rgba(255,255,255,0)');
                     x.fillStyle = g; x.fillRect(0, 0, w, h);
                     drawLogo(x, w / 2, h / 2 - 30, 520);
-                    x.fillStyle = 'rgba(220,230,236,.8)'; x.font = '800 44px Inter,Arial';
+                    x.fillStyle = 'rgba(220,230,236,.8)'; x.font = '800 44px "Source Sans 3", Arial';
                     x.textAlign = 'center'; x.textBaseline = 'alphabetic';
-                    x.fillText('TOTAL BRAND ACTIVATION', w / 2, h / 2 + 150);
+                    x.fillText('Total Brand Activation', w / 2, h / 2 + 150);
                 }, 1024, 512);
 
                 /* ---- lighting ---- */
@@ -204,7 +204,7 @@ export default function ArenaHero() {
                 // ground haze — soft teal glow beneath the arena so it sits in a space, not a void
                 const hazeTex = tex((x, w, h) => {
                     const g = x.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2);
-                    g.addColorStop(0, 'rgba(0,201,201,0.5)');
+                    g.addColorStop(0, 'rgba(0,199,177,0.5)');
                     g.addColorStop(0.5, 'rgba(0,120,140,0.18)');
                     g.addColorStop(1, 'rgba(0,0,0,0)');
                     x.fillStyle = g; x.fillRect(0, 0, w, h);
@@ -258,7 +258,7 @@ export default function ArenaHero() {
                 const poolTex = tex((x, w, h) => {
                     const g = x.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2);
                     g.addColorStop(0, 'rgba(255,180,120,0.9)');
-                    g.addColorStop(0.35, 'rgba(0,201,201,0.4)');
+                    g.addColorStop(0.35, 'rgba(0,199,177,0.4)');
                     g.addColorStop(1, 'rgba(0,0,0,0)');
                     x.fillStyle = g; x.fillRect(0, 0, w, h);
                 }, 128, 128);
@@ -480,7 +480,7 @@ export default function ArenaHero() {
             </div>
             <div className="arena-text-scrim" aria-hidden="true" />
             <div className="arena-inner">
-                <h1 className="arena-title">We Build the <span className="arena-highlight">Show</span></h1>
+                <h1 className="arena-title">We Build the <span className="arena-highlight brand-tick">Show</span></h1>
                 <p className="arena-sub">
                     From a single booth to a full arena — furniture, LED displays, graphics, and structures,
                     designed and installed by Pico. Order online and we&apos;ll handle the rest.

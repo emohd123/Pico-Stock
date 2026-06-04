@@ -1242,6 +1242,14 @@ select.form-input option {
   gap: 0.6rem;
 }
 
+.footer-brand-tagline {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pico-grey); /* Cool Gray 9 C per brand guideline */
+  margin-top: -0.2rem;
+}
 .footer-tagline {
   font-size: 0.8rem;
   color: var(--text-muted);
@@ -1291,6 +1299,14 @@ select.form-input option {
   font-size: 0.78rem;
   color: var(--text-muted);
   opacity: 0.7;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.footer-signature {
+  color: var(--pico-teal);
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 /* ==================== LOADING ==================== */
@@ -8567,7 +8583,7 @@ input[type="checkbox"] {
 .arena-sub{max-width:620px;margin:0 auto 2rem;color:#cdd6e2;font-size:1.12rem;animation:arenaRise .9s .14s ease both}
 .arena-actions{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;animation:arenaRise .9s .22s ease both}
 .arena-credit{position:absolute;bottom:24px;left:24px;z-index:2;font-size:.72rem;letter-spacing:.06em;color:#6B7280;
-  max-width:230px;text-align:left;line-height:1.4;border-left:2px solid #FF5A1F;padding-left:.6rem}
+  max-width:230px;text-align:left;line-height:1.4;border-left:2px solid #FF8200;padding-left:.6rem}
 .arena-scroll{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);z-index:2;color:#6B7280;
   font-size:.75rem;letter-spacing:.18em;text-transform:uppercase;animation:arenaBob 2.4s ease-in-out infinite}
 @keyframes arenaRise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
@@ -8619,3 +8635,18 @@ input[type="checkbox"] {
   color: transparent;
 }
 .brand-gradient-bg { background: var(--pico-gradient); }
+
+/* Colour-block image treatment (Brand Guideline 2022 — "juxtapose image with
+   a background colour block"). Wrap a contained image; teal block sits offset
+   behind it. Use on featured/portfolio imagery (photos with a human element). */
+.brand-imgblock { position: relative; isolation: isolate; }
+.brand-imgblock::before {
+  content: ''; position: absolute; left: -14px; bottom: -14px;
+  width: 56%; height: 56%; background: var(--pico-teal); opacity: 0.9;
+  border-radius: 4px; z-index: -1; pointer-events: none;
+}
+/* Subtle teal colour-block accent along the About photo column */
+.cpv2-about-img-side::after {
+  content: ''; position: absolute; left: 0; bottom: 0; width: 42%; height: 6px;
+  background: var(--pico-gradient); z-index: 4; pointer-events: none;
+}

@@ -678,7 +678,7 @@ function SectionContact() {
                     transition={{ duration: 0.8, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}>
                     <span className="cpv2-section-tag">Get In Touch</span>
                     <h2 className="cpv2-contact-title">
-                        Let&apos;s build your next<br /><span className="cpv2-accent">brand experience.</span>
+                        Let&apos;s build your next<br /><span className="cpv2-accent brand-tick">brand experience.</span>
                     </h2>
                     <p className="cpv2-contact-sub">
                         Share your event, stand, or interior requirement and our Bahrain team
