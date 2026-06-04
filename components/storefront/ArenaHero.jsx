@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Icon from '@/components/storefront/Icon';
 
 /**
  * Pico cinematic arena hero (Three.js).
@@ -476,7 +477,7 @@ export default function ArenaHero() {
             <div className="arena-vignette" />
             <div className="arena-fade" />
             <div className="arena-header">
-                <div className="arena-badge"><span className="arena-pulse" /> &#10024; Premium Exhibition &amp; Event Services &middot; Bahrain</div>
+                <div className="arena-badge"><span className="arena-pulse" /> Premium Exhibition &amp; Event Services &middot; Bahrain</div>
             </div>
             <div className="arena-text-scrim" aria-hidden="true" />
             <div className="arena-inner">
@@ -487,7 +488,7 @@ export default function ArenaHero() {
                 </p>
                 <div className="arena-actions">
                     <Link href="/catalogue" className="btn btn-primary btn-lg">Browse Catalogue &#8594;</Link>
-                    <Link href="/cart" className="btn btn-secondary btn-lg arena-cta-ghost">&#128722; View Cart</Link>
+                    <Link href="/cart" className="btn btn-secondary btn-lg arena-cta-ghost"><Icon name="cart" size={18} /> View Cart</Link>
                 </div>
             </div>
             <div className="arena-credit">Inspired by our build for the FIBA 3x3 World Tour Finals — Manama, Bahrain.</div>

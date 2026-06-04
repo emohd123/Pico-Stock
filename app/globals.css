@@ -1515,6 +1515,9 @@ select.form-input option {
 }
 
 .filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 8px 16px;
   background: var(--bg-glass);
   border: 1px solid var(--border-subtle);
@@ -1526,6 +1529,7 @@ select.form-input option {
   cursor: pointer;
   transition: all var(--transition-fast);
 }
+.filter-chip-icon { flex: none; }
 
 .filter-chip:hover {
   background: rgba(0, 199, 177, 0.1);

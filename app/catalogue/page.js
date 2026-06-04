@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import ProductCard from '@/components/storefront/ProductCard';
 import CatalogueScene from '@/components/storefront/CatalogueScene';
+import Icon from '@/components/storefront/Icon';
 import { useProducts } from '@/hooks/useProducts';
 import { useCart } from '@/lib/cartContext';
 import {
@@ -114,7 +115,7 @@ export default function CataloguePage() {
                                     onClick={() => setActiveCategory(category.value)}
                                     type="button"
                                 >
-                                    {category.icon} {category.label}
+                                    <Icon name={category.iconKey} size={15} className="filter-chip-icon" /> {category.label}
                                 </button>
                             ))}
                         </div>

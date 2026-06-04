@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useMemo } from 'react';
 import ArenaHero from '@/components/storefront/ArenaHero';
 import ProductCard from '@/components/storefront/ProductCard';
+import Icon from '@/components/storefront/Icon';
 import Reveal from '@/components/Reveal';
 import { useProducts } from '@/hooks/useProducts';
 import { useCart } from '@/lib/cartContext';
@@ -42,8 +43,8 @@ export default function HomePage() {
                             className="group relative flex flex-col overflow-hidden rounded-[24px] border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.01] p-9 transition-all duration-300 hover:-translate-y-1.5 hover:border-[#00C7B1]/50 hover:shadow-teal-lg lg:p-11"
                         >
                             <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#00C7B1]/15 opacity-0 blur-3xl transition-opacity duration-300 group-hover:opacity-100" />
-                            <div className="mb-6 inline-flex h-[72px] w-[72px] items-center justify-center rounded-3xl bg-[#00C7B1]/10 text-4xl ring-1 ring-[#00C7B1]/25 transition-transform duration-300 group-hover:scale-110">
-                                {category.icon}
+                            <div className="mb-6 inline-flex h-[72px] w-[72px] items-center justify-center rounded-3xl bg-[#00C7B1]/10 text-[#00C7B1] ring-1 ring-[#00C7B1]/25 transition-transform duration-300 group-hover:scale-110">
+                                <Icon name={category.iconKey} size={32} />
                             </div>
                             <h3 className="m-0 text-2xl font-extrabold text-white">{category.title}</h3>
                             <p className="mb-0 mt-3 text-[0.95rem] leading-relaxed text-[#9CA3AF]">{category.description}</p>
@@ -98,7 +99,7 @@ export default function HomePage() {
                                 <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#1FD8C2] to-[#00A593] text-lg font-extrabold text-white shadow-teal">
                                     {i + 1}
                                 </span>
-                                <span className="text-3xl">{step.icon}</span>
+                                <span className="text-[#00C7B1]"><Icon name={step.iconKey} size={26} /></span>
                             </div>
                             <h3 className="m-0 text-xl font-bold text-white">{step.title}</h3>
                             <p className="mb-0 mt-2.5 text-[0.95rem] leading-relaxed text-[#9CA3AF]">{step.description}</p>
