@@ -1,6 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;600;700;900&display=swap');
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@200;300;400;600;700;900&display=swap');
 
 /* Tailwind utilities for new/enhanced sections. Preflight is disabled in
    tailwind.config.js so existing hand-written styles below are untouched. */
@@ -25,15 +23,22 @@
 }
 
 :root {
-  --font-sans: 'Inter', 'Noto Sans Arabic Local', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  /* Pico Brand Colors */
-  --pico-teal: #00A5A5;
-  --pico-teal-light: #00C9C9;
-  --pico-teal-dark: #008585;
-  --pico-teal-glow: rgba(0, 165, 165, 0.3);
-  --pico-grey: #6B7280;
-  --pico-grey-light: #9CA3AF;
-  --pico-grey-dark: #374151;
+  --font-sans: 'Source Sans 3', 'Source Sans Pro', 'Noto Sans Arabic Local', Arial, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* Pico Brand Colors — Brand Guideline March 2022 (Pantone, Coated/digital) */
+  --pico-teal: #00C7B1;        /* Pantone 3265 C — primary mark */
+  --pico-teal-light: #1FD8C2;  /* tint of 3265 C */
+  --pico-teal-dark: #00A593;   /* shade of 3265 C */
+  --pico-teal-glow: rgba(0, 199, 177, 0.3);
+  --pico-grey: #75787B;        /* Pantone Cool Gray 9 C */
+  --pico-grey-light: #9A9DA0;
+  --pico-grey-dark: #5A5C5F;
+  /* Secondary / accent palette (3265C → 310C gradient) */
+  --pico-cyan: #6AD1E3;        /* Pantone 310 C */
+  --pico-orange: #FF8200;      /* Pantone 151 C */
+  --pico-magenta: #A20067;     /* Pantone 234 C */
+  --pico-blue: #004C97;        /* Pantone 2945 C */
+  --pico-indigo: #001871;      /* Pantone 2748 C */
+  --pico-gradient: linear-gradient(120deg, #00C7B1, #6AD1E3);
 
   /* Dark Theme */
   --bg-primary: #0B1120;
@@ -45,20 +50,20 @@
 
   /* Borders */
   --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-teal: rgba(0, 165, 165, 0.3);
+  --border-teal: rgba(0, 199, 177, 0.3);
 
   /* Text */
   --text-primary: #F9FAFB;
   --text-secondary: #9CA3AF;
   --text-muted: #6B7280;
-  --text-accent: #00C9C9;
+  --text-accent: #1FD8C2;
 
   /* Shadows */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.5);
-  --shadow-teal: 0 4px 20px rgba(0, 165, 165, 0.15);
-  --shadow-teal-lg: 0 8px 40px rgba(0, 165, 165, 0.2);
+  --shadow-teal: 0 4px 20px rgba(0, 199, 177, 0.15);
+  --shadow-teal-lg: 0 8px 40px rgba(0, 199, 177, 0.2);
 
   /* Spacing */
   --radius-sm: 8px;
@@ -101,8 +106,8 @@ body::before {
   width: 100%;
   height: 100%;
   background: 
-    radial-gradient(ellipse at 20% 0%, rgba(0, 165, 165, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 100%, rgba(0, 165, 165, 0.05) 0%, transparent 50%);
+    radial-gradient(ellipse at 20% 0%, rgba(0, 199, 177, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(0, 199, 177, 0.05) 0%, transparent 50%);
   pointer-events: none;
   z-index: 0;
 }
@@ -284,7 +289,7 @@ a:hover {
 }
 
 .btn-outline:hover {
-  background: rgba(0, 165, 165, 0.1);
+  background: rgba(0, 199, 177, 0.1);
   transform: translateY(-1px);
 }
 
@@ -359,8 +364,8 @@ a:hover {
 
 .product-card:hover {
   transform: translateY(-6px);
-  border-color: rgba(0,165,165,0.5);
-  box-shadow: 0 18px 48px rgba(0,0,0,0.42), 0 0 0 1px rgba(0,165,165,0.15);
+  border-color: rgba(0,199,177,0.5);
+  box-shadow: 0 18px 48px rgba(0,0,0,0.42), 0 0 0 1px rgba(0,199,177,0.15);
 }
 
 .product-card:hover .card-image {
@@ -376,7 +381,7 @@ a:hover {
 }
 .product-card:hover .card-view-hint { opacity: 1; }
 .card-view-hint span {
-  background: rgba(0,165,165,0.92); color: #fff; font-size: 0.72rem; font-weight: 700;
+  background: rgba(0,199,177,0.92); color: #fff; font-size: 0.72rem; font-weight: 700;
   letter-spacing: 0.02em; padding: 0.4rem 0.9rem; border-radius: 999px;
   transform: translateY(6px); transition: transform 0.3s ease; backdrop-filter: blur(4px);
 }
@@ -449,7 +454,7 @@ a:hover {
   transform: translateX(-50%);
   width: 800px;
   height: 800px;
-  background: radial-gradient(circle, rgba(0, 165, 165, 0.12) 0%, transparent 60%);
+  background: radial-gradient(circle, rgba(0, 199, 177, 0.12) 0%, transparent 60%);
   pointer-events: none;
 }
 
@@ -458,8 +463,8 @@ a:hover {
   align-items: center;
   gap: 8px;
   padding: 8px 20px;
-  background: rgba(0, 165, 165, 0.1);
-  border: 1px solid rgba(0, 165, 165, 0.2);
+  background: rgba(0, 199, 177, 0.1);
+  border: 1px solid rgba(0, 199, 177, 0.2);
   border-radius: 100px;
   font-size: 0.8rem;
   font-weight: 600;
@@ -600,7 +605,7 @@ a:hover {
   display: inline-block;
   margin-top: 1rem;
   padding: 4px 16px;
-  background: rgba(0, 165, 165, 0.1);
+  background: rgba(0, 199, 177, 0.1);
   border-radius: 100px;
   font-size: 0.8rem;
   font-weight: 600;
@@ -626,11 +631,11 @@ a:hover {
 .catalogue-bg .cat-orb-1 { width: 620px; height: 620px; top: -160px; left: -120px;
   background: radial-gradient(circle, rgba(0,199,177,0.18) 0%, transparent 70%); animation: cat-drift 16s ease-in-out infinite alternate; }
 .catalogue-bg .cat-orb-2 { width: 520px; height: 520px; top: 38%; right: -140px;
-  background: radial-gradient(circle, rgba(0,165,165,0.14) 0%, transparent 70%); animation: cat-drift 13s ease-in-out infinite alternate-reverse; }
+  background: radial-gradient(circle, rgba(0,199,177,0.14) 0%, transparent 70%); animation: cat-drift 13s ease-in-out infinite alternate-reverse; }
 .catalogue-bg .cat-orb-3 { width: 460px; height: 460px; bottom: -160px; left: 30%;
   background: radial-gradient(circle, rgba(124,77,255,0.10) 0%, transparent 70%); animation: cat-drift 20s ease-in-out infinite alternate; }
 .catalogue-bg .cat-dots { position: absolute; inset: 0; opacity: 0.5;
-  background-image: radial-gradient(rgba(0,201,201,0.10) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(0,199,177,0.10) 1px, transparent 1px);
   background-size: 38px 38px; animation: cat-pan 40s linear infinite; }
 @keyframes cat-drift { from { transform: translate(0,0) scale(1); } to { transform: translate(34px,22px) scale(1.08); } }
 @keyframes cat-pan { from { background-position: 0 0; } to { background-position: 38px 38px; } }
@@ -669,7 +674,7 @@ a:hover {
 .form-textarea:focus {
   outline: none;
   border-color: var(--pico-teal);
-  box-shadow: 0 0 0 3px rgba(0, 165, 165, 0.15);
+  box-shadow: 0 0 0 3px rgba(0, 199, 177, 0.15);
 }
 
 .form-input::placeholder,
@@ -718,7 +723,7 @@ select.form-input option {
 .upload-zone:hover,
 .upload-zone.drag-over {
   border-color: var(--pico-teal);
-  background: rgba(0, 165, 165, 0.05);
+  background: rgba(0, 199, 177, 0.05);
 }
 
 .upload-zone-icon {
@@ -963,7 +968,7 @@ select.form-input option {
 .admin-sidebar-item:hover,
 .admin-sidebar-item.active {
   color: var(--pico-teal);
-  background: rgba(0, 165, 165, 0.08);
+  background: rgba(0, 199, 177, 0.08);
   border-right: 3px solid var(--pico-teal);
 }
 
@@ -1040,7 +1045,7 @@ select.form-input option {
 }
 
 .badge-confirmed {
-  background: rgba(0, 165, 165, 0.15);
+  background: rgba(0, 199, 177, 0.15);
   color: var(--pico-teal);
 }
 
@@ -1509,7 +1514,7 @@ select.form-input option {
 
 .filter-chip:hover,
 .filter-chip.active {
-  background: rgba(0, 165, 165, 0.1);
+  background: rgba(0, 199, 177, 0.1);
   border-color: var(--pico-teal);
   color: var(--pico-teal);
 }
@@ -1526,8 +1531,8 @@ select.form-input option {
 }
 
 .alert-success {
-  background: rgba(0, 165, 165, 0.1);
-  border: 1px solid rgba(0, 165, 165, 0.2);
+  background: rgba(0, 199, 177, 0.1);
+  border: 1px solid rgba(0, 199, 177, 0.2);
   color: var(--pico-teal);
 }
 
@@ -1574,11 +1579,11 @@ select.form-input option {
 }
 /* Admin Enhancements */
 .selected-row {
-  background: rgba(0, 165, 165, 0.08) !important;
+  background: rgba(0, 199, 177, 0.08) !important;
 }
 
 .selected-row td {
-  border-bottom-color: rgba(0, 165, 165, 0.2) !important;
+  border-bottom-color: rgba(0, 199, 177, 0.2) !important;
 }
 
 input[type="checkbox"] {
@@ -2282,7 +2287,7 @@ input[type="checkbox"] {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at top left, rgba(0, 165, 165, 0.18), transparent 38%),
+    radial-gradient(circle at top left, rgba(0, 199, 177, 0.18), transparent 38%),
     radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.16), transparent 30%);
   pointer-events: none;
 }
@@ -2507,7 +2512,7 @@ input[type="checkbox"] {
   width: 32px;
   height: 32px;
   border-radius: 999px;
-  background: rgba(0, 165, 165, 0.14);
+  background: rgba(0, 199, 177, 0.14);
   color: var(--pico-teal);
   font-weight: 800;
   font-size: 1.2rem;
@@ -2751,7 +2756,7 @@ input[type="checkbox"] {
 .quotation-list-item.active {
   border-color: var(--border-teal);
   box-shadow: var(--shadow-teal);
-  background: rgba(0, 165, 165, 0.08);
+  background: rgba(0, 199, 177, 0.08);
 }
 
 .quotation-list-item-top,
@@ -2857,7 +2862,7 @@ input[type="checkbox"] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 165, 165, 0.14);
+  background: rgba(0, 199, 177, 0.14);
   color: var(--pico-teal);
   font-weight: 800;
 }
@@ -5693,7 +5698,7 @@ input[type="checkbox"] {
 
 .stand-design-page {
   background:
-    radial-gradient(circle at top left, rgba(0, 165, 165, 0.08), transparent 26%),
+    radial-gradient(circle at top left, rgba(0, 199, 177, 0.08), transparent 26%),
     radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 22%),
     linear-gradient(180deg, #eef5f7 0%, #f8fbfc 38%, #edf3f5 100%);
   min-height: calc(100vh - 72px);
@@ -8548,17 +8553,17 @@ input[type="checkbox"] {
   background:linear-gradient(transparent,#0B1120)}
 .arena-inner{position:relative;z-index:2;padding:0 1.5rem;transform:translateY(-4px)}
 .arena-badge{display:inline-flex;align-items:center;gap:.6rem;padding:.62rem 1.4rem;border-radius:999px;
-  background:rgba(255,255,255,.1);border:1px solid rgba(0,201,201,.4);font-size:1.02rem;font-weight:700;
+  background:rgba(255,255,255,.1);border:1px solid rgba(0,199,177,.4);font-size:1.02rem;font-weight:700;
   letter-spacing:.01em;color:#F9FAFB;margin-bottom:1.6rem;backdrop-filter:blur(6px);
-  box-shadow:0 4px 24px rgba(0,201,201,.12);animation:arenaRise .8s ease both}
-.arena-pulse{width:10px;height:10px;border-radius:50%;background:#00C9C9;animation:arenaPulse 2s infinite;flex:none}
-@keyframes arenaPulse{0%{box-shadow:0 0 0 0 rgba(0,201,201,.55)}70%{box-shadow:0 0 0 10px rgba(0,201,201,0)}100%{box-shadow:0 0 0 0 rgba(0,201,201,0)}}
+  box-shadow:0 4px 24px rgba(0,199,177,.12);animation:arenaRise .8s ease both}
+.arena-pulse{width:10px;height:10px;border-radius:50%;background:#00C7B1;animation:arenaPulse 2s infinite;flex:none}
+@keyframes arenaPulse{0%{box-shadow:0 0 0 0 rgba(0,199,177,.55)}70%{box-shadow:0 0 0 10px rgba(0,199,177,0)}100%{box-shadow:0 0 0 0 rgba(0,199,177,0)}}
 .arena-header{position:absolute;top:0;left:0;right:0;z-index:3;display:flex;justify-content:center;
   padding-top:clamp(84px,11vh,120px);pointer-events:none}
 .arena-header .arena-badge{margin-bottom:0;pointer-events:auto}
 .arena-title{font-size:clamp(2.7rem,7vw,5.4rem);line-height:1.02;font-weight:900;letter-spacing:-.035em;
   margin-bottom:1.2rem;color:#F9FAFB;animation:arenaRise .9s .05s ease both;text-shadow:0 8px 44px rgba(0,0,0,.6)}
-.arena-highlight{background:linear-gradient(105deg,#00C9C9 0%,#7FEAD8 32%,#FFE2A6 64%,#FFAE57 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 18px rgba(0,201,201,.28))}
+.arena-highlight{background:linear-gradient(105deg,#00C7B1 0%,#7FEAD8 32%,#FFE2A6 64%,#FFAE57 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 18px rgba(0,199,177,.28))}
 .arena-sub{max-width:620px;margin:0 auto 2rem;color:#cdd6e2;font-size:1.12rem;animation:arenaRise .9s .14s ease both}
 .arena-actions{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;animation:arenaRise .9s .22s ease both}
 .arena-credit{position:absolute;bottom:24px;left:24px;z-index:2;font-size:.72rem;letter-spacing:.06em;color:#6B7280;
@@ -8573,7 +8578,7 @@ input[type="checkbox"] {
   background:radial-gradient(ellipse 60% 54% at 50% 50%, rgba(8,12,20,0.74) 0%, rgba(8,12,20,0.46) 46%, transparent 76%)}
 /* brighter secondary CTA so both buttons read over the scene */
 .arena-cta-ghost{background:rgba(255,255,255,0.1)!important;border-color:rgba(255,255,255,0.42)!important;color:#fff!important;backdrop-filter:blur(6px)}
-.arena-cta-ghost:hover{background:rgba(255,255,255,0.18)!important;border-color:rgba(0,201,201,0.75)!important;color:#fff!important}
+.arena-cta-ghost:hover{background:rgba(255,255,255,0.18)!important;border-color:rgba(0,199,177,0.75)!important;color:#fff!important}
 /* animated scroll cue */
 .arena-scroll{display:flex;flex-direction:column;align-items:center;gap:.35rem}
 .arena-scroll-arrow{font-size:1.05rem;line-height:1;animation:arenaArrow 1.7s ease-in-out infinite}
@@ -8583,3 +8588,34 @@ input[type="checkbox"] {
   .arena-badge,.arena-title,.arena-sub,.arena-actions{animation:none}
   .arena-pulse,.arena-scroll,.arena-scroll-arrow{animation:none}
 }
+
+/* ===========================================================================
+   Pico ADDD brand markers — corner "Deliver" brackets (Brand Guideline 2022)
+   .brand-corners → teal L-marks at top-left + bottom-right of a card/image
+   .brand-tick    → single teal corner tick (top-right) for eyebrows/headings
+   =========================================================================== */
+.brand-corners { position: relative; }
+.brand-corners::before,
+.brand-corners::after {
+  content: ''; position: absolute; width: 16px; height: 16px;
+  border: 2px solid var(--pico-teal); pointer-events: none; opacity: 0.75;
+  transition: opacity var(--transition-base), width var(--transition-base), height var(--transition-base);
+}
+.brand-corners::before { top: 12px; left: 12px; border-right: 0; border-bottom: 0; }
+.brand-corners::after  { bottom: 12px; right: 12px; border-left: 0; border-top: 0; }
+.brand-corners:hover::before,
+.brand-corners:hover::after { opacity: 1; width: 22px; height: 22px; }
+
+.brand-tick { position: relative; }
+.brand-tick::after {
+  content: ''; position: absolute; top: -5px; right: -10px; width: 9px; height: 9px;
+  border-top: 2px solid var(--pico-teal); border-right: 2px solid var(--pico-teal);
+  pointer-events: none;
+}
+
+/* Official teal→cyan brand gradient helpers */
+.brand-gradient-text {
+  background: var(--pico-gradient); -webkit-background-clip: text; background-clip: text;
+  color: transparent;
+}
+.brand-gradient-bg { background: var(--pico-gradient); }

@@ -78,8 +78,8 @@ function OrderSuccessContent() {
                                         alignItems: 'center',
                                         gap: '0.6rem',
                                         padding: '0.5rem 0.75rem',
-                                        background: 'rgba(0,165,165,0.08)',
-                                        border: '1px solid rgba(0,165,165,0.2)',
+                                        background: 'rgba(0,199,177,0.08)',
+                                        border: '1px solid rgba(0,199,177,0.2)',
                                         borderRadius: 'var(--radius-sm)',
                                         color: 'var(--pico-teal)',
                                         textDecoration: 'none',
@@ -102,7 +102,7 @@ function OrderSuccessContent() {
 
                 <div
                     style={{
-                        background: 'rgba(0, 165, 165, 0.08)',
+                        background: 'rgba(0, 199, 177, 0.08)',
                         borderRadius: 'var(--radius-md)',
                         padding: '1.25rem',
                         marginBottom: '2rem',

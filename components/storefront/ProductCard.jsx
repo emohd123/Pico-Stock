@@ -30,7 +30,7 @@ function StockBadge({ stock, inStock }) {
                 fontSize: '0.72rem',
                 fontWeight: 700,
                 color: isLow ? '#f59e0b' : 'var(--pico-teal)',
-                background: isLow ? 'rgba(245,158,11,0.12)' : 'rgba(0,165,165,0.12)',
+                background: isLow ? 'rgba(245,158,11,0.12)' : 'rgba(0,199,177,0.12)',
                 borderRadius: '4px',
                 padding: '2px 7px',
                 display: 'inline-block',

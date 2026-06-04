@@ -30,7 +30,7 @@ export default function CatalogueScene() {
             .then((THREE) => {
                 if (disposed) return;
 
-                const TEAL = 0x00c9c9, NAVY = 0x0a0e1a;
+                const TEAL = 0x00C7B1, NAVY = 0x0a0e1a;
                 const scene = new THREE.Scene();
                 scene.fog = new THREE.FogExp2(NAVY, 0.048);
 

@@ -29,7 +29,7 @@ export default function HomePage() {
             <section className="section">
               <Reveal>
                 <div className="section-header">
-                    <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#00A5A5]/30 bg-[#00A5A5]/10 px-3 py-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-[#00C9C9]">
+                    <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#00C7B1]/30 bg-[#00C7B1]/10 px-3 py-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-[#1FD8C2]">
                         What we rent
                     </span>
                     <h2>Rental Categories</h2>
@@ -39,10 +39,10 @@ export default function HomePage() {
                     {categories.map((category) => (
                         <div
                             key={category.slug}
-                            className="group relative flex flex-col overflow-hidden rounded-[24px] border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.01] p-9 transition-all duration-300 hover:-translate-y-1.5 hover:border-[#00A5A5]/50 hover:shadow-teal-lg lg:p-11"
+                            className="brand-corners group relative flex flex-col overflow-hidden rounded-[24px] border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.01] p-9 transition-all duration-300 hover:-translate-y-1.5 hover:border-[#00C7B1]/50 hover:shadow-teal-lg lg:p-11"
                         >
-                            <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#00A5A5]/15 opacity-0 blur-3xl transition-opacity duration-300 group-hover:opacity-100" />
-                            <div className="mb-6 inline-flex h-[72px] w-[72px] items-center justify-center rounded-3xl bg-[#00A5A5]/10 text-4xl ring-1 ring-[#00A5A5]/25 transition-transform duration-300 group-hover:scale-110">
+                            <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#00C7B1]/15 opacity-0 blur-3xl transition-opacity duration-300 group-hover:opacity-100" />
+                            <div className="mb-6 inline-flex h-[72px] w-[72px] items-center justify-center rounded-3xl bg-[#00C7B1]/10 text-4xl ring-1 ring-[#00C7B1]/25 transition-transform duration-300 group-hover:scale-110">
                                 {category.icon}
                             </div>
                             <h3 className="m-0 text-2xl font-extrabold text-white">{category.title}</h3>
@@ -57,7 +57,7 @@ export default function HomePage() {
                 <section className="section">
                   <Reveal>
                     <div className="section-header">
-                        <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#00A5A5]/30 bg-[#00A5A5]/10 px-3 py-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-[#00C9C9]">
+                        <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#00C7B1]/30 bg-[#00C7B1]/10 px-3 py-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-[#1FD8C2]">
                             Featured
                         </span>
                         <h2>Catalogue Highlights</h2>
@@ -82,7 +82,7 @@ export default function HomePage() {
             <section className="section">
               <Reveal>
                 <div className="section-header">
-                    <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#00A5A5]/30 bg-[#00A5A5]/10 px-3 py-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-[#00C9C9]">
+                    <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#00C7B1]/30 bg-[#00C7B1]/10 px-3 py-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-[#1FD8C2]">
                         How it works
                     </span>
                     <h2>From Order to Booth</h2>
@@ -92,10 +92,10 @@ export default function HomePage() {
                     {HOME_STEPS.map((step, i) => (
                         <div
                             key={step.title}
-                            className="relative rounded-[24px] border border-white/10 bg-white/[0.03] p-9 transition-all duration-300 hover:-translate-y-1.5 hover:border-[#00A5A5]/40 hover:bg-white/[0.05] hover:shadow-teal-lg"
+                            className="relative rounded-[24px] border border-white/10 bg-white/[0.03] p-9 transition-all duration-300 hover:-translate-y-1.5 hover:border-[#00C7B1]/40 hover:bg-white/[0.05] hover:shadow-teal-lg"
                         >
                             <div className="mb-6 flex items-center gap-4">
-                                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#00C9C9] to-[#008585] text-lg font-extrabold text-white shadow-teal">
+                                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#1FD8C2] to-[#00A593] text-lg font-extrabold text-white shadow-teal">
                                     {i + 1}
                                 </span>
                                 <span className="text-3xl">{step.icon}</span>
@@ -110,10 +110,10 @@ export default function HomePage() {
 
             <section className="section">
               <Reveal>
-                <div className="relative mx-auto max-w-5xl overflow-hidden rounded-[28px] border border-[#00A5A5]/25 bg-gradient-to-br from-[#00A5A5]/15 via-white/[0.03] to-transparent px-6 py-16 text-center sm:px-12">
-                    <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[#00A5A5]/20 blur-3xl" />
-                    <div className="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-[#00C9C9]/10 blur-3xl" />
-                    <span className="relative inline-flex items-center gap-2 rounded-full border border-[#00A5A5]/30 bg-[#00A5A5]/10 px-3 py-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-[#00C9C9]">
+                <div className="brand-corners relative mx-auto max-w-5xl overflow-hidden rounded-[28px] border border-[#00C7B1]/25 bg-gradient-to-br from-[#00C7B1]/15 via-white/[0.03] to-transparent px-6 py-16 text-center sm:px-12">
+                    <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[#00C7B1]/20 blur-3xl" />
+                    <div className="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-[#1FD8C2]/10 blur-3xl" />
+                    <span className="relative inline-flex items-center gap-2 rounded-full border border-[#00C7B1]/30 bg-[#00C7B1]/10 px-3 py-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-[#1FD8C2]">
                         Ready when you are
                     </span>
                     <h2 className="relative mx-auto mt-4 max-w-2xl text-3xl font-extrabold leading-tight text-white sm:text-4xl">
@@ -125,7 +125,7 @@ export default function HomePage() {
                     <div className="relative mt-9 flex flex-wrap items-center justify-center gap-4">
                         <Link
                             href="/catalogue"
-                            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#00C9C9] to-[#00A5A5] px-8 py-4 text-base font-bold text-white no-underline shadow-teal-lg transition-transform duration-300 hover:scale-105"
+                            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#1FD8C2] to-[#00C7B1] px-8 py-4 text-base font-bold text-white no-underline shadow-teal-lg transition-transform duration-300 hover:scale-105"
                         >
                             Browse Catalogue →
                         </Link>
@@ -133,7 +133,7 @@ export default function HomePage() {
                             href="https://wa.me/97336357377"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 rounded-full border border-white/20 px-8 py-4 text-base font-bold text-white no-underline transition-colors duration-300 hover:border-[#00A5A5]/60 hover:text-[#00C9C9]"
+                            className="inline-flex items-center gap-2 rounded-full border border-white/20 px-8 py-4 text-base font-bold text-white no-underline transition-colors duration-300 hover:border-[#00C7B1]/60 hover:text-[#1FD8C2]"
                         >
                             WhatsApp Us
                         </a>

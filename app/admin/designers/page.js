@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-const COLORS = ['#00A5A5', '#3b82f6', '#8b5cf6', '#f97316', '#10b981', '#f59e0b', '#ec4899'];
+const COLORS = ['#00C7B1', '#3b82f6', '#8b5cf6', '#f97316', '#10b981', '#f59e0b', '#ec4899'];
 
 const STATUS_CONFIG = {
     'pending':     { label: 'Pending',     color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
-    'in-progress': { label: 'In Progress', color: '#00A5A5', bg: 'rgba(0,165,165,0.12)' },
+    'in-progress': { label: 'In Progress', color: '#00C7B1', bg: 'rgba(0,199,177,0.12)' },
     'review':      { label: 'In Review',   color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)' },
     'completed':   { label: 'Completed',   color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
 };
@@ -312,7 +312,7 @@ export default function DesignersPage() {
                                     </span>
                                     <button
                                         onClick={() => setCalMonth({ year: new Date().getFullYear(), month: new Date().getMonth() })}
-                                        style={{ background: 'rgba(0,165,165,0.15)', border: '1px solid rgba(0,165,165,0.3)', borderRadius: '6px', color: 'var(--pico-teal)', cursor: 'pointer', padding: '3px 10px', fontSize: '0.72rem', fontWeight: 600 }}
+                                        style={{ background: 'rgba(0,199,177,0.15)', border: '1px solid rgba(0,199,177,0.3)', borderRadius: '6px', color: 'var(--pico-teal)', cursor: 'pointer', padding: '3px 10px', fontSize: '0.72rem', fontWeight: 600 }}
                                     >Today</button>
                                 </div>
                                 <button
@@ -341,7 +341,7 @@ export default function DesignersPage() {
                                     return (
                                         <div key={ds} style={{
                                             minHeight: '64px', padding: '4px 3px', borderRadius: '7px',
-                                            background: isToday ? 'rgba(0,165,165,0.15)' : 'rgba(255,255,255,0.03)',
+                                            background: isToday ? 'rgba(0,199,177,0.15)' : 'rgba(255,255,255,0.03)',
                                             border: isToday ? '1.5px solid var(--pico-teal)' : '1px solid rgba(255,255,255,0.06)',
                                             position: 'relative',
                                         }}>

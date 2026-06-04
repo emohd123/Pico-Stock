@@ -58,7 +58,7 @@ export default function CataloguePage() {
 
             <section className="section" style={{ paddingBottom: '0.5rem' }}>
                 <div className="section-header">
-                    <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#00A5A5]/30 bg-[#00A5A5]/10 px-3 py-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-[#00C9C9]">
+                    <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#00C7B1]/30 bg-[#00C7B1]/10 px-3 py-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-[#1FD8C2]">
                         Rental Catalogue
                     </span>
                     <h2>Everything for your booth</h2>

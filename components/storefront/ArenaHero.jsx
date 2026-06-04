@@ -32,7 +32,7 @@ export default function ArenaHero() {
             .then(async (THREE) => {
                 if (disposed) return;
 
-                const TEAL = 0x00c9c9, EMBER = 0xff5a1f, EMBER2 = 0xff8a3d, FABRIC = 0xc9b6ad;
+                const TEAL = 0x00C7B1, EMBER = 0xff8200, EMBER2 = 0xff8a3d, FABRIC = 0xc9b6ad;
                 const scene = new THREE.Scene();
                 scene.fog = new THREE.FogExp2(0x0b0e16, 0.03);
 
@@ -87,7 +87,7 @@ export default function ArenaHero() {
                 }
                 const scoreTex = tex((x, w, h) => {
                     roundRect(x, 6, 6, w - 12, h - 12, 22); x.fillStyle = '#cfd8de'; x.fill();
-                    x.lineWidth = 6; x.strokeStyle = 'rgba(0,165,165,.55)'; x.stroke();
+                    x.lineWidth = 6; x.strokeStyle = 'rgba(0,199,177,.55)'; x.stroke();
                     drawLogo(x, w / 2, h / 2 - 22, 300);
                     x.fillStyle = 'rgba(60,70,78,.7)'; x.font = '700 26px Inter,Arial';
                     x.textAlign = 'center'; x.textBaseline = 'alphabetic';
