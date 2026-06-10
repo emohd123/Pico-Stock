@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Icon from '@/components/storefront/Icon';
 
@@ -10,9 +10,50 @@ import Icon from '@/components/storefront/Icon';
  * - Lazy-loads three only on the client.
  * - Respects prefers-reduced-motion (renders a static frame, no animation).
  * - Scales crowd/beam counts down on small / low-power devices.
+ * - journey mode (desktop): the page scroll scrubs the camera through
+ *   chapter keyframes while pinned content cross-fades — one continuous shot.
  */
-export default function ArenaHero() {
+
+// Camera keyframes for the scroll journey: radius / height / lookAt-Y / extra orbit angle.
+// K0 matches the intro's settled shot so the hand-off from fly-in to scrub is seamless.
+const JOURNEY_KF = [
+    { r: 27.0, y: 11.0, look: 4.5, ang: 0.0 },   // 01 Build  — wide establishing
+    { r: 13.0, y: 2.2,  look: 1.2, ang: 1.1 },   // 02 Furnish — court-level dolly
+    { r: 6.5,  y: 3.0,  look: 8.2, ang: 2.1 },   // 03 Power  — inside the bowl, looking up into beams & canopy
+    { r: 19.0, y: 8.5,  look: 2.8, ang: 3.3 },   // 04 Deliver — over the crowd
+    { r: 23.0, y: 13.0, look: 3.6, ang: 4.2 },   // 05 Start  — elevated full-arena closing shot
+];
+
+const JOURNEY_CHAPTERS = ['Build', 'Furnish', 'Power', 'Deliver', 'Start'];
+
+/** Desktop + no reduced-motion → cinematic journey; otherwise classic hero. */
+export function useJourneyMode() {
+    const [journey, setJourney] = useState(false);
+    useEffect(() => {
+        const mq = window.matchMedia('(min-width: 1024px)');
+        const rm = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const update = () => setJourney(mq.matches && !rm.matches);
+        update();
+        mq.addEventListener('change', update);
+        rm.addEventListener('change', update);
+        return () => {
+            mq.removeEventListener('change', update);
+            rm.removeEventListener('change', update);
+        };
+    }, []);
+    return journey;
+}
+
+export default function ArenaHero({ journey = false }) {
     const canvasRef = useRef(null);
+    const wrapRef = useRef(null);
+    const journeyRef = useRef(journey);
+    const chapterEls = useRef([]);
+    const railEls = useRef([]);
+    const counterRef = useRef(null);
+    const progressRef = useRef(null);
+    const hintRef = useRef(null);
+    useEffect(() => { journeyRef.current = journey; }, [journey]);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -41,6 +82,9 @@ export default function ArenaHero() {
                 renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, alpha: true });
                 renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
                 renderer.setClearColor(0x000000, 0);
+                // filmic tone mapping — cinema color response instead of clipped linear
+                renderer.toneMapping = THREE.ACESFilmicToneMapping;
+                renderer.toneMappingExposure = 1.15;
 
                 let composer = null, bloomPass = null, ReflectorCls = null;
                 const useBloom = !isMobile && !reduceMotion;
@@ -125,15 +169,22 @@ export default function ArenaHero() {
                 /* ---- bloom post-processing (desktop only) ---- */
                 if (useBloom) {
                     try {
-                        const [{ EffectComposer }, { RenderPass }, { UnrealBloomPass }, { OutputPass }, { Reflector }] = await Promise.all([
+                        const [{ EffectComposer }, { RenderPass }, { UnrealBloomPass }, { OutputPass }, { Reflector }, { RoomEnvironment }] = await Promise.all([
                             import('three/examples/jsm/postprocessing/EffectComposer.js'),
                             import('three/examples/jsm/postprocessing/RenderPass.js'),
                             import('three/examples/jsm/postprocessing/UnrealBloomPass.js'),
                             import('three/examples/jsm/postprocessing/OutputPass.js'),
                             import('three/examples/jsm/objects/Reflector.js'),
+                            import('three/examples/jsm/environments/RoomEnvironment.js'),
                         ]);
                         if (disposed) return;
                         ReflectorCls = Reflector;
+                        // image-based lighting — gives PBR metals/floor real reflections (render look)
+                        try {
+                            const pmrem = new THREE.PMREMGenerator(renderer);
+                            scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+                            pmrem.dispose();
+                        } catch (e) { /* env optional */ }
                         const w0 = canvas.clientWidth || window.innerWidth;
                         const h0 = canvas.clientHeight || window.innerHeight;
                         const dpr = renderer.getPixelRatio();
@@ -151,11 +202,11 @@ export default function ArenaHero() {
 
                 /* ---- canopy ---- */
                 const canopyGeo = new THREE.ConeGeometry(R, APEX - RIM, 60, 1, true);
-                const canopy = new THREE.Mesh(canopyGeo, new THREE.MeshStandardMaterial({ color: FABRIC, emissive: 0x140a06, side: THREE.DoubleSide, metalness: 0.1, roughness: 0.92 }));
+                const canopy = new THREE.Mesh(canopyGeo, new THREE.MeshStandardMaterial({ color: FABRIC, emissive: 0x140a06, side: THREE.DoubleSide, metalness: 0.1, roughness: 0.92, envMapIntensity: 0.12 }));
                 canopy.position.y = RIM + (APEX - RIM) / 2; arena.add(canopy);
                 const spokes = new THREE.Mesh(canopyGeo, new THREE.MeshBasicMaterial({ color: 0x2a1c14, wireframe: true, transparent: true, opacity: 0.22 }));
                 spokes.position.copy(canopy.position); arena.add(spokes);
-                const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.7, 0.8, 16), new THREE.MeshStandardMaterial({ color: 0x10151d, metalness: 0.8, roughness: 0.4 }));
+                const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.7, 0.8, 16), new THREE.MeshStandardMaterial({ color: 0x10151d, metalness: 0.8, roughness: 0.4, envMapIntensity: 0.9 }));
                 hub.position.y = APEX - 0.2; arena.add(hub);
                 const hubGlow = new THREE.Mesh(new THREE.SphereGeometry(0.35, 16, 16), new THREE.MeshBasicMaterial({ color: 0xfff0d0 }));
                 hubGlow.position.y = APEX - 0.5; arena.add(hubGlow);
@@ -170,15 +221,15 @@ export default function ArenaHero() {
                 cable.position.y = (APEX + RIM + 2.3) / 2; sbGroup.add(cable);
 
                 /* ---- truss ring + posts ---- */
-                const ring = new THREE.Mesh(new THREE.TorusGeometry(R, 0.22, 10, 80), new THREE.MeshStandardMaterial({ color: 0xb8c3d2, metalness: 0.95, roughness: 0.3 }));
+                const ring = new THREE.Mesh(new THREE.TorusGeometry(R, 0.22, 10, 80), new THREE.MeshStandardMaterial({ color: 0xb8c3d2, metalness: 0.95, roughness: 0.3, envMapIntensity: 0.9 }));
                 ring.rotation.x = Math.PI / 2; ring.position.y = RIM; arena.add(ring);
-                const ring2 = new THREE.Mesh(new THREE.TorusGeometry(R - 0.45, 0.12, 8, 80), new THREE.MeshStandardMaterial({ color: 0x8b97a8, metalness: 0.9, roughness: 0.35 }));
+                const ring2 = new THREE.Mesh(new THREE.TorusGeometry(R - 0.45, 0.12, 8, 80), new THREE.MeshStandardMaterial({ color: 0x8b97a8, metalness: 0.9, roughness: 0.35, envMapIntensity: 0.9 }));
                 ring2.rotation.x = Math.PI / 2; ring2.position.y = RIM - 0.5; arena.add(ring2);
                 // glowing teal LED ribbon on the rim — defines the arena silhouette and blooms
                 const ledRimMat = new THREE.MeshStandardMaterial({ color: 0x002525, emissive: TEAL, emissiveIntensity: 1.7, metalness: 0.2, roughness: 0.5 });
                 const ledRim = new THREE.Mesh(new THREE.TorusGeometry(R + 0.06, 0.11, 10, 140), ledRimMat);
                 ledRim.rotation.x = Math.PI / 2; ledRim.position.y = RIM + 0.06; arena.add(ledRim);
-                const postMat = new THREE.MeshStandardMaterial({ color: 0x9fb0c2, metalness: 0.9, roughness: 0.35 });
+                const postMat = new THREE.MeshStandardMaterial({ color: 0x9fb0c2, metalness: 0.9, roughness: 0.35, envMapIntensity: 0.8 });
                 for (let i = 0; i < 28; i++) {
                     const a = (i / 28) * Math.PI * 2;
                     const p = new THREE.Mesh(new THREE.BoxGeometry(0.16, RIM, 0.16), postMat);
@@ -191,10 +242,10 @@ export default function ArenaHero() {
                     const mirror = new ReflectorCls(new THREE.CircleGeometry(R - 1.25, 64), {
                         textureWidth: 1024, textureHeight: 1024, color: 0x2b3a4c, clipBias: 0.003,
                     });
-                    mirror.rotation.x = -Math.PI / 2; mirror.position.y = 0.0; arena.add(mirror);
+                    mirror.rotation.x = -Math.PI / 2; mirror.position.y = 0.0; mirror.userData.noShadow = true; arena.add(mirror);
                 }
-                // court tint laid over the mirror — translucent so reflections read through it (wet-court look)
-                const court = new THREE.Mesh(new THREE.CircleGeometry(R - 1.3, 64), new THREE.MeshStandardMaterial({ color: 0x14233b, metalness: 0.3, roughness: 0.7, emissive: 0x06121f, emissiveIntensity: 0.5, transparent: !!ReflectorCls, opacity: ReflectorCls ? 0.5 : 1, depthWrite: !ReflectorCls }));
+                // court tint laid over the mirror — clear-coated like a polished arena floor
+                const court = new THREE.Mesh(new THREE.CircleGeometry(R - 1.3, 64), new THREE.MeshPhysicalMaterial({ color: 0x14233b, metalness: 0.15, roughness: 0.4, clearcoat: 1, clearcoatRoughness: 0.18, envMapIntensity: 0.5, emissive: 0x06121f, emissiveIntensity: 0.4, transparent: !!ReflectorCls, opacity: ReflectorCls ? 0.5 : 1, depthWrite: !ReflectorCls }));
                 court.rotation.x = -Math.PI / 2; court.position.y = 0.02; arena.add(court);
                 const courtLogo = new THREE.Mesh(new THREE.PlaneGeometry(12, 6), new THREE.MeshBasicMaterial({ map: courtTex, transparent: true, depthWrite: false }));
                 courtLogo.rotation.x = -Math.PI / 2; courtLogo.position.y = 0.06; arena.add(courtLogo);
@@ -339,6 +390,31 @@ export default function ArenaHero() {
                     fwG.attributes.position.needsUpdate = true; fwG.attributes.color.needsUpdate = true;
                 }
 
+                /* ---- realism: soft shadows (desktop only) ---- */
+                if (useBloom) {
+                    renderer.shadowMap.enabled = true;
+                    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                    moon.intensity = 0.55;
+                    moon.castShadow = true;
+                    moon.shadow.mapSize.set(1024, 1024);
+                    moon.shadow.camera.left = -22; moon.shadow.camera.right = 22;
+                    moon.shadow.camera.top = 22; moon.shadow.camera.bottom = -22;
+                    moon.shadow.camera.near = 5; moon.shadow.camera.far = 80;
+                    moon.shadow.bias = -0.0004;
+                    // canopy would blanket the court in shadow; logo/spokes are decals
+                    canopy.userData.noShadow = true;
+                    spokes.userData.noShadow = true;
+                    courtLogo.userData.noShadow = true;
+                    arena.traverse((o) => {
+                        if (o.isMesh && !o.userData.noShadow && o.material && !o.material.transparent) {
+                            o.castShadow = true;
+                            o.receiveShadow = true;
+                        }
+                    });
+                    court.castShadow = false;
+                    court.receiveShadow = true; // polished floor catches structure shadows
+                }
+
                 /* ---- interaction ---- */
                 let mx = 0, my = 0, tmx = 0, tmy = 0, scrollY = 0;
                 const onMove = (e) => { tmx = (e.clientX / window.innerWidth - 0.5); tmy = (e.clientY / window.innerHeight - 0.5); };
@@ -427,15 +503,41 @@ export default function ArenaHero() {
                     }
 
                     const intro = smooth(Math.min(el / 4.8, 1));
-                    const f = Math.min(scrollY / (window.innerHeight || 800), 1);
                     // cinematic settle: bloom flash as the camera lands + FOV ease-in
                     if (bloomPass) bloomPass.strength = 0.55 + Math.max(0, 0.2 - Math.abs(intro - 0.92) * 4);
                     if (intro < 1) { camera.fov = THREE.MathUtils.lerp(58, 50, intro); camera.updateProjectionMatrix(); }
                     const orbit = t * 0.05;
-                    const radius = THREE.MathUtils.lerp(2, 27, intro) + mx * 3;
-                    const camY = THREE.MathUtils.lerp(46, 11, intro) - my * 2.4 + f * 5;
-                    camera.position.set(Math.sin(orbit) * radius, camY, Math.cos(orbit) * radius);
-                    camera.lookAt(0, THREE.MathUtils.lerp(8, 4.5, intro) - f * 1.2, 0);
+
+                    if (journeyRef.current && wrapRef.current) {
+                        // journey: native scroll scrubs the camera along chapter keyframes
+                        const wrap = wrapRef.current;
+                        const total = wrap.offsetHeight - window.innerHeight;
+                        const rect = wrap.getBoundingClientRect();
+                        const p = total > 0 ? Math.min(1, Math.max(0, -rect.top / total)) : 0;
+                        const seg = p * (JOURNEY_KF.length - 1);
+                        const ki = Math.min(JOURNEY_KF.length - 2, Math.floor(seg));
+                        const kt = smooth(seg - ki);
+                        const A = JOURNEY_KF[ki], B = JOURNEY_KF[ki + 1];
+                        const kr = A.r + (B.r - A.r) * kt;
+                        const ky = A.y + (B.y - A.y) * kt;
+                        const klook = A.look + (B.look - A.look) * kt;
+                        const kang = A.ang + (B.ang - A.ang) * kt;
+                        // damp bloom near the close-up Power chapter so the LED panel doesn't white-out
+                        if (bloomPass) bloomPass.strength *= 1 - 0.65 * Math.max(0, 1 - Math.abs(seg - 2) * 1.3);
+                        // intro fly-in blends into whatever keyframe scroll currently targets
+                        const radius = THREE.MathUtils.lerp(2, kr, intro);
+                        const camY = THREE.MathUtils.lerp(46, ky, intro) - my * 1.6;
+                        const ang = orbit + kang + mx * 0.06;
+                        camera.position.set(Math.sin(ang) * radius, camY, Math.cos(ang) * radius);
+                        camera.lookAt(0, THREE.MathUtils.lerp(8, klook, intro), 0);
+                    } else {
+                        // classic: settled wide shot with a gentle scroll nudge
+                        const f = Math.min(scrollY / (window.innerHeight || 800), 1);
+                        const radius = THREE.MathUtils.lerp(2, 27, intro) + mx * 3;
+                        const camY = THREE.MathUtils.lerp(46, 11, intro) - my * 2.4 + f * 5;
+                        camera.position.set(Math.sin(orbit) * radius, camY, Math.cos(orbit) * radius);
+                        camera.lookAt(0, THREE.MathUtils.lerp(8, 4.5, intro) - f * 1.2, 0);
+                    }
 
                     renderFrame();
                 }
@@ -471,8 +573,65 @@ export default function ArenaHero() {
         };
     }, []);
 
+    // Journey overlay choreography — direct DOM writes, no re-renders.
+    useEffect(() => {
+        if (!journey) return;
+        let raf = null;
+        const tick = () => {
+            const wrap = wrapRef.current;
+            if (wrap) {
+                const total = wrap.offsetHeight - window.innerHeight;
+                const rect = wrap.getBoundingClientRect();
+                const p = total > 0 ? Math.min(1, Math.max(0, -rect.top / total)) : 0;
+                const seg = p * (JOURNEY_KF.length - 1);
+                chapterEls.current.forEach((el, i) => {
+                    if (!el) return;
+                    const d = seg - i;
+                    const op = Math.max(0, 1 - Math.abs(d) * 1.9);
+                    el.style.opacity = op.toFixed(3);
+                    el.style.transform = `translateY(${(-d * 28).toFixed(1)}px)`;
+                    el.style.pointerEvents = op > 0.5 ? 'auto' : 'none';
+                });
+                const active = Math.round(seg);
+                railEls.current.forEach((el, i) => {
+                    if (el) el.classList.toggle('active', i === active);
+                });
+                if (counterRef.current) counterRef.current.textContent = `0${active + 1} / 0${JOURNEY_KF.length}`;
+                if (progressRef.current) progressRef.current.style.width = `${(p * 100).toFixed(1)}%`;
+                if (hintRef.current) {
+                    hintRef.current.textContent = p > 0.92 ? 'Continue to catalogue ↓' : 'Scroll to explore ↓';
+                }
+            }
+            raf = requestAnimationFrame(tick);
+        };
+        raf = requestAnimationFrame(tick);
+        return () => { if (raf) cancelAnimationFrame(raf); };
+    }, [journey]);
+
+    const goChapter = (i) => {
+        const wrap = wrapRef.current;
+        if (!wrap) return;
+        const total = wrap.offsetHeight - window.innerHeight;
+        window.scrollTo({ top: wrap.offsetTop + (total * i) / (JOURNEY_KF.length - 1), behavior: 'smooth' });
+    };
+
+    const heroContent = (
+        <>
+            <h1 className="arena-title">We Build the <span className="arena-highlight brand-tick">Show</span></h1>
+            <p className="arena-sub">
+                From a single booth to a full arena — furniture, LED displays, graphics, and structures,
+                designed and installed by Pico. Order online and we&apos;ll handle the rest.
+            </p>
+            <div className="arena-actions">
+                <Link href="/catalogue" className="btn btn-primary btn-lg">Browse Catalogue &#8594;</Link>
+                <Link href="/cart" className="btn btn-secondary btn-lg arena-cta-ghost"><Icon name="cart" size={18} /> View Cart</Link>
+            </div>
+        </>
+    );
+
     return (
-        <header className="arena-hero">
+        <div ref={wrapRef} className={journey ? 'journey-wrap' : undefined}>
+        <header className={`arena-hero${journey ? ' journey-view' : ''}`}>
             <canvas ref={canvasRef} className="arena-canvas" />
             <div className="arena-vignette" />
             <div className="arena-fade" />
@@ -480,19 +639,107 @@ export default function ArenaHero() {
                 <div className="arena-badge"><span className="arena-pulse" /> Premium Exhibition &amp; Event Services &middot; Bahrain</div>
             </div>
             <div className="arena-text-scrim" aria-hidden="true" />
-            <div className="arena-inner">
-                <h1 className="arena-title">We Build the <span className="arena-highlight brand-tick">Show</span></h1>
-                <p className="arena-sub">
-                    From a single booth to a full arena — furniture, LED displays, graphics, and structures,
-                    designed and installed by Pico. Order online and we&apos;ll handle the rest.
-                </p>
-                <div className="arena-actions">
-                    <Link href="/catalogue" className="btn btn-primary btn-lg">Browse Catalogue &#8594;</Link>
-                    <Link href="/cart" className="btn btn-secondary btn-lg arena-cta-ghost"><Icon name="cart" size={18} /> View Cart</Link>
-                </div>
-            </div>
-            <div className="arena-credit">Inspired by our build for the FIBA 3x3 World Tour Finals — Manama, Bahrain.</div>
-            <div className="arena-scroll"><span className="arena-scroll-txt">Scroll</span><span className="arena-scroll-arrow" aria-hidden="true">&#8595;</span></div>
+            {!journey && (
+                <div className="arena-inner">{heroContent}</div>
+            )}
+            {!journey && (
+                <div className="arena-credit">Inspired by our build for the FIBA 3x3 World Tour Finals — Manama, Bahrain.</div>
+            )}
+            {!journey && (
+                <div className="arena-scroll"><span className="arena-scroll-txt">Scroll</span><span className="arena-scroll-arrow" aria-hidden="true">&#8595;</span></div>
+            )}
+            {journey && (
+                <>
+                    <div className="journey-frame" aria-hidden="true" />
+                    <div className="journey-chapters">
+                        <div className="journey-chapter jc-center" ref={(el) => { chapterEls.current[0] = el; }}>
+                            <div className="arena-inner">{heroContent}</div>
+                        </div>
+                        <div className="journey-chapter jc-left" ref={(el) => { chapterEls.current[1] = el; }}>
+                            <div className="journey-card">
+                                <span className="journey-ghost-num" aria-hidden="true">02</span>
+                                <span className="journey-kicker">02 — Furniture Rental</span>
+                                <h2 className="journey-h">Furnish <strong>the floor.</strong></h2>
+                                <p className="journey-sub">Exhibition-grade tables, seating, counters and display pieces — quality-checked, delivered and placed at your stand.</p>
+                                <div className="journey-rows">
+                                    <div className="journey-row">
+                                        <span className="jw-ic"><Icon name="furniture" size={24} /></span>
+                                        <div><h4>Furniture</h4><p>Modern lines for meeting areas, receptions and lounges — every booth size.</p></div>
+                                    </div>
+                                    <div className="journey-row">
+                                        <span className="jw-ic"><Icon name="truck" size={24} /></span>
+                                        <div><h4>On-Schedule Delivery</h4><p>Delivered, installed and collected around your exhibition dates.</p></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="journey-chapter jc-right" ref={(el) => { chapterEls.current[2] = el; }}>
+                            <div className="journey-card">
+                                <span className="journey-ghost-num" aria-hidden="true">03</span>
+                                <span className="journey-kicker">03 — AV &amp; Graphics</span>
+                                <h2 className="journey-h">Power <strong>the show.</strong></h2>
+                                <p className="journey-sub">Broadcast-quality screens and large-format print that carry your brand across the venue.</p>
+                                <div className="journey-rows">
+                                    <div className="journey-row">
+                                        <span className="jw-ic"><Icon name="screen" size={24} /></span>
+                                        <div><h4>TV / LED Screens</h4><p>High-definition displays, video walls, touch screens and digital kiosks — installed and configured.</p></div>
+                                    </div>
+                                    <div className="journey-row">
+                                        <span className="jw-ic"><Icon name="graphics" size={24} /></span>
+                                        <div><h4>Graphics</h4><p>Backdrops, banners, signage and floor graphics — printed to specification.</p></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="journey-chapter jc-left" ref={(el) => { chapterEls.current[3] = el; }}>
+                            <div className="journey-card">
+                                <span className="journey-ghost-num" aria-hidden="true">04</span>
+                                <span className="journey-kicker">04 — How It Works</span>
+                                <h2 className="journey-h">From order <strong>to show day.</strong></h2>
+                                <p className="journey-sub">One online order — our Bahrain team handles everything between checkout and opening day.</p>
+                                <div className="journey-steps">
+                                    {[
+                                        { n: '01', t: 'Browse', d: 'Pick items from the online catalogue.', icon: 'browse' },
+                                        { n: '02', t: 'Order', d: 'Add to cart with your booth details.', icon: 'cart' },
+                                        { n: '03', t: 'Confirm', d: 'We confirm availability and timing by email.', icon: 'mail' },
+                                        { n: '04', t: 'Deliver', d: 'Set up before doors open — collected after.', icon: 'truck' },
+                                    ].map((s) => (
+                                        <div key={s.t} className="journey-step">
+                                            <div className="js-head">
+                                                <span className="jw-ic"><Icon name={s.icon} size={18} /></span>
+                                                <span className="js-n">{s.n}</span>
+                                                <span className="js-t">{s.t}</span>
+                                            </div>
+                                            <p className="js-d">{s.d}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="journey-chapter jc-center" ref={(el) => { chapterEls.current[4] = el; }}>
+                            <div className="journey-card">
+                                <span className="journey-kicker">05 — Ready When You Are</span>
+                                <h2 className="journey-h">Let&apos;s build <strong>yours.</strong></h2>
+                                <p className="journey-sub">25+ years of exhibitions and events in Bahrain — from the FIBA 3x3 World Tour to your next stand. Order online, or talk to our team.</p>
+                                <div className="arena-actions">
+                                    <Link href="/catalogue" className="btn btn-primary btn-lg">Browse Catalogue &#8594;</Link>
+                                    <a href="https://wa.me/97336357377" target="_blank" rel="noopener noreferrer" className="btn btn-lg journey-btn-orange">WhatsApp Us</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <nav className="journey-rail" aria-label="Home chapters">
+                        {JOURNEY_CHAPTERS.map((label, i) => (
+                            <button key={label} type="button" ref={(el) => { railEls.current[i] = el; }} onClick={() => goChapter(i)}>
+                                <span className="jr-num">0{i + 1}</span>
+                                {label}
+                                <span className="jr-tick" aria-hidden="true" />
+                            </button>
+                        ))}
+                    </nav>
+                </>
+            )}
         </header>
+        </div>
     );
 }

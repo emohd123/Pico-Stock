@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo } from 'react';
-import ArenaHero from '@/components/storefront/ArenaHero';
+import ArenaHero, { useJourneyMode } from '@/components/storefront/ArenaHero';
 import ProductCard from '@/components/storefront/ProductCard';
 import Icon from '@/components/storefront/Icon';
 import Reveal from '@/components/Reveal';
@@ -11,6 +11,7 @@ import { useCart } from '@/lib/cartContext';
 import { getVisibleProducts, HOME_STEPS, SHOP_CATEGORIES } from '@/lib/storefront/catalogue';
 
 export default function HomePage() {
+    const journey = useJourneyMode();
     const { products, loading } = useProducts();
     const { toast } = useCart();
     const visibleProducts = useMemo(() => getVisibleProducts(products), [products]);
@@ -25,8 +26,9 @@ export default function HomePage() {
 
     return (
         <div className="page-enter">
-            <ArenaHero />
+            <ArenaHero journey={journey} />
 
+            {!journey && (
             <section className="section">
               <Reveal>
                 <div className="section-header">
@@ -53,6 +55,7 @@ export default function HomePage() {
                 </div>
               </Reveal>
             </section>
+            )}
 
             {!loading && visibleProducts.length > 0 && (
                 <section className="section">
@@ -80,6 +83,7 @@ export default function HomePage() {
                 </section>
             )}
 
+            {!journey && (
             <section className="section">
               <Reveal>
                 <div className="section-header">
@@ -108,6 +112,7 @@ export default function HomePage() {
                 </div>
               </Reveal>
             </section>
+            )}
 
             <section className="section">
               <Reveal>
