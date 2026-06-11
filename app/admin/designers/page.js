@@ -28,6 +28,30 @@ const fmtDate = (str) => {
     return `${d} ${MONTH_NAMES[parseInt(m,10)-1]?.slice(0,3)} ${y}`;
 };
 
+const fmtBytes = (bytes) => {
+    const n = Number(bytes || 0);
+    if (n >= 1024 * 1024) return `${(n / 1024 / 1024).toFixed(1)} MB`;
+    if (n >= 1024) return `${Math.round(n / 1024)} KB`;
+    return `${n} B`;
+};
+
+const MAX_FILE_BYTES = 50 * 1024 * 1024; // 50 MB
+
+async function uploadProjectFile(file) {
+    const { upload } = await import('@vercel/blob/client');
+    const blob = await upload(`designer-projects/${file.name}`, file, {
+        access: 'public',
+        handleUploadUrl: '/api/designers/blob-upload',
+    });
+    return {
+        url: blob.url,
+        name: file.name,
+        size: Number(file.size || 0),
+        type: file.type || 'application/octet-stream',
+        uploadedAt: new Date().toISOString(),
+    };
+}
+
 export default function DesignersPage() {
     const router = useRouter();
     const [designers, setDesigners] = useState([]);
@@ -41,8 +65,10 @@ export default function DesignersPage() {
     const [newName, setNewName] = useState('');
     const [projectModalOpen, setProjectModalOpen] = useState(false);
     const [editingProject, setEditingProject] = useState(null);
-    const [projectForm, setProjectForm] = useState({ name: '', startDate: '', deadline: '', status: 'in-progress', notes: '' });
+    const [projectForm, setProjectForm] = useState({ name: '', startDate: '', deadline: '', status: 'in-progress', notes: '', file: null });
     const [projectError, setProjectError] = useState('');
+    const [pendingFile, setPendingFile] = useState(null); // chosen but not yet uploaded
+    const [uploading, setUploading] = useState(false);
 
     const TODAY = todayStr();
 
@@ -95,16 +121,30 @@ export default function DesignersPage() {
 
     function openAddProject() {
         setEditingProject(null);
-        setProjectForm({ name: '', startDate: TODAY, deadline: '', status: 'in-progress', notes: '' });
+        setProjectForm({ name: '', startDate: TODAY, deadline: '', status: 'in-progress', notes: '', file: null });
         setProjectError('');
+        setPendingFile(null);
         setProjectModalOpen(true);
     }
 
     function openEditProject(p) {
         setEditingProject(p);
-        setProjectForm({ name: p.name, startDate: p.startDate, deadline: p.deadline, status: p.status, notes: p.notes || '' });
+        setProjectForm({ name: p.name, startDate: p.startDate, deadline: p.deadline, status: p.status, notes: p.notes || '', file: p.file || null });
         setProjectError('');
+        setPendingFile(null);
         setProjectModalOpen(true);
+    }
+
+    function onPickFile(e) {
+        const f = e.target.files?.[0];
+        e.target.value = ''; // allow re-picking the same file
+        if (!f) return;
+        if (f.size > MAX_FILE_BYTES) {
+            setProjectError(`"${f.name}" is too large — maximum file size is 50 MB.`);
+            return;
+        }
+        setProjectError('');
+        setPendingFile(f);
     }
 
     async function saveProject() {
@@ -115,10 +155,27 @@ export default function DesignersPage() {
         }
         setProjectError('');
         setSaving(true);
+
+        // Upload the attached file first (if a new one was picked)
+        let fileMeta = projectForm.file || null;
+        if (pendingFile) {
+            setUploading(true);
+            try {
+                fileMeta = await uploadProjectFile(pendingFile);
+            } catch (err) {
+                setProjectError(`File upload failed: ${err?.message || 'unknown error'}. The project was not saved.`);
+                setUploading(false);
+                setSaving(false);
+                return;
+            }
+            setUploading(false);
+        }
+
+        const payload = { ...projectForm, file: fileMeta };
         const current = selected?.projects || [];
         const updated = editingProject
-            ? current.map(p => p.id === editingProject.id ? { ...p, ...projectForm } : p)
-            : [...current, { id: `proj-${Date.now()}`, ...projectForm }];
+            ? current.map(p => p.id === editingProject.id ? { ...p, ...payload } : p)
+            : [...current, { id: `proj-${Date.now()}`, ...payload }];
         const res = await fetch('/api/designers', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -444,11 +501,47 @@ export default function DesignersPage() {
                                                     <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.25rem', fontSize: '0.95rem' }}>
                                                         {project.name}
                                                     </div>
-                                                    <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                                    <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
                                                         <span>📅 Start: <strong style={{ color: 'var(--text-secondary)' }}>{fmtDate(project.startDate)}</strong></span>
                                                         <span>·</span>
                                                         <span>⏰ Deadline: <strong style={{ color: overdue ? '#ef4444' : 'var(--text-secondary)' }}>{fmtDate(project.deadline)}</strong></span>
+                                                        {(() => {
+                                                            const days = Math.round((new Date(project.deadline) - new Date(project.startDate)) / 86400000) + 1;
+                                                            const left = Math.round((new Date(project.deadline) - new Date(TODAY)) / 86400000);
+                                                            return (
+                                                                <>
+                                                                    <span>·</span>
+                                                                    <span>{days} day{days !== 1 ? 's' : ''} plan</span>
+                                                                    {project.status !== 'completed' && !overdue && (
+                                                                        <span style={{
+                                                                            padding: '1px 8px', borderRadius: '10px', fontSize: '0.68rem', fontWeight: 700,
+                                                                            color: left <= 2 ? '#f59e0b' : 'var(--pico-teal)',
+                                                                            background: left <= 2 ? 'rgba(245,158,11,0.12)' : 'rgba(0,199,177,0.1)',
+                                                                        }}>
+                                                                            {left === 0 ? 'Due today' : `${left} day${left !== 1 ? 's' : ''} left`}
+                                                                        </span>
+                                                                    )}
+                                                                </>
+                                                            );
+                                                        })()}
                                                     </div>
+                                                    {project.file?.url && (
+                                                        <a
+                                                            href={project.file.url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            style={{
+                                                                display: 'inline-flex', alignItems: 'center', gap: '5px', marginTop: '0.35rem',
+                                                                padding: '2px 10px', borderRadius: '12px', fontSize: '0.72rem', fontWeight: 600,
+                                                                color: 'var(--pico-teal)', background: 'rgba(0,199,177,0.08)',
+                                                                border: '1px solid rgba(0,199,177,0.25)', textDecoration: 'none', maxWidth: '100%',
+                                                            }}
+                                                            title={`Open ${project.file.name}`}
+                                                        >
+                                                            📎 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{project.file.name}</span>
+                                                            <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>({fmtBytes(project.file.size)})</span>
+                                                        </a>
+                                                    )}
                                                     {project.notes && (
                                                         <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)', marginTop: '0.25rem', fontStyle: 'italic' }}>
                                                             {project.notes}
@@ -588,6 +681,38 @@ export default function DesignersPage() {
                                 />
                             </div>
 
+                            <div className="form-group">
+                                <label className="form-label">Project File <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(optional)</span></label>
+                                {pendingFile ? (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.55rem 0.8rem', background: 'rgba(0,199,177,0.08)', border: '1px solid rgba(0,199,177,0.3)', borderRadius: '8px' }}>
+                                        <span style={{ fontSize: '0.82rem', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                                            📎 {pendingFile.name} <span style={{ color: 'var(--text-muted)' }}>({fmtBytes(pendingFile.size)})</span>
+                                        </span>
+                                        <span style={{ fontSize: '0.68rem', color: 'var(--pico-teal)', fontWeight: 700, flexShrink: 0 }}>uploads on save</span>
+                                        <button onClick={() => setPendingFile(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: '0.85rem', padding: '2px', flexShrink: 0 }} title="Remove file">✕</button>
+                                    </div>
+                                ) : projectForm.file ? (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.55rem 0.8rem', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border-subtle)', borderRadius: '8px' }}>
+                                        <a href={projectForm.file.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.82rem', color: 'var(--pico-teal)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, textDecoration: 'none' }}>
+                                            📎 {projectForm.file.name} <span style={{ color: 'var(--text-muted)' }}>({fmtBytes(projectForm.file.size)})</span>
+                                        </a>
+                                        <label style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 600, cursor: 'pointer', flexShrink: 0, textDecoration: 'underline' }}>
+                                            Replace
+                                            <input type="file" onChange={onPickFile} style={{ display: 'none' }} />
+                                        </label>
+                                        <button onClick={() => setProjectForm(p => ({ ...p, file: null }))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: '0.85rem', padding: '2px', flexShrink: 0 }} title="Remove file">✕</button>
+                                    </div>
+                                ) : (
+                                    <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.65rem', border: '1px dashed var(--border-subtle)', borderRadius: '8px', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: '0.82rem', transition: 'border-color 0.2s' }}>
+                                        📎 Attach project file
+                                        <input type="file" onChange={onPickFile} style={{ display: 'none' }} />
+                                    </label>
+                                )}
+                                <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '0.35rem' }}>
+                                    PDF, images, AI / PSD, Office or ZIP — up to 50 MB. Stored with the project.
+                                </div>
+                            </div>
+
                             <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
                                 <button
                                     className="btn btn-primary"
@@ -595,7 +720,7 @@ export default function DesignersPage() {
                                     onClick={saveProject}
                                     disabled={saving || !projectForm.name || !projectForm.startDate || !projectForm.deadline}
                                 >
-                                    {saving ? 'Saving...' : editingProject ? 'Save Changes' : 'Add Project'}
+                                    {uploading ? 'Uploading file…' : saving ? 'Saving...' : editingProject ? 'Save Changes' : 'Add Project'}
                                 </button>
                                 <button className="btn" onClick={() => setProjectModalOpen(false)}>Cancel</button>
                             </div>
