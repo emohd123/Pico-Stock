@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 import { isAdmin } from '@/lib/ministry/auth';
 import { getMinistryById, getMinistryPhotos, getMinistryQuotations } from '@/lib/ministry/queries';
-import { deletePhotoAction, regenerateTokenAction, updateMinistryAction, updateQuoteNotesAction } from '@/lib/ministry/actions';
+import { deletePhotoAction, regenerateTokenAction, updateLinkCodeAction, updateMinistryAction, updateQuoteNotesAction } from '@/lib/ministry/actions';
 import CopyLink from '@/components/ministry/CopyLink';
 import PhotoUploader from '@/components/ministry/PhotoUploader';
 import { fmtBHD } from '@/lib/ministry/money';
@@ -46,13 +46,27 @@ export default async function ManageMinistryPage({ params }) {
                 <section style={{ ...card, padding: 20 }}>
                     <h2 style={title}>Private portal link</h2>
                     <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12 }}>
-                        <code style={{ wordBreak: 'break-all', borderRadius: 4, background: '#f1f5f9', padding: '4px 8px', fontSize: 12 }}>{link}</code>
+                        <code style={{ wordBreak: 'break-all', borderRadius: 4, background: '#f1f5f9', padding: '4px 8px', fontSize: 13, fontWeight: 600, color: '#00857A' }}>{link}</code>
                         <CopyLink url={link} />
+                    </div>
+                    <div style={{ marginTop: 14, display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 8 }}>
+                        <form action={updateLinkCodeAction} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 8 }}>
+                            <input type="hidden" name="ministryId" value={ministry.id} />
+                            <label style={{ fontSize: 12, color: '#75787B' }}>
+                                Link code
+                                <div style={{ display: 'flex', alignItems: 'center', marginTop: 4 }}>
+                                    <span style={{ borderRadius: '8px 0 0 8px', border: '1px solid #cbd5e1', borderRight: 'none', background: '#f8fafc', padding: '8px 10px', fontSize: 13, color: '#94a3b8' }}>{proto}://{host}/q/</span>
+                                    <input name="code" defaultValue={ministry.token} pattern="[a-z0-9-]{3,24}" style={{ borderRadius: '0 8px 8px 0', border: '1px solid #cbd5e1', padding: '8px 10px', fontSize: 13, width: 160 }} />
+                                </div>
+                            </label>
+                            <button style={{ ...btn, padding: '8px 12px', fontSize: 12 }}>Save link code</button>
+                        </form>
                         <form action={regenerateTokenAction}>
                             <input type="hidden" name="ministryId" value={ministry.id} />
-                            <button style={{ borderRadius: 6, border: '1px solid #cbd5e1', padding: '4px 8px', fontSize: 12, color: '#75787B', background: '#fff', cursor: 'pointer' }}>Regenerate (invalidate old)</button>
+                            <button style={{ borderRadius: 6, border: '1px solid #cbd5e1', padding: '8px 12px', fontSize: 12, color: '#75787B', background: '#fff', cursor: 'pointer' }}>Regenerate random (revoke old link)</button>
                         </form>
                     </div>
+                    <p style={{ marginTop: 8, fontSize: 11, color: '#94a3b8' }}>Lowercase letters, numbers, hyphens (3–24 chars). Anyone with the old link loses access once you change it.</p>
                 </section>
 
                 <section style={{ ...card, padding: 20 }}>
