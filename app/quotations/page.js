@@ -42,10 +42,13 @@ export default async function QuotationsAdminPage({ searchParams }) {
                     <form action={createMinistryAction} style={{ display: 'grid', gap: 12, gridTemplateColumns: '1fr 1fr' }}>
                         <input name="name" required placeholder="Ministry name (English)" style={inputStyle} />
                         <input name="nameAr" placeholder="اسم الوزارة (Arabic, optional)" dir="rtl" style={inputStyle} />
-                        <input name="contactEmail" type="email" placeholder="Contact email (optional)" style={{ ...inputStyle, gridColumn: '1 / -1' }} />
+                        <input name="contactEmail" type="email" placeholder="Contact email (optional)" style={inputStyle} />
+                        <input name="contactPhone" type="tel" placeholder="Contact phone (optional)" style={inputStyle} />
+                        <input name="attentionName" placeholder="Contact person (optional)" style={inputStyle} />
+                        <input name="attentionTitle" placeholder="Position / title (optional)" style={inputStyle} />
                         <button style={{ ...btn, justifySelf: 'start', gridColumn: '1 / -1' }}>Create + generate link</button>
                     </form>
-                    <p style={{ marginTop: 8, fontSize: 12, color: '#75787B' }}>You can add the recipient (Attn.), P.O. Box and photos after creating.</p>
+                    <p style={{ marginTop: 8, fontSize: 12, color: '#75787B' }}>Contact details are optional and can be added or edited later. P.O. Box and photos are added after creating.</p>
                 </section>
 
                 <section style={card}>

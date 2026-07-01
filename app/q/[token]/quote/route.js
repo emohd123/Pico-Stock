@@ -55,7 +55,8 @@ export async function POST(req, { params }) {
         ref,
         dateStr: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }),
         ministryName: ministry.name,
-        attentionName: ministry.attentionName, attentionTitle: ministry.attentionTitle, poBox: ministry.poBox,
+        attentionName: ministry.attentionName, attentionTitle: ministry.attentionTitle,
+        attentionPhone: ministry.contactPhone, poBox: ministry.poBox,
         eventName, venue, eventDate,
         lines: resolved.map((r) => {
             const d = itemDetail(r.item.itemNo);

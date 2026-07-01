@@ -77,6 +77,7 @@ export default async function ManageMinistryPage({ params }) {
                         <label style={{ fontSize: 12, color: '#75787B' }}>Attn. title<input name="attentionTitle" defaultValue={ministry.attentionTitle || ''} style={inputStyle} placeholder="Director of Communication" /></label>
                         <label style={{ fontSize: 12, color: '#75787B' }}>P.O. Box<input name="poBox" defaultValue={ministry.poBox || ''} style={inputStyle} placeholder="P.O. Box 60667" /></label>
                         <label style={{ fontSize: 12, color: '#75787B' }}>Contact email<input name="contactEmail" type="email" defaultValue={ministry.contactEmail || ''} style={inputStyle} /></label>
+                        <label style={{ fontSize: 12, color: '#75787B' }}>Contact phone<input name="contactPhone" type="tel" defaultValue={ministry.contactPhone || ''} style={inputStyle} placeholder="+973 ..." /></label>
                         <label style={{ fontSize: 12, color: '#75787B', gridColumn: '1 / -1' }}>Internal status note (PICO only — to track what&apos;s up to date)<input name="internalNote" defaultValue={ministry.internalNote || ''} style={inputStyle} placeholder="e.g. Rev 2 sent 1 Jul — awaiting PO" /></label>
                         <button style={{ ...btn, justifySelf: 'start', gridColumn: '1 / -1' }}>Save details</button>
                     </form>
