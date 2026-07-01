@@ -12,6 +12,7 @@ const ADMIN_NAV_ITEMS = [
     { key: 'stand-design', href: '/admin/stand-design', label: 'Stand Design' },
     { key: 'grid-measure', href: '/admin/grid-measure', label: 'Grid Measure' },
     { key: 'quotations', href: '/admin/quotations', label: 'Quotation Studio' },
+    { key: 'ministry', href: '/quotations', label: 'Ministry Quotations' },
 ];
 
 function itemClassName(active) {
