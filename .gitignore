@@ -88,3 +88,7 @@ pico-home-*.html
 scripts/test_*.mjs
 scripts/brand_update.py
 scripts/replace_css.py
+
+# Ministry portal assets (override blanket *.png ignore)
+!/public/brand/*.png
+!/public/ministry-items/*.png

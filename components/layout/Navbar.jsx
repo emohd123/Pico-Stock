@@ -51,6 +51,7 @@ export default function Navbar() {
                     <li><Link href="/" className={pathname === '/' ? 'active' : ''}>Home</Link></li>
                     <li><Link href="/company-profile" className={isActive('/company-profile') ? 'active' : ''}>Company Profile</Link></li>
                     <li><Link href="/catalogue" className={isActive('/catalogue') ? 'active' : ''}>Catalogue</Link></li>
+                    <li><Link href="/quotations" className={isActive('/quotations') ? 'active' : ''}>Ministry Quotations</Link></li>
                     <li><Link href="/admin/login" className={isActive('/admin') ? 'active' : ''}>Admin</Link></li>
                 </ul>
 

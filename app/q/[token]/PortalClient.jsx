@@ -1,0 +1,226 @@
+'use client';
+
+import { useMemo, useState } from 'react';
+import { formatFils, VAT_RATE } from '@/lib/ministry/money';
+import { APPROVAL_NOTICE } from '@/lib/ministry/company';
+
+export default function PortalClient({ token, ministryName, ministryNameAr, items, quotations, photos }) {
+    const [tab, setTab] = useState('select');
+    return (
+        <div style={{ minHeight: '100vh', background: '#f8fafc', color: '#4D4D4F' }}>
+            <header style={{ borderBottom: '4px solid #00C7B1', background: '#fff' }}>
+                <div style={{ maxWidth: 1000, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '12px 20px' }}>
+                    <img src="/brand/pico-logo.png" alt="PICO — Total Brand Activation" style={{ height: 40 }} />
+                    <img src="/brand/bahrain-emblem.png" alt="Kingdom of Bahrain" style={{ height: 44 }} />
+                </div>
+                <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 20px 8px' }}>
+                    <h1 style={{ fontSize: 20, fontWeight: 600, color: '#4D4D4F', margin: 0 }}>{ministryName}</h1>
+                    {ministryNameAr ? <div dir="rtl" style={{ fontSize: 16, color: '#75787B' }}>{ministryNameAr}</div> : null}
+                    <p style={{ fontSize: 14, color: '#75787B', margin: '2px 0 0' }}>Ministerial Meeting — Services &amp; Quotation Portal</p>
+                </div>
+                <nav style={{ maxWidth: 1000, margin: '0 auto', display: 'flex', gap: 4, padding: '0 20px' }}>
+                    {[['select', 'Build Quotation'], ['quotes', `My Quotations (${quotations.length})`], ['gallery', `Gallery (${photos.length})`]].map(([key, label]) => (
+                        <button key={key} onClick={() => setTab(key)}
+                            style={{ borderBottom: tab === key ? '2px solid #00C7B1' : '2px solid transparent', padding: '8px 16px', fontSize: 14, fontWeight: 500, color: tab === key ? '#00857A' : '#75787B', background: 'none', cursor: 'pointer' }}>
+                            {label}
+                        </button>
+                    ))}
+                </nav>
+            </header>
+
+            <div style={{ background: '#00C7B1', color: '#fff' }}>
+                <div style={{ maxWidth: 1000, margin: '0 auto', padding: '8px 20px', textAlign: 'center', fontSize: 14, fontWeight: 600 }}>
+                    ⚠ IMPORTANT: {APPROVAL_NOTICE}
+                </div>
+            </div>
+
+            <main style={{ maxWidth: 1000, margin: '0 auto', padding: '24px 20px' }}>
+                {tab === 'select' && <Selector token={token} items={items} />}
+                {tab === 'quotes' && <Quotations quotations={quotations} />}
+                {tab === 'gallery' && <Gallery photos={photos} />}
+            </main>
+        </div>
+    );
+}
+
+const card = { background: '#fff', borderRadius: 12, boxShadow: '0 1px 2px rgba(0,0,0,0.06)' };
+const inputStyle = { width: '100%', borderRadius: 8, border: '1px solid #cbd5e1', padding: '8px 12px', fontSize: 14, boxSizing: 'border-box' };
+const btn = { borderRadius: 8, background: '#00857A', color: '#fff', padding: '10px 16px', fontSize: 14, fontWeight: 600, border: 'none', cursor: 'pointer' };
+
+function Selector({ token, items }) {
+    const [selected, setSelected] = useState({});
+    const [eventName, setEventName] = useState('');
+    const [venue, setVenue] = useState('');
+    const [eventDate, setEventDate] = useState('');
+    const [busy, setBusy] = useState(false);
+    const [error, setError] = useState('');
+    const [lightbox, setLightbox] = useState(null);
+
+    const sortedItems = useMemo(() => [...items].sort((a, b) => a.itemNo - b.itemNo), [items]);
+    const totals = useMemo(() => {
+        let subtotal = 0;
+        for (const it of items) { const q = selected[it.id]; if (q > 0) subtotal += it.unitPriceFils * q; }
+        const vat = Math.round(subtotal * VAT_RATE);
+        return { subtotal, vat, total: subtotal + vat };
+    }, [selected, items]);
+    const selectedCount = Object.values(selected).filter((q) => q > 0).length;
+
+    function toggle(it, on) { setSelected((s) => { const n = { ...s }; if (on) n[it.id] = it.defaultQty; else delete n[it.id]; return n; }); }
+    function setQty(it, qty) { setSelected((s) => ({ ...s, [it.id]: Math.min(it.maxQty, Math.max(1, qty || 1)) })); }
+
+    async function submit() {
+        setError('');
+        if (selectedCount === 0) { setError('Please select at least one item.'); return; }
+        setBusy(true);
+        try {
+            const lines = items.filter((it) => selected[it.id] > 0).map((it) => ({ itemId: it.id, qty: selected[it.id] }));
+            const res = await fetch(`/q/${token}/quote`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ eventName, venue, eventDate, lines }) });
+            if (!res.ok) throw new Error((await res.text()) || 'Failed to generate quotation');
+            const data = await res.json();
+            if (data.pdfUrl) window.open(data.pdfUrl, '_blank');
+            window.location.reload();
+        } catch (e) { setError(e.message || 'Something went wrong'); } finally { setBusy(false); }
+    }
+
+    return (
+        <div style={{ display: 'grid', gap: 24, gridTemplateColumns: '1fr 300px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                <div style={{ ...card, padding: 16 }}>
+                    <div style={{ display: 'grid', gap: 12, gridTemplateColumns: '1fr 1fr' }}>
+                        <label style={{ gridColumn: '1 / -1', fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Event / Meeting name
+                            <input value={eventName} onChange={(e) => setEventName(e.target.value)} placeholder="e.g. GCC Finance Ministers Meeting 2026" style={{ ...inputStyle, marginTop: 4 }} /></label>
+                        <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Venue
+                            <input value={venue} onChange={(e) => setVenue(e.target.value)} placeholder="e.g. Ritz Carlton" style={{ ...inputStyle, marginTop: 4 }} /></label>
+                        <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Date / Duration
+                            <input value={eventDate} onChange={(e) => setEventDate(e.target.value)} placeholder="e.g. 27 August 2026 / 1 Day" style={{ ...inputStyle, marginTop: 4 }} /></label>
+                    </div>
+                    <p style={{ marginTop: 12, borderRadius: 6, background: '#f1f5f9', padding: '8px 12px', fontSize: 12, color: '#75787B' }}>
+                        Listed quantities are the <strong>maximum allowed</strong> per item — you may reduce them but not exceed them. Items marked <em>fixed qty</em> cannot be changed.
+                    </p>
+                </div>
+
+                <section style={card}>
+                    <h2 style={{ borderBottom: '1px solid #f1f5f9', padding: '12px 16px', fontSize: 14, fontWeight: 600, color: '#00857A', margin: 0 }}>Tender items (1–40)</h2>
+                    <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                        {sortedItems.map((it) => {
+                            const on = selected[it.id] > 0;
+                            return (
+                                <li key={it.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 16px', borderTop: '1px solid #f1f5f9' }}>
+                                    <input type="checkbox" checked={on} onChange={(e) => toggle(it, e.target.checked)} style={{ marginTop: 4, width: 16, height: 16, accentColor: '#00857A' }} />
+                                    {it.imageUrl ? (
+                                        <button type="button" onClick={() => setLightbox({ url: it.imageUrl, name: `${it.itemNo}. ${it.name}` })} title="Click to enlarge"
+                                            style={{ height: 48, width: 48, flexShrink: 0, overflow: 'hidden', borderRadius: 4, border: '1px solid #e2e8f0', padding: 0, cursor: 'pointer' }}>
+                                            <img src={it.imageUrl} alt={it.name} style={{ height: '100%', width: '100%', objectFit: 'cover' }} />
+                                        </button>
+                                    ) : <span style={{ height: 48, width: 48, flexShrink: 0 }} />}
+                                    <div style={{ minWidth: 0, flex: 1 }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                                            <span style={{ fontSize: 14, fontWeight: 500 }}>{it.itemNo}. {it.name}
+                                                {it.qtyFixed ? <span style={{ marginLeft: 8, borderRadius: 4, background: '#f1f5f9', padding: '1px 6px', fontSize: 10, fontWeight: 400, color: '#75787B' }}>fixed qty</span> : null}</span>
+                                            <span style={{ whiteSpace: 'nowrap', fontSize: 12, color: '#75787B' }}>BD {formatFils(it.unitPriceFils)} / {it.unit || 'unit'}</span>
+                                        </div>
+                                        {it.description ? <p style={{ margin: '2px 0 0', fontSize: 12, color: '#75787B' }}>{it.description}</p> : null}
+                                        {on ? (
+                                            <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                <span style={{ fontSize: 12, color: '#75787B' }}>Qty</span>
+                                                {it.qtyFixed ? (
+                                                    <span style={{ borderRadius: 4, border: '1px solid #e2e8f0', background: '#f8fafc', padding: '4px 8px', fontSize: 14 }}>{it.maxQty} {it.unit} (fixed)</span>
+                                                ) : (
+                                                    <>
+                                                        <input type="number" min={1} max={it.maxQty} value={selected[it.id]} onChange={(e) => setQty(it, parseInt(e.target.value, 10))} style={{ width: 80, borderRadius: 4, border: '1px solid #cbd5e1', padding: '4px 8px', fontSize: 14 }} />
+                                                        <span style={{ fontSize: 11, color: '#75787B' }}>max {it.maxQty}</span>
+                                                    </>
+                                                )}
+                                                <span style={{ marginLeft: 'auto', fontSize: 14, fontWeight: 500 }}>BD {formatFils(it.unitPriceFils * selected[it.id])}</span>
+                                            </div>
+                                        ) : null}
+                                    </div>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                </section>
+            </div>
+
+            <aside style={{ position: 'sticky', top: 24, alignSelf: 'flex-start' }}>
+                <div style={{ ...card, padding: 20 }}>
+                    <h3 style={{ fontSize: 14, fontWeight: 600, color: '#00857A', margin: 0 }}>Summary</h3>
+                    <div style={{ marginTop: 12, fontSize: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <Row label="Items selected" value={String(selectedCount)} />
+                        <Row label="Subtotal (w/o VAT)" value={`BD ${formatFils(totals.subtotal)}`} />
+                        <Row label="VAT (10%)" value={`BD ${formatFils(totals.vat)}`} />
+                        <div style={{ marginTop: 8, borderTop: '1px solid #e2e8f0', paddingTop: 8 }}><Row label="Grand Total" value={`BD ${formatFils(totals.total)}`} bold /></div>
+                    </div>
+                    {error ? <p style={{ marginTop: 12, borderRadius: 4, background: '#fef2f2', padding: '8px 12px', fontSize: 12, color: '#dc2626' }}>{error}</p> : null}
+                    <button onClick={submit} disabled={busy} style={{ ...btn, width: '100%', marginTop: 16, opacity: busy ? 0.5 : 1 }}>{busy ? 'Generating…' : 'Generate Quotation PDF'}</button>
+                    <p style={{ marginTop: 8, textAlign: 'center', fontSize: 11, color: '#94a3b8' }}>Fixed tender rates · Bahraini Dinars</p>
+                </div>
+            </aside>
+
+            {lightbox ? (
+                <div onClick={() => setLightbox(null)} style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.7)', padding: 16 }}>
+                    <div onClick={(e) => e.stopPropagation()} style={{ maxHeight: '90vh', maxWidth: 768, overflow: 'hidden', borderRadius: 12, background: '#fff' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, borderBottom: '1px solid #f1f5f9', padding: '8px 16px' }}>
+                            <span style={{ fontSize: 14, fontWeight: 500, color: '#4D4D4F' }}>{lightbox.name}</span>
+                            <button onClick={() => setLightbox(null)} style={{ fontSize: 14, color: '#75787B', background: 'none', border: 'none', cursor: 'pointer' }}>✕ Close</button>
+                        </div>
+                        <img src={lightbox.url} alt={lightbox.name} style={{ maxHeight: '80vh', width: '100%', objectFit: 'contain' }} />
+                    </div>
+                </div>
+            ) : null}
+        </div>
+    );
+}
+
+function Row({ label, value, bold }) {
+    return (<div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <span style={{ color: bold ? '#00857A' : '#64748b', fontWeight: bold ? 600 : 400 }}>{label}</span>
+        <span style={{ color: bold ? '#00857A' : 'inherit', fontWeight: bold ? 600 : 400 }}>{value}</span>
+    </div>);
+}
+
+function Quotations({ quotations }) {
+    if (quotations.length === 0) return <Empty text="No quotations yet. Build one from the “Build Quotation” tab." />;
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {quotations.map((q) => (
+                <div key={q.id} style={{ ...card, padding: 16 }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ fontWeight: 500 }}>{q.ref}</span>
+                            <span style={{ borderRadius: 4, background: '#f1f5f9', padding: '1px 6px', fontSize: 11, color: '#75787B' }}>Rev {q.revision}</span>
+                            {q.isCurrent
+                                ? <span style={{ borderRadius: 4, background: '#00C7B1', padding: '1px 6px', fontSize: 11, fontWeight: 600, color: '#fff' }}>LATEST</span>
+                                : <span style={{ borderRadius: 4, background: '#e2e8f0', padding: '1px 6px', fontSize: 11, color: '#75787B' }}>Superseded</span>}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 14 }}>
+                            <span style={{ color: '#75787B' }}>{new Date(q.createdAt).toLocaleDateString('en-GB')}</span>
+                            <span style={{ fontWeight: 500 }}>BD {formatFils(q.totalFils)}</span>
+                            {q.pdfBlobUrl ? <a href={q.pdfBlobUrl} target="_blank" rel="noreferrer" style={{ fontWeight: 500, color: '#00857A', textDecoration: 'underline' }}>Download PDF</a> : null}
+                        </div>
+                    </div>
+                    <div style={{ marginTop: 4, fontSize: 12, color: '#75787B' }}>{q.eventName || '—'}</div>
+                    {q.notes ? <div style={{ marginTop: 8, borderRadius: 4, background: '#fffbeb', padding: '4px 8px', fontSize: 12, color: '#92400e' }}>Update: {q.notes}</div> : null}
+                </div>
+            ))}
+        </div>
+    );
+}
+
+function Gallery({ photos }) {
+    if (photos.length === 0) return <Empty text="No photos have been shared with you yet." />;
+    return (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+            {photos.map((p) => (
+                <figure key={p.id} style={{ ...card, overflow: 'hidden', margin: 0 }}>
+                    <img src={p.url} alt={p.caption || 'Reference photo'} style={{ height: 176, width: '100%', objectFit: 'cover' }} />
+                    {p.caption ? <figcaption style={{ padding: '8px 12px', fontSize: 12, color: '#75787B' }}>{p.caption}</figcaption> : null}
+                </figure>
+            ))}
+        </div>
+    );
+}
+
+function Empty({ text }) {
+    return <div style={{ ...card, padding: 40, textAlign: 'center', fontSize: 14, color: '#75787B' }}>{text}</div>;
+}
