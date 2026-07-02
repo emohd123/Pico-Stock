@@ -14,8 +14,10 @@ export default function PortalClient({ token, ministryName, ministryNameAr, item
                     <img src="/brand/pico-logo.png" alt="PICO — Total Brand Activation" style={{ height: 40 }} />
                 </div>
                 <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 20px 8px' }}>
-                    <h1 style={{ fontSize: 20, fontWeight: 600, color: '#4D4D4F', margin: 0 }}>{ministryName}</h1>
-                    {ministryNameAr ? <div dir="rtl" style={{ display: 'inline-block', textAlign: 'right', fontSize: 16, color: '#75787B' }}>{ministryNameAr}</div> : null}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: 12 }}>
+                        <h1 style={{ fontSize: 20, fontWeight: 600, color: '#4D4D4F', margin: 0 }}>{ministryName}</h1>
+                        {ministryNameAr ? <span dir="rtl" style={{ fontSize: 16, color: '#75787B' }}>{ministryNameAr}</span> : null}
+                    </div>
                     <p style={{ fontSize: 14, color: '#75787B', margin: '2px 0 0' }}>Ministerial Meeting — Services &amp; Quotation Portal</p>
                 </div>
                 <nav style={{ maxWidth: 1000, margin: '0 auto', display: 'flex', gap: 4, padding: '0 20px' }}>
