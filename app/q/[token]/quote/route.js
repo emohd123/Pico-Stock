@@ -5,6 +5,7 @@ import { itemDetail } from '@/lib/ministry/itemDetails';
 import { renderQuotationPdf } from '@/components/ministry/QuotationPdf';
 import { putPrivate } from '@/lib/ministry/storage';
 import { appendQuoteRow } from '@/lib/ministry/quoteLog';
+import { COMPANY } from '@/lib/ministry/company';
 
 export const runtime = 'nodejs';
 
@@ -57,7 +58,11 @@ export async function POST(req, { params }) {
     // (the revision bumps instead). A brand-new number is minted only the first
     // time this ministry generates, and only then logged to the master sheet.
     const reserved = await reserveMinistryQuoteRef(ministry.id);
-    const ref = reserved.ref;
+    // Permanent per-ministry number (e.g. 11915), wrapped in the Q/MM/YYYY/EM/NN
+    // reference shown on the quotation.
+    const quoteNo = reserved.ref;
+    const refNow = new Date();
+    const ref = `${COMPANY.refPrefix}/${String(refNow.getMonth() + 1).padStart(2, '0')}/${refNow.getFullYear()}/${COMPANY.refDept}/${quoteNo}`;
     const prior = await getMinistryQuotations(ministry.id);
     const revision = prior.length + 1;
 

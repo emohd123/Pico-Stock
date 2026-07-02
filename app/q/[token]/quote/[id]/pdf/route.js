@@ -15,10 +15,16 @@ export async function GET(req, { params }) {
     // ?download=1 forces "save file" (soft copy); default is inline view/print.
     const download = new URL(req.url).searchParams.get('download');
     const disposition = download ? 'attachment' : 'inline';
+    // File name uses the ministry name in place of the dept segment, i.e.
+    // Q/MM/YYYY/{ministry}/{number} -> Q-MM-YYYY-<ministry>-<number>.pdf
+    const nameSlug = ministry.name.replace(/[^A-Za-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const parts = quote.ref.split('/');
+    if (parts.length === 5) parts[3] = nameSlug;
+    const fileName = parts.join('-');
     return new NextResponse(file.body, {
         headers: {
             'Content-Type': 'application/pdf',
-            'Content-Disposition': `${disposition}; filename="${quote.ref.replace(/\//g, '-')}.pdf"`,
+            'Content-Disposition': `${disposition}; filename="${fileName}.pdf"`,
             'Cache-Control': 'private, max-age=0, must-revalidate',
         },
     });
