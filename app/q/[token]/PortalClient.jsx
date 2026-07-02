@@ -155,7 +155,7 @@ function Selector({ token, items }) {
                             <span style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Date</span>
                             <DateCalendar value={eventDate} onChange={setEventDate} />
                         </div>
-                        <label style={{ gridColumn: '1 / -1', fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Address
+                        <label style={{ gridColumn: '1 / -1', fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Ministry address
                             <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="e.g. Building 123, Road 45, Manama, Kingdom of Bahrain" style={{ ...inputStyle, marginTop: 4 }} /></label>
                         <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Contact 1 name
                             <input value={contact1} onChange={(e) => setContact1(e.target.value)} placeholder="" style={{ ...inputStyle, marginTop: 4 }} /></label>
