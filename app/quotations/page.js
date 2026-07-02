@@ -2,8 +2,9 @@ import Link from 'next/link';
 import { headers } from 'next/headers';
 import { isAdmin } from '@/lib/ministry/auth';
 import { getAllMinistries } from '@/lib/ministry/queries';
-import { createMinistryAction } from '@/lib/ministry/actions';
+import { createMinistryAction, deleteMinistryAction } from '@/lib/ministry/actions';
 import CopyLink from '@/components/ministry/CopyLink';
+import DeleteMinistryButton from '@/components/ministry/DeleteMinistryButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -67,6 +68,7 @@ export default async function QuotationsAdminPage({ searchParams }) {
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                         <CopyLink url={`${origin}/q/${m.token}`} />
                                         <Link href={`/quotations/ministry/${m.id}`} style={{ borderRadius: 6, background: '#00857A', color: '#fff', padding: '4px 12px', fontSize: 12, fontWeight: 500, textDecoration: 'none' }}>Manage</Link>
+                                        <DeleteMinistryButton ministryId={m.id} ministryName={m.name} action={deleteMinistryAction} />
                                     </div>
                                 </li>
                             ))}
