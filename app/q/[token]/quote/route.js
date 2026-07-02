@@ -80,7 +80,7 @@ export async function POST(req, { params }) {
         lines: resolved.map((r) => {
             const d = itemDetail(r.item.itemNo);
             let mainDesc = (d && d.mainDesc) || r.item.description;
-            if (r.item.itemNo === 6 && heads) mainDesc = `${mainDesc || ''}${mainDesc ? ' ' : ''}— Seating for ${heads} heads`;
+            if (r.item.itemNo === 6 && heads) mainDesc = `${mainDesc || ''}${mainDesc ? ' ' : ''}— Seating for ${heads} ministries`;
             return {
                 scope: (d && d.scope) || r.item.name,
                 mainDesc,

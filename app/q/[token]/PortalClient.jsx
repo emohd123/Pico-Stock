@@ -184,8 +184,14 @@ function Selector({ token, items }) {
                                         ) : null}
                                         {on && it.itemNo === 6 ? (
                                             <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                <span style={{ fontSize: 12, color: '#75787B' }}>Number of heads</span>
-                                                <input type="number" min={1} value={heads} onChange={(e) => setHeads(e.target.value)} placeholder="e.g. 10" style={{ width: 90, borderRadius: 4, border: '1px solid #cbd5e1', padding: '4px 8px', fontSize: 14 }} />
+                                                <span style={{ fontSize: 12, color: '#75787B' }}>Number of ministries</span>
+                                                <select value={heads} onChange={(e) => setHeads(e.target.value)} style={{ width: 110, borderRadius: 4, border: '1px solid #cbd5e1', padding: '4px 8px', fontSize: 14 }}>
+                                                    <option value="">—</option>
+                                                    <option value="7">7 pax</option>
+                                                    <option value="8">8 pax</option>
+                                                    <option value="9">9 pax</option>
+                                                    <option value="10">10 pax</option>
+                                                </select>
                                                 <span style={{ fontSize: 11, color: '#94a3b8' }}>seating only — does not change the price</span>
                                             </div>
                                         ) : null}
