@@ -53,6 +53,7 @@ create table if not exists public.mm_quotations (
     vat_fils integer not null,
     total_fils integer not null,
     pdf_blob_url text,
+    terms_agreed_at timestamptz,
     created_at timestamptz not null default now()
 );
 
