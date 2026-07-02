@@ -18,6 +18,13 @@ export async function POST(req, { params }) {
     const venue = String(body?.venue || '').slice(0, 200);
     const eventDate = String(body?.eventDate || '').slice(0, 200);
     const duration = String(body?.duration || '').slice(0, 200);
+    const contact1 = String(body?.contact1 || '').slice(0, 120);
+    const phone1 = String(body?.phone1 || '').slice(0, 60);
+    const contact2 = String(body?.contact2 || '').slice(0, 120);
+    const phone2 = String(body?.phone2 || '').slice(0, 60);
+    // The recipient must accept the Exclusions / Terms / Payment terms before a
+    // quotation can be generated — enforced here, not just in the UI.
+    if (body?.agreedTerms !== true) return new NextResponse('You must accept the Exclusions, Terms & Conditions and Payment Terms before generating a quotation.', { status: 400 });
     const rawLines = Array.isArray(body?.lines) ? body.lines : [];
     if (rawLines.length === 0) return new NextResponse('No items', { status: 400 });
 
@@ -45,6 +52,7 @@ export async function POST(req, { params }) {
     const quote = await createQuotation({
         ministryId: ministry.id, ref, eventName, venue, eventDate, duration, revision,
         subtotalFils: totals.subtotal, vatFils: totals.vat, totalFils: totals.total,
+        termsAgreedAt: new Date().toISOString(),
     });
 
     await insertQuotationLines(quote.id, resolved.map((r) => ({
@@ -59,6 +67,10 @@ export async function POST(req, { params }) {
         attentionName: ministry.attentionName, attentionTitle: ministry.attentionTitle,
         attentionPhone: ministry.contactPhone, poBox: ministry.poBox,
         eventName, venue, eventDate, duration,
+        contacts: [
+            contact1 || phone1 ? { name: contact1, phone: phone1 } : null,
+            contact2 || phone2 ? { name: contact2, phone: phone2 } : null,
+        ].filter(Boolean),
         lines: resolved.map((r) => {
             const d = itemDetail(r.item.itemNo);
             return {

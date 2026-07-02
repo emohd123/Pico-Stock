@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { formatFils, VAT_RATE } from '@/lib/ministry/money';
-import { APPROVAL_NOTICE } from '@/lib/ministry/company';
+import { APPROVAL_NOTICE, EXCLUSIONS, TERMS, PAYMENT_TERMS } from '@/lib/ministry/company';
 
 export default function PortalClient({ token, ministryName, ministryNameAr, items, quotations, photos }) {
     const [tab, setTab] = useState('select');
@@ -53,10 +53,16 @@ function Selector({ token, items }) {
     const [venue, setVenue] = useState('');
     const [eventDate, setEventDate] = useState('');
     const [duration, setDuration] = useState('');
+    const [contact1, setContact1] = useState('');
+    const [phone1, setPhone1] = useState('');
+    const [contact2, setContact2] = useState('');
+    const [phone2, setPhone2] = useState('');
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     const [result, setResult] = useState(null);
     const [lightbox, setLightbox] = useState(null);
+    const [agreed, setAgreed] = useState(false);
+    const [termsOpen, setTermsOpen] = useState(false); // 'accept' | 'view' | false
 
     const sortedItems = useMemo(() => [...items].sort((a, b) => a.itemNo - b.itemNo), [items]);
     const totals = useMemo(() => {
@@ -74,10 +80,11 @@ function Selector({ token, items }) {
         setError('');
         setResult(null);
         if (selectedCount === 0) { setError('Please select at least one item.'); return; }
+        if (!agreed) { setTermsOpen('accept'); return; }
         setBusy(true);
         try {
             const lines = items.filter((it) => selected[it.id] > 0).map((it) => ({ itemId: it.id, qty: selected[it.id] }));
-            const res = await fetch(`/q/${token}/quote`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ eventName, venue, eventDate, duration, lines }) });
+            const res = await fetch(`/q/${token}/quote`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ eventName, venue, eventDate, duration, contact1, phone1, contact2, phone2, agreedTerms: true, lines }) });
             if (!res.ok) throw new Error((await res.text()) || 'Failed to generate quotation');
             const data = await res.json();
             // Show a persistent success panel with a reliable click-to-open link.
@@ -99,10 +106,29 @@ function Selector({ token, items }) {
                             <input value={eventDate} onChange={(e) => setEventDate(e.target.value)} placeholder="e.g. 27 August 2026" style={{ ...inputStyle, marginTop: 4 }} /></label>
                         <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Duration
                             <input value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="e.g. 1 Day" style={{ ...inputStyle, marginTop: 4 }} /></label>
+                        <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Contact 1
+                            <input value={contact1} onChange={(e) => setContact1(e.target.value)} placeholder="e.g. Ahmed Al Khalifa" style={{ ...inputStyle, marginTop: 4 }} /></label>
+                        <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Phone number
+                            <input value={phone1} onChange={(e) => setPhone1(e.target.value)} placeholder="e.g. +973 3600 0000" style={{ ...inputStyle, marginTop: 4 }} /></label>
+                        <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Contact 2
+                            <input value={contact2} onChange={(e) => setContact2(e.target.value)} placeholder="Optional" style={{ ...inputStyle, marginTop: 4 }} /></label>
+                        <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Phone number
+                            <input value={phone2} onChange={(e) => setPhone2(e.target.value)} placeholder="Optional" style={{ ...inputStyle, marginTop: 4 }} /></label>
                     </div>
                     <p style={{ marginTop: 12, borderRadius: 6, background: '#f1f5f9', padding: '8px 12px', fontSize: 12, color: '#75787B' }}>
                         Listed quantities are the <strong>maximum allowed</strong> per item — you may reduce them but not exceed them. Items marked <em>fixed qty</em> cannot be changed.
                     </p>
+                    {agreed ? (
+                        <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8, borderRadius: 6, border: '1px solid #bbf7d0', background: '#f0fdf4', padding: '8px 12px' }}>
+                            <span style={{ fontSize: 12, color: '#15803d' }}>✓ You have accepted the Exclusions, Terms &amp; Conditions and Payment Terms.</span>
+                            <button type="button" onClick={() => setTermsOpen('view')} style={{ fontSize: 12, fontWeight: 600, color: '#00857A', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>View terms</button>
+                        </div>
+                    ) : (
+                        <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8, borderRadius: 6, border: '1px solid #fed7aa', background: '#fff7ed', padding: '8px 12px' }}>
+                            <span style={{ fontSize: 12, color: '#9a3412' }}>⚠ You must review &amp; accept the Exclusions, Terms &amp; Conditions and Payment Terms before generating a quotation.</span>
+                            <button type="button" onClick={() => setTermsOpen('accept')} style={{ borderRadius: 6, background: '#00857A', color: '#fff', border: 'none', padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Review &amp; accept</button>
+                        </div>
+                    )}
                 </div>
 
                 <section style={card}>
@@ -177,6 +203,10 @@ function Selector({ token, items }) {
                 </div>
             </aside>
 
+            {termsOpen ? (
+                <TermsModal mode={termsOpen} onAgree={() => { setAgreed(true); setTermsOpen(false); }} onClose={() => setTermsOpen(false)} />
+            ) : null}
+
             {lightbox ? (
                 <div onClick={() => setLightbox(null)} style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.7)', padding: 16 }}>
                     <div onClick={(e) => e.stopPropagation()} style={{ maxHeight: '90vh', maxWidth: 768, overflow: 'hidden', borderRadius: 12, background: '#fff' }}>
@@ -197,6 +227,51 @@ function Row({ label, value, bold }) {
         <span style={{ color: bold ? '#00857A' : '#64748b', fontWeight: bold ? 600 : 400 }}>{label}</span>
         <span style={{ color: bold ? '#00857A' : 'inherit', fontWeight: bold ? 600 : 400 }}>{value}</span>
     </div>);
+}
+
+function TermsModal({ mode, onAgree, onClose }) {
+    const [checked, setChecked] = useState(false);
+    const accept = mode === 'accept';
+    const secTitle = { margin: '14px 0 4px', fontSize: 13, fontWeight: 700, color: '#00857A' };
+    const clause = { display: 'flex', gap: 8, margin: '2px 0', fontSize: 12, color: '#4D4D4F', lineHeight: 1.4 };
+    const clauseNo = { flexShrink: 0, width: 16, color: '#75787B' };
+    return (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)', padding: 16 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', maxHeight: '88vh', width: '100%', maxWidth: 640, borderRadius: 12, background: '#fff', overflow: 'hidden' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, borderBottom: '1px solid #f1f5f9', padding: '12px 20px' }}>
+                    <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: '#4D4D4F' }}>Exclusions, Terms &amp; Payment Terms</h2>
+                    {!accept ? <button onClick={onClose} style={{ fontSize: 14, color: '#75787B', background: 'none', border: 'none', cursor: 'pointer' }}>✕ Close</button> : null}
+                </div>
+                <div style={{ overflowY: 'auto', padding: '4px 20px 16px' }}>
+                    <h3 style={secTitle}>EXCLUSIONS</h3>
+                    <p style={{ margin: '0 0 4px', fontSize: 12, color: '#75787B' }}>The following items are not provided for within the main scope of work and should be provided by client (or third party suppliers as necessary):</p>
+                    {EXCLUSIONS.map((e, i) => (<div key={i} style={clause}><span style={clauseNo}>{i + 1}</span><span>{e}</span></div>))}
+                    <h3 style={secTitle}>TERMS &amp; CONDITIONS OF CONTRACT</h3>
+                    <p style={{ margin: 0, fontSize: 12, color: '#4D4D4F' }}>{TERMS}</p>
+                    <h3 style={secTitle}>PAYMENT TERMS &amp; SCHEDULE</h3>
+                    {PAYMENT_TERMS.map((p, i) => (<div key={i} style={clause}><span style={clauseNo}>{i + 1}</span><span>{p}</span></div>))}
+                </div>
+                <div style={{ borderTop: '1px solid #f1f5f9', padding: '12px 20px' }}>
+                    {accept ? (
+                        <>
+                            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13, color: '#4D4D4F', cursor: 'pointer' }}>
+                                <input type="checkbox" checked={checked} onChange={(e) => setChecked(e.target.checked)} style={{ marginTop: 2, width: 16, height: 16, accentColor: '#00857A' }} />
+                                <span>I have read and agree to the Exclusions, Terms &amp; Conditions and Payment Terms above.</span>
+                            </label>
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
+                                <button onClick={onClose} style={{ borderRadius: 8, border: '1px solid #cbd5e1', background: '#fff', color: '#475569', padding: '8px 16px', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Cancel</button>
+                                <button onClick={onAgree} disabled={!checked} style={{ borderRadius: 8, background: '#00857A', color: '#fff', border: 'none', padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: checked ? 'pointer' : 'not-allowed', opacity: checked ? 1 : 0.5 }}>I Agree &amp; Continue</button>
+                            </div>
+                        </>
+                    ) : (
+                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                            <button onClick={onClose} style={{ borderRadius: 8, background: '#00857A', color: '#fff', border: 'none', padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Close</button>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
 }
 
 function Quotations({ quotations }) {

@@ -1,5 +1,5 @@
 import { Document, Page, View, Text, Image, StyleSheet, renderToBuffer } from '@react-pdf/renderer';
-import { COMPANY, EXCLUSIONS, TERMS, PAYMENT_TERMS } from '@/lib/ministry/company';
+import { COMPANY } from '@/lib/ministry/company';
 import { fmtBHD, fmtBHDRate, amountInWords } from '@/lib/ministry/money';
 import { PICO_LOGO_DATA_URI } from '@/lib/ministry/logos';
 import { SIGNATURE_DATA_URI } from '@/lib/ministry/signature';
@@ -96,6 +96,11 @@ export function QuotationPdf({ data }) {
                     <Text style={s.recipLine}>{data.ministryName}</Text>
                     {data.poBox ? <Text style={s.recipLine}>{data.poBox}, Kingdom of Bahrain</Text> : null}
                     {data.attentionPhone ? <Text style={s.recipLine}>Tel: {data.attentionPhone}</Text> : null}
+                    {(data.contacts || []).map((c, i) => (
+                        <Text key={i} style={s.recipLine}>
+                            Contact {i + 1}: {c.name}{c.name && c.phone ? ' — ' : ''}{c.phone ? `Tel: ${c.phone}` : ''}
+                        </Text>
+                    ))}
                     <View style={{ marginTop: 8 }}>
                         <View style={s.evRow}><Text style={s.evLabel}>EVENT :</Text><Text style={s.evVal}>{data.eventName || data.ministryName}</Text></View>
                         {data.venue ? <View style={s.evRow}><Text style={s.evLabel}>VENUE :</Text><Text style={s.evVal}>{data.venue}</Text></View> : null}
@@ -147,19 +152,6 @@ export function QuotationPdf({ data }) {
                     <Text style={s.words}>{amountInWords(data.totalFils)}</Text>
                 </View>
 
-                <View style={s.section}>
-                    <Text style={s.sectionTitle}>EXCLUSIONS</Text>
-                    <Text style={s.intro}>The following items are not provided for within the abovementioned main scope of work and should be provided by client (or third party suppliers as necessary):</Text>
-                    {EXCLUSIONS.map((e, i) => (<View key={i} style={s.clause}><Text style={s.clauseNo}>{i + 1}</Text><Text style={s.clauseText}>{e}</Text></View>))}
-                </View>
-                <View style={s.section} wrap={false}>
-                    <Text style={s.sectionTitle}>TERMS &amp; CONDITIONS OF CONTRACT</Text>
-                    <Text style={s.clauseText}>{TERMS}</Text>
-                </View>
-                <View style={s.section} wrap={false}>
-                    <Text style={s.sectionTitle}>PAYMENT TERMS &amp; SCHEDULE</Text>
-                    {PAYMENT_TERMS.map((p, i) => (<View key={i} style={s.clause}><Text style={s.clauseNo}>{i + 1}</Text><Text style={s.clauseText}>{p}</Text></View>))}
-                </View>
                 <View style={s.sign} wrap={false}>
                     <View style={s.signCol}>
                         <Text style={s.signLabelSigned}>For Pico International (Bahrain)</Text>
