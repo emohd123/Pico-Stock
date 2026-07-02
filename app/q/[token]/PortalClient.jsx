@@ -11,7 +11,6 @@ export default function PortalClient({ token, ministryName, ministryNameAr, item
             <header style={{ borderBottom: '4px solid #00C7B1', background: '#fff' }}>
                 <div style={{ maxWidth: 1000, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '12px 20px' }}>
                     <img src="/brand/pico-logo.png" alt="PICO — Total Brand Activation" style={{ height: 40 }} />
-                    <img src="/brand/bahrain-emblem.png" alt="Kingdom of Bahrain" style={{ height: 44 }} />
                 </div>
                 <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 20px 8px' }}>
                     <h1 style={{ fontSize: 20, fontWeight: 600, color: '#4D4D4F', margin: 0 }}>{ministryName}</h1>
