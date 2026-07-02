@@ -2,8 +2,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 import { isAdmin } from '@/lib/ministry/auth';
-import { getMinistryById, getMinistryPhotos, getMinistryQuotations } from '@/lib/ministry/queries';
-import { deletePhotoAction, regenerateTokenAction, updateLinkCodeAction, updateMinistryAction, updateQuoteNotesAction } from '@/lib/ministry/actions';
+import { getMinistryById, getMinistryPhotos, getMinistryQuotations, getMinistryNotes } from '@/lib/ministry/queries';
+import { addMinistryNoteAction, deleteMinistryNoteAction, deletePhotoAction, regenerateTokenAction, updateLinkCodeAction, updateMinistryAction, updateMinistryNoteAction, updateQuoteNotesAction } from '@/lib/ministry/actions';
 import CopyLink from '@/components/ministry/CopyLink';
 import PhotoUploader from '@/components/ministry/PhotoUploader';
 import { fmtBHD } from '@/lib/ministry/money';
@@ -15,13 +15,19 @@ const inputStyle = { borderRadius: 8, border: '1px solid #cbd5e1', padding: '8px
 const btn = { borderRadius: 8, background: '#00857A', color: '#fff', padding: '8px 16px', fontSize: 14, fontWeight: 600, border: 'none', cursor: 'pointer' };
 const title = { fontSize: 14, fontWeight: 600, color: '#00857A', marginTop: 0, marginBottom: 12 };
 
-export default async function ManageMinistryPage({ params }) {
+function fmtNoteDate(d) {
+    return new Date(d).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bahrain' });
+}
+
+export default async function ManageMinistryPage({ params, searchParams }) {
     if (!isAdmin()) notFound();
     const { id } = params;
     const ministry = await getMinistryById(Number(id));
     if (!ministry) notFound();
 
-    const [photos, quotes] = await Promise.all([getMinistryPhotos(ministry.id), getMinistryQuotations(ministry.id)]);
+    const errorMsg = typeof searchParams?.error === 'string' ? searchParams.error : '';
+    const saved = searchParams?.saved === '1';
+    const [photos, quotes, notes] = await Promise.all([getMinistryPhotos(ministry.id), getMinistryQuotations(ministry.id), getMinistryNotes(ministry.id)]);
     const h = headers();
     const proto = h.get('x-forwarded-proto') || 'https';
     const host = h.get('host') || 'localhost:3000';
@@ -43,6 +49,16 @@ export default async function ManageMinistryPage({ params }) {
             </header>
 
             <main style={{ maxWidth: 900, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24, padding: '32px 20px' }}>
+                {errorMsg ? (
+                    <div style={{ borderRadius: 8, border: '1px solid #fecaca', background: '#fef2f2', color: '#b91c1c', padding: '10px 14px', fontSize: 13 }}>
+                        ⚠ {errorMsg}
+                    </div>
+                ) : null}
+                {saved ? (
+                    <div style={{ borderRadius: 8, border: '1px solid #bbf7d0', background: '#f0fdf4', color: '#15803d', padding: '10px 14px', fontSize: 13 }}>
+                        ✓ Saved.
+                    </div>
+                ) : null}
                 <section style={{ ...card, padding: 20 }}>
                     <h2 style={title}>Private portal link</h2>
                     <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12 }}>
@@ -78,9 +94,41 @@ export default async function ManageMinistryPage({ params }) {
                         <label style={{ fontSize: 12, color: '#75787B' }}>P.O. Box<input name="poBox" defaultValue={ministry.poBox || ''} style={inputStyle} placeholder="P.O. Box 60667" /></label>
                         <label style={{ fontSize: 12, color: '#75787B' }}>Contact email<input name="contactEmail" type="email" defaultValue={ministry.contactEmail || ''} style={inputStyle} /></label>
                         <label style={{ fontSize: 12, color: '#75787B' }}>Contact phone<input name="contactPhone" type="tel" defaultValue={ministry.contactPhone || ''} style={inputStyle} placeholder="+973 ..." /></label>
-                        <label style={{ fontSize: 12, color: '#75787B', gridColumn: '1 / -1' }}>Internal status note (PICO only — to track what&apos;s up to date)<input name="internalNote" defaultValue={ministry.internalNote || ''} style={inputStyle} placeholder="e.g. Rev 2 sent 1 Jul — awaiting PO" /></label>
                         <button style={{ ...btn, justifySelf: 'start', gridColumn: '1 / -1' }}>Save details</button>
                     </form>
+                </section>
+
+                <section style={{ ...card, padding: 20 }}>
+                    <h2 style={title}>Project notes ({notes.length}) <span style={{ fontWeight: 400, color: '#94a3b8' }}>— PICO only, to track what&apos;s up to date</span></h2>
+                    <form action={addMinistryNoteAction} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
+                        <input type="hidden" name="ministryId" value={ministry.id} />
+                        <input name="note" placeholder="e.g. Rev 2 sent 1 Jul — awaiting PO" style={{ ...inputStyle, flex: 1, width: 'auto' }} />
+                        <button style={{ ...btn, padding: '8px 12px', fontSize: 12 }}>Add note</button>
+                    </form>
+                    {notes.length > 0 ? (
+                        <ul style={{ listStyle: 'none', margin: '16px 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                            {notes.map((n) => (
+                                <li key={n.id} style={{ borderRadius: 8, border: '1px solid #e2e8f0', padding: 10 }}>
+                                    <div style={{ marginBottom: 6, fontSize: 11, color: '#94a3b8' }}>
+                                        Added {fmtNoteDate(n.createdAt)}{n.updatedAt ? ` · edited ${fmtNoteDate(n.updatedAt)}` : ''}
+                                    </div>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
+                                        <form action={updateMinistryNoteAction} style={{ display: 'flex', flex: 1, alignItems: 'center', gap: 8, minWidth: 260 }}>
+                                            <input type="hidden" name="ministryId" value={ministry.id} />
+                                            <input type="hidden" name="noteId" value={n.id} />
+                                            <input name="note" defaultValue={n.note} style={{ ...inputStyle, flex: 1, width: 'auto' }} />
+                                            <button style={{ ...btn, padding: '8px 12px', fontSize: 12 }}>Save</button>
+                                        </form>
+                                        <form action={deleteMinistryNoteAction}>
+                                            <input type="hidden" name="ministryId" value={ministry.id} />
+                                            <input type="hidden" name="noteId" value={n.id} />
+                                            <button style={{ borderRadius: 6, border: '1px solid #fecaca', background: '#fff', color: '#dc2626', padding: '8px 12px', fontSize: 12, cursor: 'pointer' }}>Delete</button>
+                                        </form>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : <p style={{ marginTop: 12, marginBottom: 0, fontSize: 13, color: '#94a3b8' }}>No notes yet.</p>}
                 </section>
 
                 <section style={{ ...card, padding: 20 }}>
