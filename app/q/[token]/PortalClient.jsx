@@ -15,7 +15,7 @@ export default function PortalClient({ token, ministryName, ministryNameAr, item
                 </div>
                 <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 20px 8px' }}>
                     <h1 style={{ fontSize: 20, fontWeight: 600, color: '#4D4D4F', margin: 0 }}>{ministryName}</h1>
-                    {ministryNameAr ? <div dir="rtl" style={{ fontSize: 16, color: '#75787B' }}>{ministryNameAr}</div> : null}
+                    {ministryNameAr ? <div dir="rtl" style={{ display: 'inline-block', textAlign: 'right', fontSize: 16, color: '#75787B' }}>{ministryNameAr}</div> : null}
                     <p style={{ fontSize: 14, color: '#75787B', margin: '2px 0 0' }}>Ministerial Meeting — Services &amp; Quotation Portal</p>
                 </div>
                 <nav style={{ maxWidth: 1000, margin: '0 auto', display: 'flex', gap: 4, padding: '0 20px' }}>
@@ -147,10 +147,12 @@ function Selector({ token, items }) {
                             <input value={eventName} onChange={(e) => setEventName(e.target.value)} placeholder="e.g. GCC Finance Ministers Meeting 2026" style={{ ...inputStyle, marginTop: 4 }} /></label>
                         <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Venue
                             <input value={venue} onChange={(e) => setVenue(e.target.value)} placeholder="e.g. Ritz Carlton" style={{ ...inputStyle, marginTop: 4 }} /></label>
-                        <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Date
-                            <input value={eventDate} onChange={(e) => setEventDate(e.target.value)} placeholder="e.g. 27 August 2026" style={{ ...inputStyle, marginTop: 4 }} /></label>
                         <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Duration
                             <input value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="e.g. 1 Day" style={{ ...inputStyle, marginTop: 4 }} /></label>
+                        <div style={{ gridColumn: '1 / -1' }}>
+                            <span style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Date — click day(s) to select</span>
+                            <DateCalendar value={eventDate} onChange={setEventDate} />
+                        </div>
                         <label style={{ gridColumn: '1 / -1', fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Address
                             <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="e.g. Building 123, Road 45, Manama, Kingdom of Bahrain" style={{ ...inputStyle, marginTop: 4 }} /></label>
                         <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Contact 1 name
@@ -288,6 +290,83 @@ function Selector({ token, items }) {
                     </div>
                 </div>
             ) : null}
+        </div>
+    );
+}
+
+const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+function iso(y, m, d) { return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`; }
+
+// Turn the selected ISO days into a readable string, grouped by month/year,
+// e.g. "2, 3 July 2026" or "30 July 2026, 1 August 2026".
+function formatSelected(isoList) {
+    const sorted = [...isoList].sort();
+    const groups = new Map();
+    for (const s of sorted) {
+        const [y, m, d] = s.split('-').map(Number);
+        const key = `${y}-${m}`;
+        if (!groups.has(key)) groups.set(key, { y, m, days: [] });
+        groups.get(key).days.push(d);
+    }
+    return [...groups.values()].map((g) => `${g.days.join(', ')} ${MONTHS[g.m - 1]} ${g.y}`).join(' · ');
+}
+
+// Single-month calendar with multi-day selection. Writes a readable date string
+// back through onChange so the rest of the form / PDF stays plain text.
+function DateCalendar({ value, onChange }) {
+    const today = new Date();
+    const [view, setView] = useState({ y: today.getFullYear(), m: today.getMonth() });
+    const [selected, setSelected] = useState(() => new Set());
+
+    const first = new Date(view.y, view.m, 1).getDay();
+    const daysInMonth = new Date(view.y, view.m + 1, 0).getDate();
+    const cells = [];
+    for (let i = 0; i < first; i++) cells.push(null);
+    for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+    function toggle(d) {
+        const key = iso(view.y, view.m, d);
+        const next = new Set(selected);
+        if (next.has(key)) next.delete(key); else next.add(key);
+        setSelected(next);
+        onChange(formatSelected([...next]));
+    }
+    function move(delta) {
+        let m = view.m + delta, y = view.y;
+        if (m < 0) { m = 11; y -= 1; } else if (m > 11) { m = 0; y += 1; }
+        setView({ y, m });
+    }
+    const navBtn = { border: '1px solid #cbd5e1', background: '#fff', borderRadius: 6, width: 28, height: 28, cursor: 'pointer', color: '#475569', fontSize: 16, lineHeight: 1 };
+
+    return (
+        <div style={{ marginTop: 4, border: '1px solid #cbd5e1', borderRadius: 8, padding: 12, maxWidth: 320 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <button type="button" onClick={() => move(-1)} style={navBtn} aria-label="Previous month">‹</button>
+                <span style={{ fontSize: 14, fontWeight: 600, color: '#334155' }}>{MONTHS[view.m]} {view.y}</span>
+                <button type="button" onClick={() => move(1)} style={navBtn} aria-label="Next month">›</button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, textAlign: 'center' }}>
+                {WEEKDAYS.map((w) => <span key={w} style={{ fontSize: 11, color: '#94a3b8', padding: '2px 0' }}>{w}</span>)}
+                {cells.map((d, i) => {
+                    if (d === null) return <span key={`e${i}`} />;
+                    const key = iso(view.y, view.m, d);
+                    const on = selected.has(key);
+                    const isToday = d === today.getDate() && view.m === today.getMonth() && view.y === today.getFullYear();
+                    return (
+                        <button type="button" key={key} onClick={() => toggle(d)}
+                            style={{ height: 32, borderRadius: 6, cursor: 'pointer', fontSize: 13,
+                                border: isToday && !on ? '1px solid #00C7B1' : '1px solid transparent',
+                                background: on ? '#00857A' : 'transparent', color: on ? '#fff' : '#334155', fontWeight: on ? 600 : 400 }}>
+                            {d}
+                        </button>
+                    );
+                })}
+            </div>
+            <div style={{ marginTop: 8, fontSize: 12, color: value ? '#00857A' : '#94a3b8', minHeight: 16 }}>
+                {value ? `Selected: ${value}` : 'No date selected yet'}
+            </div>
         </div>
     );
 }
