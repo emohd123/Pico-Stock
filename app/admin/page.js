@@ -503,6 +503,13 @@ export default function AdminDashboard() {
                     >
                         Quotation Studio
                     </Link>
+                    <Link
+                        href="/quotations"
+                        className="admin-sidebar-item"
+                        style={{ display: 'block', textDecoration: 'none' }}
+                    >
+                        Ministry Quotations
+                    </Link>
                     <button className="admin-sidebar-item" onClick={handleLogout}>
                         🚪 Logout
                     </button>
