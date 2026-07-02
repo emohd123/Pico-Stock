@@ -54,6 +54,7 @@ function Selector({ token, items }) {
     const [eventDate, setEventDate] = useState('');
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
+    const [result, setResult] = useState(null);
     const [lightbox, setLightbox] = useState(null);
 
     const sortedItems = useMemo(() => [...items].sort((a, b) => a.itemNo - b.itemNo), [items]);
@@ -70,6 +71,7 @@ function Selector({ token, items }) {
 
     async function submit() {
         setError('');
+        setResult(null);
         if (selectedCount === 0) { setError('Please select at least one item.'); return; }
         setBusy(true);
         try {
@@ -77,8 +79,9 @@ function Selector({ token, items }) {
             const res = await fetch(`/q/${token}/quote`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ eventName, venue, eventDate, lines }) });
             if (!res.ok) throw new Error((await res.text()) || 'Failed to generate quotation');
             const data = await res.json();
-            if (data.pdfUrl) window.open(data.pdfUrl, '_blank');
-            window.location.reload();
+            // Show a persistent success panel with a reliable click-to-open link.
+            // (Opening a new tab automatically after an await is blocked by popup blockers.)
+            setResult({ ref: data.ref, pdfUrl: data.pdfUrl });
         } catch (e) { setError(e.message || 'Something went wrong'); } finally { setBusy(false); }
     }
 
@@ -152,7 +155,17 @@ function Selector({ token, items }) {
                         <div style={{ marginTop: 8, borderTop: '1px solid #e2e8f0', paddingTop: 8 }}><Row label="Grand Total" value={`BD ${formatFils(totals.total)}`} bold /></div>
                     </div>
                     {error ? <p style={{ marginTop: 12, borderRadius: 4, background: '#fef2f2', padding: '8px 12px', fontSize: 12, color: '#dc2626' }}>{error}</p> : null}
-                    <button onClick={submit} disabled={busy} style={{ ...btn, width: '100%', marginTop: 16, opacity: busy ? 0.5 : 1 }}>{busy ? 'Generating…' : 'Generate Quotation PDF'}</button>
+                    {result ? (
+                        <div style={{ marginTop: 12, borderRadius: 8, border: '1px solid #bbf7d0', background: '#f0fdf4', padding: 12 }}>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: '#15803d' }}>✓ Quotation {result.ref} ready</div>
+                            <a href={result.pdfUrl} target="_blank" rel="noreferrer"
+                                style={{ display: 'block', marginTop: 8, textAlign: 'center', borderRadius: 8, background: '#00857A', color: '#fff', padding: '10px 16px', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
+                                Open / Download PDF
+                            </a>
+                            <p style={{ marginTop: 8, fontSize: 11, color: '#15803d', textAlign: 'center' }}>Also saved under “My Quotations”.</p>
+                        </div>
+                    ) : null}
+                    <button onClick={submit} disabled={busy} style={{ ...btn, width: '100%', marginTop: 16, opacity: busy ? 0.5 : 1 }}>{busy ? 'Generating…' : (result ? 'Generate Another' : 'Generate Quotation PDF')}</button>
                     <p style={{ marginTop: 8, textAlign: 'center', fontSize: 11, color: '#94a3b8' }}>Fixed tender rates · Bahraini Dinars</p>
                 </div>
             </aside>
