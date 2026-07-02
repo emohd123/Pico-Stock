@@ -45,6 +45,7 @@ create table if not exists public.mm_quotations (
     event_name text,
     venue text,
     event_date text,
+    duration text,
     revision integer not null default 1,
     notes text,
     status text not null default 'submitted',

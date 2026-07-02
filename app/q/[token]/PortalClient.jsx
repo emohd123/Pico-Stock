@@ -52,6 +52,7 @@ function Selector({ token, items }) {
     const [eventName, setEventName] = useState('');
     const [venue, setVenue] = useState('');
     const [eventDate, setEventDate] = useState('');
+    const [duration, setDuration] = useState('');
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     const [result, setResult] = useState(null);
@@ -76,7 +77,7 @@ function Selector({ token, items }) {
         setBusy(true);
         try {
             const lines = items.filter((it) => selected[it.id] > 0).map((it) => ({ itemId: it.id, qty: selected[it.id] }));
-            const res = await fetch(`/q/${token}/quote`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ eventName, venue, eventDate, lines }) });
+            const res = await fetch(`/q/${token}/quote`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ eventName, venue, eventDate, duration, lines }) });
             if (!res.ok) throw new Error((await res.text()) || 'Failed to generate quotation');
             const data = await res.json();
             // Show a persistent success panel with a reliable click-to-open link.
@@ -94,8 +95,10 @@ function Selector({ token, items }) {
                             <input value={eventName} onChange={(e) => setEventName(e.target.value)} placeholder="e.g. GCC Finance Ministers Meeting 2026" style={{ ...inputStyle, marginTop: 4 }} /></label>
                         <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Venue
                             <input value={venue} onChange={(e) => setVenue(e.target.value)} placeholder="e.g. Ritz Carlton" style={{ ...inputStyle, marginTop: 4 }} /></label>
-                        <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Date / Duration
-                            <input value={eventDate} onChange={(e) => setEventDate(e.target.value)} placeholder="e.g. 27 August 2026 / 1 Day" style={{ ...inputStyle, marginTop: 4 }} /></label>
+                        <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Date
+                            <input value={eventDate} onChange={(e) => setEventDate(e.target.value)} placeholder="e.g. 27 August 2026" style={{ ...inputStyle, marginTop: 4 }} /></label>
+                        <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Duration
+                            <input value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="e.g. 1 Day" style={{ ...inputStyle, marginTop: 4 }} /></label>
                     </div>
                     <p style={{ marginTop: 12, borderRadius: 6, background: '#f1f5f9', padding: '8px 12px', fontSize: 12, color: '#75787B' }}>
                         Listed quantities are the <strong>maximum allowed</strong> per item — you may reduce them but not exceed them. Items marked <em>fixed qty</em> cannot be changed.
@@ -120,14 +123,14 @@ function Selector({ token, items }) {
                                         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
                                             <span style={{ fontSize: 14, fontWeight: 500 }}>{it.itemNo}. {it.name}
                                                 {it.qtyFixed ? <span style={{ marginLeft: 8, borderRadius: 4, background: '#f1f5f9', padding: '1px 6px', fontSize: 10, fontWeight: 400, color: '#75787B' }}>fixed qty</span> : null}</span>
-                                            <span style={{ whiteSpace: 'nowrap', fontSize: 12, color: '#75787B' }}>BD {formatFils(it.unitPriceFils)} / {it.unit || 'unit'}</span>
+                                            <span style={{ whiteSpace: 'nowrap', fontSize: 12, color: '#75787B' }}>BD {formatFils(it.unitPriceFils)}</span>
                                         </div>
                                         {it.description ? <p style={{ margin: '2px 0 0', fontSize: 12, color: '#75787B' }}>{it.description}</p> : null}
                                         {on ? (
                                             <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
                                                 <span style={{ fontSize: 12, color: '#75787B' }}>Qty</span>
                                                 {it.qtyFixed ? (
-                                                    <span style={{ borderRadius: 4, border: '1px solid #e2e8f0', background: '#f8fafc', padding: '4px 8px', fontSize: 14 }}>{it.maxQty} {it.unit} (fixed)</span>
+                                                    <span style={{ borderRadius: 4, border: '1px solid #e2e8f0', background: '#f8fafc', padding: '4px 8px', fontSize: 14 }}>{it.maxQty} (fixed)</span>
                                                 ) : (
                                                     <>
                                                         <input type="number" min={1} max={it.maxQty} value={selected[it.id]} onChange={(e) => setQty(it, parseInt(e.target.value, 10))} style={{ width: 80, borderRadius: 4, border: '1px solid #cbd5e1', padding: '4px 8px', fontSize: 14 }} />
@@ -160,7 +163,11 @@ function Selector({ token, items }) {
                             <div style={{ fontSize: 13, fontWeight: 600, color: '#15803d' }}>✓ Quotation {result.ref} ready</div>
                             <a href={result.pdfUrl} target="_blank" rel="noreferrer"
                                 style={{ display: 'block', marginTop: 8, textAlign: 'center', borderRadius: 8, background: '#00857A', color: '#fff', padding: '10px 16px', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
-                                Open / Download PDF
+                                Open / Print PDF
+                            </a>
+                            <a href={`${result.pdfUrl}?download=1`}
+                                style={{ display: 'block', marginTop: 8, textAlign: 'center', borderRadius: 8, border: '1px solid #00857A', color: '#00857A', padding: '9px 16px', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
+                                Save PDF (soft copy)
                             </a>
                             <p style={{ marginTop: 8, fontSize: 11, color: '#15803d', textAlign: 'center' }}>Also saved under “My Quotations”.</p>
                         </div>
@@ -209,7 +216,8 @@ function Quotations({ quotations }) {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 14 }}>
                             <span style={{ color: '#75787B' }}>{new Date(q.createdAt).toLocaleDateString('en-GB')}</span>
                             <span style={{ fontWeight: 500 }}>BD {formatFils(q.totalFils)}</span>
-                            {q.pdfBlobUrl ? <a href={q.pdfBlobUrl} target="_blank" rel="noreferrer" style={{ fontWeight: 500, color: '#00857A', textDecoration: 'underline' }}>Download PDF</a> : null}
+                            {q.pdfBlobUrl ? <a href={q.pdfBlobUrl} target="_blank" rel="noreferrer" style={{ fontWeight: 500, color: '#00857A', textDecoration: 'underline' }}>Open</a> : null}
+                            {q.pdfBlobUrl ? <a href={`${q.pdfBlobUrl}?download=1`} style={{ fontWeight: 500, color: '#00857A', textDecoration: 'underline' }}>Save PDF</a> : null}
                         </div>
                     </div>
                     <div style={{ marginTop: 4, fontSize: 12, color: '#75787B' }}>{q.eventName || '—'}</div>

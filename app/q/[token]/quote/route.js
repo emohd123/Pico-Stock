@@ -17,6 +17,7 @@ export async function POST(req, { params }) {
     const eventName = String(body?.eventName || '').slice(0, 200);
     const venue = String(body?.venue || '').slice(0, 200);
     const eventDate = String(body?.eventDate || '').slice(0, 200);
+    const duration = String(body?.duration || '').slice(0, 200);
     const rawLines = Array.isArray(body?.lines) ? body.lines : [];
     if (rawLines.length === 0) return new NextResponse('No items', { status: 400 });
 
@@ -42,7 +43,7 @@ export async function POST(req, { params }) {
     const revision = prior.length + 1;
 
     const quote = await createQuotation({
-        ministryId: ministry.id, ref, eventName, venue, eventDate, revision,
+        ministryId: ministry.id, ref, eventName, venue, eventDate, duration, revision,
         subtotalFils: totals.subtotal, vatFils: totals.vat, totalFils: totals.total,
     });
 
@@ -57,7 +58,7 @@ export async function POST(req, { params }) {
         ministryName: ministry.name,
         attentionName: ministry.attentionName, attentionTitle: ministry.attentionTitle,
         attentionPhone: ministry.contactPhone, poBox: ministry.poBox,
-        eventName, venue, eventDate,
+        eventName, venue, eventDate, duration,
         lines: resolved.map((r) => {
             const d = itemDetail(r.item.itemNo);
             return {

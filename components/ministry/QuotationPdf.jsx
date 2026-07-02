@@ -99,7 +99,8 @@ export function QuotationPdf({ data }) {
                     <View style={{ marginTop: 8 }}>
                         <View style={s.evRow}><Text style={s.evLabel}>EVENT :</Text><Text style={s.evVal}>{data.eventName || data.ministryName}</Text></View>
                         {data.venue ? <View style={s.evRow}><Text style={s.evLabel}>VENUE :</Text><Text style={s.evVal}>{data.venue}</Text></View> : null}
-                        {data.eventDate ? <View style={s.evRow}><Text style={s.evLabel}>DATE / DURATION :</Text><Text style={s.evVal}>{data.eventDate}</Text></View> : null}
+                        {data.eventDate ? <View style={s.evRow}><Text style={s.evLabel}>DATE :</Text><Text style={s.evVal}>{data.eventDate}</Text></View> : null}
+                        {data.duration ? <View style={s.evRow}><Text style={s.evLabel}>DURATION :</Text><Text style={s.evVal}>{data.duration}</Text></View> : null}
                     </View>
                 </View>
 
