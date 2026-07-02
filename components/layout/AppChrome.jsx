@@ -1,6 +1,15 @@
+'use client';
+
+import { usePathname } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 
 export default function AppChrome({ children }) {
+    const pathname = usePathname();
+    // Ministry quotation links (/q/[token]) are sent to external recipients —
+    // render them bare, without the site navbar/footer.
+    if (pathname && pathname.startsWith('/q/')) {
+        return <main style={{ position: 'relative', zIndex: 1 }}>{children}</main>;
+    }
     return (
         <>
             <Navbar />
