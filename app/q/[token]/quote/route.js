@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
-import { getMinistryByToken, getActiveCatalog, nextQuotationRef, getMinistryQuotations, createQuotation, insertQuotationLines, setQuotationPdfUrl } from '@/lib/ministry/queries';
+import { getMinistryByToken, getActiveCatalog, reserveMinistryQuoteRef, getMinistryQuotations, createQuotation, insertQuotationLines, setQuotationPdfUrl } from '@/lib/ministry/queries';
 import { computeTotals, lineTotal } from '@/lib/ministry/money';
 import { itemDetail } from '@/lib/ministry/itemDetails';
 import { renderQuotationPdf } from '@/components/ministry/QuotationPdf';
 import { putPrivate } from '@/lib/ministry/storage';
+import { appendQuoteRow } from '@/lib/ministry/quoteLog';
 
 export const runtime = 'nodejs';
 
@@ -51,7 +52,11 @@ export async function POST(req, { params }) {
     if (resolved.length === 0) return new NextResponse('No valid items', { status: 400 });
 
     const totals = computeTotals(resolved.map((r) => r.lineTotalFils));
-    const ref = await nextQuotationRef();
+    // One permanent quotation number per ministry — reused on every regeneration
+    // (the revision bumps instead). A brand-new number is minted only the first
+    // time this ministry generates, and only then logged to the master sheet.
+    const reserved = await reserveMinistryQuoteRef(ministry.id);
+    const ref = reserved.ref;
     const prior = await getMinistryQuotations(ministry.id);
     const revision = prior.length + 1;
 
@@ -94,6 +99,18 @@ export async function POST(req, { params }) {
     const safeRef = ref.replace(/\//g, '-');
     const stored = await putPrivate(`ministry-quotations/${ministry.id}/${safeRef}.pdf`, pdf, 'application/pdf');
     await setQuotationPdfUrl(quote.id, stored.url);
+
+    // Log to the master quotation-number sheet only when a NEW number was minted
+    // (regenerations reuse the number, so they don't add rows). Best-effort.
+    if (reserved.isNew) {
+        await appendQuoteRow([
+            ref,
+            ministry.name,
+            eventName || '',
+            new Date().toLocaleDateString('en-GB'),
+            (totals.total / 1000).toFixed(3),
+        ]);
+    }
 
     return NextResponse.json({ id: quote.id, ref, pdfUrl: `/q/${token}/quote/${quote.id}/pdf` });
 }

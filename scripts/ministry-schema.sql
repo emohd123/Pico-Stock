@@ -13,6 +13,8 @@ create table if not exists public.mm_ministries (
     attention_title text,
     po_box text,
     internal_note text,
+    quote_ref text,       -- permanent quotation number for this ministry (reused across regenerations)
+    quote_seq integer,    -- numeric sequence behind quote_ref
     created_at timestamptz not null default now()
 );
 
