@@ -44,7 +44,7 @@ export default async function ManageMinistryPage({ params, searchParams }) {
                 <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 20px 12px' }}>
                     <Link href="/quotations" style={{ fontSize: 12, color: '#00857A' }}>← All ministries</Link>
                     <h1 style={{ fontSize: 20, fontWeight: 600, margin: '4px 0 0' }}>{ministry.name}</h1>
-                    {ministry.nameAr ? <div dir="rtl" style={{ color: '#75787B' }}>{ministry.nameAr}</div> : null}
+                    {ministry.nameAr ? <div dir="rtl" style={{ display: 'inline-block', textAlign: 'right', color: '#75787B' }}>{ministry.nameAr}</div> : null}
                 </div>
             </header>
 
