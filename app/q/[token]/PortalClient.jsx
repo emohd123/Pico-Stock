@@ -70,6 +70,7 @@ function Selector({ token, items }) {
     const [phone2, setPhone2] = useState('');
     const [email2, setEmail2] = useState('');
     const [heads, setHeads] = useState('');
+    const [adminNote, setAdminNote] = useState('');
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     const [result, setResult] = useState(null);
@@ -125,7 +126,7 @@ function Selector({ token, items }) {
         setBusy(true);
         try {
             const lines = items.filter((it) => selected[it.id] > 0).map((it) => ({ itemId: it.id, qty: selected[it.id] }));
-            const res = await fetch(`/q/${token}/quote`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ eventName, venue, eventDate, duration, address, contact1, title1, phone1, email1, contact2, title2, phone2, email2, heads, agreedTerms: true, lines }) });
+            const res = await fetch(`/q/${token}/quote`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ eventName, venue, eventDate, duration, address, contact1, title1, phone1, email1, contact2, title2, phone2, email2, heads, adminNote, agreedTerms: true, lines }) });
             if (!res.ok) throw new Error((await res.text()) || 'Failed to generate quotation');
             const data = await res.json();
             // Show a persistent success panel with a reliable click-to-open link.
@@ -266,6 +267,8 @@ function Selector({ token, items }) {
                         </div>
                     ) : null}
                     <button onClick={submit} disabled={busy} style={{ ...btn, width: '100%', marginTop: 16, opacity: busy ? 0.5 : 1 }}>{busy ? 'Generating…' : (result ? 'Generate Another' : 'Generate Quotation PDF')}</button>
+                    <label style={{ display: 'block', marginTop: 12, fontSize: 12, color: '#75787B' }}>Note to PICO team (optional)
+                        <textarea value={adminNote} onChange={(e) => setAdminNote(e.target.value)} rows={3} placeholder="Anything you'd like PICO to know — sent to admin with this quotation." style={{ ...inputStyle, marginTop: 4, resize: 'vertical' }} /></label>
                     <p style={{ marginTop: 8, textAlign: 'center', fontSize: 11, color: '#94a3b8' }}>Fixed tender rates · Bahraini Dinars</p>
                 </div>
             </aside>

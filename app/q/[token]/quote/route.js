@@ -29,6 +29,7 @@ export async function POST(req, { params }) {
     const phone2 = String(body?.phone2 || '').slice(0, 60);
     const email2 = String(body?.email2 || '').slice(0, 120);
     const heads = parseInt(body?.heads, 10) > 0 ? parseInt(body.heads, 10) : null;
+    const submitterNote = String(body?.adminNote || '').slice(0, 1000).trim();
     // The recipient must accept the Exclusions / Terms / Payment terms before a
     // quotation can be generated — enforced here, not just in the UI.
     if (body?.agreedTerms !== true) return new NextResponse('You must accept the Exclusions, Terms & Conditions and Payment Terms before generating a quotation.', { status: 400 });
@@ -63,7 +64,7 @@ export async function POST(req, { params }) {
     const quote = await createQuotation({
         ministryId: ministry.id, ref, eventName, venue, eventDate, duration, revision,
         subtotalFils: totals.subtotal, vatFils: totals.vat, totalFils: totals.total,
-        termsAgreedAt: new Date().toISOString(),
+        termsAgreedAt: new Date().toISOString(), submitterNote,
     });
 
     await insertQuotationLines(quote.id, resolved.map((r) => ({

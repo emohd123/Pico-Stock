@@ -1,10 +1,19 @@
 import Link from 'next/link';
 import { headers } from 'next/headers';
 import { isAdmin } from '@/lib/ministry/auth';
-import { getAllMinistries } from '@/lib/ministry/queries';
+import { getAllMinistries, getRecentQuotations } from '@/lib/ministry/queries';
 import { createMinistryAction, deleteMinistryAction } from '@/lib/ministry/actions';
+import { fmtBHD } from '@/lib/ministry/money';
 import CopyLink from '@/components/ministry/CopyLink';
 import DeleteMinistryButton from '@/components/ministry/DeleteMinistryButton';
+
+function timeAgo(d) {
+    const s = Math.max(0, (Date.now() - new Date(d).getTime()) / 1000);
+    if (s < 60) return 'just now';
+    if (s < 3600) return `${Math.floor(s / 60)} min ago`;
+    if (s < 86400) return `${Math.floor(s / 3600)} h ago`;
+    return `${Math.floor(s / 86400)} d ago`;
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -16,7 +25,8 @@ export default async function QuotationsAdminPage({ searchParams }) {
     if (!isAdmin()) {
         return <LoginScreen error={!!(searchParams && searchParams.error)} />;
     }
-    const ministryRows = await getAllMinistries();
+    const [ministryRows, recentQuotes] = await Promise.all([getAllMinistries(), getRecentQuotations(12)]);
+    const nameById = new Map(ministryRows.map((m) => [m.id, m.name]));
     const h = headers();
     const proto = h.get('x-forwarded-proto') || 'https';
     const host = h.get('host') || 'localhost:3000';
@@ -38,6 +48,37 @@ export default async function QuotationsAdminPage({ searchParams }) {
             </header>
 
             <main style={{ maxWidth: 1000, margin: '0 auto', padding: '32px 20px' }}>
+                <section style={{ ...card, marginBottom: 32 }}>
+                    <h2 style={{ display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid #f1f5f9', padding: '12px 20px', fontSize: 14, fontWeight: 600, color: '#00857A', margin: 0 }}>
+                        🔔 Recent activity
+                        {recentQuotes.length > 0 ? <span style={{ borderRadius: 10, background: '#00C7B1', color: '#fff', padding: '0 8px', fontSize: 11, fontWeight: 700 }}>{recentQuotes.length}</span> : null}
+                    </h2>
+                    {recentQuotes.length === 0 ? (
+                        <p style={{ padding: '18px 20px', fontSize: 14, color: '#75787B' }}>No quotations submitted yet. Activity will appear here when a ministry generates a quotation.</p>
+                    ) : (
+                        <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                            {recentQuotes.map((q) => (
+                                <li key={q.id} style={{ padding: '10px 20px', borderTop: '1px solid #f1f5f9' }}>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
+                                        <span style={{ fontSize: 14 }}>
+                                            <Link href={`/quotations/ministry/${q.ministryId}`} style={{ fontWeight: 600, color: '#00857A', textDecoration: 'none' }}>{nameById.get(q.ministryId) || 'Ministry'}</Link>
+                                            <span style={{ color: '#75787B' }}> submitted </span>
+                                            <span style={{ fontWeight: 500 }}>{q.ref}</span>
+                                            {q.revision > 1 ? <span style={{ marginLeft: 6, borderRadius: 4, background: '#f1f5f9', padding: '1px 6px', fontSize: 11, color: '#75787B' }}>Rev {q.revision}</span> : null}
+                                        </span>
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13 }}>
+                                            <span style={{ fontWeight: 600 }}>{fmtBHD(q.totalFils)}</span>
+                                            <span style={{ color: '#94a3b8' }}>{timeAgo(q.createdAt)}</span>
+                                        </span>
+                                    </div>
+                                    {q.eventName ? <div style={{ marginTop: 2, fontSize: 12, color: '#75787B' }}>{q.eventName}</div> : null}
+                                    {q.submitterNote ? <div style={{ marginTop: 6, borderRadius: 6, background: '#fffbeb', border: '1px solid #fde68a', padding: '6px 10px', fontSize: 12, color: '#92400e' }}><strong>Note to PICO:</strong> {q.submitterNote}</div> : null}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </section>
+
                 <section style={{ ...card, padding: 20, marginBottom: 32 }}>
                     <h2 style={{ marginTop: 0, marginBottom: 12, fontSize: 14, fontWeight: 600, color: '#00857A' }}>Add a ministry</h2>
                     <form action={createMinistryAction} style={{ display: 'grid', gap: 12, gridTemplateColumns: '1fr 1fr' }}>
