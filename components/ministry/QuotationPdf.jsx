@@ -2,6 +2,7 @@ import { Document, Page, View, Text, Image, StyleSheet, renderToBuffer } from '@
 import { COMPANY, EXCLUSIONS, TERMS, PAYMENT_TERMS } from '@/lib/ministry/company';
 import { fmtBHD, fmtBHDRate, amountInWords } from '@/lib/ministry/money';
 import { PICO_LOGO_DATA_URI } from '@/lib/ministry/logos';
+import { SIGNATURE_DATA_URI } from '@/lib/ministry/signature';
 
 const INK = '#1a1a1a';
 const GRAY = '#666666';
@@ -52,6 +53,8 @@ const s = StyleSheet.create({
     sign: { marginTop: 26, flexDirection: 'row', justifyContent: 'space-between' },
     signCol: { width: '45%' },
     signLabel: { fontSize: 8, color: INK, marginBottom: 26 },
+    signLabelSigned: { fontSize: 8, color: INK, marginBottom: 2 },
+    signImg: { width: 96, height: 24, marginBottom: 0, marginLeft: 2 },
     signLine: { borderTopWidth: 0.8, borderTopColor: RULE, paddingTop: 3, fontSize: 8 },
     bold: { fontFamily: 'Helvetica-Bold' },
 });
@@ -158,7 +161,9 @@ export function QuotationPdf({ data }) {
                 </View>
                 <View style={s.sign} wrap={false}>
                     <View style={s.signCol}>
-                        <Text style={s.signLabel}>For Pico International (Bahrain)</Text>
+                        <Text style={s.signLabelSigned}>For Pico International (Bahrain)</Text>
+                        {/* eslint-disable-next-line jsx-a11y/alt-text */}
+                        <Image style={s.signImg} src={SIGNATURE_DATA_URI} />
                         <View style={s.signLine}><Text style={s.bold}>{COMPANY.signatory.name}</Text><Text>{COMPANY.signatory.title}</Text></View>
                     </View>
                     <View style={s.signCol}>
