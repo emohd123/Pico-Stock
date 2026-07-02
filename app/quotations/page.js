@@ -6,6 +6,7 @@ import { createMinistryAction, deleteMinistryAction } from '@/lib/ministry/actio
 import { fmtBHD } from '@/lib/ministry/money';
 import CopyLink from '@/components/ministry/CopyLink';
 import DeleteMinistryButton from '@/components/ministry/DeleteMinistryButton';
+import BookingsCalendar from '@/components/ministry/BookingsCalendar';
 
 function timeAgo(d) {
     const s = Math.max(0, (Date.now() - new Date(d).getTime()) / 1000);
@@ -13,6 +14,24 @@ function timeAgo(d) {
     if (s < 3600) return `${Math.floor(s / 60)} min ago`;
     if (s < 86400) return `${Math.floor(s / 3600)} h ago`;
     return `${Math.floor(s / 86400)} d ago`;
+}
+
+const MONTHS_FULL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+// Parse the portal's readable date string (e.g. "2, 3 July 2026 · 1 August 2026")
+// back into ISO days. Non-matching / free-text values are skipped.
+function parseEventDates(str) {
+    if (!str) return [];
+    const out = [];
+    for (const group of String(str).split('·')) {
+        const m = group.trim().match(/^([\d,\s]+)\s+([A-Za-z]+)\s+(\d{4})$/);
+        if (!m) continue;
+        const days = m[1].split(',').map((s) => parseInt(s.trim(), 10)).filter((n) => n >= 1 && n <= 31);
+        const monIdx = MONTHS_FULL.findIndex((mm) => mm.toLowerCase() === m[2].toLowerCase());
+        const year = parseInt(m[3], 10);
+        if (monIdx < 0 || !year) continue;
+        for (const d of days) out.push(`${year}-${String(monIdx + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
+    }
+    return out;
 }
 
 export const dynamic = 'force-dynamic';
@@ -25,8 +44,19 @@ export default async function QuotationsAdminPage({ searchParams }) {
     if (!isAdmin()) {
         return <LoginScreen error={!!(searchParams && searchParams.error)} />;
     }
-    const [ministryRows, recentQuotes] = await Promise.all([getAllMinistries(), getRecentQuotations(12)]);
+    const [ministryRows, allQuotes] = await Promise.all([getAllMinistries(), getRecentQuotations(200)]);
     const nameById = new Map(ministryRows.map((m) => [m.id, m.name]));
+    const recentQuotes = allQuotes.slice(0, 12);
+    // Calendar shows each ministry's latest selected dates (allQuotes is newest-first).
+    const latestByMinistry = new Map();
+    for (const q of allQuotes) if (!latestByMinistry.has(q.ministryId)) latestByMinistry.set(q.ministryId, q);
+    const calendarEntries = [];
+    for (const q of latestByMinistry.values()) {
+        const name = nameById.get(q.ministryId) || 'Ministry';
+        for (const isoDay of parseEventDates(q.eventDate)) {
+            calendarEntries.push({ iso: isoDay, label: `${name}${q.eventName ? ' — ' + q.eventName : ''}` });
+        }
+    }
     const h = headers();
     const proto = h.get('x-forwarded-proto') || 'https';
     const host = h.get('host') || 'localhost:3000';
@@ -77,6 +107,11 @@ export default async function QuotationsAdminPage({ searchParams }) {
                             ))}
                         </ul>
                     )}
+                </section>
+
+                <section style={{ ...card, marginBottom: 32 }}>
+                    <h2 style={{ borderBottom: '1px solid #f1f5f9', padding: '12px 20px', fontSize: 14, fontWeight: 600, color: '#00857A', margin: 0 }}>📅 Selected dates calendar</h2>
+                    <BookingsCalendar entries={calendarEntries} />
                 </section>
 
                 <section style={{ ...card, padding: 20, marginBottom: 32 }}>
