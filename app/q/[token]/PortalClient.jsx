@@ -53,6 +53,7 @@ function Selector({ token, items }) {
     const [venue, setVenue] = useState('');
     const [eventDate, setEventDate] = useState('');
     const [duration, setDuration] = useState('');
+    const [address, setAddress] = useState('');
     const [contact1, setContact1] = useState('');
     const [phone1, setPhone1] = useState('');
     const [contact2, setContact2] = useState('');
@@ -84,7 +85,7 @@ function Selector({ token, items }) {
         setBusy(true);
         try {
             const lines = items.filter((it) => selected[it.id] > 0).map((it) => ({ itemId: it.id, qty: selected[it.id] }));
-            const res = await fetch(`/q/${token}/quote`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ eventName, venue, eventDate, duration, contact1, phone1, contact2, phone2, agreedTerms: true, lines }) });
+            const res = await fetch(`/q/${token}/quote`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ eventName, venue, eventDate, duration, address, contact1, phone1, contact2, phone2, agreedTerms: true, lines }) });
             if (!res.ok) throw new Error((await res.text()) || 'Failed to generate quotation');
             const data = await res.json();
             // Show a persistent success panel with a reliable click-to-open link.
@@ -106,6 +107,8 @@ function Selector({ token, items }) {
                             <input value={eventDate} onChange={(e) => setEventDate(e.target.value)} placeholder="e.g. 27 August 2026" style={{ ...inputStyle, marginTop: 4 }} /></label>
                         <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Duration
                             <input value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="e.g. 1 Day" style={{ ...inputStyle, marginTop: 4 }} /></label>
+                        <label style={{ gridColumn: '1 / -1', fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Address
+                            <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="e.g. Building 123, Road 45, Manama, Kingdom of Bahrain" style={{ ...inputStyle, marginTop: 4 }} /></label>
                         <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Contact 1
                             <input value={contact1} onChange={(e) => setContact1(e.target.value)} placeholder="e.g. Ahmed Al Khalifa" style={{ ...inputStyle, marginTop: 4 }} /></label>
                         <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Phone number

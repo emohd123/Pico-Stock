@@ -94,6 +94,7 @@ export function QuotationPdf({ data }) {
                     {data.attentionName ? <Text style={s.recipLine}>{data.attentionName}</Text> : null}
                     {data.attentionTitle ? <Text style={s.recipLine}>{data.attentionTitle}</Text> : null}
                     <Text style={s.recipLine}>{data.ministryName}</Text>
+                    {data.address ? <Text style={s.recipLine}>{data.address}</Text> : null}
                     {data.poBox ? <Text style={s.recipLine}>{data.poBox}, Kingdom of Bahrain</Text> : null}
                     {data.attentionPhone ? <Text style={s.recipLine}>Tel: {data.attentionPhone}</Text> : null}
                     {(data.contacts || []).map((c, i) => (

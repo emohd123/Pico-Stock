@@ -18,6 +18,7 @@ export async function POST(req, { params }) {
     const venue = String(body?.venue || '').slice(0, 200);
     const eventDate = String(body?.eventDate || '').slice(0, 200);
     const duration = String(body?.duration || '').slice(0, 200);
+    const address = String(body?.address || '').slice(0, 300);
     const contact1 = String(body?.contact1 || '').slice(0, 120);
     const phone1 = String(body?.phone1 || '').slice(0, 60);
     const contact2 = String(body?.contact2 || '').slice(0, 120);
@@ -66,7 +67,7 @@ export async function POST(req, { params }) {
         ministryName: ministry.name,
         attentionName: ministry.attentionName, attentionTitle: ministry.attentionTitle,
         attentionPhone: ministry.contactPhone, poBox: ministry.poBox,
-        eventName, venue, eventDate, duration,
+        eventName, venue, eventDate, duration, address,
         contacts: [
             contact1 || phone1 ? { name: contact1, phone: phone1 } : null,
             contact2 || phone2 ? { name: contact2, phone: phone2 } : null,
