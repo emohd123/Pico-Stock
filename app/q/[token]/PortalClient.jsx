@@ -47,6 +47,12 @@ const card = { background: '#fff', borderRadius: 12, boxShadow: '0 1px 2px rgba(
 const inputStyle = { width: '100%', borderRadius: 8, border: '1px solid #cbd5e1', padding: '8px 12px', fontSize: 14, boxSizing: 'border-box' };
 const btn = { borderRadius: 8, background: '#00857A', color: '#fff', padding: '10px 16px', fontSize: 14, fontWeight: 600, border: 'none', cursor: 'pointer' };
 
+// Official Chair (item 4) = one seat per delegation. Setting its quantity
+// auto-fills every per-delegate item to the same number, plus the Head Table
+// "pax" (ministries) value. Item numbers, not ids.
+const CHAIR_ITEM_NO = 4;
+const CHAIR_LINKED_NOS = [8, 11, 12, 13, 14, 19, 20, 25, 26, 39];
+
 function Selector({ token, items }) {
     const [selected, setSelected] = useState({});
     const [eventName, setEventName] = useState('');
@@ -71,6 +77,7 @@ function Selector({ token, items }) {
     const [termsOpen, setTermsOpen] = useState(false); // 'accept' | 'view' | false
 
     const sortedItems = useMemo(() => [...items].sort((a, b) => a.itemNo - b.itemNo), [items]);
+    const byNo = useMemo(() => { const m = new Map(); for (const it of items) m.set(it.itemNo, it); return m; }, [items]);
     const totals = useMemo(() => {
         let subtotal = 0;
         for (const it of items) { const q = selected[it.id]; if (q > 0) subtotal += it.unitPriceFils * q; }
@@ -79,8 +86,35 @@ function Selector({ token, items }) {
     }, [selected, items]);
     const selectedCount = Object.values(selected).filter((q) => q > 0).length;
 
-    function toggle(it, on) { setSelected((s) => { const n = { ...s }; if (on) n[it.id] = it.defaultQty; else delete n[it.id]; return n; }); }
-    function setQty(it, qty) { setSelected((s) => ({ ...s, [it.id]: Math.min(it.maxQty, Math.max(1, qty || 1)) })); }
+    // Setting the Official Chair count auto-fills all per-delegate items + pax.
+    function propagateChair(rawN) {
+        const chair = byNo.get(CHAIR_ITEM_NO);
+        const n = Math.max(1, Math.min(chair ? chair.maxQty : rawN, parseInt(rawN, 10) || 1));
+        setSelected((s) => {
+            const next = { ...s };
+            if (chair) next[chair.id] = n;
+            for (const no of CHAIR_LINKED_NOS) {
+                const it = byNo.get(no);
+                if (it) next[it.id] = Math.min(it.maxQty, Math.max(1, n));
+            }
+            return next;
+        });
+        // Head Table pax (ministries) mirrors the count when it's an offered value.
+        setHeads(n >= 7 && n <= 10 ? String(n) : '');
+    }
+
+    function toggle(it, on) {
+        if (it.itemNo === CHAIR_ITEM_NO) {
+            if (on) propagateChair(it.defaultQty);
+            else setSelected((s) => { const n = { ...s }; delete n[it.id]; return n; });
+            return;
+        }
+        setSelected((s) => { const n = { ...s }; if (on) n[it.id] = it.defaultQty; else delete n[it.id]; return n; });
+    }
+    function setQty(it, qty) {
+        if (it.itemNo === CHAIR_ITEM_NO) { propagateChair(qty); return; }
+        setSelected((s) => ({ ...s, [it.id]: Math.min(it.maxQty, Math.max(1, qty || 1)) }));
+    }
 
     async function submit() {
         setError('');
@@ -122,7 +156,7 @@ function Selector({ token, items }) {
                             <input value={phone1} onChange={(e) => setPhone1(e.target.value)} placeholder="e.g. +973 3600 0000" style={{ ...inputStyle, marginTop: 4 }} /></label>
                         <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Email address
                             <input type="email" value={email1} onChange={(e) => setEmail1(e.target.value)} placeholder="e.g. name@ministry.gov.bh" style={{ ...inputStyle, marginTop: 4 }} /></label>
-                        <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Contact 2
+                        <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Contact name 2
                             <input value={contact2} onChange={(e) => setContact2(e.target.value)} placeholder="Optional" style={{ ...inputStyle, marginTop: 4 }} /></label>
                         <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Job title
                             <input value={title2} onChange={(e) => setTitle2(e.target.value)} placeholder="Optional" style={{ ...inputStyle, marginTop: 4 }} /></label>
