@@ -77,80 +77,81 @@ export default async function QuotationsAdminPage({ searchParams }) {
                 </div>
             </header>
 
-            <main style={{ maxWidth: 1000, margin: '0 auto', padding: '32px 20px' }}>
-                <section style={{ ...card, marginBottom: 32 }}>
-                    <h2 style={{ display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid #f1f5f9', padding: '12px 20px', fontSize: 14, fontWeight: 600, color: '#00857A', margin: 0 }}>
-                        🔔 Recent activity
-                        {recentQuotes.length > 0 ? <span style={{ borderRadius: 10, background: '#00C7B1', color: '#fff', padding: '0 8px', fontSize: 11, fontWeight: 700 }}>{recentQuotes.length}</span> : null}
-                    </h2>
-                    {recentQuotes.length === 0 ? (
-                        <p style={{ padding: '18px 20px', fontSize: 14, color: '#75787B' }}>No quotations submitted yet. Activity will appear here when a ministry generates a quotation.</p>
-                    ) : (
-                        <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-                            {recentQuotes.map((q) => (
-                                <li key={q.id} style={{ padding: '10px 20px', borderTop: '1px solid #f1f5f9' }}>
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
-                                        <span style={{ fontSize: 14 }}>
+            <main style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 20px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 340px', gap: 24, alignItems: 'start' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 24, minWidth: 0 }}>
+                    <section style={{ ...card, padding: 20 }}>
+                        <h2 style={{ marginTop: 0, marginBottom: 12, fontSize: 14, fontWeight: 600, color: '#00857A' }}>Add a ministry</h2>
+                        <form action={createMinistryAction} style={{ display: 'grid', gap: 12, gridTemplateColumns: '1fr 1fr' }}>
+                            <input name="name" required placeholder="Ministry name (English)" style={inputStyle} />
+                            <input name="nameAr" placeholder="اسم الوزارة (Arabic, optional)" dir="rtl" style={inputStyle} />
+                            <input name="contactEmail" type="email" placeholder="Contact email (optional)" style={inputStyle} />
+                            <input name="contactPhone" type="tel" placeholder="Contact phone (optional)" style={inputStyle} />
+                            <input name="attentionName" placeholder="Contact person (optional)" style={inputStyle} />
+                            <input name="attentionTitle" placeholder="Position / title (optional)" style={inputStyle} />
+                            <button style={{ ...btn, justifySelf: 'start', gridColumn: '1 / -1' }}>Create + generate link</button>
+                        </form>
+                        <p style={{ marginTop: 8, fontSize: 12, color: '#75787B' }}>Contact details are optional and can be added or edited later. P.O. Box and photos are added after creating.</p>
+                    </section>
+
+                    <section style={card}>
+                        <h2 style={{ borderBottom: '1px solid #f1f5f9', padding: '12px 20px', fontSize: 14, fontWeight: 600, color: '#00857A', margin: 0 }}>Ministries ({ministryRows.length})</h2>
+                        {ministryRows.length === 0 ? (
+                            <p style={{ padding: '24px 20px', fontSize: 14, color: '#75787B' }}>No ministries yet. Add one above.</p>
+                        ) : (
+                            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                                {ministryRows.map((m) => (
+                                    <li key={m.id} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '12px 20px', borderTop: '1px solid #f1f5f9' }}>
+                                        <div>
+                                            <Link href={`/quotations/ministry/${m.id}`} style={{ fontWeight: 500, color: '#00857A', textDecoration: 'none' }}>{m.name}</Link>
+                                            {m.nameAr ? <span dir="rtl" style={{ marginLeft: 8, fontSize: 14, color: '#75787B' }}>{m.nameAr}</span> : null}
+                                            {m.internalNote ? <div style={{ fontSize: 12, color: '#d97706' }}>● {m.internalNote}</div> : null}
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                            <CopyLink url={`${origin}/q/${m.token}`} />
+                                            <Link href={`/quotations/ministry/${m.id}`} style={{ borderRadius: 6, background: '#00857A', color: '#fff', padding: '4px 12px', fontSize: 12, fontWeight: 500, textDecoration: 'none' }}>Manage</Link>
+                                            <DeleteMinistryButton ministryId={m.id} ministryName={m.name} action={deleteMinistryAction} />
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </section>
+                </div>
+
+                <aside style={{ position: 'sticky', top: 24, display: 'flex', flexDirection: 'column', gap: 24, minWidth: 0 }}>
+                    <section style={card}>
+                        <h2 style={{ display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid #f1f5f9', padding: '12px 16px', fontSize: 14, fontWeight: 600, color: '#00857A', margin: 0 }}>
+                            🔔 Recent activity
+                            {recentQuotes.length > 0 ? <span style={{ borderRadius: 10, background: '#00C7B1', color: '#fff', padding: '0 8px', fontSize: 11, fontWeight: 700 }}>{recentQuotes.length}</span> : null}
+                        </h2>
+                        {recentQuotes.length === 0 ? (
+                            <p style={{ padding: '14px 16px', fontSize: 13, color: '#75787B' }}>No quotations submitted yet. Activity appears here when a ministry generates a quotation.</p>
+                        ) : (
+                            <ul style={{ listStyle: 'none', margin: 0, padding: 0, maxHeight: 360, overflowY: 'auto' }}>
+                                {recentQuotes.map((q) => (
+                                    <li key={q.id} style={{ padding: '10px 16px', borderTop: '1px solid #f1f5f9' }}>
+                                        <div style={{ fontSize: 13 }}>
                                             <Link href={`/quotations/ministry/${q.ministryId}`} style={{ fontWeight: 600, color: '#00857A', textDecoration: 'none' }}>{nameById.get(q.ministryId) || 'Ministry'}</Link>
-                                            <span style={{ color: '#75787B' }}> submitted </span>
-                                            <span style={{ fontWeight: 500 }}>{q.ref}</span>
-                                            {q.revision > 1 ? <span style={{ marginLeft: 6, borderRadius: 4, background: '#f1f5f9', padding: '1px 6px', fontSize: 11, color: '#75787B' }}>Rev {q.revision}</span> : null}
-                                        </span>
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13 }}>
-                                            <span style={{ fontWeight: 600 }}>{fmtBHD(q.totalFils)}</span>
-                                            <span style={{ color: '#94a3b8' }}>{timeAgo(q.createdAt)}</span>
-                                        </span>
-                                    </div>
-                                    {q.eventName ? <div style={{ marginTop: 2, fontSize: 12, color: '#75787B' }}>{q.eventName}</div> : null}
-                                    {q.submitterNote ? <div style={{ marginTop: 6, borderRadius: 6, background: '#fffbeb', border: '1px solid #fde68a', padding: '6px 10px', fontSize: 12, color: '#92400e' }}><strong>Note to PICO:</strong> {q.submitterNote}</div> : null}
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                </section>
+                                            <span style={{ color: '#75787B' }}> · {q.ref}</span>
+                                            {q.revision > 1 ? <span style={{ marginLeft: 6, borderRadius: 4, background: '#f1f5f9', padding: '1px 5px', fontSize: 10, color: '#75787B' }}>Rev {q.revision}</span> : null}
+                                        </div>
+                                        <div style={{ marginTop: 2, display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#94a3b8' }}>
+                                            <span style={{ fontWeight: 600, color: '#4D4D4F' }}>{fmtBHD(q.totalFils)}</span>
+                                            <span>{timeAgo(q.createdAt)}</span>
+                                        </div>
+                                        {q.eventName ? <div style={{ marginTop: 2, fontSize: 12, color: '#75787B' }}>{q.eventName}</div> : null}
+                                        {q.submitterNote ? <div style={{ marginTop: 6, borderRadius: 6, background: '#fffbeb', border: '1px solid #fde68a', padding: '5px 8px', fontSize: 12, color: '#92400e' }}><strong>Note:</strong> {q.submitterNote}</div> : null}
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </section>
 
-                <section style={{ ...card, marginBottom: 32 }}>
-                    <h2 style={{ borderBottom: '1px solid #f1f5f9', padding: '12px 20px', fontSize: 14, fontWeight: 600, color: '#00857A', margin: 0 }}>📅 Selected dates calendar</h2>
-                    <BookingsCalendar entries={calendarEntries} />
-                </section>
-
-                <section style={{ ...card, padding: 20, marginBottom: 32 }}>
-                    <h2 style={{ marginTop: 0, marginBottom: 12, fontSize: 14, fontWeight: 600, color: '#00857A' }}>Add a ministry</h2>
-                    <form action={createMinistryAction} style={{ display: 'grid', gap: 12, gridTemplateColumns: '1fr 1fr' }}>
-                        <input name="name" required placeholder="Ministry name (English)" style={inputStyle} />
-                        <input name="nameAr" placeholder="اسم الوزارة (Arabic, optional)" dir="rtl" style={inputStyle} />
-                        <input name="contactEmail" type="email" placeholder="Contact email (optional)" style={inputStyle} />
-                        <input name="contactPhone" type="tel" placeholder="Contact phone (optional)" style={inputStyle} />
-                        <input name="attentionName" placeholder="Contact person (optional)" style={inputStyle} />
-                        <input name="attentionTitle" placeholder="Position / title (optional)" style={inputStyle} />
-                        <button style={{ ...btn, justifySelf: 'start', gridColumn: '1 / -1' }}>Create + generate link</button>
-                    </form>
-                    <p style={{ marginTop: 8, fontSize: 12, color: '#75787B' }}>Contact details are optional and can be added or edited later. P.O. Box and photos are added after creating.</p>
-                </section>
-
-                <section style={card}>
-                    <h2 style={{ borderBottom: '1px solid #f1f5f9', padding: '12px 20px', fontSize: 14, fontWeight: 600, color: '#00857A', margin: 0 }}>Ministries ({ministryRows.length})</h2>
-                    {ministryRows.length === 0 ? (
-                        <p style={{ padding: '24px 20px', fontSize: 14, color: '#75787B' }}>No ministries yet. Add one above.</p>
-                    ) : (
-                        <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-                            {ministryRows.map((m) => (
-                                <li key={m.id} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '12px 20px', borderTop: '1px solid #f1f5f9' }}>
-                                    <div>
-                                        <Link href={`/quotations/ministry/${m.id}`} style={{ fontWeight: 500, color: '#00857A', textDecoration: 'none' }}>{m.name}</Link>
-                                        {m.nameAr ? <span dir="rtl" style={{ marginLeft: 8, fontSize: 14, color: '#75787B' }}>{m.nameAr}</span> : null}
-                                        {m.internalNote ? <div style={{ fontSize: 12, color: '#d97706' }}>● {m.internalNote}</div> : null}
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                        <CopyLink url={`${origin}/q/${m.token}`} />
-                                        <Link href={`/quotations/ministry/${m.id}`} style={{ borderRadius: 6, background: '#00857A', color: '#fff', padding: '4px 12px', fontSize: 12, fontWeight: 500, textDecoration: 'none' }}>Manage</Link>
-                                        <DeleteMinistryButton ministryId={m.id} ministryName={m.name} action={deleteMinistryAction} />
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                </section>
+                    <section style={card}>
+                        <h2 style={{ borderBottom: '1px solid #f1f5f9', padding: '12px 16px', fontSize: 14, fontWeight: 600, color: '#00857A', margin: 0 }}>📅 Selected dates</h2>
+                        <BookingsCalendar entries={calendarEntries} />
+                    </section>
+                </aside>
             </main>
         </div>
     );

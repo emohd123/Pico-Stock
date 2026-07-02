@@ -45,17 +45,17 @@ export default function BookingsCalendar({ entries }) {
     const iso = (d) => `${view.y}-${String(view.m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     const monthDays = [...Array(daysInMonth)].map((_, i) => i + 1).filter((d) => byDay.has(iso(d)));
 
-    const navBtn = { border: '1px solid #cbd5e1', background: '#fff', borderRadius: 6, width: 30, height: 30, cursor: 'pointer', color: '#475569', fontSize: 16, lineHeight: 1 };
+    const navBtn = { border: '1px solid #cbd5e1', background: '#fff', borderRadius: 6, width: 26, height: 26, cursor: 'pointer', color: '#475569', fontSize: 15, lineHeight: 1 };
 
     return (
-        <div style={{ padding: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <div style={{ padding: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                 <button type="button" onClick={() => move(-1)} style={navBtn} aria-label="Previous month">‹</button>
-                <span style={{ fontSize: 15, fontWeight: 600, color: '#334155' }}>{MONTHS[view.m]} {view.y}</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{MONTHS[view.m]} {view.y}</span>
                 <button type="button" onClick={() => move(1)} style={navBtn} aria-label="Next month">›</button>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, textAlign: 'center' }}>
-                {WEEKDAYS.map((w) => <span key={w} style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', padding: '2px 0' }}>{w}</span>)}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, textAlign: 'center' }}>
+                {WEEKDAYS.map((w) => <span key={w} style={{ fontSize: 10, fontWeight: 600, color: '#94a3b8', padding: '1px 0' }}>{w}</span>)}
                 {cells.map((d, i) => {
                     if (d === null) return <span key={`e${i}`} />;
                     const key = iso(d);
@@ -63,34 +63,34 @@ export default function BookingsCalendar({ entries }) {
                     const isToday = key === todayIso;
                     return (
                         <div key={key} title={booked ? booked.join('\n') : ''}
-                            style={{ position: 'relative', height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, fontSize: 14,
+                            style={{ position: 'relative', height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6, fontSize: 12,
                                 border: isToday ? '1px solid #00C7B1' : '1px solid transparent',
-                                background: booked ? '#00857A' : '#f8fafc', color: booked ? '#fff' : '#334155', fontWeight: booked ? 700 : 400, cursor: booked ? 'default' : 'default' }}>
+                                background: booked ? '#00857A' : '#f8fafc', color: booked ? '#fff' : '#334155', fontWeight: booked ? 700 : 400 }}>
                             {d}
                             {booked && booked.length > 1 ? (
-                                <span style={{ position: 'absolute', top: 2, right: 4, fontSize: 9, background: '#fff', color: '#00857A', borderRadius: 8, padding: '0 4px', fontWeight: 700 }}>{booked.length}</span>
+                                <span style={{ position: 'absolute', top: 1, right: 2, fontSize: 8, background: '#fff', color: '#00857A', borderRadius: 8, padding: '0 3px', fontWeight: 700 }}>{booked.length}</span>
                             ) : null}
                         </div>
                     );
                 })}
             </div>
 
-            <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 12, fontSize: 12, color: '#75787B' }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><span style={{ width: 14, height: 14, borderRadius: 4, background: '#00857A', display: 'inline-block' }} /> booked date</span>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><span style={{ width: 14, height: 14, borderRadius: 4, border: '1px solid #00C7B1', display: 'inline-block' }} /> today</span>
+            <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10, fontSize: 11, color: '#75787B' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><span style={{ width: 12, height: 12, borderRadius: 3, background: '#00857A', display: 'inline-block' }} /> booked</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><span style={{ width: 12, height: 12, borderRadius: 3, border: '1px solid #00C7B1', display: 'inline-block' }} /> today</span>
             </div>
 
             {monthDays.length > 0 ? (
-                <ul style={{ listStyle: 'none', margin: '12px 0 0', padding: 0, borderTop: '1px solid #f1f5f9' }}>
+                <ul style={{ listStyle: 'none', margin: '10px 0 0', padding: 0, borderTop: '1px solid #f1f5f9' }}>
                     {monthDays.map((d) => (
-                        <li key={d} style={{ display: 'flex', gap: 10, padding: '8px 0', borderBottom: '1px solid #f8fafc', fontSize: 13 }}>
-                            <span style={{ flexShrink: 0, fontWeight: 700, color: '#00857A', minWidth: 74 }}>{d} {MONTHS[view.m].slice(0, 3)}</span>
-                            <span style={{ color: '#4D4D4F' }}>{byDay.get(iso(d)).join('  •  ')}</span>
+                        <li key={d} style={{ padding: '7px 0', borderBottom: '1px solid #f8fafc', fontSize: 12 }}>
+                            <span style={{ fontWeight: 700, color: '#00857A' }}>{d} {MONTHS[view.m].slice(0, 3)}</span>
+                            <span style={{ color: '#4D4D4F' }}> — {byDay.get(iso(d)).join('  •  ')}</span>
                         </li>
                     ))}
                 </ul>
             ) : (
-                <p style={{ marginTop: 12, fontSize: 13, color: '#94a3b8' }}>No dates selected in {MONTHS[view.m]} {view.y}.</p>
+                <p style={{ marginTop: 10, fontSize: 12, color: '#94a3b8' }}>No dates selected in {MONTHS[view.m]}.</p>
             )}
         </div>
     );
