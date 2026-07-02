@@ -20,9 +20,13 @@ export async function POST(req, { params }) {
     const duration = String(body?.duration || '').slice(0, 200);
     const address = String(body?.address || '').slice(0, 300);
     const contact1 = String(body?.contact1 || '').slice(0, 120);
+    const title1 = String(body?.title1 || '').slice(0, 120);
     const phone1 = String(body?.phone1 || '').slice(0, 60);
+    const email1 = String(body?.email1 || '').slice(0, 120);
     const contact2 = String(body?.contact2 || '').slice(0, 120);
+    const title2 = String(body?.title2 || '').slice(0, 120);
     const phone2 = String(body?.phone2 || '').slice(0, 60);
+    const email2 = String(body?.email2 || '').slice(0, 120);
     // The recipient must accept the Exclusions / Terms / Payment terms before a
     // quotation can be generated — enforced here, not just in the UI.
     if (body?.agreedTerms !== true) return new NextResponse('You must accept the Exclusions, Terms & Conditions and Payment Terms before generating a quotation.', { status: 400 });
@@ -69,8 +73,8 @@ export async function POST(req, { params }) {
         attentionPhone: ministry.contactPhone, poBox: ministry.poBox,
         eventName, venue, eventDate, duration, address,
         contacts: [
-            contact1 || phone1 ? { name: contact1, phone: phone1 } : null,
-            contact2 || phone2 ? { name: contact2, phone: phone2 } : null,
+            contact1 || title1 || phone1 || email1 ? { name: contact1, title: title1, phone: phone1, email: email1 } : null,
+            contact2 || title2 || phone2 || email2 ? { name: contact2, title: title2, phone: phone2, email: email2 } : null,
         ].filter(Boolean),
         lines: resolved.map((r) => {
             const d = itemDetail(r.item.itemNo);

@@ -55,9 +55,13 @@ function Selector({ token, items }) {
     const [duration, setDuration] = useState('');
     const [address, setAddress] = useState('');
     const [contact1, setContact1] = useState('');
+    const [title1, setTitle1] = useState('');
     const [phone1, setPhone1] = useState('');
+    const [email1, setEmail1] = useState('');
     const [contact2, setContact2] = useState('');
+    const [title2, setTitle2] = useState('');
     const [phone2, setPhone2] = useState('');
+    const [email2, setEmail2] = useState('');
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     const [result, setResult] = useState(null);
@@ -85,7 +89,7 @@ function Selector({ token, items }) {
         setBusy(true);
         try {
             const lines = items.filter((it) => selected[it.id] > 0).map((it) => ({ itemId: it.id, qty: selected[it.id] }));
-            const res = await fetch(`/q/${token}/quote`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ eventName, venue, eventDate, duration, address, contact1, phone1, contact2, phone2, agreedTerms: true, lines }) });
+            const res = await fetch(`/q/${token}/quote`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ eventName, venue, eventDate, duration, address, contact1, title1, phone1, email1, contact2, title2, phone2, email2, agreedTerms: true, lines }) });
             if (!res.ok) throw new Error((await res.text()) || 'Failed to generate quotation');
             const data = await res.json();
             // Show a persistent success panel with a reliable click-to-open link.
@@ -111,12 +115,20 @@ function Selector({ token, items }) {
                             <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="e.g. Building 123, Road 45, Manama, Kingdom of Bahrain" style={{ ...inputStyle, marginTop: 4 }} /></label>
                         <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Contact 1
                             <input value={contact1} onChange={(e) => setContact1(e.target.value)} placeholder="e.g. Ahmed Al Khalifa" style={{ ...inputStyle, marginTop: 4 }} /></label>
+                        <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Job title
+                            <input value={title1} onChange={(e) => setTitle1(e.target.value)} placeholder="e.g. Protocol Manager" style={{ ...inputStyle, marginTop: 4 }} /></label>
                         <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Phone number
                             <input value={phone1} onChange={(e) => setPhone1(e.target.value)} placeholder="e.g. +973 3600 0000" style={{ ...inputStyle, marginTop: 4 }} /></label>
+                        <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Email address
+                            <input type="email" value={email1} onChange={(e) => setEmail1(e.target.value)} placeholder="e.g. name@ministry.gov.bh" style={{ ...inputStyle, marginTop: 4 }} /></label>
                         <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Contact 2
                             <input value={contact2} onChange={(e) => setContact2(e.target.value)} placeholder="Optional" style={{ ...inputStyle, marginTop: 4 }} /></label>
+                        <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Job title
+                            <input value={title2} onChange={(e) => setTitle2(e.target.value)} placeholder="Optional" style={{ ...inputStyle, marginTop: 4 }} /></label>
                         <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Phone number
                             <input value={phone2} onChange={(e) => setPhone2(e.target.value)} placeholder="Optional" style={{ ...inputStyle, marginTop: 4 }} /></label>
+                        <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Email address
+                            <input type="email" value={email2} onChange={(e) => setEmail2(e.target.value)} placeholder="Optional" style={{ ...inputStyle, marginTop: 4 }} /></label>
                     </div>
                     <p style={{ marginTop: 12, borderRadius: 6, background: '#f1f5f9', padding: '8px 12px', fontSize: 12, color: '#75787B' }}>
                         Listed quantities are the <strong>maximum allowed</strong> per item — you may reduce them but not exceed them. Items marked <em>fixed qty</em> cannot be changed.

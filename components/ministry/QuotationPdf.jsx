@@ -97,11 +97,15 @@ export function QuotationPdf({ data }) {
                     {data.address ? <Text style={s.recipLine}>{data.address}</Text> : null}
                     {data.poBox ? <Text style={s.recipLine}>{data.poBox}, Kingdom of Bahrain</Text> : null}
                     {data.attentionPhone ? <Text style={s.recipLine}>Tel: {data.attentionPhone}</Text> : null}
-                    {(data.contacts || []).map((c, i) => (
-                        <Text key={i} style={s.recipLine}>
-                            Contact {i + 1}: {c.name}{c.name && c.phone ? ' — ' : ''}{c.phone ? `Tel: ${c.phone}` : ''}
-                        </Text>
-                    ))}
+                    {(data.contacts || []).map((c, i) => {
+                        const parts = [
+                            c.name,
+                            c.title,
+                            c.phone ? `Tel: ${c.phone}` : '',
+                            c.email,
+                        ].filter(Boolean);
+                        return <Text key={i} style={s.recipLine}>Contact {i + 1}: {parts.join(' — ')}</Text>;
+                    })}
                     <View style={{ marginTop: 8 }}>
                         <View style={s.evRow}><Text style={s.evLabel}>EVENT :</Text><Text style={s.evVal}>{data.eventName || data.ministryName}</Text></View>
                         {data.venue ? <View style={s.evRow}><Text style={s.evLabel}>VENUE :</Text><Text style={s.evVal}>{data.venue}</Text></View> : null}
