@@ -150,7 +150,7 @@ function Selector({ token, items }) {
                         <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Duration
                             <input value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="e.g. 1 Day" style={{ ...inputStyle, marginTop: 4 }} /></label>
                         <div style={{ gridColumn: '1 / -1' }}>
-                            <span style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Date — click day(s) to select</span>
+                            <span style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Date</span>
                             <DateCalendar value={eventDate} onChange={setEventDate} />
                         </div>
                         <label style={{ gridColumn: '1 / -1', fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Address
@@ -313,12 +313,33 @@ function formatSelected(isoList) {
     return [...groups.values()].map((g) => `${g.days.join(', ')} ${MONTHS[g.m - 1]} ${g.y}`).join(' · ');
 }
 
-// Single-month calendar with multi-day selection. Writes a readable date string
-// back through onChange so the rest of the form / PDF stays plain text.
+// Dropdown calendar with multi-day selection. The box shows the chosen dates;
+// clicking it opens a single-month calendar; picking days then "OK" commits the
+// readable date string through onChange (used by the form / PDF).
 function DateCalendar({ value, onChange }) {
     const today = new Date();
+    const [open, setOpen] = useState(false);
     const [view, setView] = useState({ y: today.getFullYear(), m: today.getMonth() });
-    const [selected, setSelected] = useState(() => new Set());
+    const [draft, setDraft] = useState(() => new Set()); // selection while the dropdown is open
+
+    function openPicker() {
+        setDraft(new Set()); // start fresh each open; box keeps last committed value
+        setView({ y: today.getFullYear(), m: today.getMonth() });
+        setOpen(true);
+    }
+    function toggle(d) {
+        const key = iso(view.y, view.m, d);
+        const next = new Set(draft);
+        if (next.has(key)) next.delete(key); else next.add(key);
+        setDraft(next);
+    }
+    function move(delta) {
+        let m = view.m + delta, y = view.y;
+        if (m < 0) { m = 11; y -= 1; } else if (m > 11) { m = 0; y += 1; }
+        setView({ y, m });
+    }
+    function confirm() { onChange(formatSelected([...draft])); setOpen(false); }
+    function clearAll() { setDraft(new Set()); onChange(''); setOpen(false); }
 
     const first = new Date(view.y, view.m, 1).getDay();
     const daysInMonth = new Date(view.y, view.m + 1, 0).getDate();
@@ -326,47 +347,49 @@ function DateCalendar({ value, onChange }) {
     for (let i = 0; i < first; i++) cells.push(null);
     for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
-    function toggle(d) {
-        const key = iso(view.y, view.m, d);
-        const next = new Set(selected);
-        if (next.has(key)) next.delete(key); else next.add(key);
-        setSelected(next);
-        onChange(formatSelected([...next]));
-    }
-    function move(delta) {
-        let m = view.m + delta, y = view.y;
-        if (m < 0) { m = 11; y -= 1; } else if (m > 11) { m = 0; y += 1; }
-        setView({ y, m });
-    }
     const navBtn = { border: '1px solid #cbd5e1', background: '#fff', borderRadius: 6, width: 28, height: 28, cursor: 'pointer', color: '#475569', fontSize: 16, lineHeight: 1 };
 
     return (
-        <div style={{ marginTop: 4, border: '1px solid #cbd5e1', borderRadius: 8, padding: 12, maxWidth: 320 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                <button type="button" onClick={() => move(-1)} style={navBtn} aria-label="Previous month">‹</button>
-                <span style={{ fontSize: 14, fontWeight: 600, color: '#334155' }}>{MONTHS[view.m]} {view.y}</span>
-                <button type="button" onClick={() => move(1)} style={navBtn} aria-label="Next month">›</button>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, textAlign: 'center' }}>
-                {WEEKDAYS.map((w) => <span key={w} style={{ fontSize: 11, color: '#94a3b8', padding: '2px 0' }}>{w}</span>)}
-                {cells.map((d, i) => {
-                    if (d === null) return <span key={`e${i}`} />;
-                    const key = iso(view.y, view.m, d);
-                    const on = selected.has(key);
-                    const isToday = d === today.getDate() && view.m === today.getMonth() && view.y === today.getFullYear();
-                    return (
-                        <button type="button" key={key} onClick={() => toggle(d)}
-                            style={{ height: 32, borderRadius: 6, cursor: 'pointer', fontSize: 13,
-                                border: isToday && !on ? '1px solid #00C7B1' : '1px solid transparent',
-                                background: on ? '#00857A' : 'transparent', color: on ? '#fff' : '#334155', fontWeight: on ? 600 : 400 }}>
-                            {d}
-                        </button>
-                    );
-                })}
-            </div>
-            <div style={{ marginTop: 8, fontSize: 12, color: value ? '#00857A' : '#94a3b8', minHeight: 16 }}>
-                {value ? `Selected: ${value}` : 'No date selected yet'}
-            </div>
+        <div style={{ position: 'relative', marginTop: 4 }}>
+            <button type="button" onClick={() => (open ? setOpen(false) : openPicker())}
+                style={{ ...inputStyle, textAlign: 'left', cursor: 'pointer', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: value ? '#334155' : '#94a3b8' }}>
+                <span>{value || 'Select date(s)…'}</span>
+                <span style={{ color: '#94a3b8' }}>▾</span>
+            </button>
+
+            {open ? (
+                <div style={{ position: 'absolute', zIndex: 40, marginTop: 4, border: '1px solid #cbd5e1', borderRadius: 8, padding: 12, width: 300, background: '#fff', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                        <button type="button" onClick={() => move(-1)} style={navBtn} aria-label="Previous month">‹</button>
+                        <span style={{ fontSize: 14, fontWeight: 600, color: '#334155' }}>{MONTHS[view.m]} {view.y}</span>
+                        <button type="button" onClick={() => move(1)} style={navBtn} aria-label="Next month">›</button>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, textAlign: 'center' }}>
+                        {WEEKDAYS.map((w) => <span key={w} style={{ fontSize: 11, color: '#94a3b8', padding: '2px 0' }}>{w}</span>)}
+                        {cells.map((d, i) => {
+                            if (d === null) return <span key={`e${i}`} />;
+                            const key = iso(view.y, view.m, d);
+                            const on = draft.has(key);
+                            const isToday = d === today.getDate() && view.m === today.getMonth() && view.y === today.getFullYear();
+                            return (
+                                <button type="button" key={key} onClick={() => toggle(d)}
+                                    style={{ height: 32, borderRadius: 6, cursor: 'pointer', fontSize: 13,
+                                        border: isToday && !on ? '1px solid #00C7B1' : '1px solid transparent',
+                                        background: on ? '#00857A' : 'transparent', color: on ? '#fff' : '#334155', fontWeight: on ? 600 : 400 }}>
+                                    {d}
+                                </button>
+                            );
+                        })}
+                    </div>
+                    <div style={{ marginTop: 8, fontSize: 12, color: draft.size ? '#00857A' : '#94a3b8', minHeight: 16 }}>
+                        {draft.size ? formatSelected([...draft]) : 'Pick one or more days'}
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginTop: 10 }}>
+                        <button type="button" onClick={clearAll} style={{ border: '1px solid #cbd5e1', background: '#fff', color: '#475569', borderRadius: 6, padding: '6px 12px', fontSize: 13, cursor: 'pointer' }}>Clear</button>
+                        <button type="button" onClick={confirm} disabled={!draft.size} style={{ border: 'none', background: '#00857A', color: '#fff', borderRadius: 6, padding: '6px 18px', fontSize: 13, fontWeight: 600, cursor: draft.size ? 'pointer' : 'not-allowed', opacity: draft.size ? 1 : 0.5 }}>OK</button>
+                    </div>
+                </div>
+            ) : null}
         </div>
     );
 }
