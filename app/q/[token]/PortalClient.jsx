@@ -62,6 +62,7 @@ function Selector({ token, items }) {
     const [title2, setTitle2] = useState('');
     const [phone2, setPhone2] = useState('');
     const [email2, setEmail2] = useState('');
+    const [heads, setHeads] = useState('');
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     const [result, setResult] = useState(null);
@@ -89,7 +90,7 @@ function Selector({ token, items }) {
         setBusy(true);
         try {
             const lines = items.filter((it) => selected[it.id] > 0).map((it) => ({ itemId: it.id, qty: selected[it.id] }));
-            const res = await fetch(`/q/${token}/quote`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ eventName, venue, eventDate, duration, address, contact1, title1, phone1, email1, contact2, title2, phone2, email2, agreedTerms: true, lines }) });
+            const res = await fetch(`/q/${token}/quote`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ eventName, venue, eventDate, duration, address, contact1, title1, phone1, email1, contact2, title2, phone2, email2, heads, agreedTerms: true, lines }) });
             if (!res.ok) throw new Error((await res.text()) || 'Failed to generate quotation');
             const data = await res.json();
             // Show a persistent success panel with a reliable click-to-open link.
@@ -113,8 +114,8 @@ function Selector({ token, items }) {
                             <input value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="e.g. 1 Day" style={{ ...inputStyle, marginTop: 4 }} /></label>
                         <label style={{ gridColumn: '1 / -1', fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Address
                             <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="e.g. Building 123, Road 45, Manama, Kingdom of Bahrain" style={{ ...inputStyle, marginTop: 4 }} /></label>
-                        <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Contact 1
-                            <input value={contact1} onChange={(e) => setContact1(e.target.value)} placeholder="e.g. Ahmed Al Khalifa" style={{ ...inputStyle, marginTop: 4 }} /></label>
+                        <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Contact 1 name
+                            <input value={contact1} onChange={(e) => setContact1(e.target.value)} placeholder="" style={{ ...inputStyle, marginTop: 4 }} /></label>
                         <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Job title
                             <input value={title1} onChange={(e) => setTitle1(e.target.value)} placeholder="e.g. Protocol Manager" style={{ ...inputStyle, marginTop: 4 }} /></label>
                         <label style={{ fontSize: 12, textTransform: 'uppercase', color: '#75787B' }}>Phone number
@@ -179,6 +180,13 @@ function Selector({ token, items }) {
                                                     </>
                                                 )}
                                                 <span style={{ marginLeft: 'auto', fontSize: 14, fontWeight: 500 }}>BD {formatFils(it.unitPriceFils * selected[it.id])}</span>
+                                            </div>
+                                        ) : null}
+                                        {on && it.itemNo === 6 ? (
+                                            <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                <span style={{ fontSize: 12, color: '#75787B' }}>Number of heads</span>
+                                                <input type="number" min={1} value={heads} onChange={(e) => setHeads(e.target.value)} placeholder="e.g. 10" style={{ width: 90, borderRadius: 4, border: '1px solid #cbd5e1', padding: '4px 8px', fontSize: 14 }} />
+                                                <span style={{ fontSize: 11, color: '#94a3b8' }}>seating only — does not change the price</span>
                                             </div>
                                         ) : null}
                                     </div>

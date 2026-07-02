@@ -27,6 +27,7 @@ export async function POST(req, { params }) {
     const title2 = String(body?.title2 || '').slice(0, 120);
     const phone2 = String(body?.phone2 || '').slice(0, 60);
     const email2 = String(body?.email2 || '').slice(0, 120);
+    const heads = parseInt(body?.heads, 10) > 0 ? parseInt(body.heads, 10) : null;
     // The recipient must accept the Exclusions / Terms / Payment terms before a
     // quotation can be generated — enforced here, not just in the UI.
     if (body?.agreedTerms !== true) return new NextResponse('You must accept the Exclusions, Terms & Conditions and Payment Terms before generating a quotation.', { status: 400 });
@@ -78,9 +79,11 @@ export async function POST(req, { params }) {
         ].filter(Boolean),
         lines: resolved.map((r) => {
             const d = itemDetail(r.item.itemNo);
+            let mainDesc = (d && d.mainDesc) || r.item.description;
+            if (r.item.itemNo === 6 && heads) mainDesc = `${mainDesc || ''}${mainDesc ? ' ' : ''}— Seating for ${heads} heads`;
             return {
                 scope: (d && d.scope) || r.item.name,
-                mainDesc: (d && d.mainDesc) || r.item.description,
+                mainDesc,
                 qty: r.qty, unit: r.item.unit, unitPriceFils: r.item.unitPriceFils,
                 lineTotalFils: r.lineTotalFils, subs: (d && d.subs) || [],
             };
