@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { formatFils, VAT_RATE } from '@/lib/ministry/money';
 import { APPROVAL_NOTICE, EXCLUSIONS, TERMS, PAYMENT_TERMS } from '@/lib/ministry/company';
 
@@ -53,6 +54,7 @@ const CHAIR_ITEM_NO = 4;
 const CHAIR_LINKED_NOS = [8, 11, 12, 13, 14, 19, 20, 25, 26, 39];
 
 function Selector({ token, items }) {
+    const router = useRouter();
     const [selected, setSelected] = useState({});
     const [eventName, setEventName] = useState('');
     const [venue, setVenue] = useState('');
@@ -129,6 +131,9 @@ function Selector({ token, items }) {
             // Show a persistent success panel with a reliable click-to-open link.
             // (Opening a new tab automatically after an await is blocked by popup blockers.)
             setResult({ ref: data.ref, pdfUrl: data.pdfUrl });
+            // Refresh the server-fetched quotations list so the new quote shows
+            // under "My Quotations" without a full page reload.
+            router.refresh();
         } catch (e) { setError(e.message || 'Something went wrong'); } finally { setBusy(false); }
     }
 
