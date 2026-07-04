@@ -32,7 +32,7 @@ export async function GET(req, { params }) {
                 .jpeg({ quality: q, mozjpeg: true })
                 .toBuffer();
             ct = 'image/jpeg';
-        } catch { /* fall back to original bytes */ }
+        } catch (e) { console.error('[photo-resize] sharp failed:', e?.message || e); /* fall back to original bytes */ }
     }
     return new NextResponse(body, {
         headers: {
