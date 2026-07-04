@@ -478,10 +478,12 @@ function Quotations({ quotations }) {
 }
 
 function Gallery({ photos, token, ministryName }) {
-    const [open, setOpen] = useState(null); // index of the photo shown in the lightbox
+    const [open, setOpen] = useState(null); // index in the lightbox
+    const [zoom, setZoom] = useState(false);
+    const touch = useMemo(() => ({ x: 0 }), []);
 
-    const close = () => setOpen(null);
-    const go = (delta) => setOpen((i) => (i === null ? i : (i + delta + photos.length) % photos.length));
+    const close = () => { setOpen(null); setZoom(false); };
+    const go = (delta) => { setZoom(false); setOpen((i) => (i === null ? i : (i + delta + photos.length) % photos.length)); };
 
     useEffect(() => {
         if (open === null) return;
@@ -491,60 +493,84 @@ function Gallery({ photos, token, ministryName }) {
             else if (e.key === 'ArrowLeft') go(-1);
         }
         window.addEventListener('keydown', onKey);
-        const prevOverflow = document.body.style.overflow;
+        const prev = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
-        return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = prevOverflow; };
+        return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = prev; };
     }, [open, photos.length]);
 
     if (photos.length === 0) return <Empty text="No photos have been shared with you yet." />;
 
     const current = open === null ? null : photos[open];
+    const thumb = (p, w, q = 62) => `${p.url}?w=${w}&q=${q}`;
+    const downloadBtn = { display: 'inline-flex', alignItems: 'center', gap: 8, borderRadius: 8, background: '#fff', color: '#00857A', padding: '11px 20px', fontSize: 14, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.18)' };
 
     return (
         <div>
-            <div style={{ ...card, display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 22px', marginBottom: 18, borderTop: '3px solid #00C7B1' }}>
-                <div>
-                    <div style={{ fontSize: 17, fontWeight: 700, color: '#4D4D4F', letterSpacing: 0.2 }}>{ministryName}</div>
-                    <div style={{ fontSize: 13, color: '#75787B', marginTop: 2 }}>Event photo gallery · {photos.length} photo{photos.length === 1 ? '' : 's'}</div>
+            {/* Branded cover header — first photo as a darkened background */}
+            <div style={{ position: 'relative', borderRadius: 14, overflow: 'hidden', marginBottom: 18, minHeight: 160 }}>
+                <img src={thumb(photos[0], 1400, 55)} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.45)' }} />
+                <div style={{ position: 'relative', display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 14, padding: '30px 26px', color: '#fff' }}>
+                    <div>
+                        <div style={{ fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', opacity: 0.85 }}>Event Photo Gallery</div>
+                        <div style={{ fontSize: 24, fontWeight: 700, marginTop: 6, textShadow: '0 1px 8px rgba(0,0,0,0.5)' }}>{ministryName}</div>
+                        <div style={{ fontSize: 13, opacity: 0.9, marginTop: 3 }}>{photos.length} photo{photos.length === 1 ? '' : 's'} · shared by PICO</div>
+                    </div>
+                    <a href={`/q/${token}/gallery/zip`} style={downloadBtn}>⬇ Download all ({photos.length})</a>
                 </div>
-                <a href={`/q/${token}/gallery/zip`}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 8, borderRadius: 8, background: '#00857A', color: '#fff', padding: '11px 20px', fontSize: 14, fontWeight: 600, textDecoration: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.12)' }}>
-                    ⬇ Download all ({photos.length})
-                </a>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 14 }}>
+            {/* Masonry grid — keeps each photo's real aspect ratio */}
+            <div style={{ columnWidth: 230, columnGap: 12 }}>
                 {photos.map((p, i) => (
                     <button key={p.id} type="button" onClick={() => setOpen(i)} title="Click to view"
-                        style={{ position: 'relative', padding: 0, border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden', background: '#fff', cursor: 'zoom-in', boxShadow: '0 1px 2px rgba(0,0,0,0.06)' }}>
-                        <img src={p.url} alt={p.caption || 'Event photo'} loading="lazy"
-                            style={{ display: 'block', height: 190, width: '100%', objectFit: 'cover' }} />
-                        <span style={{ position: 'absolute', top: 8, left: 8, borderRadius: 6, background: 'rgba(0,0,0,0.55)', color: '#fff', padding: '1px 7px', fontSize: 11, fontWeight: 600 }}>{i + 1}</span>
+                        style={{ display: 'block', width: '100%', marginBottom: 12, breakInside: 'avoid', WebkitColumnBreakInside: 'avoid', padding: 0, border: 'none', borderRadius: 10, overflow: 'hidden', cursor: 'zoom-in', background: '#eef2f6', position: 'relative', lineHeight: 0, boxShadow: '0 1px 2px rgba(0,0,0,0.06)' }}>
+                        <img src={thumb(p, 500)} alt={p.caption || 'Event photo'} loading="lazy" style={{ display: 'block', width: '100%', height: 'auto' }} />
                     </button>
                 ))}
             </div>
 
             {current ? (
                 <div onClick={close}
-                    style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(15,23,42,0.92)', padding: 16 }}>
-                    <div style={{ position: 'absolute', top: 14, left: 20, color: '#e2e8f0', fontSize: 13, fontWeight: 500 }}>{ministryName}</div>
-                    <div style={{ position: 'absolute', top: 14, right: 64, color: '#cbd5e1', fontSize: 13 }}>{open + 1} / {photos.length}</div>
-                    <button type="button" onClick={close} aria-label="Close"
-                        style={{ position: 'absolute', top: 10, right: 14, width: 40, height: 40, borderRadius: 20, border: 'none', background: 'rgba(255,255,255,0.14)', color: '#fff', fontSize: 22, lineHeight: 1, cursor: 'pointer' }}>✕</button>
+                    onTouchStart={(e) => { touch.x = e.changedTouches[0].clientX; }}
+                    onTouchEnd={(e) => { const dx = e.changedTouches[0].clientX - touch.x; if (Math.abs(dx) > 50) { e.stopPropagation(); go(dx < 0 ? 1 : -1); } }}
+                    style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', flexDirection: 'column', background: 'rgba(11,17,29,0.95)' }}>
+                    {/* Top bar */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', color: '#e2e8f0' }} onClick={(e) => e.stopPropagation()}>
+                        <div style={{ fontSize: 13, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ministryName}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <span style={{ fontSize: 13, color: '#cbd5e1' }}>{open + 1} / {photos.length}</span>
+                            <a href={`${current.url}?w=2400&q=90`} download onClick={(e) => e.stopPropagation()} title="Download this photo"
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 8, background: 'rgba(255,255,255,0.14)', color: '#fff', padding: '7px 12px', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>⬇ Download</a>
+                            <button type="button" onClick={close} aria-label="Close" style={{ width: 38, height: 38, borderRadius: 19, border: 'none', background: 'rgba(255,255,255,0.14)', color: '#fff', fontSize: 20, cursor: 'pointer' }}>✕</button>
+                        </div>
+                    </div>
 
-                    {photos.length > 1 ? (
-                        <button type="button" onClick={(e) => { e.stopPropagation(); go(-1); }} aria-label="Previous"
-                            style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 48, height: 48, borderRadius: 24, border: 'none', background: 'rgba(255,255,255,0.14)', color: '#fff', fontSize: 26, cursor: 'pointer' }}>‹</button>
-                    ) : null}
-                    {photos.length > 1 ? (
-                        <button type="button" onClick={(e) => { e.stopPropagation(); go(1); }} aria-label="Next"
-                            style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', width: 48, height: 48, borderRadius: 24, border: 'none', background: 'rgba(255,255,255,0.14)', color: '#fff', fontSize: 26, cursor: 'pointer' }}>›</button>
-                    ) : null}
+                    {/* Stage */}
+                    <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'auto', padding: '0 8px' }}>
+                        {photos.length > 1 ? (
+                            <button type="button" onClick={(e) => { e.stopPropagation(); go(-1); }} aria-label="Previous"
+                                style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', width: 48, height: 48, borderRadius: 24, border: 'none', background: 'rgba(255,255,255,0.14)', color: '#fff', fontSize: 26, cursor: 'pointer', zIndex: 2 }}>‹</button>
+                        ) : null}
+                        <img src={`${current.url}?w=1800&q=82`} alt={current.caption || 'Event photo'}
+                            onClick={(e) => { e.stopPropagation(); setZoom((z) => !z); }}
+                            style={{ maxHeight: zoom ? 'none' : '100%', maxWidth: zoom ? 'none' : '100%', width: zoom ? 'auto' : undefined, objectFit: 'contain', borderRadius: 4, cursor: zoom ? 'zoom-out' : 'zoom-in', transition: 'max-height 0.15s' }} />
+                        {photos.length > 1 ? (
+                            <button type="button" onClick={(e) => { e.stopPropagation(); go(1); }} aria-label="Next"
+                                style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', width: 48, height: 48, borderRadius: 24, border: 'none', background: 'rgba(255,255,255,0.14)', color: '#fff', fontSize: 26, cursor: 'pointer', zIndex: 2 }}>›</button>
+                        ) : null}
+                    </div>
 
-                    <img src={current.url} alt={current.caption || 'Event photo'} onClick={(e) => e.stopPropagation()}
-                        style={{ maxHeight: '86vh', maxWidth: '92vw', objectFit: 'contain', borderRadius: 6, boxShadow: '0 10px 40px rgba(0,0,0,0.5)' }} />
-                    {current.caption ? <div style={{ marginTop: 12, color: '#e2e8f0', fontSize: 13, textAlign: 'center', maxWidth: '80vw' }}>{current.caption}</div> : null}
-                    <div style={{ marginTop: 6, color: '#94a3b8', fontSize: 11 }}>Click anywhere or press Esc to close</div>
+                    {current.caption ? <div onClick={(e) => e.stopPropagation()} style={{ textAlign: 'center', color: '#e2e8f0', fontSize: 13, padding: '2px 16px 8px' }}>{current.caption}</div> : null}
+
+                    {/* Filmstrip */}
+                    {photos.length > 1 ? (
+                        <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', gap: 6, overflowX: 'auto', padding: '8px 12px 12px', background: 'rgba(0,0,0,0.25)' }}>
+                            {photos.map((p, i) => (
+                                <img key={p.id} src={thumb(p, 120, 50)} alt="" onClick={() => { setZoom(false); setOpen(i); }}
+                                    style={{ height: 56, width: 74, objectFit: 'cover', borderRadius: 4, cursor: 'pointer', flexShrink: 0, opacity: i === open ? 1 : 0.55, outline: i === open ? '2px solid #00C7B1' : 'none', outlineOffset: -2 }} />
+                            ))}
+                        </div>
+                    ) : null}
                 </div>
             ) : null}
         </div>
