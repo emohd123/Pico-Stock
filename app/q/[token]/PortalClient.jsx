@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatFils, VAT_RATE } from '@/lib/ministry/money';
 import { APPROVAL_NOTICE, EXCLUSIONS, TERMS, PAYMENT_TERMS } from '@/lib/ministry/company';
+import PdfModal from '@/components/ministry/PdfModal';
 
 export default function PortalClient({ token, ministryName, ministryNameAr, items, quotations, photos }) {
     const [tab, setTab] = useState('select');
@@ -449,6 +450,7 @@ function TermsModal({ mode, onAgree, onClose }) {
 }
 
 function Quotations({ quotations }) {
+    const [modal, setModal] = useState(null); // { url, title }
     if (quotations.length === 0) return <Empty text="No quotations yet. Build one from the “Build Quotation” tab." />;
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -465,7 +467,7 @@ function Quotations({ quotations }) {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 14 }}>
                             <span style={{ color: '#75787B' }}>{new Date(q.createdAt).toLocaleDateString('en-GB')}</span>
                             <span style={{ fontWeight: 500 }}>BD {formatFils(q.totalFils)}</span>
-                            {q.pdfBlobUrl ? <a href={q.pdfBlobUrl} target="_blank" rel="noreferrer" style={{ fontWeight: 500, color: '#00857A', textDecoration: 'underline' }}>Open</a> : null}
+                            {q.pdfBlobUrl ? <button type="button" onClick={() => setModal({ url: q.pdfBlobUrl, title: `Quotation ${q.ref}` })} style={{ border: 'none', background: 'none', padding: 0, fontWeight: 600, color: '#00857A', textDecoration: 'underline', cursor: 'pointer', fontSize: 14 }}>View</button> : null}
                             {q.pdfBlobUrl ? <a href={`${q.pdfBlobUrl}?download=1`} style={{ fontWeight: 500, color: '#00857A', textDecoration: 'underline' }}>Save PDF</a> : null}
                         </div>
                     </div>
@@ -473,6 +475,7 @@ function Quotations({ quotations }) {
                     {q.notes ? <div style={{ marginTop: 8, borderRadius: 4, background: '#fffbeb', padding: '4px 8px', fontSize: 12, color: '#92400e' }}>Update: {q.notes}</div> : null}
                 </div>
             ))}
+            {modal ? <PdfModal url={modal.url} title={modal.title} onClose={() => setModal(null)} /> : null}
         </div>
     );
 }

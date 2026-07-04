@@ -4,9 +4,8 @@ import { isAdmin } from '@/lib/ministry/auth';
 import { getAllMinistries, getRecentQuotations } from '@/lib/ministry/queries';
 import { createMinistryAction, deleteMinistryAction } from '@/lib/ministry/actions';
 import { fmtBHD } from '@/lib/ministry/money';
-import CopyLink from '@/components/ministry/CopyLink';
-import DeleteMinistryButton from '@/components/ministry/DeleteMinistryButton';
 import BookingsCalendar from '@/components/ministry/BookingsCalendar';
+import MinistriesPanel from '@/components/ministry/MinistriesPanel';
 
 function timeAgo(d) {
     const s = Math.max(0, (Date.now() - new Date(d).getTime()) / 1000);
@@ -61,6 +60,13 @@ export default async function QuotationsAdminPage({ searchParams }) {
     const proto = h.get('x-forwarded-proto') || 'https';
     const host = h.get('host') || 'localhost:3000';
     const origin = `${proto}://${host}`;
+    const ministriesForPanel = ministryRows.map((m) => {
+        const q = latestByMinistry.get(m.id);
+        return {
+            id: m.id, name: m.name, nameAr: m.nameAr, token: m.token, internalNote: m.internalNote,
+            quoteViewUrl: q && q.pdfBlobUrl ? `/q/${m.token}/quote/${q.id}/pdf` : null,
+        };
+    });
 
     return (
         <div style={{ minHeight: '100vh', background: '#f8fafc', color: '#4D4D4F' }}>
@@ -93,29 +99,7 @@ export default async function QuotationsAdminPage({ searchParams }) {
                         <p style={{ marginTop: 8, fontSize: 12, color: '#75787B' }}>Contact details are optional and can be added or edited later. P.O. Box and photos are added after creating.</p>
                     </section>
 
-                    <section style={card}>
-                        <h2 style={{ borderBottom: '1px solid #f1f5f9', padding: '12px 20px', fontSize: 14, fontWeight: 600, color: '#00857A', margin: 0 }}>Ministries ({ministryRows.length})</h2>
-                        {ministryRows.length === 0 ? (
-                            <p style={{ padding: '24px 20px', fontSize: 14, color: '#75787B' }}>No ministries yet. Add one above.</p>
-                        ) : (
-                            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-                                {ministryRows.map((m) => (
-                                    <li key={m.id} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '12px 20px', borderTop: '1px solid #f1f5f9' }}>
-                                        <div>
-                                            <Link href={`/quotations/ministry/${m.id}`} style={{ fontWeight: 500, color: '#00857A', textDecoration: 'none' }}>{m.name}</Link>
-                                            {m.nameAr ? <span dir="rtl" style={{ marginLeft: 8, fontSize: 14, color: '#75787B' }}>{m.nameAr}</span> : null}
-                                            {m.internalNote ? <div style={{ fontSize: 12, color: '#d97706' }}>● {m.internalNote}</div> : null}
-                                        </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                            <CopyLink url={`${origin}/q/${m.token}`} />
-                                            <Link href={`/quotations/ministry/${m.id}`} style={{ borderRadius: 6, background: '#00857A', color: '#fff', padding: '4px 12px', fontSize: 12, fontWeight: 500, textDecoration: 'none' }}>Manage</Link>
-                                            <DeleteMinistryButton ministryId={m.id} ministryName={m.name} action={deleteMinistryAction} />
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
-                    </section>
+                    <MinistriesPanel ministries={ministriesForPanel} origin={origin} deleteAction={deleteMinistryAction} />
                 </div>
 
                 <aside style={{ position: 'sticky', top: 24, display: 'flex', flexDirection: 'column', gap: 24, minWidth: 0 }}>
