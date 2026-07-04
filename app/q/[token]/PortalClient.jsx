@@ -39,7 +39,7 @@ export default function PortalClient({ token, ministryName, ministryNameAr, item
             <main style={{ maxWidth: 1000, margin: '0 auto', padding: '24px 20px' }}>
                 {tab === 'select' && <Selector token={token} items={items} />}
                 {tab === 'quotes' && <Quotations quotations={quotations} />}
-                {tab === 'gallery' && <Gallery photos={photos} />}
+                {tab === 'gallery' && <Gallery photos={photos} token={token} ministryName={ministryName} />}
             </main>
         </div>
     );
@@ -477,16 +477,30 @@ function Quotations({ quotations }) {
     );
 }
 
-function Gallery({ photos }) {
+function Gallery({ photos, token, ministryName }) {
     if (photos.length === 0) return <Empty text="No photos have been shared with you yet." />;
     return (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
-            {photos.map((p) => (
-                <figure key={p.id} style={{ ...card, overflow: 'hidden', margin: 0 }}>
-                    <img src={p.url} alt={p.caption || 'Reference photo'} style={{ height: 176, width: '100%', objectFit: 'cover' }} />
-                    {p.caption ? <figcaption style={{ padding: '8px 12px', fontSize: 12, color: '#75787B' }}>{p.caption}</figcaption> : null}
-                </figure>
-            ))}
+        <div>
+            <div style={{ ...card, display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '14px 20px', marginBottom: 16 }}>
+                <div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: '#4D4D4F' }}>Event photos</div>
+                    <div style={{ fontSize: 13, color: '#75787B' }}>{ministryName} — {photos.length} photo{photos.length === 1 ? '' : 's'}</div>
+                </div>
+                <a href={`/q/${token}/gallery/zip`}
+                    style={{ borderRadius: 8, background: '#00857A', color: '#fff', padding: '10px 18px', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
+                    ⬇ Download all
+                </a>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+                {photos.map((p) => (
+                    <figure key={p.id} style={{ ...card, overflow: 'hidden', margin: 0 }}>
+                        <a href={p.url} target="_blank" rel="noreferrer" title="Open full size">
+                            <img src={p.url} alt={p.caption || 'Event photo'} style={{ display: 'block', height: 176, width: '100%', objectFit: 'cover', cursor: 'zoom-in' }} />
+                        </a>
+                        {p.caption ? <figcaption style={{ padding: '8px 12px', fontSize: 12, color: '#75787B' }}>{p.caption}</figcaption> : null}
+                    </figure>
+                ))}
+            </div>
         </div>
     );
 }
