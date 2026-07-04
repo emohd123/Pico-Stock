@@ -135,10 +135,10 @@ export default async function ManageMinistryPage({ params, searchParams }) {
                     <h2 style={title}>Gallery photos ({photos.length})</h2>
                     <PhotoUploader ministryId={ministry.id} />
                     {photos.length > 0 ? (
-                        <div style={{ marginTop: 20, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+                        <div style={{ marginTop: 20, maxHeight: 420, overflowY: 'auto', paddingRight: 4, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10 }}>
                             {photos.map((p) => (
                                 <figure key={p.id} style={{ overflow: 'hidden', borderRadius: 8, border: '1px solid #e2e8f0', margin: 0 }}>
-                                    <img src={`/q/${ministry.token}/photo/${p.id}`} alt={p.caption || ''} style={{ height: 144, width: '100%', objectFit: 'cover' }} />
+                                    <img src={`/q/${ministry.token}/photo/${p.id}`} alt={p.caption || ''} style={{ height: 90, width: '100%', objectFit: 'cover' }} />
                                     <figcaption style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '6px 8px' }}>
                                         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 12, color: '#75787B' }}>{p.caption || '—'}</span>
                                         <form action={deletePhotoAction}>
