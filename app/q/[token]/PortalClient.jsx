@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import { formatFils, VAT_RATE } from '@/lib/ministry/money';
 import { APPROVAL_NOTICE, EXCLUSIONS, TERMS, PAYMENT_TERMS } from '@/lib/ministry/company';
 import PdfModal from '@/components/ministry/PdfModal';
+import PhotoAlbums from '@/components/ministry/PhotoAlbums';
 
-export default function PortalClient({ token, ministryName, ministryNameAr, items, quotations, photos }) {
+export default function PortalClient({ token, ministryId, ministryName, ministryNameAr, items, quotations, albums, galleryCount }) {
     const [tab, setTab] = useState('select');
     return (
         <div style={{ minHeight: '100vh', background: '#f8fafc', color: '#4D4D4F' }}>
@@ -22,7 +23,7 @@ export default function PortalClient({ token, ministryName, ministryNameAr, item
                     <p style={{ fontSize: 14, color: '#75787B', margin: '2px 0 0' }}>Ministerial Meeting — Services &amp; Quotation Portal</p>
                 </div>
                 <nav style={{ maxWidth: 1000, margin: '0 auto', display: 'flex', gap: 4, padding: '0 20px' }}>
-                    {[['select', 'Build Quotation'], ['quotes', `My Quotations (${quotations.length})`], ['gallery', `Gallery (${photos.length})`]].map(([key, label]) => (
+                    {[['select', 'Build Quotation'], ['quotes', `My Quotations (${quotations.length})`], ['gallery', `Gallery (${galleryCount})`]].map(([key, label]) => (
                         <button key={key} onClick={() => setTab(key)}
                             style={{ borderBottom: tab === key ? '2px solid #00C7B1' : '2px solid transparent', padding: '8px 16px', fontSize: 14, fontWeight: 500, color: tab === key ? '#00857A' : '#75787B', background: 'none', cursor: 'pointer' }}>
                             {label}
@@ -40,7 +41,11 @@ export default function PortalClient({ token, ministryName, ministryNameAr, item
             <main style={{ maxWidth: 1000, margin: '0 auto', padding: '24px 20px' }}>
                 {tab === 'select' && <Selector token={token} items={items} />}
                 {tab === 'quotes' && <Quotations quotations={quotations} />}
-                {tab === 'gallery' && <Gallery photos={photos} token={token} ministryName={ministryName} />}
+                {tab === 'gallery' && (
+                    galleryCount === 0
+                        ? <Empty text="No photos have been shared yet." />
+                        : <PhotoAlbums albums={albums} initialOpenId={ministryId} />
+                )}
             </main>
         </div>
     );

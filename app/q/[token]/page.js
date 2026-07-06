@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getMinistryByToken, getActiveCatalog, getMinistryQuotations, getMinistryPhotos } from '@/lib/ministry/queries';
+import { getMinistryByToken, getActiveCatalog, getMinistryQuotations, getMinistryPhotos, getAllMinistries } from '@/lib/ministry/queries';
 import { itemImage } from '@/lib/ministry/itemImages';
 import PortalClient from './PortalClient';
 
@@ -10,11 +10,24 @@ export default async function MinistryPortalPage({ params }) {
     const ministry = await getMinistryByToken(token);
     if (!ministry) notFound();
 
-    const [catalog, quotationRows, photoRows] = await Promise.all([
+    const [catalog, quotationRows, allMinistries] = await Promise.all([
         getActiveCatalog(),
         getMinistryQuotations(ministry.id),
-        getMinistryPhotos(ministry.id),
+        getAllMinistries(),
     ]);
+
+    // Shared event gallery: every ministry portal shows all ministries' albums,
+    // with this ministry's own album first and open by default.
+    const albums = await Promise.all(allMinistries.map(async (m) => ({
+        id: m.id, name: m.name, nameAr: m.nameAr || '',
+        photos: (await getMinistryPhotos(m.id)).map((p) => ({ id: p.id, caption: p.caption || '' })),
+    })));
+    albums.sort((a, b) => {
+        if (a.id === ministry.id) return -1;
+        if (b.id === ministry.id) return 1;
+        return (b.photos.length > 0) - (a.photos.length > 0);
+    });
+    const galleryCount = albums.reduce((n, a) => n + a.photos.length, 0);
 
     const items = catalog.map((c) => ({
         id: c.id, itemNo: c.itemNo, name: c.name, description: c.description || '', category: c.category,
@@ -29,16 +42,16 @@ export default async function MinistryPortalPage({ params }) {
         pdfBlobUrl: q.pdfBlobUrl ? `/q/${token}/quote/${q.id}/pdf` : '',
     }));
 
-    const photos = photoRows.map((p) => ({ id: p.id, url: `/q/${token}/photo/${p.id}`, caption: p.caption || '' }));
-
     return (
         <PortalClient
             token={token}
+            ministryId={ministry.id}
             ministryName={ministry.name}
             ministryNameAr={ministry.nameAr || ''}
             items={items}
             quotations={quotations}
-            photos={photos}
+            albums={albums}
+            galleryCount={galleryCount}
         />
     );
 }
