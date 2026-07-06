@@ -9,15 +9,15 @@ export const dynamic = 'force-dynamic';
 export default async function AlbumsPage() {
     if (!isAdmin()) notFound();
     const ministries = await getAllMinistries();
-    const albums = await Promise.all(ministries.map(async (m) => {
+    const allAlbums = await Promise.all(ministries.map(async (m) => {
         const photos = await getMinistryPhotos(m.id);
         return {
             id: m.id, name: m.name, nameAr: m.nameAr || '',
             photos: photos.map((p) => ({ id: p.id, caption: p.caption || '' })),
         };
     }));
-    // Albums with photos first, then the empty ones.
-    albums.sort((a, b) => (b.photos.length > 0) - (a.photos.length > 0));
+    // Only ministries that have photos.
+    const albums = allAlbums.filter((a) => a.photos.length > 0);
     const totalPhotos = albums.reduce((n, a) => n + a.photos.length, 0);
 
     return (

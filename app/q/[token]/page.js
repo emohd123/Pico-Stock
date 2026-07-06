@@ -18,15 +18,13 @@ export default async function MinistryPortalPage({ params }) {
 
     // Shared event gallery: every ministry portal shows all ministries' albums,
     // with this ministry's own album first and open by default.
-    const albums = await Promise.all(allMinistries.map(async (m) => ({
+    const allAlbums = await Promise.all(allMinistries.map(async (m) => ({
         id: m.id, name: m.name, nameAr: m.nameAr || '',
         photos: (await getMinistryPhotos(m.id)).map((p) => ({ id: p.id, caption: p.caption || '' })),
     })));
-    albums.sort((a, b) => {
-        if (a.id === ministry.id) return -1;
-        if (b.id === ministry.id) return 1;
-        return (b.photos.length > 0) - (a.photos.length > 0);
-    });
+    // Only show ministries that actually have photos; this ministry's album first.
+    const albums = allAlbums.filter((a) => a.photos.length > 0);
+    albums.sort((a, b) => (a.id === ministry.id ? -1 : b.id === ministry.id ? 1 : 0));
     const galleryCount = albums.reduce((n, a) => n + a.photos.length, 0);
 
     const items = catalog.map((c) => ({

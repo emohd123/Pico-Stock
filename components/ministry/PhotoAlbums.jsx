@@ -1,10 +1,11 @@
 'use client';
 import { useEffect, useState } from 'react';
 
-// Accordion of ministry photo albums (shared event gallery). Click an album to
-// reveal its photos, click again to hide. Multiple can be open. Photos open in a
-// lightbox. albums = [{ id, name, nameAr, photos: [{ id, caption }] }].
-// URLs use the shared, id-keyed routes so no private link codes are exposed.
+// Accordion of ministry photo albums (shared event gallery). Each album header is
+// a branded cover band (its first photo, darkened). Click to reveal/hide photos;
+// multiple can be open; photos open in a lightbox.
+// albums = [{ id, name, nameAr, photos: [{ id, caption }] }] — pass only albums
+// that have photos. URLs use the shared, id-keyed routes (no link codes exposed).
 export default function PhotoAlbums({ albums, initialOpenId = null }) {
     const [open, setOpen] = useState(() => new Set(initialOpenId != null ? [initialOpenId] : []));
     const [box, setBox] = useState(null); // { photos, i, name }
@@ -23,34 +24,37 @@ export default function PhotoAlbums({ albums, initialOpenId = null }) {
     const photoUrl = (id, w, q = 62) => `/gallery/photo/${id}?w=${w}&q=${q}`;
     const cur = box ? box.photos[box.i] : null;
 
+    if (!albums.length) return <div style={{ background: '#fff', borderRadius: 12, padding: 40, textAlign: 'center', fontSize: 14, color: '#75787B', boxShadow: '0 1px 2px rgba(0,0,0,0.06)' }}>No photos have been shared yet.</div>;
+
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {albums.map((a) => {
                 const isOpen = open.has(a.id);
                 return (
-                    <section key={a.id} style={{ background: '#fff', borderRadius: 12, boxShadow: '0 1px 2px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
-                        <button type="button" onClick={() => a.photos.length && toggle(a.id)}
-                            style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%', textAlign: 'left', border: 'none', background: 'none', padding: 12, cursor: a.photos.length ? 'pointer' : 'default' }}>
-                            <span style={{ width: 84, height: 60, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: '#eef2f6' }}>
-                                {a.photos.length ? <img src={photoUrl(a.photos[0].id, 200, 55)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
-                            </span>
-                            <span style={{ flex: 1, minWidth: 0 }}>
-                                <span style={{ display: 'block', fontSize: 15, fontWeight: 600, color: '#4D4D4F' }}>{a.name}
-                                    {a.nameAr ? <span dir="rtl" style={{ marginLeft: 8, fontSize: 13, fontWeight: 400, color: '#75787B' }}>{a.nameAr}</span> : null}
-                                </span>
-                                <span style={{ display: 'block', fontSize: 13, color: '#75787B', marginTop: 2 }}>{a.photos.length ? `${a.photos.length} photo${a.photos.length === 1 ? '' : 's'}` : 'No photos yet'}</span>
-                            </span>
-                            {a.photos.length ? (
-                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                                    <a href={`/gallery/zip/${a.id}`} onClick={(e) => e.stopPropagation()} style={{ borderRadius: 6, border: '1px solid #cbd5e1', padding: '6px 12px', fontSize: 12, fontWeight: 600, color: '#00857A', textDecoration: 'none' }}>⬇ Download all</a>
-                                    <span style={{ fontSize: 18, color: '#94a3b8', transform: isOpen ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }}>▸</span>
-                                </span>
-                            ) : null}
+                    <section key={a.id} style={{ borderRadius: 14, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                        {/* Branded cover header */}
+                        <button type="button" onClick={() => toggle(a.id)}
+                            style={{ position: 'relative', display: 'block', width: '100%', border: 'none', padding: 0, textAlign: 'left', cursor: 'pointer', minHeight: 118 }}>
+                            <img src={photoUrl(a.photos[0].id, 1400, 55)} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.42)' }} />
+                            <div style={{ position: 'relative', display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, padding: '24px 24px', color: '#fff' }}>
+                                <div style={{ minWidth: 0 }}>
+                                    <div style={{ fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', opacity: 0.85 }}>Event Photo Gallery</div>
+                                    <div style={{ fontSize: 22, fontWeight: 700, marginTop: 6, textShadow: '0 1px 8px rgba(0,0,0,0.55)' }}>
+                                        {a.name}{a.nameAr ? <span dir="rtl" style={{ marginLeft: 8, fontSize: 15, fontWeight: 500, opacity: 0.9 }}>{a.nameAr}</span> : null}
+                                    </div>
+                                    <div style={{ fontSize: 13, opacity: 0.9, marginTop: 3 }}>{a.photos.length} photo{a.photos.length === 1 ? '' : 's'} · shared by PICO</div>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                    <a href={`/gallery/zip/${a.id}`} onClick={(e) => e.stopPropagation()} download
+                                        style={{ display: 'inline-flex', alignItems: 'center', gap: 8, borderRadius: 8, background: '#fff', color: '#00857A', padding: '10px 18px', fontSize: 14, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>⬇ Download all ({a.photos.length})</a>
+                                    <span style={{ fontSize: 20, color: '#fff', opacity: 0.85, transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>⌄</span>
+                                </div>
+                            </div>
                         </button>
 
                         {isOpen ? (
-                            <div style={{ padding: '0 12px 14px', borderTop: '1px solid #f1f5f9' }}>
-                                <div style={{ marginTop: 12, columnWidth: 180, columnGap: 10 }}>
+                            <div style={{ background: '#fff', padding: '14px 14px 16px' }}>
+                                <div style={{ columnWidth: 180, columnGap: 10 }}>
                                     {a.photos.map((p, i) => (
                                         <button key={p.id} type="button" onClick={() => setBox({ photos: a.photos, i, name: a.name })}
                                             style={{ display: 'block', width: '100%', marginBottom: 10, breakInside: 'avoid', padding: 0, border: 'none', borderRadius: 8, overflow: 'hidden', cursor: 'zoom-in', background: '#eef2f6', lineHeight: 0 }}>
