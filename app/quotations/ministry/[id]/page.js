@@ -5,6 +5,7 @@ import { isAdmin } from '@/lib/ministry/auth';
 import { getMinistryById, getMinistryPhotos, getMinistryQuotations, getMinistryNotes } from '@/lib/ministry/queries';
 import { addMinistryNoteAction, deleteMinistryNoteAction, deletePhotoAction, deleteQuotationAction, regenerateTokenAction, updateLinkCodeAction, updateMinistryAction, updateMinistryNoteAction, updateQuoteNotesAction } from '@/lib/ministry/actions';
 import DeleteQuoteButton from '@/components/ministry/DeleteQuoteButton';
+import ReplaceQuotePdf from '@/components/ministry/ReplaceQuotePdf';
 import CopyLink from '@/components/ministry/CopyLink';
 import PhotoUploader from '@/components/ministry/PhotoUploader';
 import { fmtBHD } from '@/lib/ministry/money';
@@ -176,6 +177,7 @@ export default async function ManageMinistryPage({ params, searchParams }) {
                                                 <span style={{ color: '#75787B' }}>{new Date(q.createdAt).toLocaleDateString('en-GB')}</span>
                                                 <span style={{ fontWeight: 500 }}>{fmtBHD(q.totalFils)}</span>
                                                 <a href={`/q/${ministry.token}/quote/${q.id}/pdf`} target="_blank" rel="noreferrer" style={{ color: '#00857A', textDecoration: 'underline' }}>Open PDF</a>
+                                                <ReplaceQuotePdf ministryId={ministry.id} quoteId={q.id} />
                                                 <DeleteQuoteButton ministryId={ministry.id} quoteId={q.id} quoteRef={q.ref} action={deleteQuotationAction} />
                                             </div>
                                         </div>
