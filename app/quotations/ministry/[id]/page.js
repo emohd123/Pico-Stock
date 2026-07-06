@@ -3,7 +3,8 @@ import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 import { isAdmin } from '@/lib/ministry/auth';
 import { getMinistryById, getMinistryPhotos, getMinistryQuotations, getMinistryNotes } from '@/lib/ministry/queries';
-import { addMinistryNoteAction, deleteMinistryNoteAction, deletePhotoAction, regenerateTokenAction, updateLinkCodeAction, updateMinistryAction, updateMinistryNoteAction, updateQuoteNotesAction } from '@/lib/ministry/actions';
+import { addMinistryNoteAction, deleteMinistryNoteAction, deletePhotoAction, deleteQuotationAction, regenerateTokenAction, updateLinkCodeAction, updateMinistryAction, updateMinistryNoteAction, updateQuoteNotesAction } from '@/lib/ministry/actions';
+import DeleteQuoteButton from '@/components/ministry/DeleteQuoteButton';
 import CopyLink from '@/components/ministry/CopyLink';
 import PhotoUploader from '@/components/ministry/PhotoUploader';
 import { fmtBHD } from '@/lib/ministry/money';
@@ -175,6 +176,7 @@ export default async function ManageMinistryPage({ params, searchParams }) {
                                                 <span style={{ color: '#75787B' }}>{new Date(q.createdAt).toLocaleDateString('en-GB')}</span>
                                                 <span style={{ fontWeight: 500 }}>{fmtBHD(q.totalFils)}</span>
                                                 <a href={`/q/${ministry.token}/quote/${q.id}/pdf`} target="_blank" rel="noreferrer" style={{ color: '#00857A', textDecoration: 'underline' }}>Open PDF</a>
+                                                <DeleteQuoteButton ministryId={ministry.id} quoteId={q.id} quoteRef={q.ref} action={deleteQuotationAction} />
                                             </div>
                                         </div>
                                         <div style={{ marginTop: 4, fontSize: 12, color: '#75787B' }}>{q.eventName || '—'}{q.venue ? ` · ${q.venue}` : ''}{q.eventDate ? ` · ${q.eventDate}` : ''}</div>
