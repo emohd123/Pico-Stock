@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 // multiple can be open; photos open in a lightbox.
 // albums = [{ id, name, nameAr, photos: [{ id, caption }] }] — pass only albums
 // that have photos. URLs use the shared, id-keyed routes (no link codes exposed).
-export default function PhotoAlbums({ albums, initialOpenId = null }) {
+export default function PhotoAlbums({ albums, initialOpenId = null, editable = false, setCoverAction = null }) {
     const [open, setOpen] = useState(() => new Set(initialOpenId != null ? [initialOpenId] : []));
     const [box, setBox] = useState(null); // { photos, i, name }
 
@@ -30,12 +30,13 @@ export default function PhotoAlbums({ albums, initialOpenId = null }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {albums.map((a) => {
                 const isOpen = open.has(a.id);
+                const coverId = a.coverId != null ? a.coverId : a.photos[0].id;
                 return (
                     <section key={a.id} style={{ borderRadius: 14, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                         {/* Branded cover header */}
                         <button type="button" onClick={() => toggle(a.id)}
                             style={{ position: 'relative', display: 'block', width: '100%', border: 'none', padding: 0, textAlign: 'left', cursor: 'pointer', minHeight: 118 }}>
-                            <img src={photoUrl(a.photos[0].id, 1400, 55)} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.42)' }} />
+                            <img src={photoUrl(coverId, 1400, 55)} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.42)' }} />
                             <div style={{ position: 'relative', display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, padding: '24px 24px', color: '#fff' }}>
                                 <div style={{ minWidth: 0 }}>
                                     <div style={{ fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', opacity: 0.85 }}>Event Photo Gallery</div>
@@ -55,12 +56,27 @@ export default function PhotoAlbums({ albums, initialOpenId = null }) {
                         {isOpen ? (
                             <div style={{ background: '#fff', padding: '14px 14px 16px' }}>
                                 <div style={{ columnWidth: 180, columnGap: 10 }}>
-                                    {a.photos.map((p, i) => (
-                                        <button key={p.id} type="button" onClick={() => setBox({ photos: a.photos, i, name: a.name })}
-                                            style={{ display: 'block', width: '100%', marginBottom: 10, breakInside: 'avoid', padding: 0, border: 'none', borderRadius: 8, overflow: 'hidden', cursor: 'zoom-in', background: '#eef2f6', lineHeight: 0 }}>
-                                            <img src={photoUrl(p.id, 400)} alt={p.caption || ''} loading="lazy" style={{ width: '100%', height: 'auto', display: 'block' }} />
-                                        </button>
-                                    ))}
+                                    {a.photos.map((p, i) => {
+                                        const isCover = String(p.id) === String(coverId);
+                                        return (
+                                            <div key={p.id} style={{ position: 'relative', marginBottom: 10, breakInside: 'avoid' }}>
+                                                <button type="button" onClick={() => setBox({ photos: a.photos, i, name: a.name })}
+                                                    style={{ display: 'block', width: '100%', padding: 0, border: isCover ? '2px solid #00857A' : 'none', borderRadius: 8, overflow: 'hidden', cursor: 'zoom-in', background: '#eef2f6', lineHeight: 0 }}>
+                                                    <img src={photoUrl(p.id, 400)} alt={p.caption || ''} loading="lazy" style={{ width: '100%', height: 'auto', display: 'block' }} />
+                                                </button>
+                                                {isCover ? (
+                                                    <span style={{ position: 'absolute', top: 6, left: 6, borderRadius: 6, background: '#00857A', color: '#fff', padding: '2px 8px', fontSize: 11, fontWeight: 700, boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>★ Cover</span>
+                                                ) : editable && setCoverAction ? (
+                                                    <form action={setCoverAction} style={{ position: 'absolute', top: 6, right: 6, margin: 0 }}>
+                                                        <input type="hidden" name="ministryId" value={a.id} />
+                                                        <input type="hidden" name="photoId" value={p.id} />
+                                                        <button type="submit" title="Use this photo as the album cover"
+                                                            style={{ borderRadius: 6, border: 'none', background: 'rgba(255,255,255,0.92)', color: '#00857A', padding: '3px 9px', fontSize: 11, fontWeight: 700, cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>Set as cover</button>
+                                                    </form>
+                                                ) : null}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         ) : null}

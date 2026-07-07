@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getMinistryByToken, getActiveCatalog, getMinistryQuotations, getMinistryPhotos, getAllMinistries, getRecentQuotations } from '@/lib/ministry/queries';
+import { getMinistryByToken, getActiveCatalog, getMinistryQuotations, getMinistryPhotos, getAllMinistries, getRecentQuotations, pickCoverPhotoId } from '@/lib/ministry/queries';
 import { itemImage } from '@/lib/ministry/itemImages';
 import PortalClient from './PortalClient';
 
@@ -51,10 +51,14 @@ export default async function MinistryPortalPage({ params }) {
 
     // Shared event gallery: every ministry portal shows all ministries' albums,
     // with this ministry's own album first and open by default.
-    const allAlbums = await Promise.all(allMinistries.map(async (m) => ({
-        id: m.id, name: m.name, nameAr: m.nameAr || '',
-        photos: (await getMinistryPhotos(m.id)).map((p) => ({ id: p.id, caption: p.caption || '' })),
-    })));
+    const allAlbums = await Promise.all(allMinistries.map(async (m) => {
+        const photos = await getMinistryPhotos(m.id);
+        return {
+            id: m.id, name: m.name, nameAr: m.nameAr || '',
+            coverId: pickCoverPhotoId(m.coverPhotoId, photos),
+            photos: photos.map((p) => ({ id: p.id, caption: p.caption || '' })),
+        };
+    }));
     // Only show ministries that actually have photos; this ministry's album first.
     const albums = allAlbums.filter((a) => a.photos.length > 0);
     albums.sort((a, b) => (a.id === ministry.id ? -1 : b.id === ministry.id ? 1 : 0));

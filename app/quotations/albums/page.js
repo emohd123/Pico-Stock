@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { isAdmin } from '@/lib/ministry/auth';
-import { getAllMinistries, getMinistryPhotos } from '@/lib/ministry/queries';
+import { getAllMinistries, getMinistryPhotos, pickCoverPhotoId } from '@/lib/ministry/queries';
+import { setCoverAction } from '@/lib/ministry/actions';
 import PhotoAlbums from '@/components/ministry/PhotoAlbums';
 
 export const dynamic = 'force-dynamic';
@@ -13,6 +14,7 @@ export default async function AlbumsPage() {
         const photos = await getMinistryPhotos(m.id);
         return {
             id: m.id, name: m.name, nameAr: m.nameAr || '',
+            coverId: pickCoverPhotoId(m.coverPhotoId, photos),
             photos: photos.map((p) => ({ id: p.id, caption: p.caption || '' })),
         };
     }));
@@ -30,11 +32,11 @@ export default async function AlbumsPage() {
                 <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 20px 12px' }}>
                     <Link href="/quotations" style={{ fontSize: 12, color: '#00857A' }}>← Admin dashboard</Link>
                     <h1 style={{ fontSize: 20, fontWeight: 600, margin: '4px 0 0' }}>Photo albums</h1>
-                    <p style={{ fontSize: 13, color: '#75787B', margin: '2px 0 0' }}>{albums.length} ministries · {totalPhotos} photos — click an album to view, click again to hide.</p>
+                    <p style={{ fontSize: 13, color: '#75787B', margin: '2px 0 0' }}>{albums.length} ministries · {totalPhotos} photos — click an album to view, click again to hide. Open an album and click <strong>Set as cover</strong> on any photo to pin it as the header.</p>
                 </div>
             </header>
             <main style={{ maxWidth: 1000, margin: '0 auto', padding: '28px 20px' }}>
-                <PhotoAlbums albums={albums} />
+                <PhotoAlbums albums={albums} editable setCoverAction={setCoverAction} />
             </main>
         </div>
     );
