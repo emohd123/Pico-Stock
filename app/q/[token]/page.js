@@ -43,8 +43,9 @@ export default async function MinistryPortalPage({ params }) {
     const bookedEntries = [];
     for (const q of latestByMinistry.values()) {
         const name = nameById.get(q.ministryId) || 'Ministry';
+        const label = `${name}${q.eventName ? ' — ' + q.eventName : ''}${q.venue ? ' · Meeting Location: ' + q.venue : ''}`;
         for (const isoDay of parseEventDates(q.eventDate)) {
-            bookedEntries.push({ iso: isoDay, label: `${name}${q.eventName ? ' — ' + q.eventName : ''}` });
+            bookedEntries.push({ iso: isoDay, label });
         }
     }
 

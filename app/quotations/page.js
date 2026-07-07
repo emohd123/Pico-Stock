@@ -52,8 +52,9 @@ export default async function QuotationsAdminPage({ searchParams }) {
     const calendarEntries = [];
     for (const q of latestByMinistry.values()) {
         const name = nameById.get(q.ministryId) || 'Ministry';
+        const label = `${name}${q.eventName ? ' — ' + q.eventName : ''}${q.venue ? ' · Meeting Location: ' + q.venue : ''}`;
         for (const isoDay of parseEventDates(q.eventDate)) {
-            calendarEntries.push({ iso: isoDay, label: `${name}${q.eventName ? ' — ' + q.eventName : ''}` });
+            calendarEntries.push({ iso: isoDay, label });
         }
     }
     const h = headers();
