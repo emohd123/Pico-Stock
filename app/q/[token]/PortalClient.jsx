@@ -14,8 +14,13 @@ export default function PortalClient({ token, ministryId, ministryName, ministry
     return (
         <div style={{ minHeight: '100vh', background: '#f8fafc', color: '#4D4D4F' }}>
             <header style={{ borderBottom: '4px solid #00C7B1', background: '#fff' }}>
-                <div style={{ maxWidth: 1000, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '12px 20px' }}>
+                <div style={{ maxWidth: 1000, margin: '0 auto', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '12px 20px' }}>
                     <img src="/brand/pico-logo.png" alt="PICO — Total Brand Activation" style={{ height: 40 }} />
+                    <div style={{ borderRadius: 8, border: '1px solid #e2e8f0', background: '#f8fafc', padding: '8px 14px', fontSize: 12, color: '#4D4D4F', lineHeight: 1.5 }}>
+                        <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5, color: '#00857A', fontWeight: 700 }}>For more info or any questions</div>
+                        <div style={{ fontWeight: 600 }}>Ebrahim Mohammed <span style={{ fontWeight: 400, color: '#75787B' }}>· Project Executive</span></div>
+                        <div><a href="tel:+97336357377" style={{ color: '#00857A', textDecoration: 'none' }}>+973 3635 7377</a> · <a href="mailto:Ebrahim@picobahrain.com" style={{ color: '#00857A', textDecoration: 'none' }}>Ebrahim@picobahrain.com</a></div>
+                    </div>
                 </div>
                 <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 20px 8px' }}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: 12 }}>
