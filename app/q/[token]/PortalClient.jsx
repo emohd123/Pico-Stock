@@ -63,6 +63,12 @@ const btn = { borderRadius: 8, background: '#00857A', color: '#fff', padding: '1
 const CHAIR_ITEM_NO = 4;
 const CHAIR_LINKED_NOS = [8, 11, 12, 13, 14, 19, 20, 25, 26, 39];
 
+// Main Backdrop (Banner), Main Backdrop (Backwall) and Platform (with Carpet)
+// form one staging set — selecting or clearing any one toggles all three.
+const STRUCTURE_LINKED_NOS = [1, 2, 3];
+// Every quotation must include Event Management Staff (item 38).
+const REQUIRED_ITEM_NO = 38;
+
 function Selector({ token, items, bookedEntries = [] }) {
     const router = useRouter();
     const [selected, setSelected] = useState({});
@@ -121,6 +127,18 @@ function Selector({ token, items, bookedEntries = [] }) {
             else setSelected((s) => { const n = { ...s }; delete n[it.id]; return n; });
             return;
         }
+        if (STRUCTURE_LINKED_NOS.includes(it.itemNo)) {
+            setSelected((s) => {
+                const n = { ...s };
+                for (const no of STRUCTURE_LINKED_NOS) {
+                    const g = byNo.get(no);
+                    if (!g) continue;
+                    if (on) n[g.id] = g.defaultQty; else delete n[g.id];
+                }
+                return n;
+            });
+            return;
+        }
         setSelected((s) => { const n = { ...s }; if (on) n[it.id] = it.defaultQty; else delete n[it.id]; return n; });
     }
     function setQty(it, qty) {
@@ -132,6 +150,11 @@ function Selector({ token, items, bookedEntries = [] }) {
         setError('');
         setResult(null);
         if (selectedCount === 0) { setError('Please select at least one item.'); return; }
+        const required = byNo.get(REQUIRED_ITEM_NO);
+        if (!required || !(selected[required.id] > 0)) {
+            setError(`Please add “${REQUIRED_ITEM_NO}. Event Management Staff” — it is required for every quotation.`);
+            return;
+        }
         if (!agreed) { setTermsOpen('accept'); return; }
         setBusy(true);
         try {
@@ -215,7 +238,9 @@ function Selector({ token, items, bookedEntries = [] }) {
                                     <div style={{ minWidth: 0, flex: 1 }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
                                             <span style={{ fontSize: 14, fontWeight: 500 }}>{it.itemNo}. {it.name}
-                                                {it.qtyFixed ? <span style={{ marginLeft: 8, borderRadius: 4, background: '#f1f5f9', padding: '1px 6px', fontSize: 10, fontWeight: 400, color: '#75787B' }}>fixed qty</span> : null}</span>
+                                                {it.qtyFixed ? <span style={{ marginLeft: 8, borderRadius: 4, background: '#f1f5f9', padding: '1px 6px', fontSize: 10, fontWeight: 400, color: '#75787B' }}>fixed qty</span> : null}
+                                                {it.itemNo === REQUIRED_ITEM_NO ? <span style={{ marginLeft: 8, borderRadius: 4, background: '#fef2f2', padding: '1px 6px', fontSize: 10, fontWeight: 600, color: '#dc2626' }}>required</span> : null}
+                                                {STRUCTURE_LINKED_NOS.includes(it.itemNo) ? <span style={{ marginLeft: 8, borderRadius: 4, background: '#eff6ff', padding: '1px 6px', fontSize: 10, fontWeight: 400, color: '#2563eb' }}>staging set</span> : null}</span>
                                             <span style={{ whiteSpace: 'nowrap', fontSize: 12, color: '#75787B' }}>BD {formatFils(it.unitPriceFils)}</span>
                                         </div>
                                         {it.description ? <p style={{ margin: '2px 0 0', fontSize: 12, color: '#75787B' }}>{it.description}</p> : null}
