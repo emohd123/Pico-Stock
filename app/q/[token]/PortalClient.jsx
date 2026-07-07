@@ -6,8 +6,9 @@ import { formatFils, VAT_RATE } from '@/lib/ministry/money';
 import { APPROVAL_NOTICE, EXCLUSIONS, TERMS, PAYMENT_TERMS } from '@/lib/ministry/company';
 import PdfModal from '@/components/ministry/PdfModal';
 import PhotoAlbums from '@/components/ministry/PhotoAlbums';
+import BookingsCalendar from '@/components/ministry/BookingsCalendar';
 
-export default function PortalClient({ token, ministryId, ministryName, ministryNameAr, items, quotations, albums, galleryCount }) {
+export default function PortalClient({ token, ministryId, ministryName, ministryNameAr, items, quotations, albums, galleryCount, bookedEntries = [] }) {
     const [tab, setTab] = useState('select');
     return (
         <div style={{ minHeight: '100vh', background: '#f8fafc', color: '#4D4D4F' }}>
@@ -39,7 +40,7 @@ export default function PortalClient({ token, ministryId, ministryName, ministry
             </div>
 
             <main style={{ maxWidth: 1000, margin: '0 auto', padding: '24px 20px' }}>
-                {tab === 'select' && <Selector token={token} items={items} />}
+                {tab === 'select' && <Selector token={token} items={items} bookedEntries={bookedEntries} />}
                 {tab === 'quotes' && <Quotations quotations={quotations} />}
                 {tab === 'gallery' && (
                     galleryCount === 0
@@ -61,7 +62,7 @@ const btn = { borderRadius: 8, background: '#00857A', color: '#fff', padding: '1
 const CHAIR_ITEM_NO = 4;
 const CHAIR_LINKED_NOS = [8, 11, 12, 13, 14, 19, 20, 25, 26, 39];
 
-function Selector({ token, items }) {
+function Selector({ token, items, bookedEntries = [] }) {
     const router = useRouter();
     const [selected, setSelected] = useState({});
     const [eventName, setEventName] = useState('');
@@ -280,6 +281,12 @@ function Selector({ token, items }) {
                     <label style={{ display: 'block', marginTop: 12, fontSize: 12, color: '#75787B' }}>Note to PICO team (optional)
                         <textarea value={adminNote} onChange={(e) => setAdminNote(e.target.value)} rows={3} placeholder="Anything you'd like PICO to know — sent to admin with this quotation." style={{ ...inputStyle, marginTop: 4, resize: 'vertical' }} /></label>
                     <p style={{ marginTop: 8, textAlign: 'center', fontSize: 11, color: '#94a3b8' }}>Fixed tender rates · Bahraini Dinars</p>
+                </div>
+
+                <div style={{ ...card, marginTop: 16 }}>
+                    <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid #f1f5f9', padding: '12px 16px', fontSize: 14, fontWeight: 600, color: '#00857A', margin: 0 }}>📅 Booked dates</h3>
+                    <p style={{ padding: '10px 16px 0', margin: 0, fontSize: 12, color: '#75787B' }}>Dates already reserved by ministries — please pick days that are still free.</p>
+                    <BookingsCalendar entries={bookedEntries} />
                 </div>
             </aside>
 
