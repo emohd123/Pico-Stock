@@ -7,6 +7,7 @@ import { APPROVAL_NOTICE, EXCLUSIONS, TERMS, PAYMENT_TERMS } from '@/lib/ministr
 import PdfModal from '@/components/ministry/PdfModal';
 import PhotoAlbums from '@/components/ministry/PhotoAlbums';
 import BookingsCalendar from '@/components/ministry/BookingsCalendar';
+import { HEAD_TABLE_CONFIGS } from '@/lib/ministry/itemImages';
 
 export default function PortalClient({ token, ministryId, ministryName, ministryNameAr, items, quotations, albums, galleryCount, bookedEntries = [] }) {
     const [tab, setTab] = useState('select');
@@ -245,6 +246,29 @@ function Selector({ token, items, bookedEntries = [] }) {
                                                 <span style={{ fontSize: 11, color: '#94a3b8' }}>seating only — does not change the price</span>
                                             </div>
                                         ) : null}
+                                        {on && it.itemNo === 6 && heads ? (() => {
+                                            const cfg = HEAD_TABLE_CONFIGS[heads];
+                                            const label = `Head Table — ${heads}-pax configuration`;
+                                            if (!cfg) return (
+                                                <p style={{ marginTop: 8, fontSize: 12, color: '#94a3b8' }}>Reference photo for {heads} pax is being prepared.</p>
+                                            );
+                                            return (
+                                                <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
+                                                    <button type="button" onClick={() => setLightbox({ url: cfg.img, name: label, video: cfg.video || null })} title="Click to see how the table looks"
+                                                        style={{ position: 'relative', height: 56, width: 84, flexShrink: 0, overflow: 'hidden', borderRadius: 6, border: '1px solid #e2e8f0', padding: 0, cursor: 'pointer' }}>
+                                                        <img src={cfg.img} alt={label} style={{ height: '100%', width: '100%', objectFit: 'cover' }} />
+                                                        {cfg.video ? <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.25)', color: '#fff', fontSize: 20 }}>▶</span> : null}
+                                                    </button>
+                                                    <div style={{ minWidth: 0 }}>
+                                                        <button type="button" onClick={() => setLightbox({ url: cfg.img, name: label, video: cfg.video || null })}
+                                                            style={{ background: 'none', border: 'none', padding: 0, textAlign: 'left', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#00857A' }}>
+                                                            View {heads}-pax table layout {cfg.video ? '· photo + video' : ''}
+                                                        </button>
+                                                        <p style={{ margin: '2px 0 0', fontSize: 11, color: '#94a3b8' }}>See how the Head Table looks set up for {heads} delegations.</p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })() : null}
                                     </div>
                                 </li>
                             );
@@ -299,9 +323,20 @@ function Selector({ token, items, bookedEntries = [] }) {
                     <div onClick={(e) => e.stopPropagation()} style={{ maxHeight: '90vh', maxWidth: 768, overflow: 'hidden', borderRadius: 12, background: '#fff' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, borderBottom: '1px solid #f1f5f9', padding: '8px 16px' }}>
                             <span style={{ fontSize: 14, fontWeight: 500, color: '#4D4D4F' }}>{lightbox.name}</span>
-                            <button onClick={() => setLightbox(null)} style={{ fontSize: 14, color: '#75787B', background: 'none', border: 'none', cursor: 'pointer' }}>✕ Close</button>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                {lightbox.video ? (
+                                    <button onClick={() => setLightbox({ ...lightbox, showVideo: !lightbox.showVideo })} style={{ fontSize: 13, fontWeight: 600, color: '#00857A', background: 'none', border: 'none', cursor: 'pointer' }}>
+                                        {lightbox.showVideo ? '🖼 View photo' : '▶ Watch video'}
+                                    </button>
+                                ) : null}
+                                <button onClick={() => setLightbox(null)} style={{ fontSize: 14, color: '#75787B', background: 'none', border: 'none', cursor: 'pointer' }}>✕ Close</button>
+                            </span>
                         </div>
-                        <img src={lightbox.url} alt={lightbox.name} style={{ maxHeight: '80vh', width: '100%', objectFit: 'contain' }} />
+                        {lightbox.video && lightbox.showVideo ? (
+                            <video src={lightbox.video} controls autoPlay playsInline style={{ maxHeight: '80vh', width: '100%', background: '#000', objectFit: 'contain' }} />
+                        ) : (
+                            <img src={lightbox.url} alt={lightbox.name} style={{ maxHeight: '80vh', width: '100%', objectFit: 'contain' }} />
+                        )}
                     </div>
                 </div>
             ) : null}
