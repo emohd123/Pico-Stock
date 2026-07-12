@@ -3,6 +3,7 @@ import { getPrivate } from '@/lib/ministry/storage';
 import { getMinistryByToken, getQuotationForMinistry } from '@/lib/ministry/queries';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function GET(req, { params }) {
     const { token, id } = params;
@@ -25,7 +26,7 @@ export async function GET(req, { params }) {
         headers: {
             'Content-Type': 'application/pdf',
             'Content-Disposition': `${disposition}; filename="${fileName}.pdf"`,
-            'Cache-Control': 'private, max-age=0, must-revalidate',
+            'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
         },
     });
 }

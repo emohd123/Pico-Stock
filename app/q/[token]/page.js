@@ -74,7 +74,7 @@ export default async function MinistryPortalPage({ params }) {
         id: q.id, ref: q.ref, eventName: q.eventName || '', revision: q.revision, notes: q.notes || '',
         status: q.status, isCurrent: idx === 0, totalFils: q.totalFils,
         createdAt: (q.createdAt instanceof Date ? q.createdAt : new Date(q.createdAt)).toISOString(),
-        pdfBlobUrl: q.pdfBlobUrl ? `/q/${token}/quote/${q.id}/pdf` : '',
+        pdfBlobUrl: q.pdfBlobUrl ? `/q/${token}/quote/${q.id}/pdf?v=${encodeURIComponent((q.pdfBlobUrl || '').split('/').pop() || q.id)}` : '',
     }));
 
     return (

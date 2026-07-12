@@ -176,7 +176,7 @@ export default async function ManageMinistryPage({ params, searchParams }) {
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 14 }}>
                                                 <span style={{ color: '#75787B' }}>{new Date(q.createdAt).toLocaleDateString('en-GB')}</span>
                                                 <span style={{ fontWeight: 500 }}>{fmtBHD(q.totalFils)}</span>
-                                                <a href={`/q/${ministry.token}/quote/${q.id}/pdf`} target="_blank" rel="noreferrer" style={{ color: '#00857A', textDecoration: 'underline' }}>Open PDF</a>
+                                                <a href={`/q/${ministry.token}/quote/${q.id}/pdf?v=${encodeURIComponent((q.pdfBlobUrl || '').split('/').pop() || q.id)}`} target="_blank" rel="noreferrer" style={{ color: '#00857A', textDecoration: 'underline' }}>Open PDF</a>
                                                 <ReplaceQuotePdf ministryId={ministry.id} quoteId={q.id} />
                                                 <DeleteQuoteButton ministryId={ministry.id} quoteId={q.id} quoteRef={q.ref} action={deleteQuotationAction} />
                                             </div>

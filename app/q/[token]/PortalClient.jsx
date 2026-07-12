@@ -545,7 +545,7 @@ function Quotations({ quotations }) {
                             <span style={{ color: '#75787B' }}>{new Date(q.createdAt).toLocaleDateString('en-GB')}</span>
                             <span style={{ fontWeight: 500 }}>BD {formatFils(q.totalFils)}</span>
                             {q.pdfBlobUrl ? <button type="button" onClick={() => setModal({ url: q.pdfBlobUrl, title: `Quotation ${q.ref}` })} style={{ border: 'none', background: 'none', padding: 0, fontWeight: 600, color: '#00857A', textDecoration: 'underline', cursor: 'pointer', fontSize: 14 }}>View</button> : null}
-                            {q.pdfBlobUrl ? <a href={`${q.pdfBlobUrl}?download=1`} style={{ fontWeight: 500, color: '#00857A', textDecoration: 'underline' }}>Save PDF</a> : null}
+                            {q.pdfBlobUrl ? <a href={`${q.pdfBlobUrl}${q.pdfBlobUrl.includes('?') ? '&' : '?'}download=1`} style={{ fontWeight: 500, color: '#00857A', textDecoration: 'underline' }}>Save PDF</a> : null}
                         </div>
                     </div>
                     <div style={{ marginTop: 4, fontSize: 12, color: '#75787B' }}>{q.eventName || '—'}</div>

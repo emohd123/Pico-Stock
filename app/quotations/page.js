@@ -65,7 +65,7 @@ export default async function QuotationsAdminPage({ searchParams }) {
         const q = latestByMinistry.get(m.id);
         return {
             id: m.id, name: m.name, nameAr: m.nameAr, token: m.token, internalNote: m.internalNote,
-            quoteViewUrl: q && q.pdfBlobUrl ? `/q/${m.token}/quote/${q.id}/pdf` : null,
+            quoteViewUrl: q && q.pdfBlobUrl ? `/q/${m.token}/quote/${q.id}/pdf?v=${encodeURIComponent((q.pdfBlobUrl || '').split('/').pop() || q.id)}` : null,
         };
     });
 
