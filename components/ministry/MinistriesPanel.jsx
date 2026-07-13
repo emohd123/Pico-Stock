@@ -1,8 +1,48 @@
 'use client';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import CopyLink from './CopyLink';
 import DeleteMinistryButton from './DeleteMinistryButton';
 import PdfModal from './PdfModal';
+
+// Admin-only: auto-generate a deck-style Technical Proposal PDF from the
+// ministry's latest quotation. Once generated it stays viewable until the
+// admin regenerates (which replaces the stored file).
+function PresentationControls({ ministry, onView }) {
+    const router = useRouter();
+    const [busy, setBusy] = useState(false);
+    const [err, setErr] = useState('');
+    const viewUrl = `/api/quotations/presentation?ministryId=${ministry.id}&v=${encodeURIComponent(ministry.presentationAt || '')}`;
+
+    async function generate() {
+        setErr('');
+        setBusy(true);
+        try {
+            const res = await fetch('/api/quotations/presentation', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ministryId: ministry.id }) });
+            if (!res.ok) throw new Error((await res.text()) || 'Generation failed');
+            router.refresh();
+            onView(viewUrl + '&fresh=1', `${ministry.name} — technical proposal`);
+        } catch (e) { setErr(e.message || 'Generation failed'); } finally { setBusy(false); }
+    }
+
+    return (
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            {ministry.hasPresentation ? (
+                <button type="button" onClick={() => onView(viewUrl, `${ministry.name} — technical proposal`)}
+                    style={{ borderRadius: 6, border: '1px solid #00857A', background: '#fff', color: '#00857A', padding: '3px 11px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                    🎞 View presentation
+                </button>
+            ) : null}
+            {ministry.quoteViewUrl ? (
+                <button type="button" onClick={generate} disabled={busy} title="Build a deck-style Technical Proposal PDF from the latest quotation"
+                    style={{ borderRadius: 6, border: 'none', background: busy ? '#cbd5e1' : '#4D4D4F', color: '#fff', padding: '4px 11px', fontSize: 12, fontWeight: 600, cursor: busy ? 'default' : 'pointer' }}>
+                    {busy ? 'Generating…' : (ministry.hasPresentation ? '↻ Regenerate' : '🎞 Presentation')}
+                </button>
+            ) : null}
+            {err ? <span style={{ fontSize: 11, color: '#dc2626' }}>{err}</span> : null}
+        </span>
+    );
+}
 
 // Admin ministries list with: quick "View quotation" popup per ministry, and
 // multi-select + "Compile selected" to merge their latest quotations into one PDF.
@@ -59,10 +99,11 @@ export default function MinistriesPanel({ ministries, origin, deleteAction }) {
                                 {m.nameAr ? <span dir="rtl" style={{ display: 'inline-block', marginLeft: 8, fontSize: 14, color: '#75787B' }}>{m.nameAr}</span> : null}
                                 {m.internalNote ? <div style={{ fontSize: 12, color: '#d97706' }}>● {m.internalNote}</div> : null}
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
                                 {m.quoteViewUrl
                                     ? <button type="button" onClick={() => setModal({ url: m.quoteViewUrl, title: `${m.name} — quotation` })} style={btnLink}>View quote</button>
                                     : <span style={{ fontSize: 12, color: '#94a3b8' }}>No quote</span>}
+                                <PresentationControls ministry={m} onView={(url, title) => setModal({ url, title })} />
                                 <CopyLink url={`${origin}/q/${m.token}`} />
                                 <a href={`/quotations/ministry/${m.id}`} style={btnLink}>Manage</a>
                                 <DeleteMinistryButton ministryId={m.id} ministryName={m.name} action={deleteAction} />

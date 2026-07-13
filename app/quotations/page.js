@@ -66,6 +66,7 @@ export default async function QuotationsAdminPage({ searchParams }) {
         return {
             id: m.id, name: m.name, nameAr: m.nameAr, token: m.token, internalNote: m.internalNote,
             quoteViewUrl: q && q.pdfBlobUrl ? `/q/${m.token}/quote/${q.id}/pdf?v=${encodeURIComponent((q.pdfBlobUrl || '').split('/').pop() || q.id)}` : null,
+            hasPresentation: Boolean(m.presentationUrl), presentationAt: m.presentationAt || '',
         };
     });
 
