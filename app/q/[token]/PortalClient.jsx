@@ -227,7 +227,7 @@ function Selector({ token, items, bookedEntries = [] }) {
                 </div>
 
                 <section style={card}>
-                    <h2 style={{ borderBottom: '1px solid #f1f5f9', padding: '12px 16px', fontSize: 14, fontWeight: 600, color: '#00857A', margin: 0 }}>Tender items (1–40)</h2>
+                    <h2 style={{ borderBottom: '1px solid #f1f5f9', padding: '12px 16px', fontSize: 14, fontWeight: 600, color: '#00857A', margin: 0 }}>Tender items</h2>
                     <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
                         {sortedItems.map((it) => {
                             const on = selected[it.id] > 0;
