@@ -37,14 +37,18 @@ export default async function MinistryPortalPage({ params }) {
 
     // Booked-dates calendar so ministries can see which dates are already taken
     // (their own + other ministries') before choosing their meeting days.
+    // Every quotation's dates (a ministry may hold several meetings on different
+    // dates); dedup exact repeats (revisions of the same meeting) by day + label.
     const nameById = new Map(allMinistries.map((m) => [m.id, m.name]));
-    const latestByMinistry = new Map();
-    for (const q of allQuotes) if (!latestByMinistry.has(q.ministryId)) latestByMinistry.set(q.ministryId, q);
     const bookedEntries = [];
-    for (const q of latestByMinistry.values()) {
+    const seenBooked = new Set();
+    for (const q of allQuotes) {
         const name = nameById.get(q.ministryId) || 'Ministry';
         const label = `${name}${q.eventName ? ' — ' + q.eventName : ''}${q.venue ? ' · Meeting Location: ' + q.venue : ''}`;
         for (const isoDay of parseEventDates(q.eventDate)) {
+            const key = isoDay + '|' + label;
+            if (seenBooked.has(key)) continue;
+            seenBooked.add(key);
             bookedEntries.push({ iso: isoDay, label });
         }
     }

@@ -46,14 +46,21 @@ export default async function QuotationsAdminPage({ searchParams }) {
     const [ministryRows, allQuotes] = await Promise.all([getAllMinistries(), getRecentQuotations(200)]);
     const nameById = new Map(ministryRows.map((m) => [m.id, m.name]));
     const recentQuotes = allQuotes.slice(0, 12);
-    // Calendar shows each ministry's latest selected dates (allQuotes is newest-first).
+    // latestByMinistry (newest first) drives the panel's "view quote" link.
     const latestByMinistry = new Map();
     for (const q of allQuotes) if (!latestByMinistry.has(q.ministryId)) latestByMinistry.set(q.ministryId, q);
+    // Calendar shows EVERY quotation's dates — a ministry can hold several
+    // meetings on different dates. Dedup exact repeats (e.g. revisions of the
+    // same meeting) by day + label so the same booking isn't listed twice.
     const calendarEntries = [];
-    for (const q of latestByMinistry.values()) {
+    const seenCal = new Set();
+    for (const q of allQuotes) {
         const name = nameById.get(q.ministryId) || 'Ministry';
         const label = `${name}${q.eventName ? ' — ' + q.eventName : ''}${q.venue ? ' · Meeting Location: ' + q.venue : ''}`;
         for (const isoDay of parseEventDates(q.eventDate)) {
+            const key = isoDay + '|' + label;
+            if (seenCal.has(key)) continue;
+            seenCal.add(key);
             calendarEntries.push({ iso: isoDay, label });
         }
     }
