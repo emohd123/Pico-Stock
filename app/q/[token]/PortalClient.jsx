@@ -6,10 +6,9 @@ import { formatFils, VAT_RATE } from '@/lib/ministry/money';
 import { APPROVAL_NOTICE, EXCLUSIONS, TERMS, PAYMENT_TERMS } from '@/lib/ministry/company';
 import PdfModal from '@/components/ministry/PdfModal';
 import PhotoAlbums from '@/components/ministry/PhotoAlbums';
-import BookingsCalendar from '@/components/ministry/BookingsCalendar';
 import { HEAD_TABLE_CONFIGS } from '@/lib/ministry/itemImages';
 
-export default function PortalClient({ token, ministryId, ministryName, ministryNameAr, items, quotations, albums, galleryCount, bookedEntries = [] }) {
+export default function PortalClient({ token, ministryId, ministryName, ministryNameAr, items, quotations, albums, galleryCount }) {
     const [tab, setTab] = useState('select');
     return (
         <div style={{ minHeight: '100vh', background: '#f8fafc', color: '#4D4D4F' }}>
@@ -46,7 +45,7 @@ export default function PortalClient({ token, ministryId, ministryName, ministry
             </div>
 
             <main style={{ maxWidth: 1000, margin: '0 auto', padding: '24px 20px' }}>
-                {tab === 'select' && <Selector token={token} items={items} bookedEntries={bookedEntries} />}
+                {tab === 'select' && <Selector token={token} items={items} />}
                 {tab === 'quotes' && <Quotations quotations={quotations} />}
                 {tab === 'gallery' && (
                     galleryCount === 0
@@ -74,7 +73,7 @@ const STRUCTURE_LINKED_NOS = [1, 2, 3];
 // Every quotation must include Event Management Staff (item 38).
 const REQUIRED_ITEM_NO = 38;
 
-function Selector({ token, items, bookedEntries = [] }) {
+function Selector({ token, items }) {
     const router = useRouter();
     const [selected, setSelected] = useState({});
     const [eventName, setEventName] = useState('');
@@ -337,11 +336,6 @@ function Selector({ token, items, bookedEntries = [] }) {
                     <p style={{ marginTop: 8, textAlign: 'center', fontSize: 11, color: '#94a3b8' }}>Fixed tender rates · Bahraini Dinars</p>
                 </div>
 
-                <div style={{ ...card, marginTop: 16 }}>
-                    <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid #f1f5f9', padding: '12px 16px', fontSize: 14, fontWeight: 600, color: '#00857A', margin: 0 }}>📅 Booked dates</h3>
-                    <p style={{ padding: '10px 16px 0', margin: 0, fontSize: 12, color: '#75787B' }}>Dates already reserved by ministries — please pick days that are still free.</p>
-                    <BookingsCalendar entries={bookedEntries} />
-                </div>
             </aside>
 
             {termsOpen ? (
