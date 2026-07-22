@@ -45,6 +45,8 @@ export default async function QuotationsAdminPage({ searchParams }) {
     }
     const [ministryRows, allQuotes] = await Promise.all([getAllMinistries(), getRecentQuotations(200)]);
     const nameById = new Map(ministryRows.map((m) => [m.id, m.name]));
+    // Ministries whose LPO (purchase order) is received — their dates show red.
+    const lpoByMinistry = new Map(ministryRows.map((m) => [m.id, m.lpoReceived]));
     const recentQuotes = allQuotes.slice(0, 12);
     // latestByMinistry (newest first) drives the panel's "view quote" link.
     const latestByMinistry = new Map();
@@ -61,7 +63,7 @@ export default async function QuotationsAdminPage({ searchParams }) {
             const key = isoDay + '|' + label;
             if (seenCal.has(key)) continue;
             seenCal.add(key);
-            calendarEntries.push({ iso: isoDay, label });
+            calendarEntries.push({ iso: isoDay, label, confirmed: Boolean(lpoByMinistry.get(q.ministryId)) });
         }
     }
     const h = headers();

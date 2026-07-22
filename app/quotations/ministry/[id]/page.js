@@ -9,6 +9,7 @@ import ReplaceQuotePdf from '@/components/ministry/ReplaceQuotePdf';
 import CopyLink from '@/components/ministry/CopyLink';
 import PhotoUploader from '@/components/ministry/PhotoUploader';
 import ManagePresentation from '@/components/ministry/ManagePresentation';
+import LpoToggle from '@/components/ministry/LpoToggle';
 import { COMPANY } from '@/lib/ministry/company';
 import { fmtBHD } from '@/lib/ministry/money';
 
@@ -113,6 +114,10 @@ export default async function ManageMinistryPage({ params, searchParams }) {
                         <span style={{ fontSize: 12, color: '#94a3b8' }}>Ref on next quotation: <code style={{ color: '#00857A' }}>{COMPANY.refPrefix}/MM/YYYY/{COMPANY.refDept}/{ministry.quoteRef || 'nnnnn'}</code></span>
                     </form>
                     <p style={{ marginTop: 8, fontSize: 11, color: '#94a3b8' }}>Set the permanent number for this ministry — the next generated quotation reuses it. Leave blank to auto-assign the next number in sequence.</p>
+                    <div style={{ marginTop: 16, borderTop: '1px solid #f1f5f9', paddingTop: 16 }}>
+                        <LpoToggle ministryId={ministry.id} initial={ministry.lpoReceived} />
+                        <p style={{ margin: '6px 0 0', fontSize: 11, color: '#94a3b8' }}>When the LPO (purchase order) is received, tick this — the ministry&apos;s dates turn red (confirmed) on the bookings calendar.</p>
+                    </div>
                     <div style={{ marginTop: 16, borderTop: '1px solid #f1f5f9', paddingTop: 16 }}>
                         <div style={{ fontSize: 12, color: '#75787B', marginBottom: 8 }}>Technical proposal presentation</div>
                         <ManagePresentation ministry={{ id: ministry.id, name: ministry.name, quoteViewUrl: currentId ? '1' : null, hasPresentation: Boolean(ministry.presentationUrl), presentationAt: ministry.presentationAt || '' }} />

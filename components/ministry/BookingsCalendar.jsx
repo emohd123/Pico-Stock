@@ -5,13 +5,19 @@ import { useMemo, useState } from 'react';
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
-// entries: [{ iso: 'YYYY-MM-DD', label: 'Ministry · ref · event' }]
+const GREEN = '#00857A';
+const RED = '#dc2626';
+
+// entries: [{ iso: 'YYYY-MM-DD', label: 'Ministry · ref · event', confirmed?: bool }]
+// A day is "confirmed" (red) if any booking on it has LPO received.
 export default function BookingsCalendar({ entries }) {
     const byDay = useMemo(() => {
         const m = new Map();
         for (const e of entries) {
-            if (!m.has(e.iso)) m.set(e.iso, []);
-            m.get(e.iso).push(e.label);
+            if (!m.has(e.iso)) m.set(e.iso, { labels: [], confirmed: false });
+            const day = m.get(e.iso);
+            day.labels.push(e.label);
+            if (e.confirmed) day.confirmed = true;
         }
         return m;
     }, [entries]);
@@ -59,35 +65,40 @@ export default function BookingsCalendar({ entries }) {
                 {cells.map((d, i) => {
                     if (d === null) return <span key={`e${i}`} />;
                     const key = iso(d);
-                    const booked = byDay.get(key);
+                    const day = byDay.get(key);
                     const isToday = key === todayIso;
+                    const bg = day ? (day.confirmed ? RED : GREEN) : '#f8fafc';
                     return (
-                        <div key={key} title={booked ? booked.join('\n') : ''}
+                        <div key={key} title={day ? day.labels.join('\n') : ''}
                             style={{ position: 'relative', height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6, fontSize: 12,
                                 border: isToday ? '1px solid #00C7B1' : '1px solid transparent',
-                                background: booked ? '#00857A' : '#f8fafc', color: booked ? '#fff' : '#334155', fontWeight: booked ? 700 : 400 }}>
+                                background: bg, color: day ? '#fff' : '#334155', fontWeight: day ? 700 : 400 }}>
                             {d}
-                            {booked && booked.length > 1 ? (
-                                <span style={{ position: 'absolute', top: 1, right: 2, fontSize: 8, background: '#fff', color: '#00857A', borderRadius: 8, padding: '0 3px', fontWeight: 700 }}>{booked.length}</span>
+                            {day && day.labels.length > 1 ? (
+                                <span style={{ position: 'absolute', top: 1, right: 2, fontSize: 8, background: '#fff', color: day.confirmed ? RED : GREEN, borderRadius: 8, padding: '0 3px', fontWeight: 700 }}>{day.labels.length}</span>
                             ) : null}
                         </div>
                     );
                 })}
             </div>
 
-            <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10, fontSize: 11, color: '#75787B' }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><span style={{ width: 12, height: 12, borderRadius: 3, background: '#00857A', display: 'inline-block' }} /> booked</span>
+            <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10, fontSize: 11, color: '#75787B' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><span style={{ width: 12, height: 12, borderRadius: 3, background: GREEN, display: 'inline-block' }} /> booked</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><span style={{ width: 12, height: 12, borderRadius: 3, background: RED, display: 'inline-block' }} /> confirmed (LPO)</span>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><span style={{ width: 12, height: 12, borderRadius: 3, border: '1px solid #00C7B1', display: 'inline-block' }} /> today</span>
             </div>
 
             {monthDays.length > 0 ? (
                 <ul style={{ listStyle: 'none', margin: '10px 0 0', padding: 0, borderTop: '1px solid #f1f5f9' }}>
-                    {monthDays.map((d) => (
-                        <li key={d} style={{ padding: '7px 0', borderBottom: '1px solid #f8fafc', fontSize: 12 }}>
-                            <span style={{ fontWeight: 700, color: '#00857A' }}>{d} {MONTHS[view.m].slice(0, 3)}</span>
-                            <span style={{ color: '#4D4D4F' }}> — {byDay.get(iso(d)).join('  •  ')}</span>
-                        </li>
-                    ))}
+                    {monthDays.map((d) => {
+                        const day = byDay.get(iso(d));
+                        return (
+                            <li key={d} style={{ padding: '7px 0', borderBottom: '1px solid #f8fafc', fontSize: 12 }}>
+                                <span style={{ fontWeight: 700, color: day.confirmed ? RED : GREEN }}>{d} {MONTHS[view.m].slice(0, 3)}{day.confirmed ? ' ✓' : ''}</span>
+                                <span style={{ color: '#4D4D4F' }}> — {day.labels.join('  •  ')}</span>
+                            </li>
+                        );
+                    })}
                 </ul>
             ) : (
                 <p style={{ marginTop: 10, fontSize: 12, color: '#94a3b8' }}>No dates selected in {MONTHS[view.m]}.</p>
