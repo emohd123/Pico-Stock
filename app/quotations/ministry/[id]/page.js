@@ -3,11 +3,13 @@ import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 import { isAdmin } from '@/lib/ministry/auth';
 import { getMinistryById, getMinistryPhotos, getMinistryQuotations, getMinistryNotes } from '@/lib/ministry/queries';
-import { addMinistryNoteAction, deleteMinistryNoteAction, deletePhotoAction, deleteQuotationAction, regenerateTokenAction, updateLinkCodeAction, updateMinistryAction, updateMinistryNoteAction, updateQuoteNotesAction } from '@/lib/ministry/actions';
+import { addMinistryNoteAction, deleteMinistryNoteAction, deletePhotoAction, deleteQuotationAction, regenerateTokenAction, setQuoteNumberAction, updateLinkCodeAction, updateMinistryAction, updateMinistryNoteAction, updateQuoteNotesAction } from '@/lib/ministry/actions';
 import DeleteQuoteButton from '@/components/ministry/DeleteQuoteButton';
 import ReplaceQuotePdf from '@/components/ministry/ReplaceQuotePdf';
 import CopyLink from '@/components/ministry/CopyLink';
 import PhotoUploader from '@/components/ministry/PhotoUploader';
+import ManagePresentation from '@/components/ministry/ManagePresentation';
+import { COMPANY } from '@/lib/ministry/company';
 import { fmtBHD } from '@/lib/ministry/money';
 
 export const dynamic = 'force-dynamic';
@@ -98,6 +100,23 @@ export default async function ManageMinistryPage({ params, searchParams }) {
                         <label style={{ fontSize: 12, color: '#75787B' }}>Contact phone<input name="contactPhone" type="tel" defaultValue={ministry.contactPhone || ''} style={inputStyle} placeholder="+973 ..." /></label>
                         <button style={{ ...btn, justifySelf: 'start', gridColumn: '1 / -1' }}>Save details</button>
                     </form>
+                </section>
+
+                <section style={{ ...card, padding: 20 }}>
+                    <h2 style={title}>Quotation number &amp; presentation</h2>
+                    <form action={setQuoteNumberAction} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 10 }}>
+                        <input type="hidden" name="ministryId" value={ministry.id} />
+                        <label style={{ fontSize: 12, color: '#75787B' }}>Quotation number
+                            <input name="quoteNumber" defaultValue={ministry.quoteRef || ''} inputMode="numeric" placeholder="e.g. 11968" style={{ ...inputStyle, width: 160, marginTop: 4 }} />
+                        </label>
+                        <button style={{ ...btn, padding: '8px 14px' }}>Save number</button>
+                        <span style={{ fontSize: 12, color: '#94a3b8' }}>Ref on next quotation: <code style={{ color: '#00857A' }}>{COMPANY.refPrefix}/MM/YYYY/{COMPANY.refDept}/{ministry.quoteRef || 'nnnnn'}</code></span>
+                    </form>
+                    <p style={{ marginTop: 8, fontSize: 11, color: '#94a3b8' }}>Set the permanent number for this ministry — the next generated quotation reuses it. Leave blank to auto-assign the next number in sequence.</p>
+                    <div style={{ marginTop: 16, borderTop: '1px solid #f1f5f9', paddingTop: 16 }}>
+                        <div style={{ fontSize: 12, color: '#75787B', marginBottom: 8 }}>Technical proposal presentation</div>
+                        <ManagePresentation ministry={{ id: ministry.id, name: ministry.name, quoteViewUrl: currentId ? '1' : null, hasPresentation: Boolean(ministry.presentationUrl), presentationAt: ministry.presentationAt || '' }} />
+                    </div>
                 </section>
 
                 <section style={{ ...card, padding: 20 }}>
