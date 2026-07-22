@@ -3,7 +3,6 @@ import { useState } from 'react';
 import CopyLink from './CopyLink';
 import DeleteMinistryButton from './DeleteMinistryButton';
 import PdfModal from './PdfModal';
-import PresentationControls from './PresentationControls';
 
 // Admin ministries list with: quick "View quotation" popup per ministry, and
 // multi-select + "Compile selected" to merge their latest quotations into one PDF.
@@ -64,7 +63,6 @@ export default function MinistriesPanel({ ministries, origin, deleteAction }) {
                                 {m.quoteViewUrl
                                     ? <button type="button" onClick={() => setModal({ url: m.quoteViewUrl, title: `${m.name} — quotation` })} style={btnLink}>View quote</button>
                                     : <span style={{ fontSize: 12, color: '#94a3b8' }}>No quote</span>}
-                                <PresentationControls ministry={m} onView={(url, title) => setModal({ url, title })} />
                                 <CopyLink url={`${origin}/q/${m.token}`} />
                                 <a href={`/quotations/ministry/${m.id}`} style={btnLink}>Manage</a>
                                 <DeleteMinistryButton ministryId={m.id} ministryName={m.name} action={deleteAction} />
