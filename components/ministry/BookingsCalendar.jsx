@@ -8,19 +8,20 @@ const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 const GREEN = '#00857A';
 const RED = '#dc2626';
 
-// entries: [{ iso: 'YYYY-MM-DD', label: 'Ministry · ref · event', confirmed?: bool }]
+// entries: [{ iso: 'YYYY-MM-DD', ministry, event, venue, confirmed? }]
 // A day is "confirmed" (red) if any booking on it has LPO received.
 export default function BookingsCalendar({ entries }) {
     const byDay = useMemo(() => {
         const m = new Map();
         for (const e of entries) {
-            if (!m.has(e.iso)) m.set(e.iso, { labels: [], confirmed: false });
+            if (!m.has(e.iso)) m.set(e.iso, { items: [], confirmed: false });
             const day = m.get(e.iso);
-            day.labels.push(e.label);
+            day.items.push(e);
             if (e.confirmed) day.confirmed = true;
         }
         return m;
     }, [entries]);
+    const tip = (day) => day.items.map((i) => [i.ministry, i.event, i.venue].filter(Boolean).join(' · ')).join('\n');
 
     // Open on the month of the earliest booked day (upcoming preferred), else today.
     const initial = useMemo(() => {
@@ -69,13 +70,13 @@ export default function BookingsCalendar({ entries }) {
                     const isToday = key === todayIso;
                     const bg = day ? (day.confirmed ? RED : GREEN) : '#f8fafc';
                     return (
-                        <div key={key} title={day ? day.labels.join('\n') : ''}
+                        <div key={key} title={day ? tip(day) : ''}
                             style={{ position: 'relative', height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6, fontSize: 12,
                                 border: isToday ? '1px solid #00C7B1' : '1px solid transparent',
                                 background: bg, color: day ? '#fff' : '#334155', fontWeight: day ? 700 : 400 }}>
                             {d}
-                            {day && day.labels.length > 1 ? (
-                                <span style={{ position: 'absolute', top: 1, right: 2, fontSize: 8, background: '#fff', color: day.confirmed ? RED : GREEN, borderRadius: 8, padding: '0 3px', fontWeight: 700 }}>{day.labels.length}</span>
+                            {day && day.items.length > 1 ? (
+                                <span style={{ position: 'absolute', top: 1, right: 2, fontSize: 8, background: '#fff', color: day.confirmed ? RED : GREEN, borderRadius: 8, padding: '0 3px', fontWeight: 700 }}>{day.items.length}</span>
                             ) : null}
                         </div>
                     );
@@ -89,13 +90,28 @@ export default function BookingsCalendar({ entries }) {
             </div>
 
             {monthDays.length > 0 ? (
-                <ul style={{ listStyle: 'none', margin: '10px 0 0', padding: 0, borderTop: '1px solid #f1f5f9' }}>
+                <ul style={{ listStyle: 'none', margin: '10px 0 0', padding: 0, borderTop: '1px solid #e8eef0' }}>
                     {monthDays.map((d) => {
                         const day = byDay.get(iso(d));
+                        const accent = day.confirmed ? RED : GREEN;
                         return (
-                            <li key={d} style={{ padding: '7px 0', borderBottom: '1px solid #f8fafc', fontSize: 12 }}>
-                                <span style={{ fontWeight: 700, color: day.confirmed ? RED : GREEN }}>{d} {MONTHS[view.m].slice(0, 3)}{day.confirmed ? ' ✓' : ''}</span>
-                                <span style={{ color: '#4D4D4F' }}> — {day.labels.join('  •  ')}</span>
+                            <li key={d} style={{ display: 'flex', gap: 10, padding: '9px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                {/* date chip */}
+                                <span style={{ flexShrink: 0, width: 42, textAlign: 'center', alignSelf: 'flex-start', borderRadius: 6, background: accent, color: '#fff', padding: '3px 0', lineHeight: 1.15 }}>
+                                    <span style={{ display: 'block', fontSize: 13, fontWeight: 700 }}>{d}</span>
+                                    <span style={{ display: 'block', fontSize: 8.5, letterSpacing: 0.4, opacity: 0.9 }}>{MONTHS[view.m].slice(0, 3).toUpperCase()}</span>
+                                </span>
+                                {/* bookings that day */}
+                                <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 7 }}>
+                                    {day.items.map((it, i) => (
+                                        <span key={i} style={{ display: 'block' }}>
+                                            <span style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: '#22282B', lineHeight: 1.3 }}>{it.ministry}</span>
+                                            {it.event ? <span style={{ display: 'block', fontSize: 10.5, color: '#6B7A80', lineHeight: 1.3 }}>{it.event}</span> : null}
+                                            {it.venue ? <span style={{ display: 'block', fontSize: 10.5, color: '#94a3b8', lineHeight: 1.3 }}>📍 {it.venue}</span> : null}
+                                            {it.confirmed ? <span style={{ display: 'inline-block', marginTop: 2, borderRadius: 4, background: '#fef2f2', color: RED, padding: '0 5px', fontSize: 9, fontWeight: 700, letterSpacing: 0.3 }}>LPO RECEIVED</span> : null}
+                                        </span>
+                                    ))}
+                                </span>
                             </li>
                         );
                     })}

@@ -57,13 +57,14 @@ export default async function QuotationsAdminPage({ searchParams }) {
     const calendarEntries = [];
     const seenCal = new Set();
     for (const q of allQuotes) {
-        const name = nameById.get(q.ministryId) || 'Ministry';
-        const label = `${name}${q.eventName ? ' — ' + q.eventName : ''}${q.venue ? ' · Meeting Location: ' + q.venue : ''}`;
+        const ministry = nameById.get(q.ministryId) || 'Ministry';
+        const event = q.eventName || '';
+        const venue = q.venue || '';
         for (const isoDay of parseEventDates(q.eventDate)) {
-            const key = isoDay + '|' + label;
+            const key = [isoDay, ministry, event, venue].join('|');
             if (seenCal.has(key)) continue;
             seenCal.add(key);
-            calendarEntries.push({ iso: isoDay, label, confirmed: Boolean(lpoByMinistry.get(q.ministryId)) });
+            calendarEntries.push({ iso: isoDay, ministry, event, venue, confirmed: Boolean(lpoByMinistry.get(q.ministryId)) });
         }
     }
     const h = headers();
