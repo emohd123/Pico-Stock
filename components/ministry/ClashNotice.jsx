@@ -27,9 +27,17 @@ export default function ClashNotice({ clashes, headTableDays = [] }) {
                             </div>
                         ))}
                         {c.tableCount > 1 ? (
-                            <div style={{ marginTop: 5, borderRadius: 5, background: '#fef2f2', border: '1px solid #fecaca', padding: '4px 7px', fontSize: 10.5, color: '#dc2626', fontWeight: 600, lineHeight: 1.35 }}>
-                                🔴 Head Table needed by {c.tableCount} meetings{c.tableVenues.length > 1 ? ` at ${c.tableVenues.length} venues` : ''} — only one table exists
-                            </div>
+                            c.tableVenues.length > 1 ? (
+                                // Different venues on the same day — the single table cannot move.
+                                <div style={{ marginTop: 5, borderRadius: 5, background: '#fef2f2', border: '1px solid #fecaca', padding: '4px 7px', fontSize: 10.5, color: '#dc2626', fontWeight: 600, lineHeight: 1.35 }}>
+                                    🔴 Head Table needed at {c.tableVenues.length} venues — only one table exists
+                                </div>
+                            ) : (
+                                // Same venue — back-to-back meetings, the table simply stays in place.
+                                <div style={{ marginTop: 5, borderRadius: 5, background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '4px 7px', fontSize: 10.5, color: '#15803d', fontWeight: 600, lineHeight: 1.35 }}>
+                                    ✓ Head Table stays at {c.tableVenues[0]} — back-to-back meetings
+                                </div>
+                            )
                         ) : null}
                     </li>
                 ))}
