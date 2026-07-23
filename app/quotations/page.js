@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { headers } from 'next/headers';
 import { isAdmin } from '@/lib/ministry/auth';
-import { getAllMinistries, getRecentQuotations } from '@/lib/ministry/queries';
+import { getAllMinistries, getRecentQuotations, getQuotationIdsWithItem } from '@/lib/ministry/queries';
 import { createMinistryAction, deleteMinistryAction } from '@/lib/ministry/actions';
 import { fmtBHD } from '@/lib/ministry/money';
 import BookingsCalendar from '@/components/ministry/BookingsCalendar';
 import MinistriesPanel from '@/components/ministry/MinistriesPanel';
+import ClashNotice from '@/components/ministry/ClashNotice';
 
 function timeAgo(d) {
     const s = Math.max(0, (Date.now() - new Date(d).getTime()) / 1000);
@@ -33,6 +34,10 @@ function parseEventDates(str) {
     return out;
 }
 
+// PICO owns exactly one custom Head Table, so two meetings needing it on the
+// same day is a hard clash (not just a scheduling note).
+const HEAD_TABLE_ITEM_NO = 6;
+
 export const dynamic = 'force-dynamic';
 
 const inputStyle = { borderRadius: 8, border: '1px solid #cbd5e1', padding: '8px 12px', fontSize: 14 };
@@ -43,7 +48,9 @@ export default async function QuotationsAdminPage({ searchParams }) {
     if (!isAdmin()) {
         return <LoginScreen error={!!(searchParams && searchParams.error)} />;
     }
-    const [ministryRows, allQuotes] = await Promise.all([getAllMinistries(), getRecentQuotations(200)]);
+    const [ministryRows, allQuotes, headTableQuoteIds] = await Promise.all([
+        getAllMinistries(), getRecentQuotations(200), getQuotationIdsWithItem(HEAD_TABLE_ITEM_NO),
+    ]);
     const nameById = new Map(ministryRows.map((m) => [m.id, m.name]));
     // Ministries whose LPO (purchase order) is received — their dates show red.
     const lpoByMinistry = new Map(ministryRows.map((m) => [m.id, m.lpoReceived]));
@@ -56,17 +63,41 @@ export default async function QuotationsAdminPage({ searchParams }) {
     // same meeting) by day + label so the same booking isn't listed twice.
     const calendarEntries = [];
     const seenCal = new Set();
+    const byDay = new Map();      // iso -> [{ ministry, venue, headTable }] for clash checks
     for (const q of allQuotes) {
         const ministry = nameById.get(q.ministryId) || 'Ministry';
         const event = q.eventName || '';
         const venue = q.venue || '';
+        const headTable = headTableQuoteIds.has(q.id);
         for (const isoDay of parseEventDates(q.eventDate)) {
             const key = [isoDay, ministry, event, venue].join('|');
             if (seenCal.has(key)) continue;
             seenCal.add(key);
             calendarEntries.push({ iso: isoDay, ministry, event, venue, confirmed: Boolean(lpoByMinistry.get(q.ministryId)) });
+            if (!byDay.has(isoDay)) byDay.set(isoDay, []);
+            byDay.get(isoDay).push({ ministry, venue: venue || '—', headTable });
         }
     }
+    // Days carrying more than one meeting. A day is a hard clash when two of
+    // them need the Head Table — there is only one, so it cannot be in two
+    // places at once.
+    const clashes = [];
+    for (const iso of [...byDay.keys()].sort()) {
+        const list = byDay.get(iso);
+        if (list.length < 2) continue;
+        const tableUsers = list.filter((b) => b.headTable);
+        clashes.push({
+            iso,
+            list,
+            tableCount: tableUsers.length,
+            tableVenues: [...new Set(tableUsers.map((b) => b.venue))],
+        });
+    }
+    const headTableDays = [...byDay.entries()]
+        .filter(([, list]) => list.some((b) => b.headTable))
+        .map(([iso]) => iso)
+        .sort();
+
     const h = headers();
     const proto = h.get('x-forwarded-proto') || 'https';
     const host = h.get('host') || 'localhost:3000';
@@ -118,6 +149,8 @@ export default async function QuotationsAdminPage({ searchParams }) {
                 </div>
 
                 <aside style={{ position: 'sticky', top: 24, display: 'flex', flexDirection: 'column', gap: 24, minWidth: 0 }}>
+                    <ClashNotice clashes={clashes} headTableDays={headTableDays} />
+
                     <section style={card}>
                         <h2 style={{ display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid #f1f5f9', padding: '12px 16px', fontSize: 14, fontWeight: 600, color: '#00857A', margin: 0 }}>
                             🔔 Recent activity
