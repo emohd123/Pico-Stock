@@ -7,6 +7,7 @@ import { fmtBHD } from '@/lib/ministry/money';
 import BookingsCalendar from '@/components/ministry/BookingsCalendar';
 import MinistriesPanel from '@/components/ministry/MinistriesPanel';
 import ClashNotice from '@/components/ministry/ClashNotice';
+import { parseEventDates } from '@/lib/ministry/production';
 
 function timeAgo(d) {
     const s = Math.max(0, (Date.now() - new Date(d).getTime()) / 1000);
@@ -14,24 +15,6 @@ function timeAgo(d) {
     if (s < 3600) return `${Math.floor(s / 60)} min ago`;
     if (s < 86400) return `${Math.floor(s / 3600)} h ago`;
     return `${Math.floor(s / 86400)} d ago`;
-}
-
-const MONTHS_FULL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-// Parse the portal's readable date string (e.g. "2, 3 July 2026 · 1 August 2026")
-// back into ISO days. Non-matching / free-text values are skipped.
-function parseEventDates(str) {
-    if (!str) return [];
-    const out = [];
-    for (const group of String(str).split('·')) {
-        const m = group.trim().match(/^([\d,\s]+)\s+([A-Za-z]+)\s+(\d{4})$/);
-        if (!m) continue;
-        const days = m[1].split(',').map((s) => parseInt(s.trim(), 10)).filter((n) => n >= 1 && n <= 31);
-        const monIdx = MONTHS_FULL.findIndex((mm) => mm.toLowerCase() === m[2].toLowerCase());
-        const year = parseInt(m[3], 10);
-        if (monIdx < 0 || !year) continue;
-        for (const d of days) out.push(`${year}-${String(monIdx + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
-    }
-    return out;
 }
 
 // PICO owns exactly one custom Head Table, so two meetings needing it on the
@@ -121,6 +104,7 @@ export default async function QuotationsAdminPage({ searchParams }) {
                 <div style={{ maxWidth: 1000, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px 12px' }}>
                     <h1 style={{ fontSize: 20, fontWeight: 600, margin: 0 }}>Ministry Meeting Portal — Admin</h1>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <Link href="/quotations/production" style={{ borderRadius: 6, border: '1px solid #cbd5e1', padding: '6px 12px', fontSize: 14, color: '#00857A', textDecoration: 'none', fontWeight: 600 }}>🏭 Production</Link>
                         <Link href="/quotations/albums" style={{ borderRadius: 6, border: '1px solid #cbd5e1', padding: '6px 12px', fontSize: 14, color: '#00857A', textDecoration: 'none', fontWeight: 600 }}>📷 Photo albums</Link>
                         <form action="/api/quotations/logout" method="post">
                             <button style={{ borderRadius: 6, border: '1px solid #cbd5e1', padding: '6px 12px', fontSize: 14, background: '#fff', cursor: 'pointer' }}>Log out</button>
