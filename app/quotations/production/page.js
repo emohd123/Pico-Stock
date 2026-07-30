@@ -7,6 +7,7 @@ import { itemImage } from '@/lib/ministry/itemImages';
 import { fmtIso } from '@/components/ministry/ClashNotice';
 import DeptSelect from '@/components/ministry/DeptSelect';
 import ProductionNote from '@/components/ministry/ProductionNote';
+import ItemThumb from '@/components/ministry/ItemThumb';
 
 export const dynamic = 'force-dynamic';
 
@@ -113,9 +114,7 @@ export default async function ProductionPage({ searchParams }) {
                             <tr key={l.itemNo} style={{ borderTop: '1px solid #f8fafc' }}>
                                 <td style={{ padding: '5px 8px 5px 16px', color: '#94a3b8' }}>{l.itemNo}</td>
                                 <td style={{ padding: '4px 8px', lineHeight: 0 }}>
-                                    {itemImage(l.itemNo)
-                                        ? <img src={itemImage(l.itemNo)} alt="" style={{ width: 36, height: 30, objectFit: 'cover', borderRadius: 4, border: '1px solid #e2e8f0' }} />
-                                        : <span style={{ display: 'inline-block', width: 36, height: 30 }} />}
+                                    <ItemThumb src={itemImage(l.itemNo)} name={`${l.itemNo}. ${l.nameSnapshot}`} />
                                 </td>
                                 <td style={{ padding: '5px 8px', color: '#22282B' }}>
                                     {l.nameSnapshot}
