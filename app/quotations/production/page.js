@@ -70,26 +70,29 @@ export default async function ProductionPage({ searchParams }) {
         if (deptFilter && lines.length === 0) return null;
         const notes = autoNotes.get(mt.quoteId) || [];
         return (
-            <section className="prod-card" style={{ ...card, overflow: 'hidden' }}>
-                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8, borderBottom: '1px solid #f1f5f9', padding: '12px 16px' }}>
-                    <div style={{ minWidth: 0 }}>
-                        <span style={{ fontSize: 15, fontWeight: 700, color: '#22282B' }}>{mt.ministry}</span>
-                        {mt.event ? <span style={{ marginLeft: 8, fontSize: 12.5, color: '#75787B' }}>{mt.event}</span> : null}
+            <details open className="prod-card prod-details" style={{ ...card, overflow: 'hidden' }}>
+                <summary style={{ listStyle: 'none', cursor: 'pointer' }} title="Click to open / close details">
+                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8, borderBottom: '1px solid #f1f5f9', padding: '12px 16px' }}>
+                        <div style={{ minWidth: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span className="chevron no-print" style={{ fontSize: 13, color: '#94a3b8', transition: 'transform 0.15s', display: 'inline-block' }}>▸</span>
+                            <span style={{ fontSize: 15, fontWeight: 700, color: '#22282B' }}>{mt.ministry}</span>
+                            {mt.event ? <span style={{ marginLeft: 4, fontSize: 12.5, color: '#75787B' }}>{mt.event}</span> : null}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ fontSize: 11, color: '#94a3b8' }}>{mt.ref}</span>
+                            <span style={{ borderRadius: 4, background: '#dc2626', color: '#fff', padding: '1px 8px', fontSize: 10.5, fontWeight: 700 }}>CONFIRMED · LPO</span>
+                        </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontSize: 11, color: '#94a3b8' }}>{mt.ref}</span>
-                        <span style={{ borderRadius: 4, background: '#dc2626', color: '#fff', padding: '1px 8px', fontSize: 10.5, fontWeight: 700 }}>CONFIRMED · LPO</span>
-                    </div>
-                </div>
 
-                {/* schedule strip */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 18, padding: '10px 16px', background: '#f8fafc', borderBottom: '1px solid #f1f5f9', fontSize: 12 }}>
-                    <span><strong style={{ color: '#00857A' }}>📍 Venue:</strong> {mt.venue || '—'}</span>
-                    {mt.setupDay ? <span><strong style={{ color: '#9a3412' }}>🔧 Setup:</strong> {fmtIso(mt.setupDay)}</span> : null}
-                    <span><strong style={{ color: '#22282B' }}>📅 Event:</strong> {mt.eventDays.length ? mt.eventDays.map(fmtIso).join(', ') : (mt.duration || '—')}</span>
-                    {mt.duration ? <span><strong>⏱</strong> {mt.duration}</span> : null}
-                    {mt.removalStart ? <span><strong style={{ color: '#9a3412' }}>🚚 Removal:</strong> {fmtIso(mt.removalStart)} (night) – {fmtIso(mt.removalEnd)}</span> : null}
-                </div>
+                    {/* schedule strip — always visible, even when collapsed */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 18, padding: '10px 16px', background: '#f8fafc', borderBottom: '1px solid #f1f5f9', fontSize: 12 }}>
+                        <span><strong style={{ color: '#00857A' }}>📍 Venue:</strong> {mt.venue || '—'}</span>
+                        {mt.setupDay ? <span><strong style={{ color: '#9a3412' }}>🔧 Setup:</strong> {fmtIso(mt.setupDay)}</span> : null}
+                        <span><strong style={{ color: '#22282B' }}>📅 Event:</strong> {mt.eventDays.length ? mt.eventDays.map(fmtIso).join(', ') : (mt.duration || '—')}</span>
+                        {mt.duration ? <span><strong>⏱</strong> {mt.duration}</span> : null}
+                        {mt.removalStart ? <span><strong style={{ color: '#9a3412' }}>🚚 Removal:</strong> {fmtIso(mt.removalStart)} (night) – {fmtIso(mt.removalEnd)}</span> : null}
+                    </div>
+                </summary>
 
                 {notes.length ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 16px 0' }}>
@@ -136,13 +139,13 @@ export default async function ProductionPage({ searchParams }) {
                 {mt.productionNote ? (
                     <p className="print-only" style={{ display: 'none', margin: 0, padding: '8px 16px 12px', fontSize: 11, color: '#4D4D4F' }}><strong>Note:</strong> {mt.productionNote}</p>
                 ) : null}
-            </section>
+            </details>
         );
     };
 
     return (
         <div style={{ minHeight: '100vh', background: '#f8fafc', color: '#4D4D4F' }}>
-            <style>{`@media print { .no-print { display: none !important } .print-only { display: table-cell !important } p.print-only { display: block !important } .prod-card { break-inside: avoid; box-shadow: none !important; border: 1px solid #ddd } }`}</style>
+            <style>{`.prod-details > summary::-webkit-details-marker { display: none } .prod-details > summary::marker { content: '' } .prod-details[open] .chevron { transform: rotate(90deg) } @media print { .no-print { display: none !important } .print-only { display: table-cell !important } p.print-only { display: block !important } .prod-card { break-inside: avoid; box-shadow: none !important; border: 1px solid #ddd } }`}</style>
             <header className="no-print" style={{ borderBottom: '4px solid #00C7B1', background: '#fff' }}>
                 <div style={{ maxWidth: 1000, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px' }}>
                     <img src="/brand/pico-logo.png" alt="PICO" style={{ height: 40 }} />
