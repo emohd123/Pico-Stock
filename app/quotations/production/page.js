@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { isAdmin } from '@/lib/ministry/auth';
 import { getAllMinistries, getRecentQuotations, getQuotationLinesBulk, getProductionAssignments } from '@/lib/ministry/queries';
 import { DEPARTMENTS, DEPT_LABEL, deptForItem, SINGLE_STOCK_ITEM_NOS, deriveSchedule, computeAutoNotes } from '@/lib/ministry/production';
+import { itemImage } from '@/lib/ministry/itemImages';
 import { fmtIso } from '@/components/ministry/ClashNotice';
 import DeptSelect from '@/components/ministry/DeptSelect';
 import ProductionNote from '@/components/ministry/ProductionNote';
@@ -101,6 +102,7 @@ export default async function ProductionPage({ searchParams }) {
                     <thead>
                         <tr style={{ textAlign: 'left', color: '#75787B', fontSize: 11 }}>
                             <th style={{ padding: '10px 8px 6px 16px', width: 34 }}>No</th>
+                            <th style={{ padding: '10px 8px 6px', width: 44 }} aria-label="Photo" />
                             <th style={{ padding: '10px 8px 6px' }}>Item</th>
                             <th style={{ padding: '10px 8px 6px', width: 52 }}>Qty</th>
                             <th style={{ padding: '10px 16px 6px 8px', width: 170 }}>Department</th>
@@ -110,6 +112,11 @@ export default async function ProductionPage({ searchParams }) {
                         {lines.map((l) => (
                             <tr key={l.itemNo} style={{ borderTop: '1px solid #f8fafc' }}>
                                 <td style={{ padding: '5px 8px 5px 16px', color: '#94a3b8' }}>{l.itemNo}</td>
+                                <td style={{ padding: '4px 8px', lineHeight: 0 }}>
+                                    {itemImage(l.itemNo)
+                                        ? <img src={itemImage(l.itemNo)} alt="" style={{ width: 36, height: 30, objectFit: 'cover', borderRadius: 4, border: '1px solid #e2e8f0' }} />
+                                        : <span style={{ display: 'inline-block', width: 36, height: 30 }} />}
+                                </td>
                                 <td style={{ padding: '5px 8px', color: '#22282B' }}>
                                     {l.nameSnapshot}
                                     {SINGLE_STOCK_ITEM_NOS.includes(l.itemNo) ? <span style={{ marginLeft: 6, borderRadius: 3, background: '#f1f5f9', padding: '0 4px', fontSize: 9, fontWeight: 700, color: '#475569' }}>ONE ONLY</span> : null}
