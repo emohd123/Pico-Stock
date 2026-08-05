@@ -1,13 +1,16 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { isAdmin } from '@/lib/ministry/auth';
-import { getAllMinistries, getRecentQuotations, getQuotationLinesBulk, getProductionAssignments } from '@/lib/ministry/queries';
-import { DEPARTMENTS, DEPT_LABEL, deptForItem, SINGLE_STOCK_ITEM_NOS, deriveSchedule, computeAutoNotes } from '@/lib/ministry/production';
+import { getAllMinistries, getRecentQuotations, getQuotationLinesBulk, getProductionAssignments, getProductionFiles } from '@/lib/ministry/queries';
+import { DEPARTMENTS, DEPT_LABEL, deptForItem, SINGLE_STOCK_ITEM_NOS, TITLE_ITEM_NOS, TITLE_ITEM_HINT, deriveSchedule, computeAutoNotes } from '@/lib/ministry/production';
 import { itemImage } from '@/lib/ministry/itemImages';
 import { fmtIso } from '@/components/ministry/ClashNotice';
 import DeptSelect from '@/components/ministry/DeptSelect';
 import ProductionNote from '@/components/ministry/ProductionNote';
 import ItemThumb from '@/components/ministry/ItemThumb';
+import ItemTitle from '@/components/ministry/ItemTitle';
+import ShareLink from '@/components/ministry/ShareLink';
+import ProductionFiles from '@/components/ministry/ProductionFiles';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,7 +43,8 @@ export default async function ProductionPage({ searchParams }) {
         const sched = deriveSchedule(q.eventDate);
         meetings.push({
             quoteId: q.id, ref: q.ref, ministry: m.name, event: q.eventName || '', venue: q.venue || '',
-            duration: q.duration || '', productionNote: q.productionNote || '', ...sched,
+            duration: q.duration || '', productionNote: q.productionNote || '',
+            shareToken: q.shareToken || null, ...sched,
         });
     }
     meetings.sort((a, b) => {
@@ -49,11 +53,15 @@ export default async function ProductionPage({ searchParams }) {
     });
 
     const ids = meetings.map((mt) => mt.quoteId);
-    const [linesByQuote, overrides] = await Promise.all([getQuotationLinesBulk(ids), getProductionAssignments(ids)]);
+    const [linesByQuote, overrides, filesByQuote] = await Promise.all([
+        getQuotationLinesBulk(ids), getProductionAssignments(ids), getProductionFiles(ids),
+    ]);
     for (const mt of meetings) {
-        mt.lines = (linesByQuote.get(mt.quoteId) || []).map((l) => ({
-            ...l, dept: overrides.get(`${mt.quoteId}:${l.itemNo}`) || deptForItem(l.itemNo),
-        }));
+        mt.files = filesByQuote.get(mt.quoteId) || [];
+        mt.lines = (linesByQuote.get(mt.quoteId) || []).map((l) => {
+            const ov = overrides.get(`${mt.quoteId}:${l.itemNo}`) || {};
+            return { ...l, dept: ov.dept || deptForItem(l.itemNo), title: ov.title || '' };
+        });
         mt.singleStockItems = new Set(mt.lines.map((l) => l.itemNo).filter((n) => SINGLE_STOCK_ITEM_NOS.includes(n)));
     }
     const autoNotes = computeAutoNotes(meetings);
@@ -122,8 +130,17 @@ export default async function ProductionPage({ searchParams }) {
                                 <td style={{ padding: '5px 8px', color: '#22282B' }}>
                                     {l.nameSnapshot}
                                     {SINGLE_STOCK_ITEM_NOS.includes(l.itemNo) ? <span style={{ marginLeft: 6, borderRadius: 3, background: '#f1f5f9', padding: '0 4px', fontSize: 9, fontWeight: 700, color: '#475569' }}>ONE ONLY</span> : null}
+                                    {/* Each meeting carries its own printed title, so it is stored per quotation. */}
+                                    {TITLE_ITEM_NOS.includes(l.itemNo) ? (
+                                        <>
+                                            <span className="no-print">
+                                                <ItemTitle quotationId={mt.quoteId} itemNo={l.itemNo} title={l.title} hint={TITLE_ITEM_HINT[l.itemNo]} />
+                                            </span>
+                                            {l.title ? <div className="print-only-block" style={{ display: 'none', marginTop: 3, fontSize: 11 }}><strong>Title:</strong> {l.title}</div> : null}
+                                        </>
+                                    ) : null}
                                 </td>
-                                <td style={{ padding: '5px 8px', fontWeight: 600 }}>{l.qty}</td>
+                                <td style={{ padding: '5px 8px', fontWeight: 600, verticalAlign: 'top' }}>{l.qty}</td>
                                 <td className="no-print" style={{ padding: '4px 16px 4px 8px' }}>
                                     <DeptSelect quotationId={mt.quoteId} itemNo={l.itemNo} dept={l.dept} />
                                 </td>
@@ -133,8 +150,10 @@ export default async function ProductionPage({ searchParams }) {
                     </tbody>
                 </table>
 
-                <div className="no-print" style={{ borderTop: '1px solid #f1f5f9', padding: '10px 16px 14px' }}>
+                <div className="no-print" style={{ borderTop: '1px solid #f1f5f9', padding: '10px 16px 14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
                     <ProductionNote quotationId={mt.quoteId} note={mt.productionNote} />
+                    <ProductionFiles quotationId={mt.quoteId} files={mt.files} />
+                    <ShareLink quotationId={mt.quoteId} token={mt.shareToken} />
                 </div>
                 {mt.productionNote ? (
                     <p className="print-only" style={{ display: 'none', margin: 0, padding: '8px 16px 12px', fontSize: 11, color: '#4D4D4F' }}><strong>Note:</strong> {mt.productionNote}</p>
@@ -145,7 +164,7 @@ export default async function ProductionPage({ searchParams }) {
 
     return (
         <div style={{ minHeight: '100vh', background: '#f8fafc', color: '#4D4D4F' }}>
-            <style>{`.prod-details > summary::-webkit-details-marker { display: none } .prod-details > summary::marker { content: '' } .prod-details[open] .chevron { transform: rotate(90deg) } @media print { .no-print { display: none !important } .print-only { display: table-cell !important } p.print-only { display: block !important } .prod-card { break-inside: avoid; box-shadow: none !important; border: 1px solid #ddd } }`}</style>
+            <style>{`.prod-details > summary::-webkit-details-marker { display: none } .prod-details > summary::marker { content: '' } .prod-details[open] .chevron { transform: rotate(90deg) } @media print { .no-print { display: none !important } .print-only { display: table-cell !important } p.print-only, .print-only-block { display: block !important } .prod-card { break-inside: avoid; box-shadow: none !important; border: 1px solid #ddd } }`}</style>
             <header className="no-print" style={{ borderBottom: '4px solid #00C7B1', background: '#fff' }}>
                 <div style={{ maxWidth: 1000, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px' }}>
                     <img src="/brand/pico-logo.png" alt="PICO" style={{ height: 40 }} />

@@ -1,0 +1,145 @@
+import { notFound } from 'next/navigation';
+import {
+    getQuotationByShareToken, getMinistryById, getQuotationLines,
+    getProductionAssignments, getProductionFiles,
+} from '@/lib/ministry/queries';
+import {
+    DEPARTMENTS, DEPT_LABEL, deptForItem, SINGLE_STOCK_ITEM_NOS,
+    TITLE_ITEM_NOS, deriveSchedule, fmtSize,
+} from '@/lib/ministry/production';
+import { itemImage } from '@/lib/ministry/itemImages';
+import { fmtIso } from '@/components/ministry/ClashNotice';
+import ItemThumb from '@/components/ministry/ItemThumb';
+
+export const dynamic = 'force-dynamic';
+
+// Anyone holding the link can read this page, so keep it out of search results.
+export const metadata = { robots: { index: false, follow: false } };
+
+const card = { background: '#fff', borderRadius: 12, boxShadow: '0 1px 2px rgba(0,0,0,0.06)' };
+
+export default async function SharedProductionPage({ params }) {
+    const quote = await getQuotationByShareToken(params.token);
+    if (!quote) notFound();
+
+    const [ministry, lines, overrides, filesByQuote] = await Promise.all([
+        getMinistryById(quote.ministryId),
+        getQuotationLines(quote.id),
+        getProductionAssignments([quote.id]),
+        getProductionFiles([quote.id]),
+    ]);
+    const files = filesByQuote.get(quote.id) || [];
+    const sched = deriveSchedule(quote.eventDate);
+
+    // Deliberately no rates or costs: this sheet is about what to deliver.
+    const rows = lines.map((l) => {
+        const ov = overrides.get(`${quote.id}:${l.itemNo}`) || {};
+        return { ...l, dept: ov.dept || deptForItem(l.itemNo), title: ov.title || '' };
+    });
+    const byDept = DEPARTMENTS
+        .map((d) => ({ ...d, rows: rows.filter((r) => r.dept === d.id) }))
+        .filter((d) => d.rows.length);
+
+    const meta = [
+        ['📍 Venue', quote.venue || '—'],
+        sched.setupDay ? ['🔧 Setup', fmtIso(sched.setupDay)] : null,
+        ['📅 Event', sched.eventDays.length ? sched.eventDays.map(fmtIso).join(', ') : (quote.eventDate || '—')],
+        quote.duration ? ['⏱ Duration', quote.duration] : null,
+        sched.removalStart ? ['🚚 Removal', `${fmtIso(sched.removalStart)} (night) – ${fmtIso(sched.removalEnd)}`] : null,
+    ].filter(Boolean);
+
+    return (
+        <div style={{ minHeight: '100vh', background: '#f8fafc', color: '#4D4D4F' }}>
+            <style>{`@media print { .no-print { display: none !important } .p-card { break-inside: avoid; box-shadow: none !important; border: 1px solid #ddd } }`}</style>
+
+            <header style={{ borderBottom: '4px solid #00C7B1', background: '#fff' }}>
+                <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px' }}>
+                    <img src="/brand/pico-logo.png" alt="PICO" style={{ height: 40 }} />
+                    <img src="/brand/bahrain-emblem.png" alt="Kingdom of Bahrain" style={{ height: 44 }} />
+                </div>
+                <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 20px 14px' }}>
+                    <span style={{ borderRadius: 4, background: '#00857A', color: '#fff', padding: '1px 8px', fontSize: 10.5, fontWeight: 700 }}>PRODUCTION SHEET</span>
+                    <h1 style={{ fontSize: 20, fontWeight: 700, margin: '6px 0 0', color: '#22282B' }}>{ministry?.name || 'Meeting'}</h1>
+                    {quote.eventName ? <p style={{ fontSize: 13.5, color: '#4D4D4F', margin: '2px 0 0' }}>{quote.eventName}</p> : null}
+                    <p style={{ fontSize: 11.5, color: '#94a3b8', margin: '4px 0 0' }}>
+                        Reference {quote.ref} · view only — nothing here can be changed from this page.
+                    </p>
+                </div>
+            </header>
+
+            <main style={{ maxWidth: 900, margin: '0 auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <section className="p-card" style={{ ...card, display: 'flex', flexWrap: 'wrap', gap: 18, padding: '12px 16px', fontSize: 12.5 }}>
+                    {meta.map(([label, value]) => (
+                        <span key={label}><strong style={{ color: '#00857A' }}>{label}:</strong> {value}</span>
+                    ))}
+                </section>
+
+                {quote.productionNote ? (
+                    <section className="p-card" style={{ ...card, background: '#fff7ed', border: '1px solid #fed7aa', padding: '10px 16px', fontSize: 12.5, color: '#9a3412' }}>
+                        <strong>Note from PICO:</strong> {quote.productionNote}
+                    </section>
+                ) : null}
+
+                {files.length ? (
+                    <section className="p-card" style={{ ...card, padding: '12px 16px' }}>
+                        <h2 style={{ fontSize: 13, fontWeight: 700, margin: '0 0 8px', color: '#22282B' }}>Files to download</h2>
+                        <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 5 }}>
+                            {files.map((f) => (
+                                <li key={f.id}>
+                                    <a href={`/production/${params.token}/file/${f.id}`}
+                                        style={{ display: 'flex', alignItems: 'center', gap: 8, borderRadius: 6, background: '#f0fdfa', border: '1px solid #99f6e4', padding: '7px 11px', fontSize: 12.5, color: '#00857A', textDecoration: 'none', fontWeight: 600 }}>
+                                        <span aria-hidden>⬇</span>
+                                        <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
+                                        <span style={{ color: '#94a3b8', fontWeight: 400 }}>{fmtSize(f.sizeBytes)}</span>
+                                    </a>
+                                </li>
+                            ))}
+                        </ul>
+                    </section>
+                ) : null}
+
+                {byDept.map((d) => (
+                    <section key={d.id} className="p-card" style={{ ...card, overflow: 'hidden' }}>
+                        <h2 style={{ fontSize: 13, fontWeight: 700, margin: 0, padding: '11px 16px', borderBottom: '1px solid #f1f5f9', color: '#22282B' }}>
+                            {d.label} <span style={{ color: '#94a3b8', fontWeight: 400 }}>· {d.rows.length} item{d.rows.length === 1 ? '' : 's'}</span>
+                        </h2>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
+                            <thead>
+                                <tr style={{ textAlign: 'left', color: '#75787B', fontSize: 11 }}>
+                                    <th style={{ padding: '9px 8px 6px 16px', width: 34 }}>No</th>
+                                    <th style={{ padding: '9px 8px 6px', width: 44 }} aria-label="Photo" />
+                                    <th style={{ padding: '9px 8px 6px' }}>Item</th>
+                                    <th style={{ padding: '9px 16px 6px 8px', width: 52 }}>Qty</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {d.rows.map((r) => (
+                                    <tr key={r.itemNo} style={{ borderTop: '1px solid #f8fafc' }}>
+                                        <td style={{ padding: '6px 8px 6px 16px', color: '#94a3b8', verticalAlign: 'top' }}>{r.itemNo}</td>
+                                        <td style={{ padding: '5px 8px', lineHeight: 0, verticalAlign: 'top' }}>
+                                            <ItemThumb src={itemImage(r.itemNo)} name={`${r.itemNo}. ${r.nameSnapshot}`} />
+                                        </td>
+                                        <td style={{ padding: '6px 8px', color: '#22282B' }}>
+                                            {r.nameSnapshot}
+                                            {SINGLE_STOCK_ITEM_NOS.includes(r.itemNo) ? <span style={{ marginLeft: 6, borderRadius: 3, background: '#f1f5f9', padding: '0 4px', fontSize: 9, fontWeight: 700, color: '#475569' }}>ONE ONLY</span> : null}
+                                            {TITLE_ITEM_NOS.includes(r.itemNo) && r.title ? (
+                                                <div style={{ marginTop: 3, borderRadius: 5, background: '#f0fdfa', border: '1px solid #99f6e4', padding: '3px 8px', fontSize: 11.5, color: '#00857A' }}>
+                                                    <strong>Title:</strong> {r.title}
+                                                </div>
+                                            ) : null}
+                                        </td>
+                                        <td style={{ padding: '6px 16px 6px 8px', fontWeight: 700, verticalAlign: 'top' }}>{r.qty}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </section>
+                ))}
+
+                <p className="no-print" style={{ fontSize: 11.5, color: '#94a3b8', margin: 0, textAlign: 'center' }}>
+                    Questions? Ebrahim Mohammed, Project Executive — +973 36357377 · Ebrahim@picobahrain.com
+                </p>
+            </main>
+        </div>
+    );
+}
