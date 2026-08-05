@@ -5,7 +5,7 @@ import {
 } from '@/lib/ministry/queries';
 import {
     DEPARTMENTS, DEPT_LABEL, deptForItem, SINGLE_STOCK_ITEM_NOS,
-    TITLE_ITEM_NOS, NAME_TAG_ITEM_NO, GCC_NAME_TAG_EN, deriveSchedule, fmtSize,
+    TITLE_ITEM_NOS, pickListFor, PICK_LIST_EN, selectionFit, deriveSchedule, fmtSize,
 } from '@/lib/ministry/production';
 import { itemImage } from '@/lib/ministry/itemImages';
 import { fmtIso } from '@/components/ministry/ClashNotice';
@@ -34,7 +34,7 @@ export default async function SharedProductionPage({ params }) {
     // Deliberately no rates or costs: this sheet is about what to deliver.
     const rows = lines.map((l) => {
         const ov = overrides.get(`${quote.id}:${l.itemNo}`) || {};
-        return { ...l, dept: ov.dept || deptForItem(l.itemNo), title: ov.title || '', nameTags: ov.nameTags || [] };
+        return { ...l, dept: ov.dept || deptForItem(l.itemNo), title: ov.title || '', selections: ov.selections || [] };
     });
     const byDept = DEPARTMENTS
         .map((d) => ({ ...d, rows: rows.filter((r) => r.dept === d.id) }))
@@ -127,17 +127,27 @@ export default async function SharedProductionPage({ params }) {
                                                     <strong>Title:</strong> {r.title}
                                                 </div>
                                             ) : null}
-                                            {/* The exact wording to engrave, so nobody has to ask. */}
-                                            {r.itemNo === NAME_TAG_ITEM_NO && r.nameTags.length ? (
-                                                <ol style={{ margin: '5px 0 0', paddingInlineStart: 20, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                                    {r.nameTags.map((t) => (
-                                                        <li key={t} style={{ fontSize: 12 }}>
-                                                            <span dir="rtl" style={{ fontSize: 13.5, color: '#22282B' }}>{t}</span>
-                                                            {GCC_NAME_TAG_EN[t] ? <span style={{ marginInlineStart: 8, fontSize: 10.5, color: '#94a3b8' }}>{GCC_NAME_TAG_EN[t]}</span> : null}
-                                                        </li>
-                                                    ))}
-                                                </ol>
-                                            ) : null}
+                                            {/* The exact wording to engrave / which flags, so nobody has to ask. */}
+                                            {pickListFor(r.itemNo) && r.selections.length ? (() => {
+                                                const fit = selectionFit(r.selections.length, r.qty);
+                                                return (
+                                                    <>
+                                                        <ol style={{ margin: '5px 0 0', paddingInlineStart: 20, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                                            {r.selections.map((t) => (
+                                                                <li key={t} style={{ fontSize: 12 }}>
+                                                                    <span dir="rtl" style={{ fontSize: 13.5, color: '#22282B' }}>{t}</span>
+                                                                    {PICK_LIST_EN[t] ? <span style={{ marginInlineStart: 8, fontSize: 10.5, color: '#94a3b8' }}>{PICK_LIST_EN[t]}</span> : null}
+                                                                </li>
+                                                            ))}
+                                                        </ol>
+                                                        {fit.per > 1 ? (
+                                                            <p style={{ margin: '3px 0 0', fontSize: 11.5, fontWeight: 700, color: '#00857A' }}>
+                                                                {fit.per} of each — {r.qty} total
+                                                            </p>
+                                                        ) : null}
+                                                    </>
+                                                );
+                                            })() : null}
                                         </td>
                                         <td style={{ padding: '6px 16px 6px 8px', fontWeight: 700, verticalAlign: 'top' }}>{r.qty}</td>
                                     </tr>

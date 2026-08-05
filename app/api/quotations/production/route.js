@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { isAdmin } from '@/lib/ministry/auth';
-import { setProductionAssignment, setProductionNote, setProductionTitle, setProductionNameTags } from '@/lib/ministry/queries';
-import { DEPARTMENTS, TITLE_ITEM_NOS, NAME_TAG_ITEM_NO } from '@/lib/ministry/production';
+import { setProductionAssignment, setProductionNote, setProductionTitle, setProductionSelections } from '@/lib/ministry/queries';
+import { DEPARTMENTS, TITLE_ITEM_NOS, pickListFor } from '@/lib/ministry/production';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -15,13 +15,16 @@ export async function POST(req) {
     const quotationId = Number(body.quotationId);
     if (!quotationId) return new NextResponse('Bad request', { status: 400 });
 
-    if (body.itemNo != null && 'nameTags' in body) {
+    // `nameTags` is the pre-rename key — accepted so a browser still running the
+    // previous bundle keeps saving instead of silently 400-ing.
+    const rawSelections = 'selections' in body ? body.selections : 'nameTags' in body ? body.nameTags : undefined;
+    if (body.itemNo != null && rawSelections !== undefined) {
         const itemNo = Number(body.itemNo);
-        if (itemNo !== NAME_TAG_ITEM_NO) return new NextResponse('Bad request', { status: 400 });
-        const tags = Array.isArray(body.nameTags)
-            ? body.nameTags.map((t) => String(t || '').trim().slice(0, 120)).filter(Boolean).slice(0, 60)
+        if (!pickListFor(itemNo)) return new NextResponse('Bad request', { status: 400 });
+        const values = Array.isArray(rawSelections)
+            ? rawSelections.map((t) => String(t || '').trim().slice(0, 120)).filter(Boolean).slice(0, 60)
             : [];
-        await setProductionNameTags(quotationId, itemNo, tags);
+        await setProductionSelections(quotationId, itemNo, values);
         return NextResponse.json({ ok: true });
     }
     if (body.itemNo != null && 'title' in body) {
