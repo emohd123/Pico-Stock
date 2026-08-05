@@ -5,7 +5,7 @@ import {
 } from '@/lib/ministry/queries';
 import {
     DEPARTMENTS, DEPT_LABEL, deptForItem, SINGLE_STOCK_ITEM_NOS,
-    TITLE_ITEM_NOS, deriveSchedule, fmtSize,
+    TITLE_ITEM_NOS, NAME_TAG_ITEM_NO, GCC_NAME_TAG_EN, deriveSchedule, fmtSize,
 } from '@/lib/ministry/production';
 import { itemImage } from '@/lib/ministry/itemImages';
 import { fmtIso } from '@/components/ministry/ClashNotice';
@@ -34,7 +34,7 @@ export default async function SharedProductionPage({ params }) {
     // Deliberately no rates or costs: this sheet is about what to deliver.
     const rows = lines.map((l) => {
         const ov = overrides.get(`${quote.id}:${l.itemNo}`) || {};
-        return { ...l, dept: ov.dept || deptForItem(l.itemNo), title: ov.title || '' };
+        return { ...l, dept: ov.dept || deptForItem(l.itemNo), title: ov.title || '', nameTags: ov.nameTags || [] };
     });
     const byDept = DEPARTMENTS
         .map((d) => ({ ...d, rows: rows.filter((r) => r.dept === d.id) }))
@@ -126,6 +126,17 @@ export default async function SharedProductionPage({ params }) {
                                                 <div style={{ marginTop: 3, borderRadius: 5, background: '#f0fdfa', border: '1px solid #99f6e4', padding: '3px 8px', fontSize: 11.5, color: '#00857A' }}>
                                                     <strong>Title:</strong> {r.title}
                                                 </div>
+                                            ) : null}
+                                            {/* The exact wording to engrave, so nobody has to ask. */}
+                                            {r.itemNo === NAME_TAG_ITEM_NO && r.nameTags.length ? (
+                                                <ol style={{ margin: '5px 0 0', paddingInlineStart: 20, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                                    {r.nameTags.map((t) => (
+                                                        <li key={t} style={{ fontSize: 12 }}>
+                                                            <span dir="rtl" style={{ fontSize: 13.5, color: '#22282B' }}>{t}</span>
+                                                            {GCC_NAME_TAG_EN[t] ? <span style={{ marginInlineStart: 8, fontSize: 10.5, color: '#94a3b8' }}>{GCC_NAME_TAG_EN[t]}</span> : null}
+                                                        </li>
+                                                    ))}
+                                                </ol>
                                             ) : null}
                                         </td>
                                         <td style={{ padding: '6px 16px 6px 8px', fontWeight: 700, verticalAlign: 'top' }}>{r.qty}</td>

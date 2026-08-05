@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { isAdmin } from '@/lib/ministry/auth';
-import { setProductionAssignment, setProductionNote, setProductionTitle } from '@/lib/ministry/queries';
-import { DEPARTMENTS, TITLE_ITEM_NOS } from '@/lib/ministry/production';
+import { setProductionAssignment, setProductionNote, setProductionTitle, setProductionNameTags } from '@/lib/ministry/queries';
+import { DEPARTMENTS, TITLE_ITEM_NOS, NAME_TAG_ITEM_NO } from '@/lib/ministry/production';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -15,6 +15,15 @@ export async function POST(req) {
     const quotationId = Number(body.quotationId);
     if (!quotationId) return new NextResponse('Bad request', { status: 400 });
 
+    if (body.itemNo != null && 'nameTags' in body) {
+        const itemNo = Number(body.itemNo);
+        if (itemNo !== NAME_TAG_ITEM_NO) return new NextResponse('Bad request', { status: 400 });
+        const tags = Array.isArray(body.nameTags)
+            ? body.nameTags.map((t) => String(t || '').trim().slice(0, 120)).filter(Boolean).slice(0, 60)
+            : [];
+        await setProductionNameTags(quotationId, itemNo, tags);
+        return NextResponse.json({ ok: true });
+    }
     if (body.itemNo != null && 'title' in body) {
         const itemNo = Number(body.itemNo);
         if (!TITLE_ITEM_NOS.includes(itemNo)) return new NextResponse('Bad request', { status: 400 });

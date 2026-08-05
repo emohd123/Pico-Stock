@@ -2,13 +2,14 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { isAdmin } from '@/lib/ministry/auth';
 import { getAllMinistries, getRecentQuotations, getQuotationLinesBulk, getProductionAssignments, getProductionFiles } from '@/lib/ministry/queries';
-import { DEPARTMENTS, DEPT_LABEL, deptForItem, SINGLE_STOCK_ITEM_NOS, TITLE_ITEM_NOS, TITLE_ITEM_HINT, deriveSchedule, computeAutoNotes } from '@/lib/ministry/production';
+import { DEPARTMENTS, DEPT_LABEL, deptForItem, SINGLE_STOCK_ITEM_NOS, TITLE_ITEM_NOS, TITLE_ITEM_HINT, NAME_TAG_ITEM_NO, deriveSchedule, computeAutoNotes } from '@/lib/ministry/production';
 import { itemImage } from '@/lib/ministry/itemImages';
 import { fmtIso } from '@/components/ministry/ClashNotice';
 import DeptSelect from '@/components/ministry/DeptSelect';
 import ProductionNote from '@/components/ministry/ProductionNote';
 import ItemThumb from '@/components/ministry/ItemThumb';
 import ItemTitle from '@/components/ministry/ItemTitle';
+import NameTagPicker from '@/components/ministry/NameTagPicker';
 import ShareLink from '@/components/ministry/ShareLink';
 import ProductionFiles from '@/components/ministry/ProductionFiles';
 
@@ -60,7 +61,7 @@ export default async function ProductionPage({ searchParams }) {
         mt.files = filesByQuote.get(mt.quoteId) || [];
         mt.lines = (linesByQuote.get(mt.quoteId) || []).map((l) => {
             const ov = overrides.get(`${mt.quoteId}:${l.itemNo}`) || {};
-            return { ...l, dept: ov.dept || deptForItem(l.itemNo), title: ov.title || '' };
+            return { ...l, dept: ov.dept || deptForItem(l.itemNo), title: ov.title || '', nameTags: ov.nameTags || [] };
         });
         mt.singleStockItems = new Set(mt.lines.map((l) => l.itemNo).filter((n) => SINGLE_STOCK_ITEM_NOS.includes(n)));
     }
@@ -137,6 +138,18 @@ export default async function ProductionPage({ searchParams }) {
                                                 <ItemTitle quotationId={mt.quoteId} itemNo={l.itemNo} title={l.title} hint={TITLE_ITEM_HINT[l.itemNo]} />
                                             </span>
                                             {l.title ? <div className="print-only-block" style={{ display: 'none', marginTop: 3, fontSize: 11 }}><strong>Title:</strong> {l.title}</div> : null}
+                                        </>
+                                    ) : null}
+                                    {l.itemNo === NAME_TAG_ITEM_NO ? (
+                                        <>
+                                            <span className="no-print">
+                                                <NameTagPicker quotationId={mt.quoteId} tags={l.nameTags} qty={l.qty} />
+                                            </span>
+                                            {l.nameTags.length ? (
+                                                <div className="print-only-block" style={{ display: 'none', marginTop: 3, fontSize: 11 }}>
+                                                    <strong>Plates ({l.nameTags.length}):</strong> <span dir="rtl">{l.nameTags.join(' · ')}</span>
+                                                </div>
+                                            ) : null}
                                         </>
                                     ) : null}
                                 </td>
