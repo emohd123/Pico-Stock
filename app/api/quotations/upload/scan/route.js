@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { isAdmin } from '@/lib/ministry/auth';
 import { scanQuotationText } from '@/lib/ministry/quotationScan';
+import { extractPdfText } from '@/lib/ministry/pdfText';
 
 export const runtime = 'nodejs';
 export const maxDuration = 30;
@@ -21,10 +22,7 @@ export async function POST(req) {
     if (file.size > MAX) return new NextResponse('PDF too large (max 4MB)', { status: 400 });
 
     try {
-        const mod = await import('pdf-parse');
-        const PDFParse = mod.PDFParse || mod.default?.PDFParse || mod.default;
-        const parser = new PDFParse({ data: Buffer.from(await file.arrayBuffer()) });
-        const { text } = await parser.getText();
+        const text = await extractPdfText(new Uint8Array(await file.arrayBuffer()));
         if (!text || !text.trim()) {
             // A scan with no text layer can't be read — the admin ticks by hand.
             return NextResponse.json({ ok: true, readable: false, reason: 'no text layer', meta: {}, matched: [], extras: [] });
