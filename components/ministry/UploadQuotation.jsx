@@ -2,6 +2,13 @@
 import { useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatFils, computeTotals, lineTotal } from '@/lib/ministry/money';
+import { deriveSchedule, MONTHS_FULL } from '@/lib/ministry/production';
+
+const shortDay = (iso) => {
+    if (!iso) return '';
+    const [y, m, d] = iso.split('-').map(Number);
+    return `${d} ${MONTHS_FULL[m - 1].slice(0, 3)} ${y}`;
+};
 
 // Record a quotation produced outside the portal: the PDF plus the event details
 // and items, so it behaves like a generated one everywhere downstream.
@@ -10,8 +17,13 @@ export default function UploadQuotation({ ministryId, catalog }) {
     const fileRef = useRef(null);
     const [open, setOpen] = useState(false);
     const [qty, setQty] = useState({});          // itemId -> qty (absent = not included)
+    const [dateText, setDateText] = useState('');
     const [busy, setBusy] = useState(false);
     const [err, setErr] = useState('');
+
+    // The calendar and the Production schedule are both derived from this text,
+    // so show what was understood rather than letting a typo fail silently.
+    const sched = useMemo(() => deriveSchedule(dateText), [dateText]);
 
     const picked = useMemo(
         () => catalog.filter((c) => qty[c.id] > 0).map((c) => ({ item: c, q: qty[c.id] })),
@@ -84,8 +96,30 @@ export default function UploadQuotation({ ministryId, catalog }) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 8, marginBottom: 10 }}>
                 <div><label style={label}>Event name</label><input name="eventName" style={input} placeholder="GCC Ministers Meeting" /></div>
                 <div><label style={label}>Venue</label><input name="venue" style={input} placeholder="Ritz Carlton" /></div>
-                <div><label style={label}>Event date</label><input name="eventDate" style={input} placeholder="27 August 2026" /></div>
+                <div>
+                    <label style={label}>Event date</label>
+                    <input name="eventDate" value={dateText} onChange={(e) => setDateText(e.target.value)}
+                        style={input} placeholder="27 August 2026  ·  5-6 September 2026" />
+                </div>
                 <div><label style={label}>Duration</label><input name="duration" style={input} placeholder="1 Day" /></div>
+                <div style={{ gridColumn: '1 / -1' }}>
+                    {!dateText.trim() ? (
+                        <p style={{ margin: 0, fontSize: 11, color: '#94a3b8' }}>
+                            Day, month, year — e.g. <code>27 August 2026</code>, <code>5-6 September 2026</code>, or <code>2, 3 July 2026 · 1 August 2026</code> for split dates.
+                        </p>
+                    ) : sched.eventDays.length ? (
+                        <p style={{ margin: 0, borderRadius: 6, background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '4px 9px', fontSize: 11.5, color: '#15803d' }}>
+                            ✓ Calendar: <strong>{sched.eventDays.map(shortDay).join(', ')}</strong>
+                            {' · '}Setup <strong>{shortDay(sched.setupDay)}</strong>
+                            {' · '}Removal <strong>{shortDay(sched.removalStart)} – {shortDay(sched.removalEnd)}</strong>
+                            {' — shows on Production once LPO received is ticked.'}
+                        </p>
+                    ) : (
+                        <p style={{ margin: 0, borderRadius: 6, background: '#fff7ed', border: '1px solid #fed7aa', padding: '4px 9px', fontSize: 11.5, color: '#9a3412' }}>
+                            ⚠ Date not recognised — it will save, but this meeting won&apos;t appear on the calendar or get a Production schedule. Try <code>27 August 2026</code>.
+                        </p>
+                    )}
+                </div>
                 <div style={{ gridColumn: '1 / -1' }}>
                     <label style={label}>Reference on the PDF <span style={{ fontWeight: 400, color: '#94a3b8' }}>— leave blank to use this ministry&apos;s number</span></label>
                     <input name="ref" style={input} placeholder="Q/07/2026/EM/11976" />
