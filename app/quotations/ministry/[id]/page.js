@@ -2,13 +2,14 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 import { isAdmin } from '@/lib/ministry/auth';
-import { getMinistryById, getMinistryPhotos, getMinistryQuotations, getMinistryNotes } from '@/lib/ministry/queries';
+import { getMinistryById, getMinistryPhotos, getMinistryQuotations, getMinistryNotes, getActiveCatalog } from '@/lib/ministry/queries';
 import { addMinistryNoteAction, deleteMinistryNoteAction, deletePhotoAction, deleteQuotationAction, regenerateTokenAction, setQuoteNumberAction, updateLinkCodeAction, updateMinistryAction, updateMinistryNoteAction, updateQuoteNotesAction } from '@/lib/ministry/actions';
 import DeleteQuoteButton from '@/components/ministry/DeleteQuoteButton';
 import ReplaceQuotePdf from '@/components/ministry/ReplaceQuotePdf';
 import CopyLink from '@/components/ministry/CopyLink';
 import PhotoUploader from '@/components/ministry/PhotoUploader';
 import ManagePresentation from '@/components/ministry/ManagePresentation';
+import UploadQuotation from '@/components/ministry/UploadQuotation';
 import LpoToggle from '@/components/ministry/LpoToggle';
 import { COMPANY } from '@/lib/ministry/company';
 import { fmtBHD } from '@/lib/ministry/money';
@@ -32,7 +33,7 @@ export default async function ManageMinistryPage({ params, searchParams }) {
 
     const errorMsg = typeof searchParams?.error === 'string' ? searchParams.error : '';
     const saved = searchParams?.saved === '1';
-    const [photos, quotes, notes] = await Promise.all([getMinistryPhotos(ministry.id), getMinistryQuotations(ministry.id), getMinistryNotes(ministry.id)]);
+    const [photos, quotes, notes, catalog] = await Promise.all([getMinistryPhotos(ministry.id), getMinistryQuotations(ministry.id), getMinistryNotes(ministry.id), getActiveCatalog()]);
     const h = headers();
     const proto = h.get('x-forwarded-proto') || 'https';
     const host = h.get('host') || 'localhost:3000';
@@ -181,6 +182,12 @@ export default async function ManageMinistryPage({ params, searchParams }) {
 
                 <section style={{ ...card, padding: 20 }}>
                     <h2 style={title}>Submitted quotations ({quotes.length})</h2>
+                    {/* Quotations priced outside the portal still need to live here,
+                        otherwise the calendar, Production page and presentation
+                        have nothing to work from. */}
+                    <div style={{ marginBottom: 14 }}>
+                        <UploadQuotation ministryId={ministry.id} catalog={catalog} />
+                    </div>
                     {quotes.length === 0 ? (
                         <p style={{ fontSize: 14, color: '#75787B' }}>None yet.</p>
                     ) : (
