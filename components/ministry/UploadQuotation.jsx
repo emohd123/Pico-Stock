@@ -18,6 +18,10 @@ export default function UploadQuotation({ ministryId, catalog }) {
     const [open, setOpen] = useState(false);
     const [qty, setQty] = useState({});          // itemId -> qty (absent = not included)
     const [dateText, setDateText] = useState('');
+    const [meta, setMeta] = useState(null);      // event fields read off the PDF
+    const [metaKey, setMetaKey] = useState(0);   // bumped per scan to reset those inputs
+    const [extras, setExtras] = useState([]);    // rows with no catalogue equivalent
+    const [scan, setScan] = useState(null);      // {state, matched, extras} for the banner
     const [busy, setBusy] = useState(false);
     const [err, setErr] = useState('');
 
@@ -30,9 +34,49 @@ export default function UploadQuotation({ ministryId, catalog }) {
         [catalog, qty],
     );
     const totals = useMemo(
-        () => computeTotals(picked.map((p) => lineTotal(p.item.unitPriceFils, p.q))),
-        [picked],
+        () => computeTotals([
+            ...picked.map((p) => lineTotal(p.item.unitPriceFils, p.q)),
+            ...extras.map((e) => lineTotal(Math.round(Number(e.unitPriceFils) || 0), Math.max(1, parseInt(e.qty, 10) || 1))),
+        ]),
+        [picked, extras],
     );
+
+    // Read the PDF as soon as it is chosen: tick the items it lists, fill the
+    // event details, and surface anything the catalogue has no equivalent for.
+    async function onFile(e) {
+        const file = e.target.files?.[0];
+        setErr('');
+        setScan(null);
+        if (!file) return;
+        setScan({ state: 'reading' });
+        try {
+            const fd = new FormData();
+            fd.set('file', file);
+            const res = await fetch('/api/quotations/upload/scan', { method: 'POST', body: fd });
+            if (!res.ok) throw new Error(await res.text());
+            const data = await res.json();
+            if (!data.readable) { setScan({ state: 'unreadable' }); return; }
+
+            const byNo = new Map(catalog.map((c) => [c.itemNo, c]));
+            const next = {};
+            let missed = 0;
+            for (const m of data.matched) {
+                const c = byNo.get(m.itemNo);
+                if (c) next[c.id] = m.qty; else missed++;
+            }
+            setQty(next);
+            setExtras(data.extras.map((x) => ({ ...x, qty: x.qty || 1 })));
+            setMeta(data.meta || null);
+            setMetaKey((k) => k + 1);
+            if (data.meta?.eventDate) setDateText(data.meta.eventDate);
+            setScan({ state: 'done', matched: data.matched.length - missed, extras: data.extras.length });
+        } catch {
+            setScan({ state: 'unreadable' });
+        }
+    }
+
+    const setExtra = (i, patch) => setExtras((prev) => prev.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+    const addExtra = () => setExtras((prev) => [...prev, { name: '', qty: 1, unit: 'nos', unitPriceFils: 0 }]);
 
     const toggle = (c) => setQty((prev) => {
         const next = { ...prev };
@@ -52,11 +96,15 @@ export default function UploadQuotation({ ministryId, catalog }) {
         setErr('');
         const file = fileRef.current?.files?.[0];
         if (!file) { setErr('Choose the quotation PDF first.'); return; }
-        if (!picked.length) { setErr('Tick at least one item so Production knows what to deliver.'); return; }
+        const cleanExtras = extras.filter((x) => String(x.name || '').trim());
+        if (!picked.length && !cleanExtras.length) { setErr('Tick at least one item so Production knows what to deliver.'); return; }
 
         const fd = new FormData(e.target);
         fd.set('ministryId', String(ministryId));
         fd.set('items', JSON.stringify(picked.map((p) => ({ itemId: p.item.id, qty: p.q }))));
+        fd.set('extras', JSON.stringify(cleanExtras.map((x) => ({
+            name: x.name, qty: x.qty, unit: x.unit, unitPriceFils: Math.round(Number(x.unitPriceFils) || 0),
+        }))));
 
         setBusy(true);
         try {
@@ -64,6 +112,10 @@ export default function UploadQuotation({ ministryId, catalog }) {
             if (!res.ok) throw new Error(await res.text());
             setOpen(false);
             setQty({});
+            setExtras([]);
+            setMeta(null);
+            setScan(null);
+            setDateText('');
             e.target.reset();
             router.refresh();
         } catch (e2) { setErr(e2.message || 'Upload failed'); } finally { setBusy(false); }
@@ -89,19 +141,33 @@ export default function UploadQuotation({ ministryId, catalog }) {
             </div>
 
             <div style={{ marginBottom: 10 }}>
-                <label style={label}>Quotation PDF</label>
-                <input ref={fileRef} type="file" name="file" accept="application/pdf" style={{ fontSize: 12.5 }} />
+                <label style={label}>Quotation PDF <span style={{ fontWeight: 400, color: '#94a3b8' }}>— read automatically, then check what it found</span></label>
+                <input ref={fileRef} type="file" name="file" accept="application/pdf" onChange={onFile} style={{ fontSize: 12.5 }} />
+                {scan?.state === 'reading' ? (
+                    <p style={{ margin: '6px 0 0', fontSize: 11.5, color: '#75787B' }}>Reading the PDF…</p>
+                ) : scan?.state === 'done' ? (
+                    <p style={{ margin: '6px 0 0', borderRadius: 6, background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '4px 9px', fontSize: 11.5, color: '#15803d' }}>
+                        ✓ Found <strong>{scan.matched}</strong> catalogue item{scan.matched === 1 ? '' : 's'} and ticked them
+                        {scan.extras ? <> · <strong>{scan.extras}</strong> row{scan.extras === 1 ? '' : 's'} not in the catalogue, listed below as additional</> : null}
+                        {' — check the quantities against the PDF.'}
+                    </p>
+                ) : scan?.state === 'unreadable' ? (
+                    <p style={{ margin: '6px 0 0', borderRadius: 6, background: '#fff7ed', border: '1px solid #fed7aa', padding: '4px 9px', fontSize: 11.5, color: '#9a3412' }}>
+                        Could not read this PDF (likely a scan with no text). Tick the items by hand below.
+                    </p>
+                ) : null}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 8, marginBottom: 10 }}>
-                <div><label style={label}>Event name</label><input name="eventName" style={input} placeholder="GCC Ministers Meeting" /></div>
-                <div><label style={label}>Venue</label><input name="venue" style={input} placeholder="Ritz Carlton" /></div>
+                {/* keyed on the scan so a freshly read PDF replaces what is typed */}
+                <div><label style={label}>Event name</label><input key={`en${metaKey}`} name="eventName" defaultValue={meta?.eventName || ''} style={input} placeholder="GCC Ministers Meeting" /></div>
+                <div><label style={label}>Venue</label><input key={`vn${metaKey}`} name="venue" defaultValue={meta?.venue || ''} style={input} placeholder="Ritz Carlton" /></div>
                 <div>
                     <label style={label}>Event date</label>
                     <input name="eventDate" value={dateText} onChange={(e) => setDateText(e.target.value)}
                         style={input} placeholder="27 August 2026  ·  5-6 September 2026" />
                 </div>
-                <div><label style={label}>Duration</label><input name="duration" style={input} placeholder="1 Day" /></div>
+                <div><label style={label}>Duration</label><input key={`du${metaKey}`} name="duration" defaultValue={meta?.duration || ''} style={input} placeholder="1 Day" /></div>
                 <div style={{ gridColumn: '1 / -1' }}>
                     {!dateText.trim() ? (
                         <p style={{ margin: 0, fontSize: 11, color: '#94a3b8' }}>
@@ -122,7 +188,7 @@ export default function UploadQuotation({ ministryId, catalog }) {
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
                     <label style={label}>Reference on the PDF <span style={{ fontWeight: 400, color: '#94a3b8' }}>— leave blank to use this ministry&apos;s number</span></label>
-                    <input name="ref" style={input} placeholder="Q/07/2026/EM/11976" />
+                    <input key={`rf${metaKey}`} name="ref" defaultValue={meta?.ref || ''} style={input} placeholder="Q/07/2026/EM/11976" />
                 </div>
             </div>
 
@@ -145,9 +211,42 @@ export default function UploadQuotation({ ministryId, catalog }) {
                 </div>
             </div>
 
+            {/* Rows the catalogue has no equivalent for. Production still has to
+                build them, so they are kept rather than dropped. */}
+            <div style={{ marginTop: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                    <label style={{ ...label, marginBottom: 0 }}>Additional items <span style={{ fontWeight: 400, color: '#94a3b8' }}>— not in the catalogue, still delivered</span></label>
+                    <button type="button" onClick={addExtra}
+                        style={{ borderRadius: 5, background: '#fff', color: '#00857A', border: '1px solid #00857A', padding: '2px 9px', fontSize: 11.5, fontWeight: 600, cursor: 'pointer' }}>＋ Add</button>
+                </div>
+                {extras.length === 0 ? (
+                    <p style={{ margin: 0, fontSize: 11, color: '#94a3b8' }}>None — everything on the PDF matched the catalogue.</p>
+                ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        {extras.map((x, i) => (
+                            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 6, background: '#fff7ed', border: '1px solid #fed7aa', padding: '4px 8px' }}>
+                                <input value={x.name} onChange={(e) => setExtra(i, { name: e.target.value })} placeholder="What is it? e.g. Custom Welcome Arch"
+                                    style={{ flex: 1, minWidth: 0, borderRadius: 5, border: '1px solid #cbd5e1', padding: '3px 7px', fontSize: 12 }} />
+                                <input type="number" min="1" value={x.qty} onChange={(e) => setExtra(i, { qty: e.target.value })} title="Quantity"
+                                    style={{ width: 58, borderRadius: 5, border: '1px solid #cbd5e1', padding: '3px 6px', fontSize: 12 }} />
+                                <input value={x.unit || ''} onChange={(e) => setExtra(i, { unit: e.target.value })} placeholder="unit" title="Unit"
+                                    style={{ width: 52, borderRadius: 5, border: '1px solid #cbd5e1', padding: '3px 6px', fontSize: 12 }} />
+                                <input type="number" min="0" step="0.001" value={(Number(x.unitPriceFils) || 0) / 1000}
+                                    onChange={(e) => setExtra(i, { unitPriceFils: Math.round((parseFloat(e.target.value) || 0) * 1000) })}
+                                    title="Rate in BHD" style={{ width: 92, borderRadius: 5, border: '1px solid #cbd5e1', padding: '3px 6px', fontSize: 12 }} />
+                                <button type="button" onClick={() => setExtras((p) => p.filter((_, j) => j !== i))} aria-label="Remove"
+                                    style={{ border: 'none', background: 'none', color: '#dc2626', fontSize: 14, lineHeight: 1, cursor: 'pointer' }}>×</button>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12, marginTop: 10 }}>
                 <span style={{ fontSize: 12.5, color: '#4D4D4F' }}>
-                    {picked.length} item{picked.length === 1 ? '' : 's'} · Subtotal <strong>BHD {formatFils(totals.subtotal)}</strong>
+                    {picked.length} item{picked.length === 1 ? '' : 's'}
+                    {extras.length ? ` + ${extras.length} additional` : ''}
+                    {' · '}Subtotal <strong>BHD {formatFils(totals.subtotal)}</strong>
                     {' · '}VAT <strong>BHD {formatFils(totals.vat)}</strong>
                     {' · '}Total <strong style={{ color: '#00857A' }}>BHD {formatFils(totals.total)}</strong>
                 </span>

@@ -4,6 +4,7 @@ import { isAdmin } from '@/lib/ministry/auth';
 import { getAllMinistries, getRecentQuotations, getQuotationLinesBulk, getProductionAssignments, getProductionFiles } from '@/lib/ministry/queries';
 import { DEPARTMENTS, DEPT_LABEL, deptForItem, SINGLE_STOCK_ITEM_NOS, TITLE_ITEM_NOS, TITLE_ITEM_HINT, pickListFor, deriveSchedule, computeAutoNotes } from '@/lib/ministry/production';
 import { itemImage } from '@/lib/ministry/itemImages';
+import { isCustomItemNo } from '@/lib/ministry/quotationScan';
 import { fmtIso } from '@/components/ministry/ClashNotice';
 import DeptSelect from '@/components/ministry/DeptSelect';
 import ProductionNote from '@/components/ministry/ProductionNote';
@@ -124,13 +125,14 @@ export default async function ProductionPage({ searchParams }) {
                     <tbody>
                         {lines.map((l) => (
                             <tr key={l.itemNo} style={{ borderTop: '1px solid #f8fafc' }}>
-                                <td style={{ padding: '5px 8px 5px 16px', color: '#94a3b8' }}>{l.itemNo}</td>
+                                <td style={{ padding: '5px 8px 5px 16px', color: '#94a3b8' }}>{isCustomItemNo(l.itemNo) ? '+' : l.itemNo}</td>
                                 <td style={{ padding: '4px 8px', lineHeight: 0 }}>
                                     <ItemThumb src={itemImage(l.itemNo)} name={`${l.itemNo}. ${l.nameSnapshot}`} />
                                 </td>
                                 <td style={{ padding: '5px 8px', color: '#22282B' }}>
                                     {l.nameSnapshot}
                                     {SINGLE_STOCK_ITEM_NOS.includes(l.itemNo) ? <span style={{ marginLeft: 6, borderRadius: 3, background: '#f1f5f9', padding: '0 4px', fontSize: 9, fontWeight: 700, color: '#475569' }}>ONE ONLY</span> : null}
+                                    {isCustomItemNo(l.itemNo) ? <span style={{ marginLeft: 6, borderRadius: 3, background: '#fff7ed', border: '1px solid #fed7aa', padding: '0 4px', fontSize: 9, fontWeight: 700, color: '#9a3412' }}>ADDITIONAL</span> : null}
                                     {/* Each meeting carries its own printed title, so it is stored per quotation. */}
                                     {TITLE_ITEM_NOS.includes(l.itemNo) ? (
                                         <>

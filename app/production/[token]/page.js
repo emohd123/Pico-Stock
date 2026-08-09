@@ -8,6 +8,7 @@ import {
     TITLE_ITEM_NOS, pickListFor, PICK_LIST_EN, selectionFit, deriveSchedule, fmtSize,
 } from '@/lib/ministry/production';
 import { itemImage } from '@/lib/ministry/itemImages';
+import { isCustomItemNo } from '@/lib/ministry/quotationScan';
 import { fmtIso } from '@/components/ministry/ClashNotice';
 import ItemThumb from '@/components/ministry/ItemThumb';
 
@@ -115,13 +116,14 @@ export default async function SharedProductionPage({ params }) {
                             <tbody>
                                 {d.rows.map((r) => (
                                     <tr key={r.itemNo} style={{ borderTop: '1px solid #f8fafc' }}>
-                                        <td style={{ padding: '6px 8px 6px 16px', color: '#94a3b8', verticalAlign: 'top' }}>{r.itemNo}</td>
+                                        <td style={{ padding: '6px 8px 6px 16px', color: '#94a3b8', verticalAlign: 'top' }}>{isCustomItemNo(r.itemNo) ? '+' : r.itemNo}</td>
                                         <td style={{ padding: '5px 8px', lineHeight: 0, verticalAlign: 'top' }}>
                                             <ItemThumb src={itemImage(r.itemNo)} name={`${r.itemNo}. ${r.nameSnapshot}`} />
                                         </td>
                                         <td style={{ padding: '6px 8px', color: '#22282B' }}>
                                             {r.nameSnapshot}
                                             {SINGLE_STOCK_ITEM_NOS.includes(r.itemNo) ? <span style={{ marginLeft: 6, borderRadius: 3, background: '#f1f5f9', padding: '0 4px', fontSize: 9, fontWeight: 700, color: '#475569' }}>ONE ONLY</span> : null}
+                                            {isCustomItemNo(r.itemNo) ? <span style={{ marginLeft: 6, borderRadius: 3, background: '#fff7ed', border: '1px solid #fed7aa', padding: '0 4px', fontSize: 9, fontWeight: 700, color: '#9a3412' }}>ADDITIONAL</span> : null}
                                             {TITLE_ITEM_NOS.includes(r.itemNo) && r.title ? (
                                                 <div style={{ marginTop: 3, borderRadius: 5, background: '#f0fdfa', border: '1px solid #99f6e4', padding: '3px 8px', fontSize: 11.5, color: '#00857A' }}>
                                                     <strong>Title:</strong> {r.title}

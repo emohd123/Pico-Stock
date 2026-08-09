@@ -6,6 +6,7 @@ import {
     createQuotation, insertQuotationLines, setQuotationPdfUrl,
 } from '@/lib/ministry/queries';
 import { computeTotals, lineTotal } from '@/lib/ministry/money';
+import { CUSTOM_ITEM_BASE } from '@/lib/ministry/quotationScan';
 import { appendQuoteRow } from '@/lib/ministry/quoteLog';
 import { COMPANY } from '@/lib/ministry/company';
 
@@ -43,9 +44,29 @@ export async function POST(req) {
     const duration = str('duration', 200);
     const customRef = str('ref', 80);
 
-    let picked;
+    let picked, extrasIn;
     try { picked = JSON.parse(String(form.get('items') || '[]')); } catch { picked = []; }
-    if (!Array.isArray(picked) || picked.length === 0) return new NextResponse('Select at least one item', { status: 400 });
+    try { extrasIn = JSON.parse(String(form.get('extras') || '[]')); } catch { extrasIn = []; }
+    if (!Array.isArray(picked)) picked = [];
+    if (!Array.isArray(extrasIn)) extrasIn = [];
+    if (picked.length === 0 && extrasIn.length === 0) return new NextResponse('Select at least one item', { status: 400 });
+
+    // Rows the catalogue has no equivalent for. They are stored as ordinary
+    // lines above the catalogue numbering so production still sees them; the
+    // number is a marker, not a catalogue reference, so item_id stays null.
+    const extras = extrasIn
+        .map((e, i) => {
+            const name = String(e.name || '').trim().slice(0, 120);
+            const qty = Math.max(1, parseInt(e.qty, 10) || 1);
+            if (!name) return null;
+            const unitPriceFils = Math.max(0, Math.round(Number(e.unitPriceFils) || 0));
+            return {
+                itemId: null, itemNo: CUSTOM_ITEM_BASE + i, nameSnapshot: name,
+                unitPriceFilsSnapshot: unitPriceFils, qty, lineTotalFils: lineTotal(unitPriceFils, qty),
+            };
+        })
+        .filter(Boolean)
+        .slice(0, 40);
 
     const catalog = await getActiveCatalog();
     const byId = new Map(catalog.map((c) => [c.id, c]));
@@ -61,9 +82,12 @@ export async function POST(req) {
         })
         .filter(Boolean)
         .sort((a, b) => a.item.itemNo - b.item.itemNo);
-    if (resolved.length === 0) return new NextResponse('No valid items', { status: 400 });
+    if (resolved.length === 0 && extras.length === 0) return new NextResponse('No valid items', { status: 400 });
 
-    const totals = computeTotals(resolved.map((r) => r.lineTotalFils));
+    const totals = computeTotals([
+        ...resolved.map((r) => r.lineTotalFils),
+        ...extras.map((e) => e.lineTotalFils),
+    ]);
 
     // An uploaded PDF usually carries its own printed reference, possibly from an
     // earlier month. When one is given, use it verbatim and do NOT reserve — that
@@ -83,10 +107,13 @@ export async function POST(req) {
         submitterNote: 'Uploaded by PICO admin',
     });
 
-    await insertQuotationLines(quote.id, resolved.map((r) => ({
-        itemId: r.item.id, itemNo: r.item.itemNo, nameSnapshot: r.item.name,
-        unitPriceFilsSnapshot: r.item.unitPriceFils, qty: r.qty, lineTotalFils: r.lineTotalFils,
-    })));
+    await insertQuotationLines(quote.id, [
+        ...resolved.map((r) => ({
+            itemId: r.item.id, itemNo: r.item.itemNo, nameSnapshot: r.item.name,
+            unitPriceFilsSnapshot: r.item.unitPriceFils, qty: r.qty, lineTotalFils: r.lineTotalFils,
+        })),
+        ...extras,
+    ]);
 
     const bytes = new Uint8Array(await file.arrayBuffer());
     const safeRef = ref.replace(/\//g, '-');
