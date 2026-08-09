@@ -27,10 +27,16 @@ export async function POST(req) {
         const { text } = await parser.getText();
         if (!text || !text.trim()) {
             // A scan with no text layer can't be read — the admin ticks by hand.
-            return NextResponse.json({ ok: true, readable: false, meta: {}, matched: [], extras: [] });
+            return NextResponse.json({ ok: true, readable: false, reason: 'no text layer', meta: {}, matched: [], extras: [] });
         }
         return NextResponse.json({ ok: true, readable: true, ...scanQuotationText(text) });
-    } catch {
-        return NextResponse.json({ ok: true, readable: false, meta: {}, matched: [], extras: [] });
+    } catch (e) {
+        // Admin-only endpoint, so report why rather than a bare "unreadable" —
+        // a library failing in the lambda looks identical to a scanned PDF
+        // otherwise, and that hid a real fault once already.
+        return NextResponse.json({
+            ok: true, readable: false, reason: String(e && e.message || e).slice(0, 300),
+            meta: {}, matched: [], extras: [],
+        });
     }
 }
