@@ -32,39 +32,57 @@ export default async function ProductionPage({ searchParams }) {
     const ministryById = new Map(ministryRows.map((m) => [m.id, m]));
 
     // Confirmed (LPO received) meetings only; one card per meeting — a ministry
-    // may hold several meetings (different eventDate), revisions dedupe to the
-    // newest quote (allQuotes is newest-first).
-    const seen = new Set();
-    const meetings = [];
+    // may hold several meetings (different eventDate).
+    //
+    // A meeting can carry MORE THAN ONE quotation: an added scope, or a second
+    // room quoted separately. Showing only the newest hid the main scope
+    // entirely. They are NOT merged either — quantities across two quotations
+    // are not additive (both may list "4 LED screens", and PICO owns one set),
+    // so each quotation keeps its own item list and a person decides.
+    const byMeeting = new Map();
     for (const q of allQuotes) {
         const m = ministryById.get(q.ministryId);
         if (!m || !m.lpoReceived) continue;
         const key = `${q.ministryId}|${q.eventDate || ''}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
-        const sched = deriveSchedule(q.eventDate);
-        meetings.push({
-            quoteId: q.id, ref: q.ref, ministry: m.name, event: q.eventName || '', venue: q.venue || '',
-            duration: q.duration || '', productionNote: q.productionNote || '',
-            shareToken: q.shareToken || null, ...sched,
-        });
+        if (!byMeeting.has(key)) {
+            byMeeting.set(key, {
+                // Meeting-level fields come from the newest quotation (first seen,
+                // allQuotes is newest-first): schedule, note, share link, files.
+                quoteId: q.id, ref: q.ref, ministry: m.name, event: q.eventName || '', venue: q.venue || '',
+                duration: q.duration || '', productionNote: q.productionNote || '',
+                shareToken: q.shareToken || null, quotes: [], ...deriveSchedule(q.eventDate),
+            });
+        }
+        byMeeting.get(key).quotes.push({ quoteId: q.id, ref: q.ref, revision: q.revision });
     }
+    // Oldest first inside a meeting, so the main scope reads before the add-on.
+    const meetings = [...byMeeting.values()];
+    for (const mt of meetings) mt.quotes.reverse();
     meetings.sort((a, b) => {
         const da = a.eventDays[0] || '9999', db2 = b.eventDays[0] || '9999';
         return da < db2 ? -1 : da > db2 ? 1 : 0;
     });
 
-    const ids = meetings.map((mt) => mt.quoteId);
+    // Every quotation of every meeting, not just the newest.
+    const ids = meetings.flatMap((mt) => mt.quotes.map((qq) => qq.quoteId));
     const [linesByQuote, overrides, filesByQuote] = await Promise.all([
         getQuotationLinesBulk(ids), getProductionAssignments(ids), getProductionFiles(ids),
     ]);
     for (const mt of meetings) {
         mt.files = filesByQuote.get(mt.quoteId) || [];
-        mt.lines = (linesByQuote.get(mt.quoteId) || []).map((l) => {
-            const ov = overrides.get(`${mt.quoteId}:${l.itemNo}`) || {};
-            return { ...l, dept: ov.dept || deptForItem(l.itemNo), title: ov.title || '', selections: ov.selections || [] };
-        });
-        mt.singleStockItems = new Set(mt.lines.map((l) => l.itemNo).filter((n) => SINGLE_STOCK_ITEM_NOS.includes(n)));
+        for (const g of mt.quotes) {
+            g.lines = (linesByQuote.get(g.quoteId) || []).map((l) => {
+                // Titles, plate/flag picks and department overrides are keyed to the
+                // quotation the line belongs to, not to the meeting.
+                const ov = overrides.get(`${g.quoteId}:${l.itemNo}`) || {};
+                return { ...l, dept: ov.dept || deptForItem(l.itemNo), title: ov.title || '', selections: ov.selections || [] };
+            });
+        }
+        // One clash view for the meeting: the table cannot be in two places at
+        // once regardless of which quotation asked for it.
+        mt.singleStockItems = new Set(
+            mt.quotes.flatMap((g) => g.lines.map((l) => l.itemNo)).filter((n) => SINGLE_STOCK_ITEM_NOS.includes(n)),
+        );
     }
     const autoNotes = computeAutoNotes(meetings);
 
@@ -73,12 +91,16 @@ export default async function ProductionPage({ searchParams }) {
     const upcoming = meetings.filter((mt) => !isPast(mt));
     const past = meetings.filter(isPast);
 
-    const visibleLines = (mt) => deptFilter ? mt.lines.filter((l) => l.dept === deptFilter) : mt.lines;
+    // Groups still holding items after the department filter.
+    const visibleGroups = (mt) => mt.quotes
+        .map((g) => ({ ...g, lines: deptFilter ? g.lines.filter((l) => l.dept === deptFilter) : g.lines }))
+        .filter((g) => g.lines.length > 0);
 
     const MeetingCard = ({ mt }) => {
-        const lines = visibleLines(mt);
-        if (deptFilter && lines.length === 0) return null;
+        const groups = visibleGroups(mt);
+        if (groups.length === 0) return null;
         const notes = autoNotes.get(mt.quoteId) || [];
+        const multi = mt.quotes.length > 1;
         return (
             <details open className="prod-card prod-details" style={{ ...card, overflow: 'hidden' }}>
                 <summary style={{ listStyle: 'none', cursor: 'pointer' }} title="Click to open / close details">
@@ -90,6 +112,12 @@ export default async function ProductionPage({ searchParams }) {
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             <span style={{ fontSize: 11, color: '#94a3b8' }}>{mt.ref}</span>
+                            {multi ? (
+                                <span title={mt.quotes.map((g) => `${g.ref} (rev ${g.revision})`).join('  ·  ')}
+                                    style={{ borderRadius: 4, background: '#fff7ed', border: '1px solid #fed7aa', padding: '1px 7px', fontSize: 10.5, fontWeight: 700, color: '#9a3412' }}>
+                                    {mt.quotes.length} QUOTATIONS
+                                </span>
+                            ) : null}
                             <span style={{ borderRadius: 4, background: '#dc2626', color: '#fff', padding: '1px 8px', fontSize: 10.5, fontWeight: 700 }}>CONFIRMED · LPO</span>
                         </div>
                     </div>
@@ -112,6 +140,16 @@ export default async function ProductionPage({ searchParams }) {
                     </div>
                 ) : null}
 
+                {groups.map((g) => (
+                <div key={g.quoteId}>
+                {/* Only labelled when the meeting has more than one quotation —
+                    a single-quotation meeting looks exactly as it always did. */}
+                {multi ? (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, padding: '10px 16px 2px' }}>
+                        <span style={{ borderRadius: 4, background: '#eef2f3', padding: '2px 8px', fontSize: 11, fontWeight: 700, color: '#475569' }}>{g.ref}</span>
+                        <span style={{ fontSize: 11, color: '#94a3b8' }}>Rev {g.revision} · {g.lines.length} item{g.lines.length === 1 ? '' : 's'}</span>
+                    </div>
+                ) : null}
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
                     <thead>
                         <tr style={{ textAlign: 'left', color: '#75787B', fontSize: 11 }}>
@@ -123,7 +161,7 @@ export default async function ProductionPage({ searchParams }) {
                         </tr>
                     </thead>
                     <tbody>
-                        {lines.map((l) => (
+                        {g.lines.map((l) => (
                             <tr key={l.itemNo} style={{ borderTop: '1px solid #f8fafc' }}>
                                 <td style={{ padding: '5px 8px 5px 16px', color: '#94a3b8' }}>{isCustomItemNo(l.itemNo) ? '+' : l.itemNo}</td>
                                 <td style={{ padding: '4px 8px', lineHeight: 0 }}>
@@ -137,7 +175,7 @@ export default async function ProductionPage({ searchParams }) {
                                     {TITLE_ITEM_NOS.includes(l.itemNo) ? (
                                         <>
                                             <span className="no-print">
-                                                <ItemTitle quotationId={mt.quoteId} itemNo={l.itemNo} title={l.title} hint={TITLE_ITEM_HINT[l.itemNo]} />
+                                                <ItemTitle quotationId={g.quoteId} itemNo={l.itemNo} title={l.title} hint={TITLE_ITEM_HINT[l.itemNo]} />
                                             </span>
                                             {l.title ? <div className="print-only-block" style={{ display: 'none', marginTop: 3, fontSize: 11 }}><strong>Title:</strong> {l.title}</div> : null}
                                         </>
@@ -145,7 +183,7 @@ export default async function ProductionPage({ searchParams }) {
                                     {pickListFor(l.itemNo) ? (
                                         <>
                                             <span className="no-print">
-                                                <PickList quotationId={mt.quoteId} itemNo={l.itemNo} values={l.selections} qty={l.qty} />
+                                                <PickList quotationId={g.quoteId} itemNo={l.itemNo} values={l.selections} qty={l.qty} />
                                             </span>
                                             {l.selections.length ? (
                                                 <div className="print-only-block" style={{ display: 'none', marginTop: 3, fontSize: 11 }}>
@@ -157,13 +195,15 @@ export default async function ProductionPage({ searchParams }) {
                                 </td>
                                 <td style={{ padding: '5px 8px', fontWeight: 600, verticalAlign: 'top' }}>{l.qty}</td>
                                 <td className="no-print" style={{ padding: '4px 16px 4px 8px' }}>
-                                    <DeptSelect quotationId={mt.quoteId} itemNo={l.itemNo} dept={l.dept} />
+                                    <DeptSelect quotationId={g.quoteId} itemNo={l.itemNo} dept={l.dept} />
                                 </td>
                                 <td className="print-only" style={{ display: 'none', padding: '5px 16px 5px 8px', fontSize: 11 }}>{DEPT_LABEL[l.dept]}</td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
+                </div>
+                ))}
 
                 <div className="no-print" style={{ borderTop: '1px solid #f1f5f9', padding: '10px 16px 14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
                     <ProductionNote quotationId={mt.quoteId} note={mt.productionNote} />

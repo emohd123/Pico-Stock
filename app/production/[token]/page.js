@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import {
-    getQuotationByShareToken, getMinistryById, getQuotationLines,
+    getQuotationByShareToken, getMinistryById, getQuotationLines, getMinistryQuotations,
     getProductionAssignments, getProductionFiles,
 } from '@/lib/ministry/queries';
 import {
@@ -23,20 +23,35 @@ export default async function SharedProductionPage({ params }) {
     const quote = await getQuotationByShareToken(params.token);
     if (!quote) notFound();
 
-    const [ministry, lines, overrides, filesByQuote] = await Promise.all([
+    const [ministry, siblings, filesByQuote] = await Promise.all([
         getMinistryById(quote.ministryId),
-        getQuotationLines(quote.id),
-        getProductionAssignments([quote.id]),
+        getMinistryQuotations(quote.ministryId),
         getProductionFiles([quote.id]),
+    ]);
+    // A meeting can be covered by more than one quotation (added scope, or a
+    // second room quoted separately). The token unlocks the meeting, so the
+    // sheet must show all of them — otherwise production builds half the job.
+    // They stay separate: quantities across quotations are not additive.
+    const meetingQuotes = siblings
+        .filter((q) => (q.eventDate || '') === (quote.eventDate || ''))
+        .sort((a, b) => a.id - b.id);
+    const multi = meetingQuotes.length > 1;
+
+    const [overrides, ...lineSets] = await Promise.all([
+        getProductionAssignments(meetingQuotes.map((q) => q.id)),
+        ...meetingQuotes.map((q) => getQuotationLines(q.id)),
     ]);
     const files = filesByQuote.get(quote.id) || [];
     const sched = deriveSchedule(quote.eventDate);
 
     // Deliberately no rates or costs: this sheet is about what to deliver.
-    const rows = lines.map((l) => {
-        const ov = overrides.get(`${quote.id}:${l.itemNo}`) || {};
-        return { ...l, dept: ov.dept || deptForItem(l.itemNo), title: ov.title || '', selections: ov.selections || [] };
-    });
+    const rows = meetingQuotes.flatMap((q, i) => lineSets[i].map((l) => {
+        const ov = overrides.get(`${q.id}:${l.itemNo}`) || {};
+        return {
+            ...l, quoteId: q.id, quoteRef: q.ref, revision: q.revision,
+            dept: ov.dept || deptForItem(l.itemNo), title: ov.title || '', selections: ov.selections || [],
+        };
+    }));
     const byDept = DEPARTMENTS
         .map((d) => ({ ...d, rows: rows.filter((r) => r.dept === d.id) }))
         .filter((d) => d.rows.length);
@@ -115,7 +130,7 @@ export default async function SharedProductionPage({ params }) {
                             </thead>
                             <tbody>
                                 {d.rows.map((r) => (
-                                    <tr key={r.itemNo} style={{ borderTop: '1px solid #f8fafc' }}>
+                                    <tr key={`${r.quoteId}:${r.itemNo}`} style={{ borderTop: '1px solid #f8fafc' }}>
                                         <td style={{ padding: '6px 8px 6px 16px', color: '#94a3b8', verticalAlign: 'top' }}>{isCustomItemNo(r.itemNo) ? '+' : r.itemNo}</td>
                                         <td style={{ padding: '5px 8px', lineHeight: 0, verticalAlign: 'top' }}>
                                             <ItemThumb src={itemImage(r.itemNo)} name={`${r.itemNo}. ${r.nameSnapshot}`} />
@@ -124,6 +139,9 @@ export default async function SharedProductionPage({ params }) {
                                             {r.nameSnapshot}
                                             {SINGLE_STOCK_ITEM_NOS.includes(r.itemNo) ? <span style={{ marginLeft: 6, borderRadius: 3, background: '#f1f5f9', padding: '0 4px', fontSize: 9, fontWeight: 700, color: '#475569' }}>ONE ONLY</span> : null}
                                             {isCustomItemNo(r.itemNo) ? <span style={{ marginLeft: 6, borderRadius: 3, background: '#fff7ed', border: '1px solid #fed7aa', padding: '0 4px', fontSize: 9, fontWeight: 700, color: '#9a3412' }}>ADDITIONAL</span> : null}
+                                            {/* With two quotations on one meeting the same item can appear
+                                                twice with different quantities — say which one it came from. */}
+                                            {multi ? <span style={{ marginLeft: 6, borderRadius: 3, background: '#eef2f3', padding: '0 5px', fontSize: 9, fontWeight: 700, color: '#475569' }}>{r.quoteRef}</span> : null}
                                             {TITLE_ITEM_NOS.includes(r.itemNo) && r.title ? (
                                                 <div style={{ marginTop: 3, borderRadius: 5, background: '#f0fdfa', border: '1px solid #99f6e4', padding: '3px 8px', fontSize: 11.5, color: '#00857A' }}>
                                                     <strong>Title:</strong> {r.title}
