@@ -4,7 +4,7 @@ import {
     getProductionAssignments, getProductionFiles,
 } from '@/lib/ministry/queries';
 import {
-    DEPARTMENTS, DEPT_LABEL, deptForItem, SINGLE_STOCK_ITEM_NOS,
+    isProductionItem, SINGLE_STOCK_ITEM_NOS,
     TITLE_ITEM_NOS, pickListFor, PICK_LIST_EN, selectionFit, deriveSchedule, fmtSize,
 } from '@/lib/ministry/production';
 import { itemImage } from '@/lib/ministry/itemImages';
@@ -45,16 +45,17 @@ export default async function SharedProductionPage({ params }) {
     const sched = deriveSchedule(quote.eventDate);
 
     // Deliberately no rates or costs: this sheet is about what to deliver.
-    const rows = meetingQuotes.flatMap((q, i) => lineSets[i].map((l) => {
-        const ov = overrides.get(`${q.id}:${l.itemNo}`) || {};
-        return {
-            ...l, quoteId: q.id, quoteRef: q.ref, revision: q.revision,
-            dept: ov.dept || deptForItem(l.itemNo), title: ov.title || '', selections: ov.selections || [],
-        };
-    }));
-    const byDept = DEPARTMENTS
-        .map((d) => ({ ...d, rows: rows.filter((r) => r.dept === d.id) }))
-        .filter((d) => d.rows.length);
+    // One list, not split by department: the same link goes to every team, so
+    // splitting it just made each of them scroll past the other three sections.
+    const rows = meetingQuotes.flatMap((q, i) => lineSets[i]
+        .filter((l) => isProductionItem(l.itemNo))
+        .map((l) => {
+            const ov = overrides.get(`${q.id}:${l.itemNo}`) || {};
+            return {
+                ...l, quoteId: q.id, quoteRef: q.ref, revision: q.revision,
+                title: ov.title || '', selections: ov.selections || [],
+            };
+        }));
 
     const meta = [
         ['📍 Venue', quote.venue || '—'],
@@ -114,7 +115,7 @@ export default async function SharedProductionPage({ params }) {
                     </section>
                 ) : null}
 
-                {byDept.map((d) => (
+                {[{ id: 'all', label: 'Items to deliver', rows }].map((d) => (
                     <section key={d.id} className="p-card" style={{ ...card, overflow: 'hidden' }}>
                         <h2 style={{ fontSize: 13, fontWeight: 700, margin: 0, padding: '11px 16px', borderBottom: '1px solid #f1f5f9', color: '#22282B' }}>
                             {d.label} <span style={{ color: '#94a3b8', fontWeight: 400 }}>· {d.rows.length} item{d.rows.length === 1 ? '' : 's'}</span>

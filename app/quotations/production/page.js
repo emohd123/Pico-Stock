@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { isAdmin } from '@/lib/ministry/auth';
 import { getAllMinistries, getRecentQuotations, getQuotationLinesBulk, getProductionAssignments, getProductionFiles } from '@/lib/ministry/queries';
-import { DEPARTMENTS, DEPT_LABEL, deptForItem, SINGLE_STOCK_ITEM_NOS, TITLE_ITEM_NOS, TITLE_ITEM_HINT, pickListFor, deriveSchedule, computeAutoNotes } from '@/lib/ministry/production';
+import { DEPARTMENTS, DEPT_LABEL, deptForItem, isProductionItem, SINGLE_STOCK_ITEM_NOS, TITLE_ITEM_NOS, TITLE_ITEM_HINT, pickListFor, deriveSchedule, computeAutoNotes } from '@/lib/ministry/production';
 import { itemImage } from '@/lib/ministry/itemImages';
 import { isCustomItemNo } from '@/lib/ministry/quotationScan';
 import { fmtIso } from '@/components/ministry/ClashNotice';
@@ -71,7 +71,7 @@ export default async function ProductionPage({ searchParams }) {
     for (const mt of meetings) {
         mt.files = filesByQuote.get(mt.quoteId) || [];
         for (const g of mt.quotes) {
-            g.lines = (linesByQuote.get(g.quoteId) || []).map((l) => {
+            g.lines = (linesByQuote.get(g.quoteId) || []).filter((l) => isProductionItem(l.itemNo)).map((l) => {
                 // Titles, plate/flag picks and department overrides are keyed to the
                 // quotation the line belongs to, not to the meeting.
                 const ov = overrides.get(`${g.quoteId}:${l.itemNo}`) || {};
