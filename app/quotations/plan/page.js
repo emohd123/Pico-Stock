@@ -5,6 +5,7 @@ import { getAllMinistries, getRecentQuotations, getQuotationLinesBulk, getProduc
 import { SINGLE_STOCK_ITEM_NOS, SINGLE_STOCK_LABELS, isProductionItem, MONTHS_FULL, isoAddDays, daysBetween } from '@/lib/ministry/production';
 import { buildPlan } from '@/lib/ministry/plan';
 import { VENUE_UNKNOWN } from '@/lib/ministry/venues';
+import { itemImage } from '@/lib/ministry/itemImages';
 import PlanCalendar from '@/components/ministry/PlanCalendar';
 
 export const dynamic = 'force-dynamic';
@@ -41,12 +42,13 @@ export default async function PlanPage() {
         if (!grouped.has(key)) {
             grouped.set(key, {
                 key, ministryId: m.id, ministry: m.name, lpo: Boolean(m.lpoReceived),
-                venueRaw: q.venue || '', eventDateText: q.eventDate || '',
-                event: q.eventName || '', quoteIds: [], refs: [],
+                token: m.token, venueRaw: q.venue || '', eventDateText: q.eventDate || '',
+                event: q.eventName || '', quoteIds: [], refs: [], qList: [],
             });
         }
         grouped.get(key).quoteIds.push(q.id);
         grouped.get(key).refs.push(q.ref);
+        grouped.get(key).qList.push({ id: q.id, ref: q.ref, pdfBlobUrl: q.pdfBlobUrl || null });
     }
     const lineMap = await getQuotationLinesBulk([...grouped.values()].flatMap((g) => g.quoteIds));
     for (const g of grouped.values()) {
@@ -133,6 +135,7 @@ export default async function PlanPage() {
                 items.push({
                     no: l.itemNo, name: l.nameSnapshot, qty: l.qty,
                     oneOnly: SINGLE_STOCK_ITEM_NOS.includes(l.itemNo),
+                    img: itemImage(l.itemNo) || null,
                     title: ov.title || null,
                     selections: ov.selections && ov.selections.length ? ov.selections : null,
                 });
@@ -144,6 +147,12 @@ export default async function PlanPage() {
             venue: m.venue, color: colorOf.get(m.venue), refs: [...new Set(m.refs)],
             range: rangeLabel(m), setupDay: m.setupDay,
             removalStart: m.removalStart, removalEnd: m.removalEnd, items,
+            // Stored quotation PDFs, viewable straight from the day panel. The
+            // token in the URL is the access, same links the portal itself uses.
+            pdfs: m.qList.filter((x) => x.pdfBlobUrl).map((x) => ({
+                ref: x.ref,
+                url: `/q/${m.token}/quote/${x.id}/pdf?v=${encodeURIComponent((x.pdfBlobUrl || '').split('/').pop() || x.id)}`,
+            })),
         };
     }
     const calDays = {};

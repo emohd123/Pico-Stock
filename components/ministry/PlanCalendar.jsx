@@ -1,6 +1,7 @@
 'use client';
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import ItemThumb from './ItemThumb';
 
 // Interactive season calendar. Click a day, see everything about it: which
 // meetings touch it and in what phase, the items each needs, titles, plates,
@@ -150,7 +151,16 @@ export default function PlanCalendar({ meetings, days, monthKeys, todayIso, firs
                                             <span>🔧 {m.setupDay || '—'}</span>
                                             <span>🚚 {m.removalStart} → {m.removalEnd}</span>
                                         </div>
-                                        <div style={{ color: '#94a3b8', fontSize: 10.5 }}>{m.refs.join(' · ')}</div>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, fontSize: 10.5 }}>
+                                            <span style={{ color: '#94a3b8' }}>{m.refs.join(' · ')}</span>
+                                            {/* the stored quotation PDFs, one link per document */}
+                                            {m.pdfs && m.pdfs.map((p) => (
+                                                <a key={p.url} href={p.url} target="_blank" rel="noreferrer"
+                                                    style={{ borderRadius: 4, border: '1px solid #99f6e4', background: '#f0fdfa', color: '#00857A', padding: '1px 7px', fontWeight: 700, textDecoration: 'none' }}>
+                                                    📄 {m.pdfs.length > 1 ? p.ref : 'Quotation'}
+                                                </a>
+                                            ))}
+                                        </div>
                                     </div>
                                     {e.phase === 'event' ? (
                                         <details style={{ borderTop: '1px solid #f8fafc' }}>
@@ -159,8 +169,10 @@ export default function PlanCalendar({ meetings, days, monthKeys, todayIso, firs
                                             </summary>
                                             <ul style={{ listStyle: 'none', margin: 0, padding: '0 14px 10px', display: 'flex', flexDirection: 'column', gap: 2 }}>
                                                 {m.items.map((it) => (
-                                                    <li key={`${it.no}|${it.name}`} style={{ display: 'flex', gap: 7, fontSize: 11, alignItems: 'baseline' }}>
+                                                    <li key={`${it.no}|${it.name}`} style={{ display: 'flex', gap: 7, fontSize: 11, alignItems: 'center' }}>
                                                         <span style={{ color: '#94a3b8', minWidth: 20, textAlign: 'right' }}>{it.no > 899 ? '+' : it.no}</span>
+                                                        {/* click to enlarge — ItemThumb opens its own popup, Esc/click closes */}
+                                                        <span style={{ lineHeight: 0 }}><ItemThumb src={it.img} name={`${it.no}. ${it.name}`} /></span>
                                                         <span style={{ flex: 1, color: '#22282B' }}>
                                                             {it.name}
                                                             {it.oneOnly ? <b style={{ marginLeft: 5, fontSize: 8.5, color: '#475569', background: '#f1f5f9', borderRadius: 3, padding: '0 3px' }}>ONE ONLY</b> : null}
@@ -184,8 +196,9 @@ export default function PlanCalendar({ meetings, days, monthKeys, todayIso, firs
                                 </h4>
                                 <ul style={{ listStyle: 'none', margin: 0, padding: '8px 14px 10px', display: 'flex', flexDirection: 'column', gap: 2 }}>
                                     {dayItems.map((it) => (
-                                        <li key={`${it.no}|${it.name}`} style={{ display: 'flex', gap: 7, fontSize: 11, alignItems: 'baseline' }}>
+                                        <li key={`${it.no}|${it.name}`} style={{ display: 'flex', gap: 7, fontSize: 11, alignItems: 'center' }}>
                                             <span style={{ color: '#94a3b8', minWidth: 20, textAlign: 'right' }}>{it.no > 899 ? '+' : it.no}</span>
+                                            <span style={{ lineHeight: 0 }}><ItemThumb src={it.img} name={`${it.no}. ${it.name}`} /></span>
                                             <span style={{ flex: 1, color: it.oneOnly && it.from.length > 1 ? '#dc2626' : '#22282B', fontWeight: it.oneOnly && it.from.length > 1 ? 700 : 400 }}>
                                                 {it.name}{it.oneOnly && it.from.length > 1 ? ' — wanted by both!' : ''}
                                             </span>
