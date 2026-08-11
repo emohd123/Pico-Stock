@@ -55,6 +55,11 @@ export default async function PlanPage() {
         const nos = g.quoteIds.flatMap((id) => (lineMap.get(id) || []).map((l) => l.itemNo)).filter(isProductionItem);
         g.singleItems = new Set(nos.filter((n) => SINGLE_STOCK_ITEM_NOS.includes(n)));
         g.itemCount = new Set(nos).size;
+        // Highest quantity across the meeting's quotations, for the clash detail.
+        g.qtyByItem = {};
+        for (const qid of g.quoteIds) for (const l of (lineMap.get(qid) || [])) {
+            g.qtyByItem[l.itemNo] = Math.max(g.qtyByItem[l.itemNo] || 0, l.qty);
+        }
     }
 
     const plan = buildPlan([...grouped.values()]);
@@ -363,10 +368,30 @@ export default async function PlanPage() {
                         {shortfall.length === 0
                             ? <li style={{ fontSize: 11.5, color: '#15803d' }}>No day needs two of any one-only item.</li>
                             : shortfall.map((s) => (
-                                <li key={s.itemNo} style={{ borderRadius: 6, background: '#fef2f2', border: '1px solid #fecaca', padding: '6px 10px', fontSize: 11.5 }}>
+                                <li key={s.itemNo} style={{ borderRadius: 6, background: '#fef2f2', border: '1px solid #fecaca', padding: '7px 10px', fontSize: 11.5 }}>
                                     <strong style={{ color: '#22282B' }}>{s.label}</strong>
                                     <span style={{ color: '#dc2626', fontWeight: 700 }}> — {s.needed} needed by {shortDate(s.firstNeededBy)}</span>
-                                    <div style={{ color: '#9a3412', fontSize: 10.5 }}>{s.venues.join(' + ')}</div>
+                                    {/* every day the shortage bites, and who is driving it */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 4 }}>
+                                        {s.clashDays.map((cd) => (
+                                            <div key={cd.iso} style={{ fontSize: 10.5, color: '#4D4D4F' }}>
+                                                <b style={{ color: '#dc2626' }}>{shortDate(cd.iso)}</b>{' — '}
+                                                {cd.needs.map((n, j) => (
+                                                    <span key={j}>
+                                                        {j > 0 ? '  +  ' : ''}
+                                                        {n.ministry.split(' ').slice(0, 4).join(' ')}
+                                                        <span style={{ color: n.venue === VENUE_UNKNOWN ? '#dc2626' : '#75787B' }}> @ {n.venue}</span>
+                                                        <span style={{ color: '#94a3b8' }}> (×{n.qty})</span>
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    {s.clashDays.some((cd) => cd.resolvable) ? (
+                                        <div style={{ marginTop: 4, fontSize: 10.5, fontWeight: 600, color: '#15803d' }}>
+                                            💡 One side&apos;s venue is not set — confirming it at the other meeting&apos;s hotel removes that day without building anything.
+                                        </div>
+                                    ) : null}
                                 </li>
                             ))}
                     </Panel>
@@ -374,13 +399,36 @@ export default async function PlanPage() {
                     <Panel title="✓ Leave standing — do not dismantle">
                         {plan.chains.length === 0
                             ? <li style={{ fontSize: 11.5, color: '#75787B' }}>No back-to-back meetings share a venue.</li>
-                            : plan.chains.map((c, i) => (
-                                <li key={i} style={{ borderRadius: 6, background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '6px 10px', fontSize: 11.5 }}>
-                                    <strong style={{ color: '#15803d' }}>{c.venue}</strong>
-                                    <div style={{ color: '#22282B' }}>{c.from.ministry} → {c.to.ministry}</div>
-                                    <div style={{ color: '#4D4D4F', fontSize: 10.5 }}>{c.gap} day{c.gap === 1 ? '' : 's'} between · {c.items.length} items stay up</div>
-                                </li>
-                            ))}
+                            : plan.chains.map((c, i) => {
+                                // The structure stays, but everything carrying the meeting's
+                                // name or flags must still change hands between them.
+                                const toItems = (calMeetings[c.to.key] || {}).items || [];
+                                const rebrand = [];
+                                if (toItems.some((it) => it.no === 1 || it.no === 2)) rebrand.push('backdrop graphics & meeting title');
+                                for (const [no, label] of [[41, 'title boards'], [26, 'name plates'], [12, 'platform flags'], [14, 'table-top flags']]) {
+                                    const it = toItems.find((x) => x.no === no);
+                                    if (it) rebrand.push(`${label} ×${it.qty}`);
+                                }
+                                return (
+                                    <li key={i} style={{ borderRadius: 6, background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '7px 10px', fontSize: 11.5 }}>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'baseline' }}>
+                                            <strong style={{ color: '#15803d' }}>{c.venue}</strong>
+                                            <span style={{ color: '#75787B', fontSize: 10.5 }}>
+                                                {shortDate(c.from.eventDays[c.from.eventDays.length - 1])} → {shortDate(c.to.eventDays[0])} · {c.gap} day{c.gap === 1 ? '' : 's'} between
+                                            </span>
+                                        </div>
+                                        <div style={{ color: '#22282B' }}>{c.from.ministry} → {c.to.ministry}</div>
+                                        <div style={{ color: '#4D4D4F', fontSize: 10.5, marginTop: 3 }}>
+                                            <b style={{ color: '#15803d' }}>Stays up:</b> {c.items.join(', ')}
+                                        </div>
+                                        {rebrand.length ? (
+                                            <div style={{ color: '#9a3412', fontSize: 10.5, marginTop: 2 }}>
+                                                <b>Still changes for {c.to.ministry.split(' ').slice(0, 3).join(' ')}:</b> {rebrand.join(' · ')}
+                                            </div>
+                                        ) : null}
+                                    </li>
+                                );
+                            })}
                     </Panel>
 
                     <Panel title="Next steps">
