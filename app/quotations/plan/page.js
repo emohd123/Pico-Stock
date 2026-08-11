@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { isAdmin } from '@/lib/ministry/auth';
-import { getAllMinistries, getRecentQuotations, getQuotationLinesBulk } from '@/lib/ministry/queries';
+import { getAllMinistries, getRecentQuotations, getQuotationLinesBulk, getProductionAssignments } from '@/lib/ministry/queries';
 import { SINGLE_STOCK_ITEM_NOS, SINGLE_STOCK_LABELS, isProductionItem, MONTHS_FULL, isoAddDays, daysBetween } from '@/lib/ministry/production';
 import { buildPlan } from '@/lib/ministry/plan';
 import { VENUE_UNKNOWN } from '@/lib/ministry/venues';
+import PlanCalendar from '@/components/ministry/PlanCalendar';
 
 export const dynamic = 'force-dynamic';
 
@@ -113,6 +114,62 @@ export default async function PlanPage() {
     const shortfall = Object.values(plan.sets).filter((s) => s.needed > 1);
     const next = rows.slice().sort((a, b) => a.eventDays[0].localeCompare(b.eventDays[0]))[0];
     const daysToNext = next ? daysBetween(todayIso, next.eventDays[0]) : null;
+
+    // ---- serialisable payload for the interactive calendar ----
+    // Titles and plate/flag selections ride along so clicking a day answers
+    // "what exactly do we deliver" without opening the production page.
+    const overrides = await getProductionAssignments(rows.flatMap((m) => m.quoteIds));
+    const calMeetings = {};
+    for (const m of rows) {
+        const items = [];
+        const seen = new Set();
+        for (const qid of m.quoteIds) {
+            for (const l of (lineMap.get(qid) || [])) {
+                if (!isProductionItem(l.itemNo)) continue;
+                const dedup = `${qid}:${l.itemNo}`;
+                if (seen.has(dedup)) continue;
+                seen.add(dedup);
+                const ov = overrides.get(`${qid}:${l.itemNo}`) || {};
+                items.push({
+                    no: l.itemNo, name: l.nameSnapshot, qty: l.qty,
+                    oneOnly: SINGLE_STOCK_ITEM_NOS.includes(l.itemNo),
+                    title: ov.title || null,
+                    selections: ov.selections && ov.selections.length ? ov.selections : null,
+                });
+            }
+        }
+        items.sort((a, b) => a.no - b.no);
+        calMeetings[m.key] = {
+            ministryId: m.ministryId, ministry: m.ministry, event: m.event, lpo: m.lpo,
+            venue: m.venue, color: colorOf.get(m.venue), refs: [...new Set(m.refs)],
+            range: rangeLabel(m), setupDay: m.setupDay,
+            removalStart: m.removalStart, removalEnd: m.removalEnd, items,
+        };
+    }
+    const calDays = {};
+    const addCal = (iso, k, phase) => {
+        if (!calDays[iso]) {
+            calDays[iso] = {
+                entries: [], pressure: pressure.get(iso) || 0, crew: crew.get(iso) || 0,
+                tableVenues: [...new Set((tableAt.get(iso) || []).map((m) => m.venue))],
+            };
+        }
+        calDays[iso].entries.push({ k, phase });
+    };
+    for (const m of rows) {
+        if (m.setupDay) addCal(m.setupDay, m.key, 'setup');
+        for (const d of m.eventDays) addCal(d, m.key, 'event');
+        if (m.removalEnd) addCal(m.removalEnd, m.key, 'removal');
+    }
+    // setup first, then event, then removal within a day
+    const phaseOrder = { setup: 0, event: 1, removal: 2 };
+    for (const d of Object.values(calDays)) d.entries.sort((a, b) => phaseOrder[a.phase] - phaseOrder[b.phase]);
+    const monthKeys = [];
+    for (const d of allDays) {
+        const p = parts(d);
+        if (!monthKeys.some((k) => k.y === p.y && k.m === p.m)) monthKeys.push({ y: p.y, m: p.m });
+    }
+    const firstEventIso = next ? next.eventDays[0] : todayIso;
 
     // background wash for a day column, reused by every row so columns line up
     const wash = (d) => {
@@ -282,6 +339,14 @@ export default async function PlanPage() {
                             ))}
                         </div>
                     </div>
+                </section>
+
+                {/* ---- interactive calendar: click a day for the full picture ---- */}
+                <section>
+                    <h2 style={{ fontSize: 14, fontWeight: 700, color: '#22282B', margin: '6px 0 10px' }}>
+                        📅 Calendar <span style={{ fontWeight: 400, color: '#94a3b8', fontSize: 12 }}>— click any day to see its meetings, items and crew load</span>
+                    </h2>
+                    <PlanCalendar meetings={calMeetings} days={calDays} monthKeys={monthKeys} todayIso={todayIso} firstEventIso={firstEventIso} />
                 </section>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(330px, 1fr))', gap: 14 }}>
