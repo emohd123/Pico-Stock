@@ -104,6 +104,7 @@ export default async function QuotationsAdminPage({ searchParams }) {
                 <div style={{ maxWidth: 1000, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px 12px' }}>
                     <h1 style={{ fontSize: 20, fontWeight: 600, margin: 0 }}>Ministry Meeting Portal — Admin</h1>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <Link href="/quotations/plan" style={{ borderRadius: 6, border: "1px solid #cbd5e1", padding: "6px 12px", fontSize: 14, color: "#00857A", textDecoration: "none", fontWeight: 600 }}>🗓 Season plan</Link>
                         <Link href="/quotations/production" style={{ borderRadius: 6, border: '1px solid #cbd5e1', padding: '6px 12px', fontSize: 14, color: '#00857A', textDecoration: 'none', fontWeight: 600 }}>🏭 Production</Link>
                         <Link href="/quotations/albums" style={{ borderRadius: 6, border: '1px solid #cbd5e1', padding: '6px 12px', fontSize: 14, color: '#00857A', textDecoration: 'none', fontWeight: 600 }}>📷 Photo albums</Link>
                         <Link href="/quotations/activity" style={{ borderRadius: 6, border: '1px solid #cbd5e1', padding: '6px 12px', fontSize: 14, color: '#00857A', textDecoration: 'none', fontWeight: 600 }}>🕓 Activity log</Link>
