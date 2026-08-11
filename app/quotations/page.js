@@ -106,6 +106,7 @@ export default async function QuotationsAdminPage({ searchParams }) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <Link href="/quotations/production" style={{ borderRadius: 6, border: '1px solid #cbd5e1', padding: '6px 12px', fontSize: 14, color: '#00857A', textDecoration: 'none', fontWeight: 600 }}>🏭 Production</Link>
                         <Link href="/quotations/albums" style={{ borderRadius: 6, border: '1px solid #cbd5e1', padding: '6px 12px', fontSize: 14, color: '#00857A', textDecoration: 'none', fontWeight: 600 }}>📷 Photo albums</Link>
+                        <Link href="/quotations/activity" style={{ borderRadius: 6, border: '1px solid #cbd5e1', padding: '6px 12px', fontSize: 14, color: '#00857A', textDecoration: 'none', fontWeight: 600 }}>🕓 Activity log</Link>
                         <form action="/api/quotations/logout" method="post">
                             <button style={{ borderRadius: 6, border: '1px solid #cbd5e1', padding: '6px 12px', fontSize: 14, background: '#fff', cursor: 'pointer' }}>Log out</button>
                         </form>

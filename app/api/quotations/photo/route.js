@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { isAdmin } from '@/lib/ministry/auth';
 import { putPrivate } from '@/lib/ministry/storage';
-import { addPhoto } from '@/lib/ministry/queries';
+import { addPhoto, logActivity } from '@/lib/ministry/queries';
 
 export const runtime = 'nodejs';
 
@@ -21,5 +21,9 @@ export async function POST(req) {
     const bytes = new Uint8Array(await file.arrayBuffer());
     const stored = await putPrivate(`ministry-photos/${ministryId}/${file.name}`, bytes, file.type);
     await addPhoto(ministryId, stored.url, stored.pathname, caption);
+    await logActivity({
+        ministryId, actor: 'admin', action: 'photo.uploaded',
+        detail: 'Gallery photo uploaded' + (caption ? ` — ${caption}` : ''),
+    });
     return NextResponse.json({ ok: true });
 }

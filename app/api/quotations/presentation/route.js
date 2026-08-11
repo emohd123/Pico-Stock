@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { isAdmin } from '@/lib/ministry/auth';
 import { putPrivate, getPrivate, delPrivate } from '@/lib/ministry/storage';
-import { getMinistryById, getMinistryQuotations, getQuotationLines, setMinistryPresentation } from '@/lib/ministry/queries';
+import { getMinistryById, getMinistryQuotations, getQuotationLines, setMinistryPresentation, logActivity } from '@/lib/ministry/queries';
 import { PRESENTATION_ITEM_IMAGES, PRESENTATION_ART } from '@/lib/ministry/presentationAssets';
 import { renderPresentationPdf } from '@/components/ministry/PresentationPdf';
 
@@ -66,6 +66,11 @@ export async function POST(req) {
     const oldUrl = ministry.presentationUrl;
     await setMinistryPresentation(ministry.id, stored.url, quote.ref);
     if (oldUrl && oldUrl !== stored.url) { try { await delPrivate(oldUrl); } catch { /* ignore */ } }
+
+    await logActivity({
+        ministryId: ministry.id, quotationId: quote.id, actor: 'admin', action: 'presentation.generated',
+        detail: `Technical proposal presentation ${oldUrl ? 'regenerated' : 'generated'} for ${quote.ref}`,
+    });
 
     return NextResponse.json({ ok: true, ref: quote.ref });
 }

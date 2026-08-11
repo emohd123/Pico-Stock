@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getMinistryByToken, getActiveCatalog, reserveMinistryQuoteRef, getMinistryQuotations, createQuotation, insertQuotationLines, setQuotationPdfUrl } from '@/lib/ministry/queries';
+import { getMinistryByToken, getActiveCatalog, reserveMinistryQuoteRef, getMinistryQuotations, createQuotation, insertQuotationLines, setQuotationPdfUrl, logActivity } from '@/lib/ministry/queries';
 import { computeTotals, lineTotal } from '@/lib/ministry/money';
 import { itemDetail } from '@/lib/ministry/itemDetails';
 import { renderQuotationPdf } from '@/components/ministry/QuotationPdf';
@@ -105,6 +105,12 @@ export async function POST(req, { params }) {
     const safeRef = ref.replace(/\//g, '-');
     const stored = await putPrivate(`ministry-quotations/${ministry.id}/${safeRef}.pdf`, pdf, 'application/pdf');
     await setQuotationPdfUrl(quote.id, stored.url);
+
+    await logActivity({
+        ministryId: ministry.id, quotationId: quote.id, actor: 'ministry', action: 'quotation.generated',
+        detail: `Quotation ${ref} (rev ${revision}) generated through the portal — Exclusions, Terms & Payment Terms accepted`
+            + ` · ${resolved.length} items · BHD ${(totals.total / 1000).toFixed(3)}`,
+    });
 
     // Log to the master quotation-number sheet only when a NEW number was minted
     // (regenerations reuse the number, so they don't add rows). Best-effort.

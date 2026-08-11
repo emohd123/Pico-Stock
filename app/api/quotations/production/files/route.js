@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { isAdmin } from '@/lib/ministry/auth';
-import { addProductionFile, getProductionFile, deleteProductionFile } from '@/lib/ministry/queries';
+import { addProductionFile, getProductionFile, deleteProductionFile, getQuotationById, logActivity } from '@/lib/ministry/queries';
 import { delPrivate } from '@/lib/ministry/storage';
 
 export const runtime = 'nodejs';
@@ -19,6 +19,13 @@ export async function POST(req) {
         name, blobUrl, pathname: body.pathname || null,
         contentType: body.contentType || null, sizeBytes: Number(body.sizeBytes) || null,
     });
+    const quote = await getQuotationById(quotationId);
+    if (quote) {
+        await logActivity({
+            ministryId: quote.ministryId, quotationId, actor: 'admin', action: 'file.added',
+            detail: `File published for production — ${name}`,
+        });
+    }
     return NextResponse.json({ ok: true });
 }
 

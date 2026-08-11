@@ -120,6 +120,12 @@ export async function POST(req) {
     const stored = await putPrivate(`ministry-quotations/${ministryId}/${safeRef}.pdf`, bytes, 'application/pdf');
     await setQuotationPdfUrl(quote.id, stored.url);
 
+    await logActivity({
+        ministryId, quotationId: quote.id, actor: 'admin', action: 'quotation.uploaded',
+        detail: `Quotation ${ref} recorded by PICO from an uploaded PDF`
+            + ` · ${resolved.length + extras.length} items · BHD ${(totals.total / 1000).toFixed(3)}`,
+    });
+
     // Only a freshly minted number is new to the master sheet; a reference typed
     // from an existing document is already logged there.
     if (reserved && reserved.isNew) {

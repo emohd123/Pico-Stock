@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { isAdmin } from '@/lib/ministry/auth';
-import { setMinistryLpo } from '@/lib/ministry/queries';
+import { setMinistryLpo, logActivity } from '@/lib/ministry/queries';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -12,5 +12,12 @@ export async function POST(req) {
     const { ministryId, received } = await req.json();
     if (!ministryId) return new NextResponse('Bad request', { status: 400 });
     await setMinistryLpo(Number(ministryId), Boolean(received));
+    await logActivity({
+        ministryId: Number(ministryId), actor: 'admin',
+        action: received ? 'lpo.received' : 'lpo.cleared',
+        detail: received
+            ? 'LPO (purchase order) received — meeting confirmed and released to production'
+            : 'LPO mark removed — meeting no longer confirmed',
+    });
     return NextResponse.json({ ok: true });
 }
