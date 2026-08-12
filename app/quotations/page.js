@@ -35,6 +35,8 @@ export default async function QuotationsAdminPage({ searchParams }) {
         getAllMinistries(), getRecentQuotations(200), getQuotationIdsWithItem(HEAD_TABLE_ITEM_NO),
     ]);
     const nameById = new Map(ministryRows.map((m) => [m.id, m.name]));
+    // The ministry's link code — needed to build the quotation PDF viewer URL.
+    const tokenById = new Map(ministryRows.map((m) => [m.id, m.token]));
     // Ministries whose LPO (purchase order) is received — their dates show red.
     const lpoByMinistry = new Map(ministryRows.map((m) => [m.id, m.lpoReceived]));
     const recentQuotes = allQuotes.slice(0, 12);
@@ -56,7 +58,18 @@ export default async function QuotationsAdminPage({ searchParams }) {
             const key = [isoDay, ministry, event, venue].join('|');
             if (seenCal.has(key)) continue;
             seenCal.add(key);
-            calendarEntries.push({ iso: isoDay, ministry, event, venue, confirmed: Boolean(lpoByMinistry.get(q.ministryId)) });
+            // allQuotes is newest first, so the first quotation to claim a day is
+            // the current revision — that is the one worth opening from here.
+            const token = tokenById.get(q.ministryId);
+            calendarEntries.push({
+                iso: isoDay, ministry, event, venue,
+                confirmed: Boolean(lpoByMinistry.get(q.ministryId)),
+                ref: q.ref,
+                quoteUrl: q.pdfBlobUrl && token
+                    ? `/q/${token}/quote/${q.id}/pdf?v=${encodeURIComponent((q.pdfBlobUrl || '').split('/').pop() || q.id)}`
+                    : null,
+                ministryUrl: `/quotations/ministry/${q.ministryId}`,
+            });
             if (!byDay.has(isoDay)) byDay.set(isoDay, []);
             byDay.get(isoDay).push({ ministry, venue: venue || '—', headTable });
         }

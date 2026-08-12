@@ -8,7 +8,7 @@ const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 const GREEN = '#00857A';
 const RED = '#dc2626';
 
-// entries: [{ iso: 'YYYY-MM-DD', ministry, event, venue, confirmed? }]
+// entries: [{ iso: 'YYYY-MM-DD', ministry, event, venue, confirmed?, ref?, quoteUrl?, ministryUrl? }]
 // A day is "confirmed" (red) if any booking on it has LPO received.
 export default function BookingsCalendar({ entries }) {
     const byDay = useMemo(() => {
@@ -108,7 +108,22 @@ export default function BookingsCalendar({ entries }) {
                                             <span style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: '#22282B', lineHeight: 1.3 }}>{it.ministry}</span>
                                             {it.event ? <span style={{ display: 'block', fontSize: 10.5, color: '#6B7A80', lineHeight: 1.3 }}>{it.event}</span> : null}
                                             {it.venue ? <span style={{ display: 'block', fontSize: 10.5, color: '#94a3b8', lineHeight: 1.3 }}>📍 {it.venue}</span> : null}
-                                            {it.confirmed ? <span style={{ display: 'inline-block', marginTop: 2, borderRadius: 4, background: '#fef2f2', color: RED, padding: '0 5px', fontSize: 9, fontWeight: 700, letterSpacing: 0.3 }}>LPO RECEIVED</span> : null}
+                                            <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 3 }}>
+                                                {it.confirmed ? <span style={{ borderRadius: 4, background: '#fef2f2', color: RED, padding: '0 5px', fontSize: 9, fontWeight: 700, letterSpacing: 0.3 }}>LPO RECEIVED</span> : null}
+                                                {/* straight to the document behind the booking; when no PDF was
+                                                    stored, the ministry page is the honest next stop */}
+                                                {it.quoteUrl ? (
+                                                    <a href={it.quoteUrl} target="_blank" rel="noreferrer" title={it.ref ? `Open ${it.ref}` : 'Open the quotation'}
+                                                        style={{ borderRadius: 4, border: '1px solid #99f6e4', background: '#f0fdfa', color: GREEN, padding: '0 6px', fontSize: 9.5, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                                                        📄 View quote{it.ref ? ` · ${it.ref.split('/').pop()}` : ''}
+                                                    </a>
+                                                ) : it.ministryUrl ? (
+                                                    <a href={it.ministryUrl} title={it.ref ? `${it.ref} — no PDF stored` : 'Open the ministry'}
+                                                        style={{ borderRadius: 4, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#6B7A80', padding: '0 6px', fontSize: 9.5, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                                                        📄 Open ministry{it.ref ? ` · ${it.ref.split('/').pop()}` : ''}
+                                                    </a>
+                                                ) : null}
+                                            </span>
                                         </span>
                                     ))}
                                 </span>
