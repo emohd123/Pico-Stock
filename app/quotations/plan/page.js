@@ -7,6 +7,7 @@ import { buildPlan, computeInventory } from '@/lib/ministry/plan';
 import { VENUE_UNKNOWN } from '@/lib/ministry/venues';
 import { itemImage } from '@/lib/ministry/itemImages';
 import PlanCalendar from '@/components/ministry/PlanCalendar';
+import InventorySheet from '@/components/ministry/InventorySheet';
 
 export const dynamic = 'force-dynamic';
 
@@ -189,8 +190,7 @@ export default async function PlanPage() {
     const namesByNo = new Map();
     for (const lines of lineMap.values()) for (const l of lines) if (!namesByNo.has(l.itemNo)) namesByNo.set(l.itemNo, l.nameSnapshot);
     const inventory = computeInventory(rows, namesByNo);
-    const reusables = inventory.filter((i) => i.kind === 'reusable');
-    const consumables = inventory.filter((i) => i.kind === 'consumable');
+    const seasonLabel = `${shortDate(rows.map((m) => m.eventDays[0]).reduce((a, b) => (a < b ? a : b)))} – ${shortDate(rows.map((m) => m.eventDays[m.eventDays.length - 1]).reduce((a, b) => (a > b ? a : b)))} ${parts(to).y}`;
 
     // background wash for a day column, reused by every row so columns line up
     const wash = (d) => {
@@ -362,53 +362,9 @@ export default async function PlanPage() {
                     </div>
                 </section>
 
-                {/* ---- season inventory: what to have ready, counted honestly ---- */}
-                <section className="p-card" style={{ ...card, overflow: 'hidden' }}>
-                    <h2 style={{ fontSize: 13, fontWeight: 700, margin: 0, padding: '11px 16px', borderBottom: '1px solid #f1f5f9', color: '#22282B' }}>
-                        📦 Inventory — have this much ready for the season
-                        <span style={{ marginLeft: 8, fontWeight: 400, fontSize: 11, color: '#94a3b8' }}>
-                            reusables = the most needed on any one day (kept builds and moved sets count once) · stationery = total consumed across all meetings
-                        </span>
-                    </h2>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: 0 }}>
-                        <div style={{ borderRight: '1px solid #f1f5f9' }}>
-                            <h3 style={{ margin: 0, padding: '8px 16px 4px', fontSize: 11, fontWeight: 700, color: '#00857A' }}>REUSABLE — peak on one day</h3>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11.5 }}>
-                                <tbody>
-                                    {reusables.map((i) => (
-                                        <tr key={i.no} style={{ borderTop: '1px solid #f8fafc', background: i.oneOnly && i.needed > 1 ? '#fef2f2' : 'transparent' }}>
-                                            <td style={{ padding: "4px 8px 4px 16px", color: "#94a3b8", width: 30 }}>{i.no > 899 ? "+" : i.no}</td>
-                                            <td style={{ padding: '4px 8px', color: '#22282B' }}>
-                                                {i.name}
-                                                {i.oneOnly ? <span style={{ marginLeft: 5, borderRadius: 3, background: '#f1f5f9', padding: '0 4px', fontSize: 8.5, fontWeight: 700, color: '#475569' }}>ONE ONLY</span> : null}
-                                            </td>
-                                            <td style={{ padding: '4px 8px', textAlign: 'right', fontWeight: 700, width: 46, color: i.oneOnly && i.needed > 1 ? '#dc2626' : '#22282B' }}>{i.needed}</td>
-                                            <td title={i.peakUsers.map((u) => `${u.ministry} ×${u.qty}`).join('  +  ')}
-                                                style={{ padding: '4px 16px 4px 8px', color: '#94a3b8', fontSize: 10, whiteSpace: 'nowrap' }}>
-                                                peak {shortDate(i.peakDay)}{i.peakUsers.length > 1 ? ` · ${i.peakUsers.length} meetings` : ''}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                        <div>
-                            <h3 style={{ margin: 0, padding: '8px 16px 4px', fontSize: 11, fontWeight: 700, color: '#9a3412' }}>CONSUMED — total across the season</h3>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11.5 }}>
-                                <tbody>
-                                    {consumables.map((i) => (
-                                        <tr key={i.no} style={{ borderTop: '1px solid #f8fafc' }}>
-                                            <td style={{ padding: "4px 8px 4px 16px", color: "#94a3b8", width: 30 }}>{i.no > 899 ? "+" : i.no}</td>
-                                            <td style={{ padding: '4px 8px', color: '#22282B' }}>{i.name}</td>
-                                            <td style={{ padding: '4px 8px', textAlign: 'right', fontWeight: 700, width: 60 }}>{i.needed.toLocaleString()}</td>
-                                            <td style={{ padding: '4px 16px 4px 8px', color: '#94a3b8', fontSize: 10, whiteSpace: 'nowrap' }}>{i.meetings} meeting{i.meetings === 1 ? '' : 's'}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </section>
+                {/* ---- season inventory: a strip here, the full sheet in a popup ---- */}
+                <InventorySheet rows={inventory} season={seasonLabel} />
+
 
                 {/* ---- interactive calendar: click a day for the full picture ---- */}
                 <section>
