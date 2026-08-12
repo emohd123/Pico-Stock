@@ -43,12 +43,13 @@ export default async function ProductionPage({ searchParams }) {
     for (const q of allQuotes) {
         const m = ministryById.get(q.ministryId);
         if (!m || !m.lpoReceived) continue;
-        const key = `${q.ministryId}|${q.eventDate || ''}`;
+        const key = `${q.ministryId}|${q.eventDate || ''}|${q.meetingKind === 'side' ? `side:${q.hall || q.ref}` : 'main'}`;
         if (!byMeeting.has(key)) {
             byMeeting.set(key, {
                 // Meeting-level fields come from the newest quotation (first seen,
                 // allQuotes is newest-first): schedule, note, share link, files.
                 quoteId: q.id, ref: q.ref, ministry: m.name, event: q.eventName || '', venue: q.venue || '',
+                side: q.meetingKind === 'side', hall: q.hall || '',
                 duration: q.duration || '', productionNote: q.productionNote || '',
                 shareToken: q.shareToken || null, quotes: [], ...deriveSchedule(q.eventDate),
             });
@@ -118,13 +119,19 @@ export default async function ProductionPage({ searchParams }) {
                                     {mt.quotes.length} QUOTATIONS
                                 </span>
                             ) : null}
+                            {mt.side ? (
+                                <span title="Runs in its own room alongside the main meeting — separate build"
+                                    style={{ borderRadius: 4, background: '#faf5ff', border: '1px solid #e9d5ff', color: '#7e22ce', padding: '1px 8px', fontSize: 10.5, fontWeight: 700 }}>SIDE MEETING</span>
+                            ) : (
+                                <span style={{ borderRadius: 4, background: '#f0fdfa', border: '1px solid #99f6e4', color: '#00857A', padding: '1px 8px', fontSize: 10.5, fontWeight: 700 }}>MAIN</span>
+                            )}
                             <span style={{ borderRadius: 4, background: '#dc2626', color: '#fff', padding: '1px 8px', fontSize: 10.5, fontWeight: 700 }}>CONFIRMED · LPO</span>
                         </div>
                     </div>
 
                     {/* schedule strip — always visible, even when collapsed */}
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 18, padding: '10px 16px', background: '#f8fafc', borderBottom: '1px solid #f1f5f9', fontSize: 12 }}>
-                        <span><strong style={{ color: '#00857A' }}>📍 Venue:</strong> {mt.venue || '—'}</span>
+                        <span><strong style={{ color: '#00857A' }}>📍 Venue:</strong> {mt.venue || '—'}{mt.hall ? ` — ${mt.hall}` : ''}</span>
                         {mt.setupDay ? <span><strong style={{ color: '#9a3412' }}>🔧 Setup:</strong> {fmtIso(mt.setupDay)}</span> : null}
                         <span><strong style={{ color: '#22282B' }}>📅 Event:</strong> {mt.eventDays.length ? mt.eventDays.map(fmtIso).join(', ') : (mt.duration || '—')}</span>
                         {mt.duration ? <span><strong>⏱</strong> {mt.duration}</span> : null}

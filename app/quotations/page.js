@@ -55,7 +55,7 @@ export default async function QuotationsAdminPage({ searchParams }) {
         const venue = q.venue || '';
         const headTable = headTableQuoteIds.has(q.id);
         for (const isoDay of parseEventDates(q.eventDate)) {
-            const key = [isoDay, ministry, event, venue].join('|');
+            const key = [isoDay, ministry, event, venue, q.meetingKind || 'main', q.hall || ''].join('|');
             if (seenCal.has(key)) continue;
             seenCal.add(key);
             // allQuotes is newest first, so the first quotation to claim a day is
@@ -65,6 +65,8 @@ export default async function QuotationsAdminPage({ searchParams }) {
                 iso: isoDay, ministry, event, venue,
                 confirmed: Boolean(lpoByMinistry.get(q.ministryId)),
                 ref: q.ref,
+                side: q.meetingKind === 'side',
+                hall: q.hall || '',
                 quoteUrl: q.pdfBlobUrl && token
                     ? `/q/${token}/quote/${q.id}/pdf?v=${encodeURIComponent((q.pdfBlobUrl || '').split('/').pop() || q.id)}`
                     : null,

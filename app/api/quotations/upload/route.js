@@ -43,6 +43,8 @@ export async function POST(req) {
     const eventDate = str('eventDate', 200);
     const duration = str('duration', 200);
     const customRef = str('ref', 80);
+    const meetingKind = str('meetingKind', 10) === 'side' ? 'side' : 'main';
+    const hall = str('hall', 120);
 
     let picked, extrasIn;
     try { picked = JSON.parse(String(form.get('items') || '[]')); } catch { picked = []; }
@@ -100,7 +102,7 @@ export async function POST(req) {
     const prior = await getMinistryQuotations(ministryId);
 
     const quote = await createQuotation({
-        ministryId, ref, eventName, venue, eventDate, duration,
+        ministryId, ref, eventName, venue, eventDate, duration, meetingKind, hall,
         revision: prior.length + 1,
         subtotalFils: totals.subtotal, vatFils: totals.vat, totalFils: totals.total,
         termsAgreedAt: null,

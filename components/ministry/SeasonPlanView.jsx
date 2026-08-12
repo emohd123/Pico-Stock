@@ -43,11 +43,12 @@ export default async function SeasonPlanView({ readOnly = false, shareUrl = null
     for (const q of quotes) {
         const m = byId.get(q.ministryId);
         if (!m) continue;
-        const key = `${q.ministryId}|${q.eventDate || ''}`;
+        const key = `${q.ministryId}|${q.eventDate || ''}|${q.meetingKind === 'side' ? `side:${q.hall || q.ref}` : 'main'}`;
         if (!grouped.has(key)) {
             grouped.set(key, {
                 key, ministryId: m.id, ministry: m.name, lpo: Boolean(m.lpoReceived),
                 token: m.token, venueRaw: q.venue || '', eventDateText: q.eventDate || '',
+                meetingKind: q.meetingKind === 'side' ? 'side' : 'main', hall: q.hall || '',
                 event: q.eventName || '', quoteIds: [], refs: [], qList: [],
             });
         }
@@ -156,6 +157,7 @@ export default async function SeasonPlanView({ readOnly = false, shareUrl = null
         }
         items.sort((a, b) => a.no - b.no);
         calMeetings[m.key] = {
+            side: Boolean(m.side), hall: m.hall || '',
             ministryId: m.ministryId, ministry: m.ministry, event: m.event, lpo: m.lpo,
             venue: m.venue, color: colorOf.get(m.venue), refs: [...new Set(m.refs)],
             range: rangeLabel(m), setupDay: m.setupDay,
@@ -262,8 +264,11 @@ export default async function SeasonPlanView({ readOnly = false, shareUrl = null
                         }).map((m) => (
                             <div key={m.key} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 16px', borderTop: '1px solid #f8fafc', background: m.venue === VENUE_UNKNOWN ? '#fef2f2' : 'transparent' }}>
                                 <div style={{ minWidth: 0, flex: 1 }}>
-                                    <div style={{ fontSize: 11.5, fontWeight: 600, color: '#22282B', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.ministry}</div>
-                                    <div style={{ fontSize: 10, color: '#94a3b8' }}>{rangeLabel(m)}</div>
+                                    <div style={{ fontSize: 11.5, fontWeight: 600, color: '#22282B', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        {m.ministry}
+                                        {m.side ? <span style={{ marginLeft: 5, borderRadius: 3, background: '#faf5ff', border: '1px solid #e9d5ff', color: '#7e22ce', padding: '0 4px', fontSize: 8.5, fontWeight: 700 }}>SIDE</span> : null}
+                                    </div>
+                                    <div style={{ fontSize: 10, color: '#94a3b8' }}>{rangeLabel(m)}{m.hall ? ` · ${m.hall}` : ''}</div>
                                 </div>
                                 {readOnly
                                     ? <span style={{ fontSize: 11.5, fontWeight: m.venue === VENUE_UNKNOWN ? 700 : 400, color: m.venue === VENUE_UNKNOWN ? '#dc2626' : '#22282B' }}>{m.venue}</span>
@@ -304,6 +309,7 @@ export default async function SeasonPlanView({ readOnly = false, shareUrl = null
                                                 : <Link href={`/quotations/ministry/${m.ministryId}`} title={m.ministry}
                                                     style={{ fontSize: 11.5, color: '#22282B', textDecoration: 'none', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.ministry}</Link>}
                                             <span style={{ fontSize: 9.5, color: '#94a3b8', display: 'flex', gap: 5, alignItems: 'center' }}>
+                                                {m.side ? <b style={{ borderRadius: 3, background: '#faf5ff', border: '1px solid #e9d5ff', color: '#7e22ce', padding: '0 3px', fontSize: 8 }}>SIDE</b> : null}
                                                 {m.itemCount} items
                                                 {!m.lpo ? <b style={{ color: '#9a3412' }}>· NO LPO</b> : <b style={{ color: '#15803d' }}>· LPO</b>}
                                             </span>

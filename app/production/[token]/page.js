@@ -58,7 +58,8 @@ export default async function SharedProductionPage({ params }) {
         }));
 
     const meta = [
-        ['📍 Venue', quote.venue || '—'],
+        ['📍 Venue', `${quote.venue || '—'}${quote.hall ? ` — ${quote.hall}` : ''}`],
+        quote.meetingKind === 'side' ? ['🏷 Meeting', 'SIDE MEETING — own room, separate build'] : null,
         sched.setupDay ? ['🔧 Setup', fmtIso(sched.setupDay)] : null,
         ['📅 Event', sched.eventDays.length ? sched.eventDays.map(fmtIso).join(', ') : (quote.eventDate || '—')],
         quote.duration ? ['⏱ Duration', quote.duration] : null,

@@ -143,12 +143,13 @@ export default function PlanCalendar({ meetings, days, monthKeys, todayIso, firs
                                         {readOnly
                                             ? <span style={{ fontSize: 13, fontWeight: 700, color: '#22282B' }}>{m.ministry}</span>
                                             : <Link href={`/quotations/ministry/${m.ministryId}`} style={{ fontSize: 13, fontWeight: 700, color: '#22282B', textDecoration: 'none' }}>{m.ministry}</Link>}
+                                        {m.side ? <span style={{ borderRadius: 4, background: '#faf5ff', border: '1px solid #e9d5ff', color: '#7e22ce', padding: '1px 6px', fontSize: 9, fontWeight: 700 }}>SIDE MEETING</span> : null}
                                         <span style={{ marginLeft: 'auto', borderRadius: 4, padding: '1px 7px', fontSize: 9.5, fontWeight: 700, background: m.lpo ? '#f0fdf4' : '#fff7ed', color: m.lpo ? '#15803d' : '#9a3412' }}>{m.lpo ? 'LPO ✓' : 'NO LPO'}</span>
                                     </div>
                                     <div style={{ padding: '8px 14px', fontSize: 11.5, color: '#4D4D4F', display: 'flex', flexDirection: 'column', gap: 3 }}>
                                         {m.event ? <div style={{ color: '#22282B' }}>{m.event}</div> : null}
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, color: '#75787B' }}>
-                                            <span style={{ color: m.venue === 'Venue not set' ? '#dc2626' : '#75787B' }}>📍 {m.venue}</span>
+                                            <span style={{ color: m.venue === 'Venue not set' ? '#dc2626' : '#75787B' }}>📍 {m.venue}{m.hall ? ` — ${m.hall}` : ''}</span>
                                             <span>📅 {m.range}</span>
                                             <span>🔧 {m.setupDay || '—'}</span>
                                             <span>🚚 {m.removalStart} → {m.removalEnd}</span>

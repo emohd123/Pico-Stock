@@ -8,7 +8,7 @@ const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 const GREEN = '#00857A';
 const RED = '#dc2626';
 
-// entries: [{ iso: 'YYYY-MM-DD', ministry, event, venue, confirmed?, ref?, quoteUrl?, ministryUrl? }]
+// entries: [{ iso, ministry, event, venue, confirmed?, side?, hall?, ref?, quoteUrl?, ministryUrl? }]
 // A day is "confirmed" (red) if any booking on it has LPO received.
 export default function BookingsCalendar({ entries }) {
     const byDay = useMemo(() => {
@@ -105,9 +105,12 @@ export default function BookingsCalendar({ entries }) {
                                 <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 7 }}>
                                     {day.items.map((it, i) => (
                                         <span key={i} style={{ display: 'block' }}>
-                                            <span style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: '#22282B', lineHeight: 1.3 }}>{it.ministry}</span>
+                                            <span style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: '#22282B', lineHeight: 1.3 }}>
+                                                {it.ministry}
+                                                {it.side ? <span style={{ marginLeft: 5, borderRadius: 3, background: '#faf5ff', border: '1px solid #e9d5ff', color: '#7e22ce', padding: '0 4px', fontSize: 8.5, fontWeight: 700 }}>SIDE</span> : null}
+                                            </span>
                                             {it.event ? <span style={{ display: 'block', fontSize: 10.5, color: '#6B7A80', lineHeight: 1.3 }}>{it.event}</span> : null}
-                                            {it.venue ? <span style={{ display: 'block', fontSize: 10.5, color: '#94a3b8', lineHeight: 1.3 }}>📍 {it.venue}</span> : null}
+                                            {it.venue ? <span style={{ display: 'block', fontSize: 10.5, color: '#94a3b8', lineHeight: 1.3 }}>📍 {it.venue}{it.hall ? ` — ${it.hall}` : ''}</span> : null}
                                             <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 3 }}>
                                                 {it.confirmed ? <span style={{ borderRadius: 4, background: '#fef2f2', color: RED, padding: '0 5px', fontSize: 9, fontWeight: 700, letterSpacing: 0.3 }}>LPO RECEIVED</span> : null}
                                                 {/* straight to the document behind the booking; when no PDF was

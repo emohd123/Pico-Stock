@@ -22,6 +22,7 @@ export default function UploadQuotation({ ministryId, catalog }) {
     const [metaKey, setMetaKey] = useState(0);   // bumped per scan to reset those inputs
     const [extras, setExtras] = useState([]);    // rows with no catalogue equivalent
     const [scan, setScan] = useState(null);      // {state, matched, extras} for the banner
+    const [kind, setKind] = useState('main');    // main meeting or a side meeting
     const [busy, setBusy] = useState(false);
     const [err, setErr] = useState('');
 
@@ -186,6 +187,38 @@ export default function UploadQuotation({ ministryId, catalog }) {
                         </p>
                     )}
                 </div>
+                {/* A ministry can run a main meeting plus side meetings in other
+                    halls on nearby days. Production and planning both need to know
+                    which is which — a side meeting is its own room, so it never
+                    shares a build with the main one. */}
+                <div style={{ gridColumn: '1 / -1', display: 'flex', flexWrap: 'wrap', gap: 14, alignItems: 'flex-end' }}>
+                    <div>
+                        <label style={label}>This quotation is for</label>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                            {[['main', 'Main meeting'], ['side', 'Side meeting']].map(([v, t]) => (
+                                <label key={v} style={{
+                                    display: 'inline-flex', alignItems: 'center', gap: 5, cursor: 'pointer',
+                                    borderRadius: 6, border: `1px solid ${kind === v ? '#00857A' : '#cbd5e1'}`,
+                                    background: kind === v ? '#f0fdfa' : '#fff', padding: '6px 11px',
+                                    fontSize: 12, fontWeight: kind === v ? 700 : 400, color: kind === v ? '#00857A' : '#4D4D4F',
+                                }}>
+                                    <input type="radio" name="meetingKind" value={v} checked={kind === v}
+                                        onChange={() => setKind(v)} style={{ cursor: 'pointer' }} />
+                                    {t}
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+                    <div style={{ flex: '1 1 220px' }}>
+                        <label style={label}>Hall / room <span style={{ fontWeight: 400, color: '#94a3b8' }}>— optional, e.g. Sky 1 &amp; 2</span></label>
+                        <input key={`hl${metaKey}`} name="hall" defaultValue={meta?.hall || ''} style={input} placeholder="AlGhazal Hall 2" />
+                    </div>
+                </div>
+                {kind === 'side' ? (
+                    <p style={{ gridColumn: '1 / -1', margin: 0, borderRadius: 6, background: '#faf5ff', border: '1px solid #e9d5ff', padding: '5px 9px', fontSize: 11.5, color: '#6b21a8' }}>
+                        Marked as a <strong>side meeting</strong> — it shows as SIDE on the calendar, the season plan and production, and is planned as its own room, so it never shares a build with the main meeting.
+                    </p>
+                ) : null}
                 <div style={{ gridColumn: '1 / -1' }}>
                     <label style={label}>Reference on the PDF <span style={{ fontWeight: 400, color: '#94a3b8' }}>— leave blank to use this ministry&apos;s number</span></label>
                     <input key={`rf${metaKey}`} name="ref" defaultValue={meta?.ref || ''} style={input} placeholder="Q/07/2026/EM/11976" />
