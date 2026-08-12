@@ -26,7 +26,7 @@ const fmtLong = (iso) => {
     return `${wd} ${p.d} ${MONTHS[p.m - 1]} ${p.y}`;
 };
 
-export default function PlanCalendar({ meetings, days, monthKeys, todayIso, firstEventIso }) {
+export default function PlanCalendar({ meetings, days, monthKeys, todayIso, firstEventIso, readOnly = false }) {
     const [selected, setSelected] = useState(
         days[todayIso] && days[todayIso].entries.length ? todayIso : firstEventIso,
     );
@@ -140,7 +140,9 @@ export default function PlanCalendar({ meetings, days, monthKeys, todayIso, firs
                                 <section key={`${e.k}${e.phase}`} style={{ background: '#fff', borderRadius: 12, boxShadow: '0 1px 2px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, padding: '10px 14px', borderBottom: '1px solid #f1f5f9' }}>
                                         <span style={{ borderRadius: 4, background: ph.bg, color: ph.fg, padding: '1px 7px', fontSize: 9.5, fontWeight: 700 }}>{ph.icon} {ph.label}</span>
-                                        <Link href={`/quotations/ministry/${m.ministryId}`} style={{ fontSize: 13, fontWeight: 700, color: '#22282B', textDecoration: 'none' }}>{m.ministry}</Link>
+                                        {readOnly
+                                            ? <span style={{ fontSize: 13, fontWeight: 700, color: '#22282B' }}>{m.ministry}</span>
+                                            : <Link href={`/quotations/ministry/${m.ministryId}`} style={{ fontSize: 13, fontWeight: 700, color: '#22282B', textDecoration: 'none' }}>{m.ministry}</Link>}
                                         <span style={{ marginLeft: 'auto', borderRadius: 4, padding: '1px 7px', fontSize: 9.5, fontWeight: 700, background: m.lpo ? '#f0fdf4' : '#fff7ed', color: m.lpo ? '#15803d' : '#9a3412' }}>{m.lpo ? 'LPO ✓' : 'NO LPO'}</span>
                                     </div>
                                     <div style={{ padding: '8px 14px', fontSize: 11.5, color: '#4D4D4F', display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -154,7 +156,7 @@ export default function PlanCalendar({ meetings, days, monthKeys, todayIso, firs
                                         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, fontSize: 10.5 }}>
                                             <span style={{ color: '#94a3b8' }}>{m.refs.join(' · ')}</span>
                                             {/* the stored quotation PDFs, one link per document */}
-                                            {m.pdfs && m.pdfs.map((p) => (
+                                            {!readOnly && m.pdfs && m.pdfs.map((p) => (
                                                 <a key={p.url} href={p.url} target="_blank" rel="noreferrer"
                                                     style={{ borderRadius: 4, border: '1px solid #99f6e4', background: '#f0fdfa', color: '#00857A', padding: '1px 7px', fontWeight: 700, textDecoration: 'none' }}>
                                                     📄 {m.pdfs.length > 1 ? p.ref : 'Quotation'}
