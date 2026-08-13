@@ -8,7 +8,7 @@ import PdfModal from '@/components/ministry/PdfModal';
 import PhotoAlbums from '@/components/ministry/PhotoAlbums';
 import { HEAD_TABLE_CONFIGS } from '@/lib/ministry/itemImages';
 
-export default function PortalClient({ token, ministryId, ministryName, ministryNameAr, items, quotations, albums, galleryCount }) {
+export default function PortalClient({ token, ministryId, ministryName, ministryNameAr, items, quotations, albums, galleryCount, prefill = null }) {
     const [tab, setTab] = useState('select');
     return (
         <div style={{ minHeight: '100vh', background: '#f8fafc', color: '#4D4D4F' }}>
@@ -45,7 +45,7 @@ export default function PortalClient({ token, ministryId, ministryName, ministry
             </div>
 
             <main style={{ maxWidth: 1000, margin: '0 auto', padding: '24px 20px' }}>
-                {tab === 'select' && <Selector token={token} items={items} />}
+                {tab === 'select' && <Selector token={token} items={items} prefill={prefill} />}
                 {tab === 'quotes' && <Quotations quotations={quotations} />}
                 {tab === 'gallery' && (
                     galleryCount === 0
@@ -73,13 +73,16 @@ const STRUCTURE_LINKED_NOS = [1, 2, 3];
 // Every quotation must include Event Management Staff (item 38).
 const REQUIRED_ITEM_NO = 38;
 
-function Selector({ token, items }) {
+function Selector({ token, items, prefill = null }) {
     const router = useRouter();
-    const [selected, setSelected] = useState({});
-    const [eventName, setEventName] = useState('');
-    const [venue, setVenue] = useState('');
-    const [eventDate, setEventDate] = useState('');
-    const [duration, setDuration] = useState('');
+    // Editing an existing quotation: the picker opens on what was quoted, and
+    // generating produces the next revision rather than a blank new document.
+    const [selected, setSelected] = useState(() => (prefill?.picks ? { ...prefill.picks } : {}));
+    const [extras, setExtras] = useState(() => (prefill?.extras ? prefill.extras.map((e) => ({ ...e })) : []));
+    const [eventName, setEventName] = useState(prefill?.eventName || '');
+    const [venue, setVenue] = useState(prefill?.venue || '');
+    const [eventDate, setEventDate] = useState(prefill?.eventDate || '');
+    const [duration, setDuration] = useState(prefill?.duration || '');
     const [address, setAddress] = useState('');
     const [contact1, setContact1] = useState('');
     const [title1, setTitle1] = useState('');
@@ -103,9 +106,10 @@ function Selector({ token, items }) {
     const totals = useMemo(() => {
         let subtotal = 0;
         for (const it of items) { const q = selected[it.id]; if (q > 0) subtotal += it.unitPriceFils * q; }
+        for (const e of extras) subtotal += Math.max(0, Number(e.unitPriceFils) || 0) * Math.max(1, parseInt(e.qty, 10) || 1);
         const vat = Math.round(subtotal * VAT_RATE);
         return { subtotal, vat, total: subtotal + vat };
-    }, [selected, items]);
+    }, [selected, items, extras]);
     const selectedCount = Object.values(selected).filter((q) => q > 0).length;
 
     // Setting the Official Chair count auto-fills all per-delegate items + pax.
@@ -153,7 +157,7 @@ function Selector({ token, items }) {
     async function submit() {
         setError('');
         setResult(null);
-        if (selectedCount === 0) { setError('Please select at least one item.'); return; }
+        if (selectedCount === 0 && extras.length === 0) { setError('Please select at least one item.'); return; }
         const required = byNo.get(REQUIRED_ITEM_NO);
         if (!required || !(selected[required.id] > 0)) {
             setError(`Please add “${REQUIRED_ITEM_NO}. Event Management Staff” — it is required for every quotation.`);
@@ -163,7 +167,10 @@ function Selector({ token, items }) {
         setBusy(true);
         try {
             const lines = items.filter((it) => selected[it.id] > 0).map((it) => ({ itemId: it.id, qty: selected[it.id] }));
-            const res = await fetch(`/q/${token}/quote`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ eventName, venue, eventDate, duration, address, contact1, title1, phone1, email1, contact2, title2, phone2, email2, heads, adminNote, agreedTerms: true, lines }) });
+            const cleanExtras = extras
+                .map((e) => ({ name: String(e.name || '').trim(), qty: Math.max(1, parseInt(e.qty, 10) || 1), unit: e.unit || 'nos', unitPriceFils: Math.max(0, Math.round(Number(e.unitPriceFils) || 0)) }))
+                .filter((e) => e.name);
+            const res = await fetch(`/q/${token}/quote`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ eventName, venue, eventDate, duration, address, contact1, title1, phone1, email1, contact2, title2, phone2, email2, heads, adminNote, agreedTerms: true, lines, extras: cleanExtras, editedFrom: prefill?.id || null }) });
             if (!res.ok) throw new Error((await res.text()) || 'Failed to generate quotation');
             const data = await res.json();
             // Show a persistent success panel with a reliable click-to-open link.
@@ -308,12 +315,51 @@ function Selector({ token, items }) {
 
             <aside style={{ position: 'sticky', top: 24, alignSelf: 'flex-start' }}>
                 <div style={{ ...card, padding: 20 }}>
+                    {prefill ? (
+                        <div style={{ marginBottom: 12, borderRadius: 8, border: '1px solid #fed7aa', background: '#fff7ed', padding: '9px 11px' }}>
+                            <div style={{ fontSize: 12.5, fontWeight: 700, color: '#9a3412' }}>Editing {prefill.ref} (rev {prefill.revision})</div>
+                            <p style={{ margin: '3px 0 0', fontSize: 11, color: '#9a3412', lineHeight: 1.5 }}>
+                                Everything it quoted is selected below. Change what you need, then generate — that produces the next revision and leaves this one on record.
+                            </p>
+                        </div>
+                    ) : null}
                     <h3 style={{ fontSize: 14, fontWeight: 600, color: '#00857A', margin: 0 }}>Summary</h3>
                     <div style={{ marginTop: 12, fontSize: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                        <Row label="Items selected" value={String(selectedCount)} />
+                        <Row label="Items selected" value={String(selectedCount + extras.length)} />
                         <Row label="Subtotal (w/o VAT)" value={`BD ${formatFils(totals.subtotal)}`} />
                         <Row label="VAT (10%)" value={`BD ${formatFils(totals.vat)}`} />
                         <div style={{ marginTop: 8, borderTop: '1px solid #e2e8f0', paddingTop: 8 }}><Row label="Grand Total" value={`BD ${formatFils(totals.total)}`} bold /></div>
+                    </div>
+
+                    {/* Rows priced outside the catalogue travel with the quotation, so
+                        an edit can correct or drop them instead of losing them. */}
+                    <div style={{ marginTop: 14, borderTop: '1px solid #e2e8f0', paddingTop: 12 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: '#22282B' }}>Additional items</span>
+                            <button type="button" onClick={() => setExtras((x) => [...x, { name: '', qty: 1, unit: 'nos', unitPriceFils: 0 }])}
+                                style={{ marginLeft: 'auto', border: '1px solid #99f6e4', background: '#f0fdfa', color: '#00857A', borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>+ Add</button>
+                        </div>
+                        {extras.length === 0 ? (
+                            <p style={{ margin: '6px 0 0', fontSize: 11, color: '#94a3b8' }}>None — everything is from the catalogue.</p>
+                        ) : (
+                            <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                {extras.map((e, i) => (
+                                    <div key={i} style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                                        <input value={e.name} placeholder="Description"
+                                            onChange={(ev) => setExtras((x) => x.map((y, j) => (j === i ? { ...y, name: ev.target.value } : y)))}
+                                            style={{ flex: 1, minWidth: 0, border: '1px solid #e2e8f0', borderRadius: 5, padding: '4px 6px', fontSize: 11 }} />
+                                        <input value={e.qty} type="number" min="1" title="Quantity"
+                                            onChange={(ev) => setExtras((x) => x.map((y, j) => (j === i ? { ...y, qty: ev.target.value } : y)))}
+                                            style={{ width: 46, border: '1px solid #e2e8f0', borderRadius: 5, padding: '4px 5px', fontSize: 11 }} />
+                                        <input value={e.unitPriceFils / 1000} type="number" step="0.001" min="0" title="Rate in BHD"
+                                            onChange={(ev) => setExtras((x) => x.map((y, j) => (j === i ? { ...y, unitPriceFils: Math.round((Number(ev.target.value) || 0) * 1000) } : y)))}
+                                            style={{ width: 74, border: '1px solid #e2e8f0', borderRadius: 5, padding: '4px 5px', fontSize: 11 }} />
+                                        <button type="button" title="Remove" onClick={() => setExtras((x) => x.filter((_, j) => j !== i))}
+                                            style={{ border: 'none', background: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 13, padding: '0 2px' }}>×</button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                     {error ? <p style={{ marginTop: 12, borderRadius: 4, background: '#fef2f2', padding: '8px 12px', fontSize: 12, color: '#dc2626' }}>{error}</p> : null}
                     {result ? (

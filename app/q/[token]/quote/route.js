@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
-import { getMinistryByToken, getActiveCatalog, reserveMinistryQuoteRef, getMinistryQuotations, createQuotation, insertQuotationLines, setQuotationPdfUrl, logActivity } from '@/lib/ministry/queries';
+import { isAdmin } from '@/lib/ministry/auth';
+import { getQuotationForMinistry, getMinistryByToken, getActiveCatalog, reserveMinistryQuoteRef, getMinistryQuotations, createQuotation, insertQuotationLines, setQuotationPdfUrl, logActivity } from '@/lib/ministry/queries';
 import { computeTotals, lineTotal } from '@/lib/ministry/money';
 import { itemDetail } from '@/lib/ministry/itemDetails';
 import { renderQuotationPdf } from '@/components/ministry/QuotationPdf';
 import { putPrivate } from '@/lib/ministry/storage';
 import { appendQuoteRow } from '@/lib/ministry/quoteLog';
 import { COMPANY } from '@/lib/ministry/company';
+import { CUSTOM_ITEM_BASE } from '@/lib/ministry/quotationScan';
 
 export const runtime = 'nodejs';
 
@@ -35,7 +37,25 @@ export async function POST(req, { params }) {
     // quotation can be generated — enforced here, not just in the UI.
     if (body?.agreedTerms !== true) return new NextResponse('You must accept the Exclusions, Terms & Conditions and Payment Terms before generating a quotation.', { status: 400 });
     const rawLines = Array.isArray(body?.lines) ? body.lines : [];
-    if (rawLines.length === 0) return new NextResponse('No items', { status: 400 });
+    // Rows the catalogue has no equivalent for, carried through a regeneration so
+    // editing a quotation cannot quietly drop what was priced outside the list.
+    const extras = (Array.isArray(body?.extras) ? body.extras : [])
+        .map((e) => {
+            const name = String(e?.name || '').trim().slice(0, 120);
+            if (!name) return null;
+            const qty = Math.max(1, parseInt(e?.qty, 10) || 1);
+            const unitPriceFils = Math.max(0, Math.round(Number(e?.unitPriceFils) || 0));
+            return { name, qty, unit: String(e?.unit || 'nos').slice(0, 20), unitPriceFils, lineTotalFils: lineTotal(unitPriceFils, qty) };
+        })
+        .filter(Boolean)
+        .slice(0, 40);
+    if (rawLines.length === 0 && extras.length === 0) return new NextResponse('No items', { status: 400 });
+
+    // When this generation is an edit of an existing quotation, record which one
+    // it came from - the new revision is otherwise indistinguishable from a
+    // fresh one in the log.
+    const editedFromId = parseInt(body?.editedFrom, 10) || 0;
+    const editedFrom = editedFromId ? await getQuotationForMinistry(ministry.id, editedFromId) : null;
 
     const catalog = await getActiveCatalog();
     const byId = new Map(catalog.map((c) => [c.id, c]));
@@ -51,9 +71,12 @@ export async function POST(req, { params }) {
         .filter(Boolean)
         .sort((a, b) => a.item.itemNo - b.item.itemNo);
 
-    if (resolved.length === 0) return new NextResponse('No valid items', { status: 400 });
+    if (resolved.length === 0 && extras.length === 0) return new NextResponse('No valid items', { status: 400 });
 
-    const totals = computeTotals(resolved.map((r) => r.lineTotalFils));
+    const totals = computeTotals([
+        ...resolved.map((r) => r.lineTotalFils),
+        ...extras.map((e) => e.lineTotalFils),
+    ]);
     // One permanent quotation number per ministry — reused on every regeneration
     // (the revision bumps instead). A brand-new number is minted only the first
     // time this ministry generates, and only then logged to the master sheet.
@@ -72,10 +95,16 @@ export async function POST(req, { params }) {
         termsAgreedAt: new Date().toISOString(), submitterNote,
     });
 
-    await insertQuotationLines(quote.id, resolved.map((r) => ({
-        itemId: r.item.id, itemNo: r.item.itemNo, nameSnapshot: r.item.name,
-        unitPriceFilsSnapshot: r.item.unitPriceFils, qty: r.qty, lineTotalFils: r.lineTotalFils,
-    })));
+    await insertQuotationLines(quote.id, [
+        ...resolved.map((r) => ({
+            itemId: r.item.id, itemNo: r.item.itemNo, nameSnapshot: r.item.name,
+            unitPriceFilsSnapshot: r.item.unitPriceFils, qty: r.qty, lineTotalFils: r.lineTotalFils,
+        })),
+        ...extras.map((e, i) => ({
+            itemId: null, itemNo: CUSTOM_ITEM_BASE + i, nameSnapshot: e.name,
+            unitPriceFilsSnapshot: e.unitPriceFils, qty: e.qty, lineTotalFils: e.lineTotalFils,
+        })),
+    ]);
 
     const pdf = await renderQuotationPdf({
         ref,
@@ -99,6 +128,10 @@ export async function POST(req, { params }) {
                 lineTotalFils: r.lineTotalFils, subs: (d && d.subs) || [],
             };
         }),
+        extraLines: extras.map((e) => ({
+            scope: e.name, mainDesc: '', qty: e.qty, unit: e.unit,
+            unitPriceFils: e.unitPriceFils, lineTotalFils: e.lineTotalFils, subs: [],
+        })),
         subtotalFils: totals.subtotal, vatFils: totals.vat, totalFils: totals.total,
     });
 
@@ -106,10 +139,16 @@ export async function POST(req, { params }) {
     const stored = await putPrivate(`ministry-quotations/${ministry.id}/${safeRef}.pdf`, pdf, 'application/pdf');
     await setQuotationPdfUrl(quote.id, stored.url);
 
+    // Attribution has to be real: the same page generates for a ministry and for
+    // PICO editing an existing quotation, and only the session says which.
+    const byPico = isAdmin();
     await logActivity({
-        ministryId: ministry.id, quotationId: quote.id, actor: 'ministry', action: 'quotation.generated',
-        detail: `Quotation ${ref} (rev ${revision}) generated through the portal — Exclusions, Terms & Payment Terms accepted`
-            + ` · ${resolved.length} items · BHD ${(totals.total / 1000).toFixed(3)}`,
+        ministryId: ministry.id, quotationId: quote.id, actor: byPico ? 'admin' : 'ministry',
+        action: 'quotation.generated',
+        detail: `Quotation ${ref} (rev ${revision}) generated ${byPico ? 'by PICO from the item list' : 'through the portal'}`
+            + `${byPico ? '' : ' — Exclusions, Terms & Payment Terms accepted'}`
+            + `${editedFrom ? ` · edited from ${editedFrom.ref} (rev ${editedFrom.revision})` : ''}`
+            + ` · ${resolved.length + extras.length} items · BHD ${(totals.total / 1000).toFixed(3)}`,
     });
 
     // Log to the master quotation-number sheet only when a NEW number was minted

@@ -1,11 +1,12 @@
 import { notFound } from 'next/navigation';
-import { getMinistryByToken, getActiveCatalog, getMinistryQuotations, getMinistryPhotos, getAllMinistries, pickCoverPhotoId } from '@/lib/ministry/queries';
+import { getMinistryByToken, getActiveCatalog, getMinistryQuotations, getMinistryPhotos, getAllMinistries, pickCoverPhotoId, getQuotationForMinistry, getQuotationLines } from '@/lib/ministry/queries';
+import { isCustomItemNo } from '@/lib/ministry/quotationScan';
 import { itemImage } from '@/lib/ministry/itemImages';
 import PortalClient from './PortalClient';
 
 export const dynamic = 'force-dynamic';
 
-export default async function MinistryPortalPage({ params }) {
+export default async function MinistryPortalPage({ params, searchParams }) {
     const { token } = params;
     const ministry = await getMinistryByToken(token);
     if (!ministry) notFound();
@@ -37,6 +38,39 @@ export default async function MinistryPortalPage({ params }) {
         unitPriceFils: c.unitPriceFils, imageUrl: itemImage(c.itemNo),
     }));
 
+    // ?from=<id> opens the picker already filled in from an existing quotation,
+    // so a change is an edit of what was quoted rather than a re-entry of all
+    // thirty rows. Scoped to this ministry, so a stray id cannot leak another's.
+    const fromId = parseInt(searchParams?.from, 10) || 0;
+    let prefill = null;
+    if (fromId) {
+        const src = await getQuotationForMinistry(ministry.id, fromId);
+        if (src) {
+            const lines = await getQuotationLines(src.id);
+            const byNo = new Map(catalog.map((c) => [c.itemNo, c]));
+            const picks = {};
+            const extras = [];
+            for (const l of lines) {
+                // A custom line has no catalogue equivalent; keep it as an extra
+                // so regenerating cannot silently drop what it priced.
+                if (isCustomItemNo(l.itemNo) || !byNo.has(l.itemNo)) {
+                    extras.push({
+                        name: l.nameSnapshot, qty: l.qty,
+                        unit: 'nos', unitPriceFils: l.unitPriceFils,
+                    });
+                    continue;
+                }
+                picks[byNo.get(l.itemNo).id] = l.qty;
+            }
+            prefill = {
+                id: src.id, ref: src.ref, revision: src.revision,
+                eventName: src.eventName || '', venue: src.venue || '',
+                eventDate: src.eventDate || '', duration: src.duration || '',
+                picks, extras,
+            };
+        }
+    }
+
     const quotations = quotationRows.map((q, idx) => ({
         id: q.id, ref: q.ref, eventName: q.eventName || '', revision: q.revision, notes: q.notes || '',
         status: q.status, isCurrent: idx === 0, totalFils: q.totalFils,
@@ -54,6 +88,7 @@ export default async function MinistryPortalPage({ params }) {
             quotations={quotations}
             albums={albums}
             galleryCount={galleryCount}
+            prefill={prefill}
         />
     );
 }

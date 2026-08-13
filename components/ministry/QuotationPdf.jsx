@@ -121,7 +121,7 @@ export function QuotationPdf({ data }) {
                         <Text style={[s.thCell, s.cRate]}>RATE (BHD)</Text>
                         <Text style={[s.thCell, s.cCost]}>COST (BHD)</Text>
                     </View>
-                    {data.lines.map((l, i) => (
+                    {[...data.lines, ...(data.extraLines || [])].map((l, i) => (
                         <View key={i} style={s.itemGroup} wrap={false}>
                             <View style={s.row}>
                                 <Text style={[s.cell, s.cNo]}>{i + 1}</Text>

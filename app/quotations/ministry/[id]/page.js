@@ -208,6 +208,12 @@ export default async function ManageMinistryPage({ params, searchParams }) {
                                                 <span style={{ color: '#75787B' }}>{new Date(q.createdAt).toLocaleDateString('en-GB')}</span>
                                                 <span style={{ fontWeight: 500 }}>{fmtBHD(q.totalFils)}</span>
                                                 <a href={`/q/${ministry.token}/quote/${q.id}/pdf?v=${encodeURIComponent((q.pdfBlobUrl || '').split('/').pop() || q.id)}`} target="_blank" rel="noreferrer" style={{ color: '#00857A', textDecoration: 'underline' }}>Open PDF</a>
+                                                {/* Opens the item picker already filled in from this quotation, so a
+                                                    change is an edit rather than re-entering thirty rows. Generating
+                                                    there produces the next revision in the standard style. */}
+                                                <a href={`/q/${ministry.token}?from=${q.id}`} target="_blank" rel="noreferrer"
+                                                    title="Open the item list filled in from this quotation, change what you need, and generate the next revision"
+                                                    style={{ borderRadius: 6, border: '1px solid #99f6e4', background: '#f0fdfa', color: '#00857A', padding: '3px 10px', fontSize: 12.5, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>&#9998; Edit &amp; regenerate</a>
                                                 <ReplaceQuotePdf ministryId={ministry.id} quoteId={q.id} />
                                                 <DeleteQuoteButton ministryId={ministry.id} quoteId={q.id} quoteRef={q.ref} action={deleteQuotationAction} />
                                             </div>
