@@ -91,6 +91,9 @@ export async function POST(req, { params }) {
 
     const quote = await createQuotation({
         ministryId: ministry.id, ref, eventName, venue, eventDate, duration, revision,
+        address, heads,
+        contact1: { name: contact1, title: title1, phone: phone1, email: email1 },
+        contact2: { name: contact2, title: title2, phone: phone2, email: email2 },
         subtotalFils: totals.subtotal, vatFils: totals.vat, totalFils: totals.total,
         termsAgreedAt: new Date().toISOString(), submitterNote,
     });

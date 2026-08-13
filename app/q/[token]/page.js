@@ -1,6 +1,9 @@
 import { notFound } from 'next/navigation';
 import { getMinistryByToken, getActiveCatalog, getMinistryQuotations, getMinistryPhotos, getAllMinistries, pickCoverPhotoId, getQuotationForMinistry, getQuotationLines } from '@/lib/ministry/queries';
 import { isCustomItemNo } from '@/lib/ministry/quotationScan';
+import { parseQuoteHeader } from '@/lib/ministry/quoteHeader';
+import { extractPdfText } from '@/lib/ministry/pdfText';
+import { getPrivate } from '@/lib/ministry/storage';
 import { itemImage } from '@/lib/ministry/itemImages';
 import PortalClient from './PortalClient';
 
@@ -62,10 +65,33 @@ export default async function MinistryPortalPage({ params, searchParams }) {
                 }
                 picks[byNo.get(l.itemNo).id] = l.qty;
             }
+            // Quotations issued before these columns existed carry the contact
+            // block only on the printed PDF, so read it back from the document
+            // itself. The ministry's saved contact is NOT a safe substitute — on
+            // Foreign Affairs it names a different person than the quotation was
+            // addressed to, and a regeneration would print the wrong one.
+            let c1 = src.contact1 && src.contact1.name ? src.contact1 : null;
+            let recovered = null;
+            if (!c1 && src.pdfBlobUrl) {
+                try {
+                    const file = await getPrivate(src.pdfBlobUrl);
+                    if (file && file.body) {
+                        recovered = parseQuoteHeader(await extractPdfText(file.body), ministry.name);
+                        if (recovered.contact1.name) c1 = recovered.contact1;
+                    }
+                } catch { /* an unreadable PDF just leaves the fields blank */ }
+            }
+            if (!c1) c1 = { name: '', title: '', phone: '', email: '' };
+            // Head Table pax drives its printed description. Where it was not
+            // stored, the Official Chair count is the delegation count.
+            const chairQty = picks[(catalog.find((c) => c.itemNo === 4) || {}).id] || 0;
             prefill = {
                 id: src.id, ref: src.ref, revision: src.revision,
                 eventName: src.eventName || '', venue: src.venue || '',
                 eventDate: src.eventDate || '', duration: src.duration || '',
+                address: src.address || (recovered && recovered.address) || '',
+                heads: src.heads || (chairQty >= 7 && chairQty <= 10 ? chairQty : null),
+                contact1: c1, contact2: src.contact2 || { name: '', title: '', phone: '', email: '' },
                 picks, extras,
             };
         }

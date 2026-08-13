@@ -12,6 +12,12 @@ const nextConfig = {
         './node_modules/@napi-rs/**',
         './node_modules/pdfjs-dist/legacy/build/**',
       ],
+      // The portal reads a quotation's own PDF to recover its contact block when
+      // opened for editing, so the same runtime-required files must reach it.
+      '/q/[token]': [
+        './node_modules/@napi-rs/**',
+        './node_modules/pdfjs-dist/legacy/build/**',
+      ],
     },
   },
   images: {
