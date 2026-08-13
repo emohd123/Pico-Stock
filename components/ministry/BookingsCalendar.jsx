@@ -7,6 +7,8 @@ const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
 const GREEN = '#00857A';
 const RED = '#dc2626';
+// Side meetings carry the same purple everywhere in the portal.
+const PLUM = '#7e22ce';
 
 // entries: [{ iso, ministry, event, venue, confirmed?, side?, hall?, ref?, quoteUrl?, ministryUrl? }]
 // A day is "confirmed" (red) if any booking on it has LPO received.
@@ -14,14 +16,17 @@ export default function BookingsCalendar({ entries }) {
     const byDay = useMemo(() => {
         const m = new Map();
         for (const e of entries) {
-            if (!m.has(e.iso)) m.set(e.iso, { items: [], confirmed: false });
+            if (!m.has(e.iso)) m.set(e.iso, { items: [], confirmed: false, mains: 0, sides: 0 });
             const day = m.get(e.iso);
             day.items.push(e);
+            if (e.side) day.sides += 1; else day.mains += 1;
             if (e.confirmed) day.confirmed = true;
         }
         return m;
     }, [entries]);
-    const tip = (day) => day.items.map((i) => [i.ministry, i.event, i.venue].filter(Boolean).join(' · ')).join('\n');
+    const tip = (day) => day.items
+        .map((i) => [i.side ? 'SIDE:' : 'MAIN:', i.ministry, i.event, i.venue].filter(Boolean).join(' · '))
+        .join('\n');
 
     // Open on the month of the earliest booked day (upcoming preferred), else today.
     const initial = useMemo(() => {
@@ -75,8 +80,16 @@ export default function BookingsCalendar({ entries }) {
                                 border: isToday ? '1px solid #00C7B1' : '1px solid transparent',
                                 background: bg, color: day ? '#fff' : '#334155', fontWeight: day ? 700 : 400 }}>
                             {d}
-                            {day && day.items.length > 1 ? (
-                                <span style={{ position: 'absolute', top: 1, right: 2, fontSize: 8, background: '#fff', color: day.confirmed ? RED : GREEN, borderRadius: 8, padding: '0 3px', fontWeight: 700 }}>{day.items.length}</span>
+                            {/* Main meetings count on the right, side meetings on the
+                                left in purple — a day holding both is the one that must
+                                never read as a single booking. */}
+                            {day && day.mains > 1 ? (
+                                <span title={`${day.mains} main meetings`}
+                                    style={{ position: 'absolute', top: 1, right: 2, fontSize: 8, background: '#fff', color: day.confirmed ? RED : GREEN, borderRadius: 8, padding: '0 3px', fontWeight: 700 }}>{day.mains}</span>
+                            ) : null}
+                            {day && day.sides > 0 ? (
+                                <span title={`${day.sides} side meeting${day.sides === 1 ? '' : 's'}`}
+                                    style={{ position: 'absolute', top: 1, left: 2, fontSize: 8, background: '#fff', color: PLUM, border: `1px solid ${PLUM}`, borderRadius: 8, padding: '0 3px', fontWeight: 700, lineHeight: 1.35 }}>{day.sides}</span>
                             ) : null}
                         </div>
                     );
@@ -87,6 +100,14 @@ export default function BookingsCalendar({ entries }) {
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><span style={{ width: 12, height: 12, borderRadius: 3, background: GREEN, display: 'inline-block' }} /> booked</span>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><span style={{ width: 12, height: 12, borderRadius: 3, background: RED, display: 'inline-block' }} /> confirmed (LPO)</span>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><span style={{ width: 12, height: 12, borderRadius: 3, border: '1px solid #00C7B1', display: 'inline-block' }} /> today</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                    <span style={{ fontSize: 8, background: '#fff', color: GREEN, borderRadius: 8, padding: '0 3px', fontWeight: 700, border: '1px solid #e2e8f0' }}>2</span>
+                    main meetings <span style={{ color: '#cbd5e1' }}>(right)</span>
+                </span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                    <span style={{ fontSize: 8, background: '#fff', color: PLUM, border: `1px solid ${PLUM}`, borderRadius: 8, padding: '0 3px', fontWeight: 700 }}>1</span>
+                    side meetings <span style={{ color: '#cbd5e1' }}>(left)</span>
+                </span>
             </div>
 
             {monthDays.length > 0 ? (
