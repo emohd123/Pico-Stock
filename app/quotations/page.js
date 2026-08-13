@@ -100,11 +100,22 @@ export default async function QuotationsAdminPage({ searchParams }) {
     const proto = h.get('x-forwarded-proto') || 'https';
     const host = h.get('host') || 'localhost:3000';
     const origin = `${proto}://${host}`;
+    const quotesByMinistry = new Map();
+    for (const q of allQuotes) {
+        if (!q.pdfBlobUrl) continue;
+        if (!quotesByMinistry.has(q.ministryId)) quotesByMinistry.set(q.ministryId, []);
+        quotesByMinistry.get(q.ministryId).push(q);
+    }
     const ministriesForPanel = ministryRows.map((m) => {
-        const q = latestByMinistry.get(m.id);
+        const list = (quotesByMinistry.get(m.id) || []).map((q) => ({
+            id: q.id, ref: q.ref,
+            label: `${q.ref}${q.eventDate ? ` · ${q.eventDate}` : ''}${q.meetingKind === 'side' ? ' · SIDE' : ''}`,
+            url: `/q/${m.token}/quote/${q.id}/pdf?v=${encodeURIComponent((q.pdfBlobUrl || '').split('/').pop() || q.id)}`,
+        }));
         return {
             id: m.id, name: m.name, nameAr: m.nameAr, token: m.token, internalNote: m.internalNote,
-            quoteViewUrl: q && q.pdfBlobUrl ? `/q/${m.token}/quote/${q.id}/pdf?v=${encodeURIComponent((q.pdfBlobUrl || '').split('/').pop() || q.id)}` : null,
+            quotes: list,
+            quoteViewUrl: list.length ? list[0].url : null,
             hasPresentation: Boolean(m.presentationUrl), presentationAt: m.presentationAt || '',
         };
     });

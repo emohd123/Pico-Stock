@@ -60,9 +60,23 @@ export default function MinistriesPanel({ ministries, origin, deleteAction }) {
                                 {m.internalNote ? <div style={{ fontSize: 12, color: '#d97706' }}>● {m.internalNote}</div> : null}
                             </div>
                             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
-                                {m.quoteViewUrl
-                                    ? <button type="button" onClick={() => setModal({ url: m.quoteViewUrl, title: `${m.name} — quotation` })} style={btnLink}>View quote</button>
-                                    : <span style={{ fontSize: 12, color: '#94a3b8' }}>No quote</span>}
+                                {!m.quotes || m.quotes.length === 0
+                                    ? <span style={{ fontSize: 12, color: '#94a3b8' }}>No quote</span>
+                                    : m.quotes.length === 1
+                                        ? <button type="button" onClick={() => setModal({ url: m.quotes[0].url, title: `${m.name} — ${m.quotes[0].ref}` })} style={btnLink}>View quote</button>
+                                        : (
+                                            <select defaultValue=""
+                                                onChange={(e) => {
+                                                    const pick = m.quotes.find((x) => String(x.id) === e.target.value);
+                                                    e.target.value = '';
+                                                    if (pick) setModal({ url: pick.url, title: `${m.name} — ${pick.ref}` });
+                                                }}
+                                                title="This ministry has more than one quotation — pick the one to view"
+                                                style={{ border: '1px solid #99f6e4', background: '#f0fdfa', color: '#00857A', borderRadius: 6, padding: '3px 6px', fontSize: 12, fontWeight: 600, cursor: 'pointer', maxWidth: 210 }}>
+                                                <option value="">View quote ({m.quotes.length})…</option>
+                                                {m.quotes.map((q) => <option key={q.id} value={q.id}>{q.label}</option>)}
+                                            </select>
+                                        )}
                                 <CopyLink url={`${origin}/q/${m.token}`} />
                                 <a href={`/quotations/ministry/${m.id}`} style={btnLink}>Manage</a>
                                 <DeleteMinistryButton ministryId={m.id} ministryName={m.name} action={deleteAction} />

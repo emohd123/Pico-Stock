@@ -207,7 +207,9 @@ export default async function ManageMinistryPage({ params, searchParams }) {
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 14 }}>
                                                 <span style={{ color: '#75787B' }}>{new Date(q.createdAt).toLocaleDateString('en-GB')}</span>
                                                 <span style={{ fontWeight: 500 }}>{fmtBHD(q.totalFils)}</span>
-                                                <a href={`/q/${ministry.token}/quote/${q.id}/pdf?v=${encodeURIComponent((q.pdfBlobUrl || '').split('/').pop() || q.id)}`} target="_blank" rel="noreferrer" style={{ color: '#00857A', textDecoration: 'underline' }}>Open PDF</a>
+                                                {q.pdfBlobUrl
+                                                    ? <a href={`/q/${ministry.token}/quote/${q.id}/pdf?v=${encodeURIComponent((q.pdfBlobUrl || '').split('/').pop() || q.id)}`} target="_blank" rel="noreferrer" style={{ color: '#00857A', textDecoration: 'underline' }}>Open PDF</a>
+                                                    : <span title="No document stored for this quotation yet — attach it with Replace PDF" style={{ fontSize: 12.5, fontWeight: 600, color: '#9a3412' }}>No PDF yet</span>}
                                                 {/* Opens the item picker already filled in from this quotation, so a
                                                     change is an edit rather than re-entering thirty rows. Generating
                                                     there produces the next revision in the standard style. */}
