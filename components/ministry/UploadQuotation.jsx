@@ -148,9 +148,16 @@ export default function UploadQuotation({ ministryId, catalog }) {
                     <p style={{ margin: '6px 0 0', fontSize: 11.5, color: '#75787B' }}>Reading the PDF…</p>
                 ) : scan?.state === 'done' ? (
                     <p style={{ margin: '6px 0 0', borderRadius: 6, background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '4px 9px', fontSize: 11.5, color: '#15803d' }}>
-                        ✓ Found <strong>{scan.matched}</strong> catalogue item{scan.matched === 1 ? '' : 's'} and ticked them
-                        {scan.extras ? <> · <strong>{scan.extras}</strong> row{scan.extras === 1 ? '' : 's'} not in the catalogue, listed below as additional</> : null}
-                        {' — check the quantities against the PDF.'}
+                        {scan.matched === 0 && scan.extras
+                            // A side-meeting quotation prices by section and matches
+                            // nothing in the catalogue — "found 0 items" would read as
+                            // a failure when in fact the whole document was read.
+                            ? <>✓ Nothing matched the catalogue — read <strong>{scan.extras}</strong> priced row{scan.extras === 1 ? '' : 's'} and added {scan.extras === 1 ? 'it' : 'them'} below as additional</>
+                            : <>
+                                ✓ Found <strong>{scan.matched}</strong> catalogue item{scan.matched === 1 ? '' : 's'} and ticked them
+                                {scan.extras ? <> · <strong>{scan.extras}</strong> row{scan.extras === 1 ? '' : 's'} not in the catalogue, added below as additional</> : null}
+                            </>}
+                        {' — check the quantities and prices against the PDF.'}
                     </p>
                 ) : scan?.state === 'unreadable' ? (
                     <p style={{ margin: '6px 0 0', borderRadius: 6, background: '#fff7ed', border: '1px solid #fed7aa', padding: '4px 9px', fontSize: 11.5, color: '#9a3412' }}>
