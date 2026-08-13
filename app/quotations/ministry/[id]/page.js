@@ -236,12 +236,13 @@ export default async function ManageMinistryPage({ params, searchParams }) {
                                             <input type="hidden" name="ministryId" value={ministry.id} />
                                             <input type="hidden" name="quoteId" value={q.id} />
                                             <input name="notes" defaultValue={q.notes || ''} placeholder="Update note (e.g. sent to client)…" style={{ flex: 1, borderRadius: 4, border: '1px solid #cbd5e1', padding: '4px 8px', fontSize: 12 }} />
-                                            <select name="status" defaultValue={q.status} style={{ borderRadius: 4, border: '1px solid #cbd5e1', padding: '4px 8px', fontSize: 12 }}>
-                                                <option value="draft">Draft</option>
-                                                <option value="submitted">Submitted</option>
-                                                <option value="sent">Sent to client</option>
-                                                <option value="approved">Approved / PO received</option>
-                                                <option value="superseded">Superseded</option>
+                                            {/* Main or side drives the calendar, the season plan and
+                                                production, so it is editable here rather than only at upload. */}
+                                            <select name="meetingKind" defaultValue={q.meetingKind === 'side' ? 'side' : 'main'}
+                                                title="A side meeting runs in its own room alongside the main one — it never shares a build with it"
+                                                style={{ borderRadius: 4, border: `1px solid ${q.meetingKind === 'side' ? '#e9d5ff' : '#cbd5e1'}`, background: q.meetingKind === 'side' ? '#faf5ff' : '#fff', color: q.meetingKind === 'side' ? '#7e22ce' : '#22282B', fontWeight: 600, padding: '4px 8px', fontSize: 12 }}>
+                                                <option value="main">Main meeting</option>
+                                                <option value="side">Side meeting</option>
                                             </select>
                                             <button style={{ borderRadius: 4, background: '#00857A', color: '#fff', padding: '4px 8px', fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer' }}>Save</button>
                                         </form>
