@@ -39,6 +39,17 @@ export default async function ManageMinistryPage({ params, searchParams }) {
     const host = h.get('host') || 'localhost:3000';
     const link = `${proto}://${host}/q/${ministry.token}`;
     const currentId = quotes[0] && quotes[0].id;
+    // "Current" belongs to each quotation NUMBER, not to the ministry. A ministry
+    // can hold a main meeting and its side meetings at once, and marking all but
+    // the newest as superseded reads as though the main scope had been replaced.
+    // Within one number the newest revision is current; earlier ones are not.
+    const currentIds = new Set();
+    const seenRefs = new Set();
+    for (const q of quotes) {          // newest first
+        if (seenRefs.has(q.ref)) continue;
+        seenRefs.add(q.ref);
+        currentIds.add(q.id);
+    }
 
     return (
         <div style={{ minHeight: '100vh', background: '#f8fafc', color: '#4D4D4F' }}>
@@ -193,7 +204,7 @@ export default async function ManageMinistryPage({ params, searchParams }) {
                     ) : (
                         <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
                             {quotes.map((q) => {
-                                const isCurrent = q.id === currentId;
+                                const isCurrent = currentIds.has(q.id);
                                 return (
                                     <li key={q.id} style={{ borderRadius: 8, border: '1px solid #e2e8f0', padding: 12 }}>
                                         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
