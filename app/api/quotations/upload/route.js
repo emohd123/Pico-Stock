@@ -3,7 +3,7 @@ import { isAdmin } from '@/lib/ministry/auth';
 import { putPrivate } from '@/lib/ministry/storage';
 import {
     getMinistryById, getActiveCatalog, reserveMinistryQuoteRef, getMinistryQuotations,
-    createQuotation, insertQuotationLines, setQuotationPdfUrl,
+    createQuotation, insertQuotationLines, setQuotationPdfUrl, logActivity,
 } from '@/lib/ministry/queries';
 import { computeTotals, lineTotal } from '@/lib/ministry/money';
 import { CUSTOM_ITEM_BASE } from '@/lib/ministry/quotationScan';
