@@ -13,8 +13,19 @@ import PlanShare from '@/components/ministry/PlanShare';
 
 const card = { background: '#fff', borderRadius: 12, boxShadow: '0 1px 2px rgba(0,0,0,0.06)' };
 const COL = 26;
-const ROW = 38;
-const LABEL_W = 250;
+const ROW = 30;
+// The row header, column for column, as the printed season sheet reads it:
+// one line per meeting in date order, venue and hall spelled out.
+const LABEL_COLS = [
+    { key: 'ministry', title: 'Ministry / Client', w: 196 },
+    { key: 'event', title: 'Meeting', w: 210 },
+    { key: 'kind', title: 'Type', w: 50 },
+    { key: 'venue', title: 'Venue', w: 132 },
+    { key: 'hall', title: 'Hall', w: 104 },
+    { key: 'dates', title: 'Dates', w: 96 },
+    { key: 'lpo', title: 'LPO', w: 40 },
+];
+const LABEL_W = LABEL_COLS.reduce((n, c) => n + c.w, 0);
 const HEAD_TABLE = 6;
 
 const VENUE_COLORS = ['#00857A', '#2563eb', '#9333ea', '#c2410c', '#0891b2', '#65a30d'];
@@ -102,10 +113,11 @@ export default async function SeasonPlanView({ readOnly = false, shareUrl = null
     // Offer the canonical hotels plus anything already typed on a quotation, so
     // picking from the list can never spawn a second spelling of one venue.
     const venueOptions = [...new Set([...KNOWN_VENUES, ...venues.filter((v) => v !== VENUE_UNKNOWN)])].sort();
-    const lanes = venues.map((v) => ({
-        venue: v, color: colorOf.get(v),
-        items: rows.filter((m) => m.venue === v).sort((a, b) => a.eventDays[0].localeCompare(b.eventDays[0])),
-    }));
+    // One flat list in date order. Venue still sets the bar colour, so the
+    // grouping is readable without costing a row per venue.
+    const ordered = rows.slice().sort((a, b) => (
+        a.eventDays[0] === b.eventDays[0] ? a.ministry.localeCompare(b.ministry) : a.eventDays[0].localeCompare(b.eventDays[0])
+    ));
     // Each meeting draws at most one "stays up" link, back to the predecessor it
     // actually inherits the build from — the nearest one. Three meetings in a row
     // at one venue produce three chain pairs but only two links, which is right:
@@ -215,7 +227,7 @@ export default async function SeasonPlanView({ readOnly = false, shareUrl = null
                         {readOnly ? null : <Link href="/quotations" style={{ fontSize: 12, color: '#00857A' }}>← Admin dashboard</Link>}
                         <h1 style={{ fontSize: 20, fontWeight: 600, margin: '4px 0 0' }}>Season plan</h1>
                         <p style={{ fontSize: 13, color: '#75787B', margin: '2px 0 0' }}>
-                            Grouped by venue. Bars joined by a dashed line stay standing between meetings.
+                            Read top to bottom: meetings in date order, whatever the venue. Bars joined by a dashed line stay standing between meetings.
                             {readOnly ? ' Read-only view.' : ''}
                         </p>
                     </div>
@@ -271,7 +283,10 @@ export default async function SeasonPlanView({ readOnly = false, shareUrl = null
                 </section>
 
                 <div className="no-print" style={{ display: 'flex', flexWrap: 'wrap', gap: 14, fontSize: 11.5, alignItems: 'center' }}>
-                    <Key sw={<i style={{ width: 22, height: 11, borderRadius: 2, background: '#00857A', display: 'inline-block' }} />} t="Event day" />
+                    {/* venue colours used to live in the lane headers; the flat list needs them spelled out */}
+                    {venues.map((v) => (
+                        <Key key={v} sw={<i style={{ width: 22, height: 11, borderRadius: 2, background: colorOf.get(v), display: 'inline-block' }} />} t={v} />
+                    ))}
                     <Key sw={<i style={{ width: 22, height: 0, borderTop: '2px dashed #00857A', display: 'inline-block' }} />} t="Stays standing" />
                     <Key sw={<i style={{ width: 10, height: 14, background: '#fee2e2', border: '1px solid #fecaca', display: 'inline-block' }} />} t="Needs 2 builds" />
                     <Key sw={<i style={{ width: 2, height: 14, background: '#dc2626', display: 'inline-block' }} />} t="Today" />
@@ -281,31 +296,33 @@ export default async function SeasonPlanView({ readOnly = false, shareUrl = null
                     <div style={{ display: 'flex', overflowX: 'auto' }}>
                         {/* ---- sticky labels ---- */}
                         <div style={{ flexShrink: 0, width: LABEL_W, position: 'sticky', left: 0, zIndex: 3, background: '#fff', borderRight: '2px solid #e2e8f0' }}>
-                            <div style={{ height: 44, borderBottom: '1px solid #e2e8f0' }} />
+                            {/* 46px = the month band and the day-number row it sits beside */}
+                            <div style={{ height: 46, boxSizing: 'border-box', display: 'flex', alignItems: 'flex-end', background: '#22282B', borderBottom: '1px solid #e2e8f0' }}>
+                                {LABEL_COLS.map((c) => (
+                                    <div key={c.key} style={{ width: c.w, flexShrink: 0, padding: '0 8px 6px', fontSize: 9.5, fontWeight: 700, color: '#fff', textAlign: c.key === 'ministry' || c.key === 'event' ? 'left' : 'center' }}>{c.title}</div>
+                                ))}
+                            </div>
                             <TrackLabel text="BUILDS NEEDED" hint="separate sets that must exist that day" />
                             <TrackLabel text="HEAD TABLE" hint="where the one custom table is" />
-                            {lanes.map((lane) => (
-                                <div key={lane.venue}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, height: 28, padding: '0 10px', background: '#f1f5f9', borderTop: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0' }}>
-                                        <span style={{ width: 10, height: 10, borderRadius: 2, background: lane.color, flexShrink: 0 }} />
-                                        <span style={{ fontSize: 12, fontWeight: 700, color: lane.venue === VENUE_UNKNOWN ? '#dc2626' : '#22282B', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{lane.venue}</span>
-                                        <span style={{ marginLeft: 'auto', fontSize: 9.5, color: '#94a3b8' }}>{lane.items.length}</span>
-                                    </div>
-                                    {lane.items.map((m) => (
-                                        <div key={m.key} style={{ height: ROW, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 10px', borderBottom: '1px solid #f8fafc' }}>
+                            {ordered.map((m) => {
+                                const cell = { flexShrink: 0, padding: '0 8px', display: 'flex', alignItems: 'center', fontSize: 10.5, color: '#4D4D4F', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', borderRight: '1px solid #f8fafc' };
+                                return (
+                                    <div key={m.key} style={{ height: ROW, display: 'flex', borderBottom: '1px solid #f1f5f9' }}>
+                                        <div style={{ ...cell, width: LABEL_COLS[0].w }}>
                                             {readOnly
-                                                ? <span title={m.ministry} style={{ fontSize: 11.5, color: '#22282B', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.ministry}</span>
+                                                ? <span title={m.ministry} style={{ fontSize: 11, fontWeight: 700, color: '#22282B', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.ministry}</span>
                                                 : <Link href={`/quotations/ministry/${m.ministryId}`} title={m.ministry}
-                                                    style={{ fontSize: 11.5, color: '#22282B', textDecoration: 'none', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.ministry}</Link>}
-                                            <span style={{ fontSize: 9.5, color: '#94a3b8', display: 'flex', gap: 5, alignItems: 'center' }}>
-                                                {m.side ? <b style={{ borderRadius: 3, background: '#faf5ff', border: '1px solid #e9d5ff', color: '#7e22ce', padding: '0 3px', fontSize: 8 }}>SIDE</b> : null}
-                                                {m.itemCount} items
-                                                {!m.lpo ? <b style={{ color: '#9a3412' }}>· NO LPO</b> : <b style={{ color: '#15803d' }}>· LPO</b>}
-                                            </span>
+                                                    style={{ fontSize: 11, fontWeight: 700, color: '#22282B', textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.ministry}</Link>}
                                         </div>
-                                    ))}
-                                </div>
-                            ))}
+                                        <div style={{ ...cell, width: LABEL_COLS[1].w, color: '#75787B' }} title={m.event || ''}>{m.event || '—'}</div>
+                                        <div style={{ ...cell, width: LABEL_COLS[2].w, justifyContent: 'center', fontWeight: 700, fontSize: 9.5, color: m.side ? '#7e22ce' : '#00857A' }}>{m.side ? 'SIDE' : 'MAIN'}</div>
+                                        <div style={{ ...cell, width: LABEL_COLS[3].w, justifyContent: 'center', fontWeight: m.venue === VENUE_UNKNOWN ? 700 : 400, color: m.venue === VENUE_UNKNOWN ? '#dc2626' : '#4D4D4F' }} title={m.venue}>{m.venue}</div>
+                                        <div style={{ ...cell, width: LABEL_COLS[4].w, justifyContent: 'center', color: '#94a3b8' }} title={m.hall || ''}>{m.hall || '—'}</div>
+                                        <div style={{ ...cell, width: LABEL_COLS[5].w, justifyContent: 'center', color: '#22282B' }}>{rangeLabel(m)}</div>
+                                        <div style={{ ...cell, width: LABEL_COLS[6].w, justifyContent: 'center', fontWeight: 700, fontSize: 9.5, color: m.lpo ? '#15803d' : '#9a3412' }}>{m.lpo ? 'YES' : 'no'}</div>
+                                    </div>
+                                );
+                            })}
                         </div>
 
                         {/* ---- chart ---- */}
@@ -347,49 +364,45 @@ export default async function SeasonPlanView({ readOnly = false, shareUrl = null
                                 })}
                             </div>
 
-                            {lanes.map((lane) => (
-                                <div key={lane.venue}>
-                                    <div style={{ ...grid, height: 28, background: '#f1f5f9', borderTop: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0' }} />
-                                    {lane.items.map((m) => {
-                                        const evS = m.eventDays[0], evE = m.eventDays[m.eventDays.length - 1];
-                                        const chain = chainTo.get(m.key);
-                                        const wide = m.eventDays.length >= 3;
-                                        const tip = `${m.ministry}\n${m.event || ''}\n${rangeLabel(m)} · ${m.eventDays.length} day(s)\nVenue: ${m.venue}\n${m.itemCount} items${m.lpo ? '' : '\nLPO NOT RECEIVED'}`;
-                                        return (
-                                            <div key={m.key} style={{ ...grid, height: ROW, borderBottom: '1px solid #f8fafc' }}>
-                                                {allDays.map((d) => <div key={d} style={{ background: wash(d), borderLeft: weekEdge(d) }} />)}
+                            {ordered.map((m) => {
+                                const evS = m.eventDays[0], evE = m.eventDays[m.eventDays.length - 1];
+                                const chain = chainTo.get(m.key);
+                                const wide = m.eventDays.length >= 3;
+                                const color = colorOf.get(m.venue);
+                                const tip = `${m.ministry}\n${m.event || ''}\n${rangeLabel(m)} · ${m.eventDays.length} day(s)\nVenue: ${m.venue}${m.hall ? ` — ${m.hall}` : ''}\n${m.itemCount} items${m.lpo ? '' : '\nLPO NOT RECEIVED'}`;
+                                return (
+                                    <div key={m.key} style={{ ...grid, height: ROW, borderBottom: '1px solid #f1f5f9' }}>
+                                        {allDays.map((d) => <div key={d} style={{ background: wash(d), borderLeft: weekEdge(d) }} />)}
 
-                                                {/* stays-standing link back to the previous meeting here */}
-                                                {chain ? (
-                                                    <div title={`Build stays up from ${chain.from.ministry} — ${chain.items.length} items`}
-                                                        style={{
-                                                            gridColumn: `${col(chain.from.eventDays[chain.from.eventDays.length - 1]) + 1} / ${col(evS) + 2}`,
-                                                            gridRow: 1, alignSelf: 'center', height: 0,
-                                                            borderTop: `2px dashed ${lane.color}`, opacity: 0.85,
-                                                        }} />
-                                                ) : null}
+                                        {/* stays-standing link back to the previous meeting at this venue */}
+                                        {chain ? (
+                                            <div title={`Build stays up from ${chain.from.ministry} — ${chain.items.length} items`}
+                                                style={{
+                                                    gridColumn: `${col(chain.from.eventDays[chain.from.eventDays.length - 1]) + 1} / ${col(evS) + 2}`,
+                                                    gridRow: 1, alignSelf: 'center', height: 0,
+                                                    borderTop: `2px dashed ${color}`, opacity: 0.85,
+                                                }} />
+                                        ) : null}
 
-                                                <div title={tip} style={{
-                                                    gridColumn: `${col(evS) + 1} / ${col(evE) + 2}`, gridRow: 1, alignSelf: 'center',
-                                                    height: 20, borderRadius: 4, background: lane.color, display: 'flex', alignItems: 'center',
-                                                    padding: '0 5px', boxShadow: '0 1px 3px rgba(0,0,0,0.22)', overflow: 'hidden',
-                                                }}>
-                                                    {wide ? (
-                                                        <span style={{ fontSize: 9.5, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap' }}>{m.eventDays.length} days</span>
-                                                    ) : null}
-                                                </div>
+                                        <div title={tip} style={{
+                                            gridColumn: `${col(evS) + 1} / ${col(evE) + 2}`, gridRow: 1, alignSelf: 'center',
+                                            height: 18, borderRadius: 4, background: color, display: 'flex', alignItems: 'center',
+                                            padding: '0 5px', boxShadow: '0 1px 3px rgba(0,0,0,0.22)', overflow: 'hidden',
+                                        }}>
+                                            {wide ? (
+                                                <span style={{ fontSize: 9.5, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap' }}>{m.eventDays.length} days</span>
+                                            ) : null}
+                                        </div>
 
-                                                {/* detail sits after the bar and is allowed to overflow its cell */}
-                                                <div style={{ gridColumn: `${col(evE) + 2} / ${span + 1}`, gridRow: 1, alignSelf: 'center', paddingLeft: 6, whiteSpace: 'nowrap', overflow: 'visible', pointerEvents: 'none' }}>
-                                                    <span style={{ fontSize: 9.5, color: '#64748b' }}>
-                                                        {rangeLabel(m)}{m.eventDays.length > 1 ? ` · ${m.eventDays.length}d` : ''}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            ))}
+                                        {/* detail sits after the bar and is allowed to overflow its cell */}
+                                        <div style={{ gridColumn: `${col(evE) + 2} / ${span + 1}`, gridRow: 1, alignSelf: 'center', paddingLeft: 6, whiteSpace: 'nowrap', overflow: 'visible', pointerEvents: 'none' }}>
+                                            <span style={{ fontSize: 9.5, color: '#64748b' }}>
+                                                {rangeLabel(m)}{m.eventDays.length > 1 ? ` · ${m.eventDays.length}d` : ''}
+                                            </span>
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 </section>
@@ -505,8 +518,10 @@ function Track({ days, grid, wash, weekEdge, value, render }) {
     );
 }
 function TrackLabel({ text, hint }) {
+    // border-box, because this has to line up to the pixel with the matching
+    // Track row in the scrolling pane next to it
     return (
-        <div title={hint} style={{ height: 20, borderBottom: '1px solid #f1f5f9', fontSize: 8.5, fontWeight: 700, color: '#94a3b8', padding: '4px 10px 0', whiteSpace: 'nowrap', overflow: 'hidden' }}>{text}</div>
+        <div title={hint} style={{ height: 21, boxSizing: 'border-box', borderBottom: '1px solid #f1f5f9', fontSize: 8.5, fontWeight: 700, color: '#94a3b8', padding: '3px 10px 0', whiteSpace: 'nowrap', overflow: 'hidden' }}>{text}</div>
     );
 }
 function Panel({ title, children }) {
