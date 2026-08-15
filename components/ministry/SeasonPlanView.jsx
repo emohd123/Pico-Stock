@@ -70,13 +70,15 @@ export default async function SeasonPlanView({ readOnly = false, shareUrl = null
 
     const plan = buildPlan([...grouped.values()]);
     const todayIso = new Date().toISOString().slice(0, 10);
-    const rows = plan.meetings.filter((m) => (m.removalEnd || m.eventDays[m.eventDays.length - 1]) >= todayIso);
+    const rows = plan.meetings.filter((m) => m.eventDays[m.eventDays.length - 1] >= todayIso);
     if (!rows.length) return <Empty />;
 
-    // --- axis: start at today so the chart opens on what matters now ---
-    const earliest = rows.map((m) => m.setupDay || m.eventDays[0]).reduce((a, b) => (a < b ? a : b));
+    // --- axis: event days only, starting at today so the chart opens on what
+    // matters now. Setup and removal are deliberately not plotted anywhere on
+    // this page — the plan shows meeting days. ---
+    const earliest = rows.map((m) => m.eventDays[0]).reduce((a, b) => (a < b ? a : b));
     const from = earliest < todayIso ? earliest : todayIso;
-    const to = rows.map((m) => m.removalEnd || m.eventDays[m.eventDays.length - 1]).reduce((a, b) => (a > b ? a : b));
+    const to = rows.map((m) => m.eventDays[m.eventDays.length - 1]).reduce((a, b) => (a > b ? a : b));
     const span = daysBetween(from, to) + 1;
     const allDays = Array.from({ length: span }, (_, i) => isoAddDays(from, i));
     const idx = new Map(allDays.map((d, i) => [d, i]));
@@ -84,17 +86,13 @@ export default async function SeasonPlanView({ readOnly = false, shareUrl = null
 
     // --- per-day pressures ---
     const pressure = new Map();   // separate builds needed
-    const crew = new Map();       // setup / removal jobs happening
     const tableAt = new Map();    // where the one Head Table is
     for (const d of allDays) {
         const live = rows.filter((m) => m.eventDays.includes(d) && m.singleItems.size);
         const known = new Set(live.filter((m) => m.venue !== VENUE_UNKNOWN).map((m) => m.venue));
         pressure.set(d, known.size + live.filter((m) => m.venue === VENUE_UNKNOWN).length);
 
-        crew.set(d, rows.filter((m) => m.setupDay === d).length + rows.filter((m) => m.removalEnd === d).length);
-
-        const holders = rows.filter((m) => m.singleItems.has(HEAD_TABLE)
-            && d >= (m.setupDay || m.eventDays[0]) && d <= (m.removalEnd || m.eventDays[m.eventDays.length - 1]));
+        const holders = rows.filter((m) => m.singleItems.has(HEAD_TABLE) && m.eventDays.includes(d));
         if (holders.length) tableAt.set(d, holders);
     }
 
@@ -160,8 +158,7 @@ export default async function SeasonPlanView({ readOnly = false, shareUrl = null
             side: Boolean(m.side), hall: m.hall || '',
             ministryId: m.ministryId, ministry: m.ministry, event: m.event, lpo: m.lpo,
             venue: m.venue, color: colorOf.get(m.venue), refs: [...new Set(m.refs)],
-            range: rangeLabel(m), setupDay: m.setupDay,
-            removalStart: m.removalStart, removalEnd: m.removalEnd, items,
+            range: rangeLabel(m), items,
             // Stored quotation PDFs, viewable straight from the day panel. The
             // token in the URL is the access, same links the portal itself uses.
             pdfs: m.qList.filter((x) => x.pdfBlobUrl).map((x) => ({
@@ -171,23 +168,17 @@ export default async function SeasonPlanView({ readOnly = false, shareUrl = null
         };
     }
     const calDays = {};
-    const addCal = (iso, k, phase) => {
+    const addCal = (iso, k) => {
         if (!calDays[iso]) {
             calDays[iso] = {
-                entries: [], pressure: pressure.get(iso) || 0, crew: crew.get(iso) || 0,
+                entries: [], pressure: pressure.get(iso) || 0,
                 tableVenues: [...new Set((tableAt.get(iso) || []).map((m) => m.venue))],
             };
         }
-        calDays[iso].entries.push({ k, phase });
+        calDays[iso].entries.push({ k });
     };
-    for (const m of rows) {
-        if (m.setupDay) addCal(m.setupDay, m.key, 'setup');
-        for (const d of m.eventDays) addCal(d, m.key, 'event');
-        if (m.removalEnd) addCal(m.removalEnd, m.key, 'removal');
-    }
-    // setup first, then event, then removal within a day
-    const phaseOrder = { setup: 0, event: 1, removal: 2 };
-    for (const d of Object.values(calDays)) d.entries.sort((a, b) => phaseOrder[a.phase] - phaseOrder[b.phase]);
+    // event days only — a day a meeting merely builds on does not appear
+    for (const m of rows) for (const d of m.eventDays) addCal(d, m.key);
     const monthKeys = [];
     for (const d of allDays) {
         const p = parts(d);
@@ -281,7 +272,6 @@ export default async function SeasonPlanView({ readOnly = false, shareUrl = null
 
                 <div className="no-print" style={{ display: 'flex', flexWrap: 'wrap', gap: 14, fontSize: 11.5, alignItems: 'center' }}>
                     <Key sw={<i style={{ width: 22, height: 11, borderRadius: 2, background: '#00857A', display: 'inline-block' }} />} t="Event day" />
-                    <Key sw={<i style={{ width: 22, height: 11, borderRadius: 2, background: '#00857A', opacity: 0.26, display: 'inline-block' }} />} t="Setup / removal" />
                     <Key sw={<i style={{ width: 22, height: 0, borderTop: '2px dashed #00857A', display: 'inline-block' }} />} t="Stays standing" />
                     <Key sw={<i style={{ width: 10, height: 14, background: '#fee2e2', border: '1px solid #fecaca', display: 'inline-block' }} />} t="Needs 2 builds" />
                     <Key sw={<i style={{ width: 2, height: 14, background: '#dc2626', display: 'inline-block' }} />} t="Today" />
@@ -293,7 +283,6 @@ export default async function SeasonPlanView({ readOnly = false, shareUrl = null
                         <div style={{ flexShrink: 0, width: LABEL_W, position: 'sticky', left: 0, zIndex: 3, background: '#fff', borderRight: '2px solid #e2e8f0' }}>
                             <div style={{ height: 44, borderBottom: '1px solid #e2e8f0' }} />
                             <TrackLabel text="BUILDS NEEDED" hint="separate sets that must exist that day" />
-                            <TrackLabel text="SETUP / REMOVAL JOBS" hint="crews working that day" />
                             <TrackLabel text="HEAD TABLE" hint="where the one custom table is" />
                             {lanes.map((lane) => (
                                 <div key={lane.venue}>
@@ -344,10 +333,6 @@ export default async function SeasonPlanView({ readOnly = false, shareUrl = null
                                 value={(d) => pressure.get(d) || 0}
                                 render={(n) => n > 1 ? { text: String(n), color: '#dc2626', bg: '#fee2e2' } : n === 1 ? { text: '·', color: '#cbd5e1' } : null} />
 
-                            <Track days={allDays} grid={grid} wash={wash} weekEdge={weekEdge}
-                                value={(d) => crew.get(d) || 0}
-                                render={(n) => n > 1 ? { text: String(n), color: '#9a3412', bg: '#fff7ed' } : n === 1 ? { text: '1', color: '#cbd5e1' } : null} />
-
                             {/* head table occupancy */}
                             <div style={{ ...grid, height: 20, borderBottom: '1px solid #e2e8f0' }}>
                                 {allDays.map((d) => {
@@ -366,12 +351,10 @@ export default async function SeasonPlanView({ readOnly = false, shareUrl = null
                                 <div key={lane.venue}>
                                     <div style={{ ...grid, height: 28, background: '#f1f5f9', borderTop: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0' }} />
                                     {lane.items.map((m) => {
-                                        const s = m.setupDay || m.eventDays[0];
-                                        const e = m.removalEnd || m.eventDays[m.eventDays.length - 1];
                                         const evS = m.eventDays[0], evE = m.eventDays[m.eventDays.length - 1];
                                         const chain = chainTo.get(m.key);
                                         const wide = m.eventDays.length >= 3;
-                                        const tip = `${m.ministry}\n${m.event || ''}\n${rangeLabel(m)} · ${m.eventDays.length} day(s)\nVenue: ${m.venue}\nSetup ${s} · Removal ${e}\n${m.itemCount} items${m.lpo ? '' : '\nLPO NOT RECEIVED'}`;
+                                        const tip = `${m.ministry}\n${m.event || ''}\n${rangeLabel(m)} · ${m.eventDays.length} day(s)\nVenue: ${m.venue}\n${m.itemCount} items${m.lpo ? '' : '\nLPO NOT RECEIVED'}`;
                                         return (
                                             <div key={m.key} style={{ ...grid, height: ROW, borderBottom: '1px solid #f8fafc' }}>
                                                 {allDays.map((d) => <div key={d} style={{ background: wash(d), borderLeft: weekEdge(d) }} />)}
@@ -385,8 +368,6 @@ export default async function SeasonPlanView({ readOnly = false, shareUrl = null
                                                             borderTop: `2px dashed ${lane.color}`, opacity: 0.85,
                                                         }} />
                                                 ) : null}
-
-                                                <div style={{ gridColumn: `${col(s) + 1} / ${col(e) + 2}`, gridRow: 1, alignSelf: 'center', height: 18, borderRadius: 4, background: lane.color, opacity: 0.22 }} />
 
                                                 <div title={tip} style={{
                                                     gridColumn: `${col(evS) + 1} / ${col(evE) + 2}`, gridRow: 1, alignSelf: 'center',
@@ -420,7 +401,7 @@ export default async function SeasonPlanView({ readOnly = false, shareUrl = null
                 {/* ---- interactive calendar: click a day for the full picture ---- */}
                 <section>
                     <h2 style={{ fontSize: 14, fontWeight: 700, color: '#22282B', margin: '6px 0 10px' }}>
-                        📅 Calendar <span style={{ fontWeight: 400, color: '#94a3b8', fontSize: 12 }}>— click any day to see its meetings, items and crew load</span>
+                        📅 Calendar <span style={{ fontWeight: 400, color: '#94a3b8', fontSize: 12 }}>— click any day to see its meetings and items</span>
                     </h2>
                     <PlanCalendar meetings={calMeetings} days={calDays} monthKeys={monthKeys} todayIso={todayIso} firstEventIso={firstEventIso} readOnly={readOnly} />
                 </section>
