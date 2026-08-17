@@ -82,6 +82,11 @@ export default async function SharedProductionPage({ params }) {
                     <p style={{ fontSize: 11.5, color: '#94a3b8', margin: '4px 0 0' }}>
                         Reference {quote.ref} · view only — nothing here can be changed from this page.
                     </p>
+                    {/* The same list as a file, for a crew that will be off the link */}
+                    <a className="no-print" href={`/production/${params.token}/pdf`}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 10, borderRadius: 6, background: '#00857A', color: '#fff', padding: '7px 13px', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
+                        <span aria-hidden>⬇</span> Save as PDF
+                    </a>
                 </div>
             </header>
 
