@@ -54,7 +54,7 @@ export default async function SharedProductionPage({ params }) {
             const ov = overrides.get(`${q.id}:${l.itemNo}`) || {};
             return {
                 ...l, quoteId: q.id, quoteRef: q.ref, revision: q.revision,
-                title: ov.title || '', selections: ov.selections || [],
+                title: ov.title || '', selections: ov.selections || [], clientNote: ov.clientNote || '',
             };
         }));
 
@@ -155,6 +155,13 @@ export default async function SharedProductionPage({ params }) {
                                             {itemDescription(r.itemNo)
                                                 ? <div style={{ fontSize: 11, color: '#75787B', marginTop: 1 }}>{itemDescription(r.itemNo)}</div>
                                                 : null}
+                                            {/* What the client asked for on this item. Amber, because
+                                                it overrides the specification printed above it. */}
+                                            {r.clientNote ? (
+                                                <div style={{ marginTop: 3, borderRadius: 5, background: '#fff7ed', border: '1px solid #fed7aa', padding: '3px 8px', fontSize: 11.5, color: '#9a3412' }}>
+                                                    <strong>Client asked:</strong> {r.clientNote}
+                                                </div>
+                                            ) : null}
                                             {TITLE_ITEM_NOS.includes(r.itemNo) && r.title ? (
                                                 <div style={{ marginTop: 3, borderRadius: 5, background: '#f0fdfa', border: '1px solid #99f6e4', padding: '3px 8px', fontSize: 11.5, color: '#00857A' }}>
                                                     <strong>Title:</strong> {r.title}

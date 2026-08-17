@@ -65,7 +65,7 @@ export async function GET(req, { params }) {
             const ov = overrides.get(`${q.id}:${l.itemNo}`) || {};
             return {
                 ...l, quoteId: q.id, quoteRef: q.ref,
-                title: ov.title || '', selections: ov.selections || [],
+                title: ov.title || '', selections: ov.selections || [], clientNote: ov.clientNote || '',
             };
         }));
 

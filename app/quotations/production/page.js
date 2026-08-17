@@ -10,6 +10,7 @@ import DeptSelect from '@/components/ministry/DeptSelect';
 import ProductionNote from '@/components/ministry/ProductionNote';
 import ItemThumb from '@/components/ministry/ItemThumb';
 import ItemTitle from '@/components/ministry/ItemTitle';
+import ClientNote from '@/components/ministry/ClientNote';
 import PickList from '@/components/ministry/PickList';
 import ShareLink from '@/components/ministry/ShareLink';
 import ProductionFiles from '@/components/ministry/ProductionFiles';
@@ -76,7 +77,10 @@ export default async function ProductionPage({ searchParams }) {
                 // Titles, plate/flag picks and department overrides are keyed to the
                 // quotation the line belongs to, not to the meeting.
                 const ov = overrides.get(`${g.quoteId}:${l.itemNo}`) || {};
-                return { ...l, dept: ov.dept || deptForItem(l.itemNo), title: ov.title || '', selections: ov.selections || [] };
+                return {
+                ...l, dept: ov.dept || deptForItem(l.itemNo), title: ov.title || '',
+                selections: ov.selections || [], clientNote: ov.clientNote || '',
+            };
             });
         }
         // One clash view for the meeting: the table cannot be in two places at
@@ -198,6 +202,16 @@ export default async function ProductionPage({ searchParams }) {
                                                 </div>
                                             ) : null}
                                         </>
+                                    ) : null}
+                                    {/* Free-text client requirement for this one item — every item
+                                        gets the box, since anything can be the subject of a request. */}
+                                    <span className="no-print">
+                                        <ClientNote quotationId={g.quoteId} itemNo={l.itemNo} note={l.clientNote} />
+                                    </span>
+                                    {l.clientNote ? (
+                                        <div className="print-only-block" style={{ display: 'none', marginTop: 3, fontSize: 11 }}>
+                                            <strong>Client:</strong> {l.clientNote}
+                                        </div>
                                     ) : null}
                                 </td>
                                 <td style={{ padding: '5px 8px', fontWeight: 600, verticalAlign: 'top' }}>{l.qty}</td>

@@ -40,6 +40,7 @@ const s = StyleSheet.create({
     tag: { fontSize: 6.5, fontFamily: 'Helvetica-Bold', color: '#475569', backgroundColor: '#f1f5f9', paddingHorizontal: 3, paddingVertical: 1 },
     tagAdd: { fontSize: 6.5, fontFamily: 'Helvetica-Bold', color: '#9a3412', backgroundColor: '#fff7ed', paddingHorizontal: 3, paddingVertical: 1 },
     tagRow: { flexDirection: 'row', gap: 4, marginTop: 2 },
+    clientBox: { marginTop: 3, borderWidth: 0.6, borderColor: '#fed7aa', backgroundColor: '#fff7ed', color: '#9a3412', padding: 3, fontSize: 8 },
     titleBox: { marginTop: 3, borderWidth: 0.6, borderColor: '#99f6e4', backgroundColor: '#f0fdfa', color: TEAL, padding: 3, fontSize: 8 },
     arabic: { fontFamily: AR, fontSize: 9, textAlign: 'right', direction: 'rtl' },
     pick: { fontSize: 8, marginTop: 1.5, paddingLeft: 8 },
@@ -126,6 +127,9 @@ export async function renderProductionSheetPdf({ data, rows, img }) {
                                     {isCustomItemNo(r.itemNo) ? <Text style={s.tagAdd}>ADDITIONAL</Text> : null}
                                     {data.multi ? <Text style={s.tag}>{r.quoteRef}</Text> : null}
                                 </View>
+                                {r.clientNote ? (
+                                    <Text style={s.clientBox}>Client asked: {r.clientNote}</Text>
+                                ) : null}
                                 {TITLE_ITEM_NOS.includes(r.itemNo) && r.title ? (
                                     <View style={s.titleBox}>
                                         <Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 7.5 }}>Title</Text>

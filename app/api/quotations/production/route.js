@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { isAdmin } from '@/lib/ministry/auth';
-import { setProductionAssignment, setProductionNote, setProductionTitle, setProductionSelections } from '@/lib/ministry/queries';
+import { setProductionAssignment, setProductionNote, setProductionTitle, setProductionSelections, setProductionClientNote } from '@/lib/ministry/queries';
 import { DEPARTMENTS, TITLE_ITEM_NOS, pickListFor } from '@/lib/ministry/production';
 
 export const runtime = 'nodejs';
@@ -25,6 +25,12 @@ export async function POST(req) {
             ? rawSelections.map((t) => String(t || '').trim().slice(0, 120)).filter(Boolean).slice(0, 60)
             : [];
         await setProductionSelections(quotationId, itemNo, values);
+        return NextResponse.json({ ok: true });
+    }
+    if (body.itemNo != null && 'clientNote' in body) {
+        const itemNo = Number(body.itemNo);
+        if (!itemNo) return new NextResponse('Bad request', { status: 400 });
+        await setProductionClientNote(quotationId, itemNo, String(body.clientNote || '').trim().slice(0, 500));
         return NextResponse.json({ ok: true });
     }
     if (body.itemNo != null && 'title' in body) {
