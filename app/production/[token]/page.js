@@ -8,6 +8,7 @@ import {
     TITLE_ITEM_NOS, pickListFor, PICK_LIST_EN, selectionFit, deriveSchedule, fmtSize,
 } from '@/lib/ministry/production';
 import { itemImage } from '@/lib/ministry/itemImages';
+import { itemDescription } from '@/lib/ministry/catalog';
 import { isCustomItemNo } from '@/lib/ministry/quotationScan';
 import { fmtIso } from '@/components/ministry/ClashNotice';
 import ItemThumb from '@/components/ministry/ItemThumb';
@@ -149,6 +150,11 @@ export default async function SharedProductionPage({ params }) {
                                             {/* With two quotations on one meeting the same item can appear
                                                 twice with different quantities — say which one it came from. */}
                                             {multi ? <span style={{ marginLeft: 6, borderRadius: 3, background: '#eef2f3', padding: '0 5px', fontSize: 9, fontWeight: 700, color: '#475569' }}>{r.quoteRef}</span> : null}
+                                            {/* The quoted specification — sizes, finish, what is included —
+                                                so this link answers what the quotation says without the money. */}
+                                            {itemDescription(r.itemNo)
+                                                ? <div style={{ fontSize: 11, color: '#75787B', marginTop: 1 }}>{itemDescription(r.itemNo)}</div>
+                                                : null}
                                             {TITLE_ITEM_NOS.includes(r.itemNo) && r.title ? (
                                                 <div style={{ marginTop: 3, borderRadius: 5, background: '#f0fdfa', border: '1px solid #99f6e4', padding: '3px 8px', fontSize: 11.5, color: '#00857A' }}>
                                                     <strong>Title:</strong> {r.title}

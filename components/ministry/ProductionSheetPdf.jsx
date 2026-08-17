@@ -3,6 +3,7 @@ import { COMPANY } from '@/lib/ministry/company';
 import { PICO_LOGO_DATA_URI } from '@/lib/ministry/logos';
 import { SINGLE_STOCK_ITEM_NOS, TITLE_ITEM_NOS, pickListFor, PICK_LIST_EN, selectionFit } from '@/lib/ministry/production';
 import { isCustomItemNo } from '@/lib/ministry/quotationScan';
+import { itemDescription } from '@/lib/ministry/catalog';
 
 // A printable copy of the shared production sheet, so a crew can carry the
 // list without the link. Same content, same order, no rates — this document
@@ -35,6 +36,7 @@ const s = StyleSheet.create({
     cNo: { width: '7%' }, cImg: { width: '13%' }, cName: { width: '68%' }, cQty: { width: '12%' },
     cell: { paddingHorizontal: 4, fontSize: 8.5 },
     thumb: { width: 46, height: 32, objectFit: 'contain' },
+    desc: { fontSize: 7.5, color: MUTED, marginTop: 1 },
     tag: { fontSize: 6.5, fontFamily: 'Helvetica-Bold', color: '#475569', backgroundColor: '#f1f5f9', paddingHorizontal: 3, paddingVertical: 1 },
     tagAdd: { fontSize: 6.5, fontFamily: 'Helvetica-Bold', color: '#9a3412', backgroundColor: '#fff7ed', paddingHorizontal: 3, paddingVertical: 1 },
     tagRow: { flexDirection: 'row', gap: 4, marginTop: 2 },
@@ -118,6 +120,7 @@ export async function renderProductionSheetPdf({ data, rows, img }) {
                             </View>
                             <View style={[s.cell, s.cName]}>
                                 <Text>{r.nameSnapshot}</Text>
+                                {itemDescription(r.itemNo) ? <Text style={s.desc}>{itemDescription(r.itemNo)}</Text> : null}
                                 <View style={s.tagRow}>
                                     {SINGLE_STOCK_ITEM_NOS.includes(r.itemNo) ? <Text style={s.tag}>ONE ONLY</Text> : null}
                                     {isCustomItemNo(r.itemNo) ? <Text style={s.tagAdd}>ADDITIONAL</Text> : null}
