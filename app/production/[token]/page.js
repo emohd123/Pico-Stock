@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import {
     getQuotationByShareToken, getMinistryById, getQuotationLines, getMinistryQuotations,
-    getProductionAssignments, getProductionFiles, getSharedNoteFiles,
+    getProductionAssignments, getProductionFiles, getSharedNotes,
 } from '@/lib/ministry/queries';
 import {
     isProductionItem, SINGLE_STOCK_ITEM_NOS,
@@ -29,7 +29,7 @@ export default async function SharedProductionPage({ params }) {
         getMinistryQuotations(quote.ministryId),
         getProductionFiles([quote.id]),
         // Project-note attachments PICO ticked as visible to the crew.
-        getSharedNoteFiles(quote.ministryId),
+        getSharedNotes(quote.ministryId),
     ]);
     // A meeting can be covered by more than one quotation (added scope, or a
     // second room quoted separately). The token unlocks the meeting, so the
@@ -112,13 +112,18 @@ export default async function SharedProductionPage({ params }) {
                         <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
                             {sharedNotes.map((n) => (
                                 <li key={n.id}>
-                                    <div style={{ fontSize: 12.5, color: '#22282B', marginBottom: 3 }}>{n.note}</div>
-                                    <a href={`/production/${params.token}/note/${n.id}`}
-                                        style={{ display: 'flex', alignItems: 'center', gap: 8, borderRadius: 6, background: '#f0fdfa', border: '1px solid #99f6e4', padding: '7px 11px', fontSize: 12.5, color: '#00857A', textDecoration: 'none', fontWeight: 600 }}>
-                                        <span aria-hidden>⬇</span>
-                                        <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.fileName}</span>
-                                        <span style={{ color: '#94a3b8', fontWeight: 400 }}>{fmtSize(n.fileSizeBytes)}</span>
-                                    </a>
+                                    <div style={{ fontSize: 12.5, color: '#22282B', marginBottom: n.fileName ? 3 : 0 }}>
+                                        <span aria-hidden style={{ color: '#00857A' }}>•</span> {n.note}
+                                    </div>
+                                    {/* a shared note may be text only — the file is optional */}
+                                    {n.fileName ? (
+                                        <a href={`/production/${params.token}/note/${n.id}`}
+                                            style={{ display: 'flex', alignItems: 'center', gap: 8, borderRadius: 6, background: '#f0fdfa', border: '1px solid #99f6e4', padding: '7px 11px', fontSize: 12.5, color: '#00857A', textDecoration: 'none', fontWeight: 600 }}>
+                                            <span aria-hidden>⬇</span>
+                                            <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.fileName}</span>
+                                            <span style={{ color: '#94a3b8', fontWeight: 400 }}>{fmtSize(n.fileSizeBytes)}</span>
+                                        </a>
+                                    ) : null}
                                 </li>
                             ))}
                         </ul>

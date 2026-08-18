@@ -82,17 +82,21 @@ export default function NoteFile({ ministryId, noteId, name, size, shared }) {
                     <a href={`${url}&download=1`} style={chip}>Download</a>
                     <button type="button" onClick={() => inputRef.current && inputRef.current.click()} disabled={Boolean(busy)} style={chip}>Replace</button>
                     <button type="button" onClick={remove} disabled={Boolean(busy)} style={{ ...chip, color: '#dc2626', borderColor: '#fecaca' }}>Remove</button>
-                    <label title="Production sees this file on the shared sheet"
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 600, color: isShared ? '#00857A' : '#94a3b8', cursor: 'pointer' }}>
-                        <input type="checkbox" checked={isShared} onChange={toggleShared} style={{ width: 14, height: 14, accentColor: '#00857A' }} />
-                        Show to production
-                    </label>
                 </>
             ) : (
                 <button type="button" onClick={() => inputRef.current && inputRef.current.click()} disabled={Boolean(busy)} style={chip}>
                     {busy ? `Uploading ${busy}…` : '📎 Attach file'}
                 </button>
             )}
+            {/* The tick stands on its own — a note with no file is still worth
+                passing to the crew, and it survives swapping the attachment. */}
+            <label title={name
+                ? 'The crew sees this note and its file on the shared production sheet'
+                : 'The crew sees this note on the shared production sheet'}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 600, color: isShared ? '#00857A' : '#94a3b8', cursor: 'pointer' }}>
+                <input type="checkbox" checked={isShared} onChange={toggleShared} style={{ width: 14, height: 14, accentColor: '#00857A' }} />
+                Show to production
+            </label>
             {err ? <span style={{ fontSize: 11, color: '#dc2626' }}>{err}</span> : null}
         </div>
     );
