@@ -77,6 +77,15 @@ export default function MinistriesPanel({ ministries, origin, deleteAction }) {
                                                 {m.quotes.map((q) => <option key={q.id} value={q.id}>{q.label}</option>)}
                                             </select>
                                         )}
+                                {/* the LPO, readable from here rather than only inside Manage */}
+                                {m.lpoFileName ? (
+                                    <button type="button"
+                                        onClick={() => setModal({ url: `/api/quotations/lpo-file?ministryId=${m.id}`, title: `${m.name} — LPO` })}
+                                        title={m.lpoFileName}
+                                        style={{ ...btnLink, borderColor: '#fecaca', background: '#fef2f2', color: '#dc2626' }}>
+                                        View LPO
+                                    </button>
+                                ) : null}
                                 <CopyLink url={`${origin}/q/${m.token}`} />
                                 <a href={`/quotations/ministry/${m.id}`} style={btnLink}>Manage</a>
                                 <DeleteMinistryButton ministryId={m.id} ministryName={m.name} action={deleteAction} />

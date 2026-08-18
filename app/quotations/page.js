@@ -116,6 +116,7 @@ export default async function QuotationsAdminPage({ searchParams }) {
             id: m.id, name: m.name, nameAr: m.nameAr, token: m.token, internalNote: m.internalNote,
             quotes: list,
             quoteViewUrl: list.length ? list[0].url : null,
+            lpoFileName: m.lpoFileName || '',
             hasPresentation: Boolean(m.presentationUrl), presentationAt: m.presentationAt || '',
         };
     });

@@ -11,6 +11,7 @@ import PhotoUploader from '@/components/ministry/PhotoUploader';
 import ManagePresentation from '@/components/ministry/ManagePresentation';
 import UploadQuotation from '@/components/ministry/UploadQuotation';
 import LpoToggle from '@/components/ministry/LpoToggle';
+import LpoFile from '@/components/ministry/LpoFile';
 import { COMPANY } from '@/lib/ministry/company';
 import { fmtBHD } from '@/lib/ministry/money';
 
@@ -129,6 +130,7 @@ export default async function ManageMinistryPage({ params, searchParams }) {
                     <div style={{ marginTop: 16, borderTop: '1px solid #f1f5f9', paddingTop: 16 }}>
                         <LpoToggle ministryId={ministry.id} initial={ministry.lpoReceived} />
                         <p style={{ margin: '6px 0 0', fontSize: 11, color: '#94a3b8' }}>When the LPO (purchase order) is received, tick this — the ministry&apos;s dates turn red (confirmed) on the bookings calendar.</p>
+                        <LpoFile ministryId={ministry.id} name={ministry.lpoFileName} size={ministry.lpoSizeBytes} uploadedAt={ministry.lpoUploadedAt} />
                     </div>
                     <div style={{ marginTop: 16, borderTop: '1px solid #f1f5f9', paddingTop: 16 }}>
                         <div style={{ fontSize: 12, color: '#75787B', marginBottom: 8 }}>Technical proposal presentation</div>
