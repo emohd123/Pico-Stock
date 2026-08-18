@@ -42,6 +42,17 @@ export async function POST(req) {
     const quotes = await getMinistryQuotations(ministry.id);
     if (!quotes.length) return new NextResponse('No quotation yet — generate a quotation first.', { status: 400 });
     const quote = quotes[0];
+    // A ministry can run several meetings on one identical scope (Transport has
+    // four, Justice two). One proposal covers them all, so the cover names them
+    // instead of pretending the deck is about a single date.
+    const seen = new Set();
+    const meetings = [];
+    for (const q of quotes) {
+        if (seen.has(q.ref)) continue;
+        seen.add(q.ref);
+        meetings.push({ title: q.eventName || ministry.name, date: q.eventDate || '', ref: q.ref.split('/').pop() });
+    }
+    if (meetings.length > 1) quote.meetings = meetings;
     const lines = await getQuotationLines(quote.id);
     if (!lines.length) return new NextResponse('The latest quotation has no items.', { status: 400 });
 

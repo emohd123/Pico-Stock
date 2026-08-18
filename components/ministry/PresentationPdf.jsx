@@ -173,6 +173,19 @@ export async function renderPresentationPdf({ ministry, quote, lines, img }) {
                         </View>
                     ))}
                 </View>
+                {/* A ministry sometimes runs several meetings on one identical
+                    scope; listing them here keeps it to a single proposal. */}
+                {(quote.meetings || []).length ? (
+                    <View style={{ position: 'absolute', top: 372, left: 38, width: PW * 0.45 }}>
+                        <Text style={{ fontSize: 9.5, color: MINT, fontFamily: 'Helvetica-Bold', marginBottom: 5 }}>MEETINGS COVERED</Text>
+                        {quote.meetings.map((m) => (
+                            <View key={m.ref || m.title} style={{ flexDirection: 'row', marginBottom: 3 }}>
+                                <Text style={{ width: PW * 0.26, fontSize: 8.5, color: '#FFFFFF' }}>{m.title}</Text>
+                                <Text style={{ flex: 1, fontSize: 8.5, color: '#9AA7AB' }}>{m.date}{m.ref ? `  ·  ${m.ref}` : ''}</Text>
+                            </View>
+                        ))}
+                    </View>
+                ) : null}
                 <Text style={{ position: 'absolute', bottom: 30, left: 38, fontSize: 8, color: '#9AA7AB', fontFamily: 'Helvetica-Oblique' }}>Events and Conference Planning, Management and Production</Text>
                 {nextNo() ? null : null}
             </Page>
