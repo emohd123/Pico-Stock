@@ -12,6 +12,7 @@ import ManagePresentation from '@/components/ministry/ManagePresentation';
 import UploadQuotation from '@/components/ministry/UploadQuotation';
 import LpoToggle from '@/components/ministry/LpoToggle';
 import LpoFile from '@/components/ministry/LpoFile';
+import NoteFile from '@/components/ministry/NoteFile';
 import { COMPANY } from '@/lib/ministry/company';
 import { fmtBHD } from '@/lib/ministry/money';
 
@@ -165,6 +166,8 @@ export default async function ManageMinistryPage({ params, searchParams }) {
                                             <button style={{ borderRadius: 6, border: '1px solid #fecaca', background: '#fff', color: '#dc2626', padding: '8px 12px', fontSize: 12, cursor: 'pointer' }}>Delete</button>
                                         </form>
                                     </div>
+                                    <NoteFile ministryId={ministry.id} noteId={n.id} name={n.fileName}
+                                        size={n.fileSizeBytes} shared={n.showToProduction} />
                                 </li>
                             ))}
                         </ul>
