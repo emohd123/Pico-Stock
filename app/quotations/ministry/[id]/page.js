@@ -240,7 +240,15 @@ export default async function ManageMinistryPage({ params, searchParams }) {
                                         <form action={updateQuoteNotesAction} style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
                                             <input type="hidden" name="ministryId" value={ministry.id} />
                                             <input type="hidden" name="quoteId" value={q.id} />
-                                            <input name="notes" defaultValue={q.notes || ''} placeholder="Update note (e.g. sent to client)…" style={{ flex: 1, borderRadius: 4, border: '1px solid #cbd5e1', padding: '4px 8px', fontSize: 12 }} />
+                                            {/* The number, editable: meetings are often filed under one
+                                                reference and split later, and the issued PDF must win. */}
+                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#94a3b8' }}
+                                                title="Change the quotation number — the Q/MM/YYYY/EM prefix stays as it is">
+                                                <code style={{ color: '#94a3b8' }}>{q.ref.includes('/') ? q.ref.slice(0, q.ref.lastIndexOf('/') + 1) : ''}</code>
+                                                <input name="quoteNo" defaultValue={q.ref.split('/').pop()} inputMode="numeric" pattern="\d{3,8}"
+                                                    style={{ width: 68, borderRadius: 4, border: '1px solid #cbd5e1', padding: '4px 6px', fontSize: 12, fontWeight: 600, color: '#00857A' }} />
+                                            </span>
+                                            <input name="notes" defaultValue={q.notes || ''} placeholder="Update note (e.g. sent to client)…" style={{ flex: 1, minWidth: 180, borderRadius: 4, border: '1px solid #cbd5e1', padding: '4px 8px', fontSize: 12 }} />
                                             {/* Main or side drives the calendar, the season plan and
                                                 production, so it is editable here rather than only at upload. */}
                                             <select name="meetingKind" defaultValue={q.meetingKind === 'side' ? 'side' : 'main'}
