@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { headers } from 'next/headers';
 import { isAdmin } from '@/lib/ministry/auth';
-import { getAllMinistries, getRecentQuotations, getQuotationIdsWithItem } from '@/lib/ministry/queries';
+import { getAllMinistries, getRecentQuotations, getQuotationIdsWithItem, getMinistryLposBulk } from '@/lib/ministry/queries';
 import { createMinistryAction, deleteMinistryAction } from '@/lib/ministry/actions';
 import { fmtBHD } from '@/lib/ministry/money';
 import BookingsCalendar from '@/components/ministry/BookingsCalendar';
@@ -34,6 +34,9 @@ export default async function QuotationsAdminPage({ searchParams }) {
     const [ministryRows, allQuotes, headTableQuoteIds] = await Promise.all([
         getAllMinistries(), getRecentQuotations(200), getQuotationIdsWithItem(HEAD_TABLE_ITEM_NO),
     ]);
+    // One query for every ministry's LPO documents, so the list can offer them
+    // without a round trip per row.
+    const lposByMinistry = await getMinistryLposBulk(ministryRows.map((m) => m.id));
     const nameById = new Map(ministryRows.map((m) => [m.id, m.name]));
     // The ministry's link code — needed to build the quotation PDF viewer URL.
     const tokenById = new Map(ministryRows.map((m) => [m.id, m.token]));
@@ -116,7 +119,7 @@ export default async function QuotationsAdminPage({ searchParams }) {
             id: m.id, name: m.name, nameAr: m.nameAr, token: m.token, internalNote: m.internalNote,
             quotes: list,
             quoteViewUrl: list.length ? list[0].url : null,
-            lpoFileName: m.lpoFileName || '',
+            lpos: (lposByMinistry.get(m.id) || []).map((f) => ({ id: f.id, fileName: f.fileName })),
             hasPresentation: Boolean(m.presentationUrl), presentationAt: m.presentationAt || '',
         };
     });

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 import { isAdmin } from '@/lib/ministry/auth';
-import { getMinistryById, getMinistryPhotos, getMinistryQuotations, getMinistryNotes, getActiveCatalog } from '@/lib/ministry/queries';
+import { getMinistryById, getMinistryPhotos, getMinistryQuotations, getMinistryNotes, getActiveCatalog, getMinistryLpos } from '@/lib/ministry/queries';
 import { addMinistryNoteAction, deleteMinistryNoteAction, deletePhotoAction, deleteQuotationAction, regenerateTokenAction, setQuoteNumberAction, updateLinkCodeAction, updateMinistryAction, updateMinistryNoteAction, updateQuoteNotesAction } from '@/lib/ministry/actions';
 import DeleteQuoteButton from '@/components/ministry/DeleteQuoteButton';
 import ReplaceQuotePdf from '@/components/ministry/ReplaceQuotePdf';
@@ -35,7 +35,7 @@ export default async function ManageMinistryPage({ params, searchParams }) {
 
     const errorMsg = typeof searchParams?.error === 'string' ? searchParams.error : '';
     const saved = searchParams?.saved === '1';
-    const [photos, quotes, notes, catalog] = await Promise.all([getMinistryPhotos(ministry.id), getMinistryQuotations(ministry.id), getMinistryNotes(ministry.id), getActiveCatalog()]);
+    const [photos, quotes, notes, catalog, lpos] = await Promise.all([getMinistryPhotos(ministry.id), getMinistryQuotations(ministry.id), getMinistryNotes(ministry.id), getActiveCatalog(), getMinistryLpos(ministry.id)]);
     const h = headers();
     const proto = h.get('x-forwarded-proto') || 'https';
     const host = h.get('host') || 'localhost:3000';
@@ -131,7 +131,7 @@ export default async function ManageMinistryPage({ params, searchParams }) {
                     <div style={{ marginTop: 16, borderTop: '1px solid #f1f5f9', paddingTop: 16 }}>
                         <LpoToggle ministryId={ministry.id} initial={ministry.lpoReceived} />
                         <p style={{ margin: '6px 0 0', fontSize: 11, color: '#94a3b8' }}>When the LPO (purchase order) is received, tick this — the ministry&apos;s dates turn red (confirmed) on the bookings calendar.</p>
-                        <LpoFile ministryId={ministry.id} name={ministry.lpoFileName} size={ministry.lpoSizeBytes} uploadedAt={ministry.lpoUploadedAt} />
+                        <LpoFile ministryId={ministry.id} files={lpos} />
                     </div>
                     <div style={{ marginTop: 16, borderTop: '1px solid #f1f5f9', paddingTop: 16 }}>
                         <div style={{ fontSize: 12, color: '#75787B', marginBottom: 8 }}>Technical proposal presentation</div>

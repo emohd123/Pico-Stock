@@ -77,14 +77,26 @@ export default function MinistriesPanel({ ministries, origin, deleteAction }) {
                                                 {m.quotes.map((q) => <option key={q.id} value={q.id}>{q.label}</option>)}
                                             </select>
                                         )}
-                                {/* the LPO, readable from here rather than only inside Manage */}
-                                {m.lpoFileName ? (
+                                {/* the LPOs, readable from here rather than only inside Manage */}
+                                {(m.lpos || []).length === 1 ? (
                                     <button type="button"
-                                        onClick={() => setModal({ url: `/api/quotations/lpo-file?ministryId=${m.id}`, title: `${m.name} — LPO` })}
-                                        title={m.lpoFileName}
+                                        onClick={() => setModal({ url: `/api/quotations/lpo-file?id=${m.lpos[0].id}`, title: `${m.name} — LPO` })}
+                                        title={m.lpos[0].fileName}
                                         style={{ ...btnLink, borderColor: '#fecaca', background: '#fef2f2', color: '#dc2626' }}>
                                         View LPO
                                     </button>
+                                ) : (m.lpos || []).length > 1 ? (
+                                    <select defaultValue=""
+                                        onChange={(e) => {
+                                            const pick = m.lpos.find((x) => String(x.id) === e.target.value);
+                                            e.target.value = '';
+                                            if (pick) setModal({ url: `/api/quotations/lpo-file?id=${pick.id}`, title: `${m.name} — ${pick.fileName}` });
+                                        }}
+                                        title="This ministry has more than one LPO on file"
+                                        style={{ border: '1px solid #fecaca', background: '#fef2f2', color: '#dc2626', borderRadius: 6, padding: '3px 6px', fontSize: 12, fontWeight: 600, cursor: 'pointer', maxWidth: 190 }}>
+                                        <option value="">View LPO ({m.lpos.length})…</option>
+                                        {m.lpos.map((f) => <option key={f.id} value={f.id}>{f.fileName}</option>)}
+                                    </select>
                                 ) : null}
                                 <CopyLink url={`${origin}/q/${m.token}`} />
                                 <a href={`/quotations/ministry/${m.id}`} style={btnLink}>Manage</a>
