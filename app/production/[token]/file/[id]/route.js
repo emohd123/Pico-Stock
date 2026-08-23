@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getPrivate } from '@/lib/ministry/storage';
+import { contentDisposition } from '@/lib/ministry/download';
 import { getQuotationByShareToken, getProductionFile } from '@/lib/ministry/queries';
 
 export const runtime = 'nodejs';
@@ -18,11 +19,10 @@ export async function GET(req, { params }) {
     const stored = await getPrivate(file.blobUrl);
     if (!stored) return new NextResponse('Not found', { status: 404 });
 
-    const safeName = file.name.replace(/["\\]/g, '');
     return new NextResponse(stored.body, {
         headers: {
             'Content-Type': file.contentType || stored.contentType || 'application/octet-stream',
-            'Content-Disposition': `attachment; filename="${safeName}"`,
+            'Content-Disposition': contentDisposition(file.name),
             'Cache-Control': 'no-store',
         },
     });

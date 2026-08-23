@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { isAdmin } from '@/lib/ministry/auth';
 import { getPrivate, delPrivate } from '@/lib/ministry/storage';
+import { contentDisposition } from '@/lib/ministry/download';
 import {
     getMinistryById, getMinistryLpo, addMinistryLpo, deleteMinistryLpo,
     setMinistryLpo, logActivity,
@@ -55,11 +56,10 @@ export async function GET(req) {
     let file = null;
     try { file = await getPrivate(lpo.blobUrl); } catch { file = null; }
     if (!file) return new NextResponse('Not found', { status: 404 });
-    const safeName = (lpo.fileName || 'LPO.pdf').replace(/["\\]/g, '');
     return new NextResponse(file.body, {
         headers: {
             'Content-Type': lpo.fileType || file.contentType || 'application/pdf',
-            'Content-Disposition': `${url.searchParams.get('download') ? 'attachment' : 'inline'}; filename="${safeName}"`,
+            'Content-Disposition': contentDisposition(lpo.fileName || 'LPO.pdf', { inline: !url.searchParams.get('download') }),
             'Cache-Control': 'no-store',
         },
     });

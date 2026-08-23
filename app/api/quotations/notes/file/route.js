@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { isAdmin } from '@/lib/ministry/auth';
 import { getPrivate, delPrivate } from '@/lib/ministry/storage';
+import { contentDisposition } from '@/lib/ministry/download';
 import {
     getMinistryNote, setMinistryNoteFile, setMinistryNoteShared, logActivity,
 } from '@/lib/ministry/queries';
@@ -61,7 +62,7 @@ export async function GET(req) {
     return new NextResponse(file.body, {
         headers: {
             'Content-Type': note.fileType || 'application/octet-stream',
-            'Content-Disposition': `${url.searchParams.get('download') ? 'attachment' : 'inline'}; filename="${(note.fileName || 'note-file').replace(/"/g, '')}"`,
+            'Content-Disposition': contentDisposition(note.fileName || 'note-file', { inline: !url.searchParams.get('download') }),
             'Cache-Control': 'no-store',
         },
     });

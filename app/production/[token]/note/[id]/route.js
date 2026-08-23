@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getPrivate } from '@/lib/ministry/storage';
+import { contentDisposition } from '@/lib/ministry/download';
 import { getQuotationByShareToken, getMinistryNote } from '@/lib/ministry/queries';
 
 export const runtime = 'nodejs';
@@ -23,11 +24,10 @@ export async function GET(req, { params }) {
     try { stored = await getPrivate(note.fileUrl); } catch { stored = null; }
     if (!stored) return new NextResponse('Not found', { status: 404 });
 
-    const safeName = (note.fileName || 'attachment').replace(/["\\]/g, '');
     return new NextResponse(stored.body, {
         headers: {
             'Content-Type': note.fileType || stored.contentType || 'application/octet-stream',
-            'Content-Disposition': `attachment; filename="${safeName}"`,
+            'Content-Disposition': contentDisposition(note.fileName || 'attachment'),
             'Cache-Control': 'no-store',
         },
     });
