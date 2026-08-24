@@ -28,7 +28,13 @@ const LABEL_COLS = [
 const LABEL_W = LABEL_COLS.reduce((n, c) => n + c.w, 0);
 const HEAD_TABLE = 6;
 
-const VENUE_COLORS = ['#00857A', '#2563eb', '#9333ea', '#c2410c', '#0891b2', '#65a30d'];
+// Two colours, one meaning: green is a main meeting, purple is a side meeting.
+// Bars used to take a colour per venue, which meant six hues competing for
+// attention and none of them saying anything the Venue column did not already
+// say. The venue is written on every row; the type is what the eye needs.
+const MAIN_COLOR = '#00857A';
+const SIDE_COLOR = '#7e22ce';
+const colorFor = (m) => (m.side ? SIDE_COLOR : MAIN_COLOR);
 
 const parts = (iso) => {
     const [y, m, d] = iso.split('-').map(Number);
@@ -111,7 +117,6 @@ export default async function SeasonPlanView({ readOnly = false, shareUrl = null
 
     const venues = [...new Set(rows.map((m) => m.venue))]
         .sort((a, b) => (a === VENUE_UNKNOWN ? 1 : b === VENUE_UNKNOWN ? -1 : a.localeCompare(b)));
-    const colorOf = new Map(venues.map((v, i) => [v, v === VENUE_UNKNOWN ? '#dc2626' : VENUE_COLORS[i % VENUE_COLORS.length]]));
     // Offer the canonical hotels plus anything already typed on a quotation, so
     // picking from the list can never spawn a second spelling of one venue.
     const venueOptions = [...new Set([...KNOWN_VENUES, ...venues.filter((v) => v !== VENUE_UNKNOWN)])].sort();
@@ -171,7 +176,7 @@ export default async function SeasonPlanView({ readOnly = false, shareUrl = null
         calMeetings[m.key] = {
             side: Boolean(m.side), hall: m.hall || '',
             ministryId: m.ministryId, ministry: m.ministry, event: m.event, lpo: m.lpo,
-            venue: m.venue, color: colorOf.get(m.venue), refs: [...new Set(m.refs)],
+            venue: m.venue, color: colorFor(m), refs: [...new Set(m.refs)],
             range: rangeLabel(m), items,
             // Stored quotation PDFs, viewable straight from the day panel. The
             // token in the URL is the access, same links the portal itself uses.
@@ -285,10 +290,8 @@ export default async function SeasonPlanView({ readOnly = false, shareUrl = null
                 </section>
 
                 <div className="no-print" style={{ display: 'flex', flexWrap: 'wrap', gap: 14, fontSize: 11.5, alignItems: 'center' }}>
-                    {/* venue colours used to live in the lane headers; the flat list needs them spelled out */}
-                    {venues.map((v) => (
-                        <Key key={v} sw={<i style={{ width: 22, height: 11, borderRadius: 2, background: colorOf.get(v), display: 'inline-block' }} />} t={v} />
-                    ))}
+                    <Key sw={<i style={{ width: 22, height: 11, borderRadius: 2, background: MAIN_COLOR, display: 'inline-block' }} />} t="Main meeting" />
+                    <Key sw={<i style={{ width: 22, height: 11, borderRadius: 2, background: SIDE_COLOR, display: 'inline-block' }} />} t="Side meeting — its own room" />
                     <Key sw={<i style={{ width: 22, height: 0, borderTop: '2px dashed #00857A', display: 'inline-block' }} />} t="Stays standing" />
                     <Key sw={<i style={{ width: 10, height: 14, background: '#fee2e2', border: '1px solid #fecaca', display: 'inline-block' }} />} t="Needs 2 builds" />
                     <Key sw={<i style={{ width: 2, height: 14, background: '#dc2626', display: 'inline-block' }} />} t="Today" />
@@ -360,7 +363,7 @@ export default async function SeasonPlanView({ readOnly = false, shareUrl = null
                                     return (
                                         <div key={d} title={h.length ? `Head Table at ${[...new Set(h.map((m) => m.venue))].join(' + ')}` : ''}
                                             style={{ background: wash(d), borderLeft: weekEdge(d), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                            {h.length ? <span style={{ width: '100%', height: 8, background: clash ? '#dc2626' : colorOf.get(h[0].venue), opacity: clash ? 1 : 0.75 }} /> : null}
+                                            {h.length ? <span style={{ width: '100%', height: 8, background: clash ? '#dc2626' : colorFor(h[0]), opacity: clash ? 1 : 0.75 }} /> : null}
                                         </div>
                                     );
                                 })}
@@ -370,7 +373,7 @@ export default async function SeasonPlanView({ readOnly = false, shareUrl = null
                                 const evS = m.eventDays[0], evE = m.eventDays[m.eventDays.length - 1];
                                 const chain = chainTo.get(m.key);
                                 const wide = m.eventDays.length >= 3;
-                                const color = colorOf.get(m.venue);
+                                const color = colorFor(m);
                                 const tip = `${m.ministry}\n${m.event || ''}\n${rangeLabel(m)} · ${m.eventDays.length} day(s)\nVenue: ${m.venue}${m.hall ? ` — ${m.hall}` : ''}\n${m.itemCount} items${m.lpo ? '' : '\nLPO NOT RECEIVED'}`;
                                 return (
                                     <div key={m.key} style={{ ...grid, height: ROW, borderBottom: '1px solid #f1f5f9' }}>
