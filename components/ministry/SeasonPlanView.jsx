@@ -99,9 +99,11 @@ export default async function SeasonPlanView({ readOnly = false, shareUrl = null
     const pressure = new Map();   // separate builds needed
     const tableAt = new Map();    // where the one Head Table is
     for (const d of allDays) {
+        // Each meeting live on the day is its own room and needs its own build —
+        // two ministries at one hotel on one day are two ballrooms, not a shared
+        // set. Only consecutive meetings share, which the chains below show.
         const live = rows.filter((m) => m.eventDays.includes(d) && m.singleItems.size);
-        const known = new Set(live.filter((m) => m.venue !== VENUE_UNKNOWN).map((m) => m.venue));
-        pressure.set(d, known.size + live.filter((m) => m.venue === VENUE_UNKNOWN).length);
+        pressure.set(d, live.length);
 
         const holders = rows.filter((m) => m.singleItems.has(HEAD_TABLE) && m.eventDays.includes(d));
         if (holders.length) tableAt.set(d, holders);
@@ -443,11 +445,8 @@ export default async function SeasonPlanView({ readOnly = false, shareUrl = null
                                             </div>
                                         ))}
                                     </div>
-                                    {s.clashDays.some((cd) => cd.resolvable) ? (
-                                        <div style={{ marginTop: 4, fontSize: 10.5, fontWeight: 600, color: '#15803d' }}>
-                                            💡 One side&apos;s venue is not set — confirming it at the other meeting&apos;s hotel removes that day without building anything.
-                                        </div>
-                                    ) : null}
+                                    {/* No "confirm the venue and this goes away" hint any more: two
+                                        meetings on one day need two sets wherever they are held. */}
                                 </li>
                             ))}
                     </Panel>
