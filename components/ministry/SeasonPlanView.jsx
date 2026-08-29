@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { getAllMinistries, getRecentQuotations, getQuotationLinesBulk, getProductionAssignments } from '@/lib/ministry/queries';
-import { SINGLE_STOCK_ITEM_NOS, SINGLE_STOCK_LABELS, isProductionItem, MONTHS_FULL, isoAddDays, daysBetween } from '@/lib/ministry/production';
+import { getAllMinistries, getRecentQuotations, getQuotationLinesBulk, getProductionAssignments, getMinistryLposBulk } from '@/lib/ministry/queries';
+import { SINGLE_STOCK_ITEM_NOS, SINGLE_STOCK_LABELS, isProductionItem, MONTHS_FULL, isoAddDays, daysBetween, lpoRelease } from '@/lib/ministry/production';
 import { buildPlan, computeInventory } from '@/lib/ministry/plan';
 import { VENUE_UNKNOWN, KNOWN_VENUES } from '@/lib/ministry/venues';
 import { itemImage } from '@/lib/ministry/itemImages';
@@ -63,7 +63,9 @@ export default async function SeasonPlanView({ readOnly = false, shareUrl = null
         const key = `${q.ministryId}|${q.eventDate || ''}|${q.meetingKind === 'side' ? `side:${q.hall || q.ref}` : 'main'}`;
         if (!grouped.has(key)) {
             grouped.set(key, {
-                key, ministryId: m.id, ministry: m.name, lpo: Boolean(m.lpoReceived),
+                // lpo is filled in below, once the meeting's quotations are known:
+                // a purchase order can name the single meeting it pays for.
+                key, ministryId: m.id, ministry: m.name, lpo: false,
                 token: m.token, venueRaw: q.venue || '', eventDateText: q.eventDate || '',
                 meetingKind: q.meetingKind === 'side' ? 'side' : 'main', hall: q.hall || '',
                 event: q.eventName || '', quoteIds: [], refs: [], qList: [],
@@ -74,7 +76,15 @@ export default async function SeasonPlanView({ readOnly = false, shareUrl = null
         grouped.get(key).qList.push({ id: q.id, ref: q.ref, pdfBlobUrl: q.pdfBlobUrl || null });
     }
     const lineMap = await getQuotationLinesBulk([...grouped.values()].flatMap((g) => g.quoteIds));
+    // Confirmed per meeting, not per ministry: where an LPO names the meeting it
+    // pays for, the ministry's other meetings still read as waiting.
+    const lposByMinistry = await getMinistryLposBulk(ministries.map((m) => m.id));
+    const releaseFor = new Map(ministries.map((m) => [
+        m.id, lpoRelease(lposByMinistry.get(m.id) || [], m.lpoReceived),
+    ]));
     for (const g of grouped.values()) {
+        const rule = releaseFor.get(g.ministryId);
+        g.lpo = rule ? rule.covers(g.quoteIds) : false;
         const nos = g.quoteIds.flatMap((id) => (lineMap.get(id) || []).map((l) => l.itemNo)).filter(isProductionItem);
         g.singleItems = new Set(nos.filter((n) => SINGLE_STOCK_ITEM_NOS.includes(n)));
         g.itemCount = new Set(nos).size;

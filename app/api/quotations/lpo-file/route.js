@@ -4,7 +4,7 @@ import { getPrivate, delPrivate } from '@/lib/ministry/storage';
 import { contentDisposition } from '@/lib/ministry/download';
 import {
     getMinistryById, getMinistryLpo, addMinistryLpo, deleteMinistryLpo,
-    setMinistryLpo, logActivity,
+    setMinistryLpo, setLpoQuotation, logActivity,
 } from '@/lib/ministry/queries';
 
 export const runtime = 'nodejs';
@@ -23,13 +23,34 @@ export async function POST(req) {
     const ministry = await getMinistryById(ministryId);
     if (!ministry) return new NextResponse('Ministry not found', { status: 404 });
 
+    // quotationId names the one meeting this order pays for; absent means it
+    // covers the ministry as a whole.
     await addMinistryLpo(ministryId, {
         url: body.blobUrl, name: String(body.name).slice(0, 200),
         type: body.contentType || '', size: Number(body.sizeBytes) || null,
-    });
+    }, Number(body.quotationId) || null);
     // Receiving a purchase order is the event the tick stands for.
     if (!ministry.lpoReceived) await setMinistryLpo(ministryId, true);
     await logActivity({ ministryId, actor: 'admin', action: 'lpo.uploaded', detail: `LPO uploaded — ${body.name}` });
+    return NextResponse.json({ ok: true });
+}
+
+// Change which meeting an LPO pays for, after the fact. Sending no quotationId
+// puts it back to covering the ministry as a whole.
+export async function PATCH(req) {
+    if (!isAdmin()) return new NextResponse('Unauthorized', { status: 401 });
+    const body = await req.json();
+    const id = Number(body.id);
+    const lpo = id ? await getMinistryLpo(id) : null;
+    if (!lpo) return new NextResponse('Not found', { status: 404 });
+
+    const quotationId = Number(body.quotationId) || null;
+    await setLpoQuotation(id, quotationId);
+    await logActivity({
+        ministryId: lpo.ministryId, actor: 'admin', action: 'lpo.assigned',
+        detail: quotationId ? `LPO ${lpo.fileName} covers quotation #${quotationId}`
+            : `LPO ${lpo.fileName} covers the whole ministry`,
+    });
     return NextResponse.json({ ok: true });
 }
 

@@ -36,6 +36,20 @@ export default async function ManageMinistryPage({ params, searchParams }) {
     const errorMsg = typeof searchParams?.error === 'string' ? searchParams.error : '';
     const saved = searchParams?.saved === '1';
     const [photos, quotes, notes, catalog, lpos] = await Promise.all([getMinistryPhotos(ministry.id), getMinistryQuotations(ministry.id), getMinistryNotes(ministry.id), getActiveCatalog(), getMinistryLpos(ministry.id)]);
+    // The meetings an LPO can be pointed at: one entry per meeting (a ministry
+    // can hold several on different days), labelled the way it is spoken about
+    // — the date first, since that is what tells two of them apart.
+    const lpoMeetings = [];
+    const seenMeeting = new Set();
+    for (const q of [...quotes].reverse()) {          // oldest first, so the main scope leads
+        const key = `${q.eventDate || ''}|${q.meetingKind === 'side' ? `side:${q.hall || q.ref}` : 'main'}`;
+        if (seenMeeting.has(key)) continue;
+        seenMeeting.add(key);
+        const bits = [q.eventDate || 'date not set', q.eventName || q.ref];
+        if (q.meetingKind === 'side') bits.push('SIDE');
+        lpoMeetings.push({ id: q.id, label: bits.join(' · ').slice(0, 70) });
+    }
+
     const h = headers();
     const proto = h.get('x-forwarded-proto') || 'https';
     const host = h.get('host') || 'localhost:3000';
@@ -131,7 +145,7 @@ export default async function ManageMinistryPage({ params, searchParams }) {
                     <div style={{ marginTop: 16, borderTop: '1px solid #f1f5f9', paddingTop: 16 }}>
                         <LpoToggle ministryId={ministry.id} initial={ministry.lpoReceived} />
                         <p style={{ margin: '6px 0 0', fontSize: 11, color: '#94a3b8' }}>When the LPO (purchase order) is received, tick this — the ministry&apos;s dates turn red (confirmed) on the bookings calendar.</p>
-                        <LpoFile ministryId={ministry.id} files={lpos} />
+                        <LpoFile ministryId={ministry.id} files={lpos} meetings={lpoMeetings} />
                     </div>
                     <div style={{ marginTop: 16, borderTop: '1px solid #f1f5f9', paddingTop: 16 }}>
                         <div style={{ fontSize: 12, color: '#75787B', marginBottom: 8 }}>Technical proposal presentation</div>

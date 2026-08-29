@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { isAdmin } from '@/lib/ministry/auth';
-import { getAllMinistries, getRecentQuotations, getQuotationLinesBulk, getProductionAssignments, getProductionFiles } from '@/lib/ministry/queries';
-import { DEPARTMENTS, DEPT_LABEL, deptForItem, isProductionItem, SINGLE_STOCK_ITEM_NOS, TITLE_ITEM_NOS, TITLE_ITEM_HINT, pickListFor, deriveSchedule, computeAutoNotes } from '@/lib/ministry/production';
+import { getAllMinistries, getRecentQuotations, getQuotationLinesBulk, getProductionAssignments, getProductionFiles, getMinistryLposBulk } from '@/lib/ministry/queries';
+import { DEPARTMENTS, DEPT_LABEL, deptForItem, isProductionItem, SINGLE_STOCK_ITEM_NOS, TITLE_ITEM_NOS, TITLE_ITEM_HINT, pickListFor, deriveSchedule, computeAutoNotes, lpoRelease } from '@/lib/ministry/production';
 import { itemImage } from '@/lib/ministry/itemImages';
 import { isCustomItemNo } from '@/lib/ministry/quotationScan';
 import { fmtIso } from '@/components/ministry/ClashNotice';
@@ -40,16 +40,26 @@ export default async function ProductionPage({ searchParams }) {
     // entirely. They are NOT merged either — quantities across two quotations
     // are not additive (both may list "4 LED screens", and PICO owns one set),
     // so each quotation keeps its own item list and a person decides.
+    //
+    // A ministry with two meetings may have sent one LPO. Where that LPO names
+    // the meeting it pays for, only that meeting is released here — the other
+    // stays off this page until its own purchase order arrives.
+    const lposByMinistry = await getMinistryLposBulk(ministryRows.map((m) => m.id));
+    const releaseFor = new Map(ministryRows.map((m) => [
+        m.id, lpoRelease(lposByMinistry.get(m.id) || [], m.lpoReceived),
+    ]));
+
     const byMeeting = new Map();
     for (const q of allQuotes) {
         const m = ministryById.get(q.ministryId);
-        if (!m || !m.lpoReceived) continue;
+        if (!m) continue;
         const key = `${q.ministryId}|${q.eventDate || ''}|${q.meetingKind === 'side' ? `side:${q.hall || q.ref}` : 'main'}`;
         if (!byMeeting.has(key)) {
             byMeeting.set(key, {
                 // Meeting-level fields come from the newest quotation (first seen,
                 // allQuotes is newest-first): schedule, note, share link, files.
-                quoteId: q.id, ref: q.ref, ministry: m.name, event: q.eventName || '', venue: q.venue || '',
+                quoteId: q.id, ref: q.ref, ministryId: m.id, ministry: m.name,
+                event: q.eventName || '', venue: q.venue || '',
                 side: q.meetingKind === 'side', hall: q.hall || '',
                 duration: q.duration || '', productionNote: q.productionNote || '',
                 shareToken: q.shareToken || null, quotes: [], ...deriveSchedule(q.eventDate),
@@ -57,8 +67,13 @@ export default async function ProductionPage({ searchParams }) {
         }
         byMeeting.get(key).quotes.push({ quoteId: q.id, ref: q.ref, revision: q.revision });
     }
+    // Released only once the meeting's own quotations are covered — decided
+    // after grouping, because a meeting's quotation ids are only complete here.
+    const meetings = [...byMeeting.values()].filter((mt) => {
+        const rule = releaseFor.get(mt.ministryId);
+        return rule ? rule.covers(mt.quotes.map((qq) => qq.quoteId)) : false;
+    });
     // Oldest first inside a meeting, so the main scope reads before the add-on.
-    const meetings = [...byMeeting.values()];
     for (const mt of meetings) mt.quotes.reverse();
     meetings.sort((a, b) => {
         const da = a.eventDays[0] || '9999', db2 = b.eventDays[0] || '9999';
