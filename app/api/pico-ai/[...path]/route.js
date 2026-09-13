@@ -1,6 +1,7 @@
 import { randomInt } from 'node:crypto';
 import backgrounds from '@/lib/picoAi/backgrounds.json';
 import landmarks from '@/lib/picoAi/landmarks.json';
+import { LANDMARK_SCAN_CATALOG, findLandmarkScanItem } from '@/lib/picoAi/landmarkScanCatalog';
 import { cookies } from 'next/headers';
 import { getAdminCookieName, verifyAdminSessionToken } from '@/lib/adminAuth';
 import { bucket, db, checked, one, device, session, job, rate, publicJob, hash, secret, fail, signed, erase, responseError, siteUrl, putImage } from '@/lib/picoAi/core';
@@ -34,6 +35,42 @@ async function handler(r,{params}) {
      checked(client.from('pico_ai_jobs').select('id,session_id,event_id,mode,status,error,download_requests,reserved_usd,created_at,captured_at,completed_at').eq('event_id',active.id).order('created_at',{ascending:false}).limit(1000)),
      checked(client.from('pico_ai_sessions').select('id,event_id').eq('event_id',active.id).limit(10000))]);
     return json({events,devices,jobs,sessions:sessions.length,configured:{google:Boolean(process.env.GEMINI_API_KEY),email:Boolean(process.env.SMTP_USER&&process.env.SMTP_PASS),publicUrl:Boolean(process.env.PICO_AI_SITE_URL)}});
+   }
+   if(p[1]==='landmark-scans' && method==='GET') {
+    const range=new URL(r.url).searchParams.get('range')||'30d';
+    const days={ '7d':7, '30d':30, '90d':90, all:null }[range] ?? 30;
+    let query=client.from('pico_ai_landmark_scans').select('landmark_id,visitor_hash,device_type,campaign,scanned_at').order('scanned_at',{ascending:false}).limit(20000);
+    if(days) query=query.gte('scanned_at',new Date(Date.now()-days*86400000).toISOString());
+    let {data:scans,error}=await query;
+    let storageMode='scan-table';
+    if(error&&(error.code==='42P01'||error.code==='PGRST205')) {
+      const fallback=await client.from('pico_ai_internal').select('value').like('name','landmark_scan:%').limit(20000);
+      if(fallback.error) fail('Scan report unavailable',503);
+      scans=(fallback.data||[]).flatMap(row=>{try{return [JSON.parse(row.value)]}catch{return []}})
+        .filter(scan=>!days||Date.parse(scan.scanned_at)>=Date.now()-days*86400000)
+        .sort((a,b)=>Date.parse(b.scanned_at)-Date.parse(a.scanned_at));
+      error=null;storageMode='compatible-store';
+    }
+    const installed=!error;
+    if(error&&error.code!=='42P01'&&error.code!=='PGRST205') fail('Scan report unavailable',503);
+    const rows=scans||[],byId=new Map(LANDMARK_SCAN_CATALOG.map(item=>[item.id,{...item,scans:0,visitors:new Set(),lastScan:null}]));
+    const allVisitors=new Set(),deviceCounts={mobile:0,tablet:0,desktop:0,other:0},dailyMap=new Map();
+    for(const scan of rows){const item=byId.get(scan.landmark_id);if(!item)continue;item.scans++;item.visitors.add(scan.visitor_hash);item.lastScan=item.lastScan||scan.scanned_at;allVisitors.add(scan.visitor_hash);deviceCounts[scan.device_type]=(deviceCounts[scan.device_type]||0)+1;const key=scan.scanned_at.slice(0,10);dailyMap.set(key,(dailyMap.get(key)||0)+1);}
+    const landmarksReport=[...byId.values()].map(({visitors,...item})=>({...item,uniqueVisitors:visitors.size})).sort((a,b)=>b.scans-a.scans||a.reference.localeCompare(b.reference));
+    const topLandmark=landmarksReport.find(item=>item.scans>0)||null;
+    const trendDays=days||Math.max(30,Math.ceil((Date.now()-Date.parse(rows.at(-1)?.scanned_at||new Date().toISOString()))/86400000));
+    const daily=Array.from({length:Math.min(trendDays,365)},(_,i)=>{const date=new Date(Date.now()-(Math.min(trendDays,365)-1-i)*86400000),key=date.toISOString().slice(0,10);return {date:key,label:date.toLocaleDateString('en-GB',{day:'2-digit',month:'short'}),scans:dailyMap.get(key)||0};});
+    const devices=Object.entries(deviceCounts).map(([key,value])=>({key,label:key[0].toUpperCase()+key.slice(1),scans:value}));
+    const scannedLandmarks=landmarksReport.filter(item=>item.scans>0).length;
+    const insight=topLandmark?{title:`${topLandmark.name} is leading guest interest`,body:`It represents ${Math.round(topLandmark.scans/Math.max(rows.length,1)*100)}% of scans in this period. Keep its QR visible and compare nearby landmarks after more traveller traffic is recorded.`}:{title:'The report is ready for the first traveller scan',body:'Download any landmark QR below, scan it on a phone, and return here to see the visit recorded. The QR opens a mobile landmark page before the final content is approved.'};
+    return json({installed,storageMode,range,summary:{totalScans:rows.length,uniqueVisitors:allVisitors.size,scannedLandmarks,totalLandmarks:LANDMARK_SCAN_CATALOG.length,topLandmark},daily,devices,landmarks:landmarksReport,insight});
+   }
+   if(p[1]==='landmark-qr' && method==='GET') {
+    const landmark=findLandmarkScanItem(p[2]);if(!landmark)fail('Landmark not found',404);
+    const QRCode=(await import('qrcode')).default;
+    const trackingUrl=`${new URL(r.url).origin}/api/pico-ai/landmark-scan/${landmark.id}?c=bia-national-day`;
+    const svg=await QRCode.toString(trackingUrl,{type:'svg',errorCorrectionLevel:'H',margin:2,color:{dark:'#143f34',light:'#fffdf6'}});
+    return new Response(svg,{headers:{'Content-Type':'image/svg+xml; charset=utf-8','Content-Disposition':`attachment; filename="${landmark.reference}-${landmark.id}-QR.svg"`,'Cache-Control':'no-store','X-QR-Target':trackingUrl}});
    }
    if(p[1]==='events' && method==='PATCH') {
     const b=await body(r),old=await one('pico_ai_events','id',p[2]);

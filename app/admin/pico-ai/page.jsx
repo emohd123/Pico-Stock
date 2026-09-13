@@ -7,5 +7,14 @@ export default function Page(){return <AdminShell activeSection="pico-ai"><div c
     <div><span className="pai-eyebrow">01 / PICO AI</span><h2>Traditional AI<br/>Cloth Change</h2><p>A new look. A personal keepsake.<br/>An experience your guests can take home.</p><span className="pai-open">Manage experience <span aria-hidden="true">↗</span></span></div>
     <div className="pai-sample-stack" aria-hidden="true"><img src="/pico-ai/abaya-card.webp" alt=""/><img src="/pico-ai/thobe-card.webp" alt=""/><span>SAMPLE LOOKS</span></div>
   </Link>
-  <div className="pai-home-notes"><span>01 / Connect your screen</span><span>02 / Welcome your guests</span><span>03 / Share their moment</span></div>
+  <Link href="/admin/pico-ai/landmark-qr-reports" className="pai-experience-link pai-qr-experience-link">
+    <div><span className="pai-eyebrow">02 / PICO AI</span><h2>Landmark QR<br/>Scan Reports</h2><p>See which stories guests discover.<br/>Live scan totals, trends and landmark performance.</p><span className="pai-open">Open reports <span aria-hidden="true">↗</span></span></div>
+    <div className="pai-qr-card-art" aria-hidden="true">
+      <span className="pai-qr-signal"><i></i><i></i><i></i></span>
+      <div className="pai-qr-mini-code">▦</div>
+      <div className="pai-qr-bars"><i></i><i></i><i></i><i></i><i></i></div>
+      <strong>LIVE SCAN PULSE</strong><small>50 LANDMARK STORIES</small>
+    </div>
+  </Link>
+  <div className="pai-home-notes"><span>01 / Create the tracking QR</span><span>02 / Guests scan the landmark</span><span>03 / Review the live report</span></div>
 </div></AdminShell>}
