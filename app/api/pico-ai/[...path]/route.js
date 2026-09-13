@@ -68,8 +68,8 @@ async function handler(r,{params}) {
    if(p[1]==='landmark-qr' && method==='GET') {
     const landmark=findLandmarkScanItem(p[2]);if(!landmark)fail('Landmark not found',404);
     const QRCode=(await import('qrcode')).default;
-    const trackingUrl=`${new URL(r.url).origin}/api/pico-ai/landmark-scan/${landmark.id}?c=bia-national-day`;
-    const svg=await QRCode.toString(trackingUrl,{type:'svg',errorCorrectionLevel:'H',margin:2,color:{dark:'#143f34',light:'#fffdf6'}});
+    const trackingUrl=`${new URL(r.url).origin}/l/${landmark.reference.toLowerCase()}`;
+    const svg=await QRCode.toString(trackingUrl,{type:'svg',errorCorrectionLevel:'H',margin:4,color:{dark:'#143f34',light:'#fffdf6'}});
     return new Response(svg,{headers:{'Content-Type':'image/svg+xml; charset=utf-8','Content-Disposition':`attachment; filename="${landmark.reference}-${landmark.id}-QR.svg"`,'Cache-Control':'no-store','X-QR-Target':trackingUrl}});
    }
    if(p[1]==='events' && method==='PATCH') {
