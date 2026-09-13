@@ -1,0 +1,37 @@
+import fs from 'node:fs/promises';
+import assert from 'node:assert/strict';
+import dotenv from 'dotenv';
+import sharp from 'sharp';
+import {createClient} from '@supabase/supabase-js';
+dotenv.config({path:'.env.local',quiet:true});
+const origin='http://127.0.0.1:3100',base=origin+'/api/pico-ai';
+const client=createClient(process.env.NEXT_PUBLIC_SUPABASE_URL,process.env.SUPABASE_SERVICE_KEY,{auth:{persistSession:false}});
+const login=await fetch(origin+'/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:process.env.ADMIN_PASSWORD})});
+assert.equal(login.status,200,'admin login');const cookie=login.headers.get('set-cookie').split(';')[0];
+async function request(path,method='GET',data,headers={}){const r=await fetch(base+path,{method,headers:{'Content-Type':'application/json',...headers},...(data?{body:JSON.stringify(data)}:{})});const b=await r.json();return {status:r.status,b};}
+assert.equal((await request('/admin/overview')).status,401,'admin access denied without login');
+const overview=await request('/admin/overview','GET',null,{Cookie:cookie});assert.equal(overview.status,200,JSON.stringify(overview.b));
+const event=overview.b.events[0];
+const pairing=await request('/admin/devices','POST',{eventId:event.id,name:'Verification screen'},{Cookie:cookie});assert.equal(pairing.status,200,JSON.stringify(pairing.b));
+const pair=await request('/pair','POST',{code:pairing.b.code});assert.equal(pair.status,200,JSON.stringify(pair.b));
+const h={'X-Device-Token':pair.b.token};
+assert.equal((await request('/pair','POST',{code:pairing.b.code})).status,401,'pair code one use');
+assert.equal((await request('/event')).status,401,'unpaired screen denied');
+assert.equal((await request('/sessions','POST',{outfit:'abaya',language:'en',accepted:false},h)).status,400,'consent required');
+const s=await request('/sessions','POST',{outfit:'abaya',language:'en',accepted:true},h);assert.equal(s.status,200,JSON.stringify(s.b));
+const sh={...h,Authorization:'Bearer '+s.b.secret};
+const attempt=crypto.randomUUID();
+const [a,b]=await Promise.all([request(`/sessions/${s.b.id}/capture`,'POST',{attemptId:attempt},sh),request(`/sessions/${s.b.id}/capture`,'POST',{attemptId:attempt},sh)]);
+assert.equal(a.status,200,JSON.stringify(a.b));assert.equal(b.status,200,JSON.stringify(b.b));assert.equal(a.b.id,b.b.id,'duplicate submission one job');
+const image=await sharp('../ai photo post/saudi-moment-app/public/assets/portraits/abaya-card.webp').resize(768,1024).jpeg().toBuffer();
+assert.equal((await fetch(base+a.b.upload.replace('/api',''),{method:'POST',headers:{...sh,'Content-Type':'image/jpeg'},body:image})).status,200,'authenticated upload');
+const processed=await request(`/jobs/${a.b.id}/process`,'POST',null,sh);assert.equal(processed.status,200,JSON.stringify(processed.b));
+const result=await request(`/jobs/${a.b.id}`,'GET',null,sh);assert.equal(result.b.status,'ready',JSON.stringify(result.b));
+assert.equal((await request(`/jobs/${a.b.id}`,'GET',null,{...h,Authorization:'Bearer wrong'})).status,401,'wrong session denied');
+const photo=await request('/photo/'+result.b.shareToken);assert.equal(photo.status,200,JSON.stringify(photo.b));
+const bytes=Buffer.from(await (await fetch(photo.b.image)).arrayBuffer());const meta=await sharp(bytes).metadata();assert.equal(meta.width,2400);assert.equal(meta.height,3200);
+await fs.mkdir('output/pico-ai',{recursive:true});await fs.writeFile('output/pico-ai/verified-demo.jpg',bytes);
+// Persist only a scoped test-screen token in an ignored local file for browser validation.
+await fs.writeFile('.env.pico-ai-test.local',JSON.stringify({url:origin,token:pair.b.token,job:a.b.id,session:s.b,shareToken:result.b.shareToken,event:event.id,device:pair.b.id}));
+const duplicate=await request(`/jobs/${a.b.id}/process`,'POST',null,sh);assert.equal(duplicate.status,200);
+console.log(JSON.stringify({passed:['admin auth','pairing','pair-code replay rejected','device auth','consent','concurrent idempotency','private upload','demo composition','session isolation','private download','2400x3200 output','duplicate processing safe'],job:a.b.id}));

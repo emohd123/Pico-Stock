@@ -10,6 +10,8 @@ const ADMIN_NAV_ITEMS = [
     { key: 'upload', href: '/admin?tab=upload', label: 'Upload & Import' },
     { key: 'designers', href: '/admin/designers', label: 'Designers Board' },
     { key: 'stand-design', href: '/admin/stand-design', label: 'Stand Design' },
+    { key: 'pico-ai', href: '/admin/pico-ai', label: '✦ Pico AI' },
+    { key: 'traditional-ai', href: '/admin/pico-ai/traditional-ai-cloth-change', label: '　Traditional AI Cloth Change' },
     { key: 'grid-measure', href: '/admin/grid-measure', label: 'Grid Measure' },
     { key: 'quotations', href: '/admin/quotations', label: 'Quotation Studio' },
     { key: 'ministry', href: '/quotations', label: 'Ministry Quotations' },

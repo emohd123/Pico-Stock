@@ -8,6 +8,7 @@ function isAdminPage(pathname) {
 }
 
 function isProtectedApiRequest(pathname, method) {
+    if (pathname.startsWith('/api/pico-ai/admin')) return true;
     if (pathname.startsWith('/api/quotations')) return true;
     if (pathname.startsWith('/api/stand-design')) return true;
     if (pathname.startsWith('/api/grid-measure')) return true;

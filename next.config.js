@@ -1,13 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverComponentsExternalPackages: ['nodemailer', 'pdf-parse', 'pdfjs-dist', 'jszip', 'pdfkit', 'sharp'],
+    serverComponentsExternalPackages: ['nodemailer', 'pdf-parse', 'pdfjs-dist', 'jszip', 'pdfkit', 'sharp', 'onnxruntime-node'],
     // pdfjs pulls two things in at runtime that file tracing cannot see: it
     // require()s @napi-rs/canvas to polyfill DOMMatrix, and it imports its own
     // worker module by path. Both were dropped from the lambda, so uploaded
     // quotations failed with "DOMMatrix is not defined" and then "Setting up
     // fake worker failed" — while working locally, where both are on disk.
     outputFileTracingIncludes: {
+      '/api/pico-ai/**': ['./private/pico-ai/**', './node_modules/onnxruntime-node/bin/napi-v6/linux/x64/**'],
       '/api/quotations/upload/scan': [
         './node_modules/@napi-rs/**',
         './node_modules/pdfjs-dist/legacy/build/**',

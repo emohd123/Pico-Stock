@@ -1,0 +1,7 @@
+[
+  {"id":"diriyah-arch","name":"Diriyah Arch","ar":"قوس الدرعية","description":"Warm Najdi plaster and architectural detail.","accent":"#dec392","footer":"#193b2c","lighting":"soft warm daylight from the upper left"},
+  {"id":"emerald-studio","name":"Emerald Celebration","ar":"احتفال أخضر","description":"Emerald fabric and sculptural gold arches.","accent":"#e4cb91","footer":"#123c2e","lighting":"soft neutral frontal studio light with a subtle warm rim light"},
+  {"id":"alula-alcove","name":"AlUla Sandstone","ar":"حجر العلا","description":"A close sandstone alcove with warm desert tones.","accent":"#e5cba3","footer":"#513c2e","lighting":"soft warm diffused daylight from the upper left"},
+  {"id":"jeddah-roshan","name":"Jeddah Roshan","ar":"روشان جدة","description":"Carved wood, sea-green screens and ivory plaster.","accent":"#dcc69d","footer":"#153e39","lighting":"soft neutral-warm window light from the upper right"},
+  {"id":"hegra","name":"Original Hegra","ar":"الحجر الأصلية","description":"The original landmark with the improved portrait crop.","accent":"#cdb578","footer":"#063c2f","lighting":"soft neutral daylight"}
+]

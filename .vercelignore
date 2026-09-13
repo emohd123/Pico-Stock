@@ -17,6 +17,8 @@ eng.traineddata
 tmp-*.json
 tmp-*.pdf
 tmp-stand-design-*.json
+output/
+.env.pico-ai-test.local
 
 # Next.js build output
 .next/

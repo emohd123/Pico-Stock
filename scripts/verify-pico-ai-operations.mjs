@@ -1,0 +1,17 @@
+import dotenv from 'dotenv';import assert from 'node:assert/strict';import fs from 'node:fs/promises';import {createClient} from '@supabase/supabase-js';import {createHash,randomBytes} from 'node:crypto';
+dotenv.config({path:'.env.local',quiet:true});const client=createClient(process.env.NEXT_PUBLIC_SUPABASE_URL,process.env.SUPABASE_SERVICE_KEY);const anon=createClient(process.env.NEXT_PUBLIC_SUPABASE_URL,process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);const test=JSON.parse(await fs.readFile('.env.pico-ai-test.local','utf8'));const base='http://127.0.0.1:3100';
+assert((await anon.from('pico_ai_jobs').select('id')).error,'anonymous DB reads denied');assert((await anon.rpc('pico_ai_claim',{p_job:test.job})).error,'anonymous job processing denied');
+const direct=await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/pico-ai-private/${test.job}/poster.jpg`);assert.notEqual(direct.status,200,'bucket is private');
+const cleanup=await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/pico-ai-cleanup`);assert.equal(cleanup.status,401,'cleanup endpoint requires secret');
+const {data:event,error}=await client.from('pico_ai_events').insert({name:'Reservation verification',mode:'live',generation_limit:1,budget_usd:0.25}).select().single();assert.ifError(error);
+const {data:s}=await client.from('pico_ai_sessions').insert({device_id:test.device,event_id:event.id,secret_hash:createHash('sha256').update(randomBytes(32)).digest('hex'),outfit:'thobe',language:'en'}).select().single();
+const {data:jobs}=await client.from('pico_ai_jobs').insert([1,2].map(()=>({session_id:s.id,event_id:event.id,attempt_id:crypto.randomUUID(),mode:'live',status:'queued'}))).select();
+const claims=await Promise.all(jobs.map(j=>client.rpc('pico_ai_claim',{p_job:j.id})));assert.equal(claims.filter(r=>r.data===true).length,1,'atomic budget allows one concurrent job');
+const {data:budget}=await client.from('pico_ai_events').select('*').eq('id',event.id).single();assert.equal(budget.reserved_usd,0.25);assert.equal(budget.generations,1);
+await client.from('pico_ai_jobs').delete().eq('event_id',event.id);await client.from('pico_ai_sessions').delete().eq('id',s.id);await client.from('pico_ai_events').delete().eq('id',event.id);
+const login=await fetch(base+'/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:process.env.ADMIN_PASSWORD})});const cookie=login.headers.get('set-cookie').split(';')[0];
+const revoked=await fetch(base+`/api/pico-ai/admin/jobs/${test.job}`,{method:'DELETE',headers:{Cookie:cookie}});assert.equal(revoked.status,200);
+assert.notEqual((await fetch(base+`/api/pico-ai/photo/${test.shareToken}`)).status,200,'deleted photo link revoked');
+const objects=await client.storage.from('pico-ai-private').list(test.job);assert.equal(objects.data.length,0,'deleted files actually removed');
+const record=await client.from('pico_ai_jobs').select('completed_at').eq('id',test.job).single();assert(record.data.completed_at,'completion metric survives deletion');
+console.log('PASS: private bucket, anonymous read/RPC rejection, protected cleanup, atomic allowance, deletion, QR revocation and retained completion metric.');

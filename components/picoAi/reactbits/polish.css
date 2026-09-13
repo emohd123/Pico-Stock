@@ -1,0 +1,34 @@
+/* React Bits patterns adapted to touch kiosks. See LICENSE.md. */
+.rb-click-spark{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:100}
+.rb-magic-rings{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;z-index:-1;overflow:visible}
+.rb-magic-rings i{position:absolute;width:calc(60% + var(--ring)*10%);aspect-ratio:1;border:1px solid #e4c78b28;border-radius:50%;box-shadow:0 0 22px #e4c78b08,inset 0 0 16px #e4c78b08;animation:rb-ring-cycle 5s ease-in-out calc(var(--ring)*-1.1s) infinite}
+.rb-magic-rings i::after{content:'';position:absolute;inset:-1px;border:2px solid transparent;border-top-color:#e4c78baa;border-right-color:#79e2ae80;border-radius:50%;animation:rb-ring-turn 9s linear calc(var(--ring)*-2s) infinite}
+@keyframes rb-ring-cycle{0%,100%{opacity:.25;transform:perspective(900px) rotateX(24deg) scale(.88)}50%{opacity:.8;transform:perspective(900px) rotateX(-12deg) scale(1.08)}}
+@keyframes rb-ring-turn{to{transform:rotate(360deg)}}
+.screen-welcome .hero-card{animation:rb-card-float 9s ease-in-out infinite;will-change:transform}
+.screen-welcome .hero-abaya{animation-delay:-4.5s}
+@keyframes rb-card-float{0%,100%{transform:translateY(0) rotateX(var(--rb-rx,2deg)) rotateY(var(--rb-ry,-4deg))}50%{transform:translateY(-8px) rotateX(var(--rb-rx,-2deg)) rotateY(var(--rb-ry,4deg))}}
+.screen-select .outfit,.screen-select .outfit:nth-child(2){transform:rotateX(var(--rb-rx,0deg)) rotateY(var(--rb-ry,0deg));transition:transform 220ms ease-out,box-shadow 220ms,border-color 220ms}
+.screen-select .outfit[aria-checked=true],.screen-select .outfit:focus-visible{transform:translateY(-5px) rotateX(var(--rb-rx,0deg)) rotateY(var(--rb-ry,0deg));box-shadow:0 0 0 2px #e4c78b,0 6px 0 #806d44,0 22px 44px #0006}
+.screen-select .outfit:active{transform:translateY(-1px) scale(.985)}
+.processing>.section-title,.selection>.section-title,.result>.section-title,.thanks-content>h1{animation:rb-content-in 600ms var(--ease,cubic-bezier(.22,1,.36,1)) both}
+.selection>.outfit-grid,.processing>.loading-stage{animation:rb-content-in 700ms var(--ease,cubic-bezier(.22,1,.36,1)) 100ms both}
+.selection>.consent,.processing>.processing-steps,.result>.result-actions{animation:rb-content-in 650ms var(--ease,cubic-bezier(.22,1,.36,1)) 180ms both}
+@keyframes rb-content-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.rb-glare{position:relative;isolation:isolate;overflow:hidden;border-radius:clamp(16px,2cqw,44px);flex-shrink:0;max-width:100%;line-height:0;box-shadow:0 6px 0 #ac955f,0 24px 60px #0007}
+.rb-glare::after{content:'';position:absolute;inset:-30% -100%;pointer-events:none;background:linear-gradient(110deg,transparent 40%,#f4deaa35 48%,#fff4 50%,transparent 58%);transform:translateX(-60%);animation:rb-glare-once 1700ms ease-in-out 500ms both;z-index:1}
+.rb-glare .result-poster{display:block;box-shadow:none!important}
+@keyframes rb-glare-once{0%{transform:translateX(-60%)}100%{transform:translateX(60%)}}
+.delivery{position:relative;z-index:4}.live-delivery img{background:#fff;padding:5px;aspect-ratio:1;object-fit:contain}
+.result .local-delivery{background:#e4c78b0d;color:#d6e1d8;border:1px solid #e4c78b40}
+.local-delivery small{display:block;margin-top:6px;font-size:.8em;color:#b9cbc2}
+.email-panel form>label:has(input[type=checkbox]){display:flex;align-items:flex-start;gap:12px;line-height:1.7}
+.email-panel input[type=checkbox]{flex-shrink:0;width:22px;height:22px;accent-color:#e4c78b}
+.email-panel input[type=email]{width:100%;box-sizing:border-box;font-size:16px}
+.email-panel{width:min(92vw,650px);padding:clamp(20px,4vw,40px)}
+.email-panel p[role=alert]{border:1px solid #e4c78b55;padding:12px;border-radius:12px;line-height:1.6}
+.email-panel p[role=status]{color:#b0e7c8;text-align:center;padding:20px}
+@media(max-width:500px){.result{padding-top:2svh;gap:10px}.result .delivery{gap:12px}.result .live-delivery>img{width:100px}.result .delivery h2{font-size:15px}.result .delivery p{font-size:12px}.email-panel{max-height:85dvh}.email-panel input[type=email]{min-height:50px}.processing>.loading-stage{max-width:100%}}
+@media(prefers-reduced-motion:reduce){.rb-click-spark{display:none}.rb-glare::after{display:none}.rb-magic-rings i,.rb-magic-rings i::after{animation:none!important}.screen-welcome .hero-card{animation:none!important;will-change:auto}.moment-photo *,.moment-photo *::before,.moment-photo *::after{animation:none!important;transition:none!important}}
+.kiosk[data-sm-motion=reduced] .rb-glare::after{display:none}
+.kiosk[data-sm-motion=reduced] .hero-card{will-change:auto}

@@ -1,0 +1,5 @@
+[
+ {"id":"elephant-rock","name":"Elephant Rock, AlUla","ar":"جبل الفيل، العلا","path":"/assets/landmarks/elephant-rock.jpg","focalPoint":[0.65,0.4],"source":"https://www.experiencealula.com/en/places-to-go/elephant-rock","status":"missing","license":"Approval and licensed photograph required","size":null},
+ {"id":"at-turaif","name":"At-Turaif, Diriyah","ar":"حي الطريف، الدرعية","path":"/assets/landmarks/at-turaif.jpg","focalPoint":[0.65,0.4],"source":"https://whc.unesco.org/en/list/1329/","status":"missing","license":"Approval and licensed photograph required","size":null},
+ {"id":"kingdom-centre","name":"Kingdom Centre, Riyadh","ar":"برج المملكة، الرياض","path":"/assets/landmarks/kingdom-centre.jpg","focalPoint":[0.65,0.35],"source":"https://kingdomcentre.com.sa/","status":"missing","license":"Approval and licensed photograph required","size":null}
+]

@@ -27,6 +27,7 @@ yarn-error.log*
 
 # vercel
 .vercel
+/output/
 
 # uploads
 /public/uploads/*
