@@ -1,0 +1,206 @@
+{
+  "updated": "2026-09-14",
+  "makkah": {
+    "landmarkId": "ksa-makkah-masjid-al-haram-kaaba",
+    "reference": "K26",
+    "verifiedAt": "2026-09-14",
+    "recommendedHero": "kaaba-richard-mortel-2020.jpg",
+    "images": [
+      {
+        "file": "kaaba-richard-mortel-2020.jpg",
+        "title": "The Ka'ba, Great Mosque of Mecca, Saudi Arabia (4)",
+        "imagePage": "https://commons.wikimedia.org/wiki/File:The_Ka%27ba,_Great_Mosque_of_Mecca,_Saudi_Arabia_(4).jpg",
+        "source": "https://www.flickr.com/photos/43714545@N06/50702603023/",
+        "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/8/89/The_Ka%27ba%2C_Great_Mosque_of_Mecca%2C_Saudi_Arabia_%284%29.jpg",
+        "author": "Richard Mortel",
+        "license": "CC BY 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+        "width": 4032,
+        "height": 3024,
+        "photoDate": "2020-12-04",
+        "attribution": "Photo: Richard Mortel / Wikimedia Commons / CC BY 2.0",
+        "licenseVerified": "Commons file page explicitly declares CC BY 2.0 and records Flickr license review on 3 January 2021.",
+        "inspection": "Real documentary photo; full Kaaba prominent, unobstructed roof and base, mosque arches behind. Preferred hero. Centered portrait crop can retain the complete Kaaba.",
+        "recommendedObjectPosition": "47% 50%",
+        "modifications": "Downloaded original without changes. If displayed with a crop, identify crop in the published credit."
+      },
+      {
+        "file": "kaaba-richard-mortel-2022.jpg",
+        "title": "The Kabah in the Grand Mosque of Makkah, Saudi Arabia (52501405646)",
+        "imagePage": "https://commons.wikimedia.org/wiki/File:The_Kabah_in_the_Grand_Mosque_of_Makkah,_Saudi_Arabia_(52501405646).jpg",
+        "source": "https://www.flickr.com/photos/prof_richard/52501405646/",
+        "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a8/The_Kabah_in_the_Grand_Mosque_of_Makkah%2C_Saudi_Arabia_%2852501405646%29.jpg",
+        "author": "Richard Mortel",
+        "license": "CC BY 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+        "width": 3789,
+        "height": 3000,
+        "photoDate": "2022-10-23",
+        "attribution": "Photo: Richard Mortel / Wikimedia Commons / CC BY 2.0",
+        "licenseVerified": "Commons file page explicitly declares CC BY 2.0 and records Flickr license review on 2 June 2024.",
+        "inspection": "Real documentary photo; close door-left view, complete upper Kaaba and gold Kiswa embroidery, pilgrims in foreground. Optional secondary photo; natural full image is preferable to a narrow crop.",
+        "recommendedObjectPosition": "46% 43%",
+        "modifications": "Downloaded original without changes. If displayed with a crop, identify crop in the published credit."
+      }
+    ],
+    "storySources": [
+      {
+        "id": "grand-mosque",
+        "title": "Grand Mosque — Saudipedia",
+        "url": "https://saudipedia.com/en/grand-mosque",
+        "supports": "Location in Makkah; Kaaba within Masjid al-Haram; Mataf as courtyard for Tawaf; Maqam Ibrahim and Zamzam among mosque landmarks."
+      },
+      {
+        "id": "qibla",
+        "title": "The Qibla — Saudipedia",
+        "url": "https://saudipedia.com/en/the-qibla",
+        "supports": "Muslims face the Kaaba in prayer."
+      },
+      {
+        "id": "kiswa",
+        "title": "Al-Kaaba's Kiswa — Saudipedia",
+        "url": "https://saudipedia.com/en/al-kaaba%22s-kiswa",
+        "supports": "Kiswa woven with black silk and embroidered with gold and silver threads."
+      },
+      {
+        "id": "umrah",
+        "title": "Umrah Journey — Nusuk",
+        "url": "https://umrah.nusuk.sa/Journey",
+        "supports": "Tawaf and Sa'i form part of Umrah; Safa and Marwa are associated with Sa'i."
+      }
+    ]
+  },
+  "hima": {
+    "landmarkId": "K08",
+    "verifiedOn": "2026-09-14",
+    "nameEn": "Ḥimā Cultural Area",
+    "nameAr": "منطقة حمى الثقافية",
+    "locationEn": "Najran · Saudi Arabia",
+    "locationAr": "نجران · المملكة العربية السعودية",
+    "content": {
+      "titleEn": "Ḥimā",
+      "titleAr": "حمى",
+      "subtitleEn": "Cultural Area",
+      "subtitleAr": "منطقة حمى الثقافية",
+      "leadEn": "Across Najran’s desert rocks, ancient drawings and inscriptions preserve thousands of years of journeys, wildlife and life in Arabia.",
+      "leadAr": "على صخور صحراء نجران، تحفظ الرسوم والكتابات القديمة حكايات الرحلات والحياة والحيوانات في الجزيرة العربية عبر آلاف السنين.",
+      "paragraphEn": "Set along an ancient caravan route, Ḥimā records people’s passage through this desert landscape. Its rock surfaces carry scenes of hunting and daily life beside inscriptions in several scripts. Nearby wells supplied travellers with water, connecting this remarkable place to generations of movement and exchange.",
+      "paragraphAr": "تقع حمى على مسار قديم للقوافل، وتوثّق صخورها مرور الناس عبر هذه البيئة الصحراوية. وتجمع بين مشاهد الصيد والحياة اليومية وكتابات بخطوط متعددة. أما آبارها القريبة فقد وفّرت الماء للمسافرين، لتربط هذا المكان بأجيال متعاقبة من الرحلات والتواصل عبر الجزيرة العربية.",
+      "facts": [
+        {
+          "valueEn": "7,000",
+          "labelEn": "Years of rock art",
+          "valueAr": "٧٬٠٠٠",
+          "labelAr": "عام من الفنون الصخرية"
+        },
+        {
+          "valueEn": "2021",
+          "labelEn": "UNESCO inscription",
+          "valueAr": "٢٠٢١",
+          "labelAr": "الإدراج في اليونسكو"
+        },
+        {
+          "valueEn": "3,000+",
+          "labelEn": "Years of ancient wells",
+          "valueAr": "+٣٬٠٠٠",
+          "labelAr": "عام لعمر الآبار القديمة"
+        }
+      ],
+      "sourceLabelEn": "Explore the UNESCO reference",
+      "sourceLabelAr": "اكتشف الموقع لدى اليونسكو",
+      "sourceUrlEn": "https://whc.unesco.org/en/list/1619/",
+      "sourceUrlAr": "https://whc.unesco.org/ar/list/1619/",
+      "editorialNote": "New concise bilingual factual paraphrase grounded in the official UNESCO listing. The 7,000-year span applies to the area's corpus, not to each pictured inscription. Wells date back at least 3,000 years. No claim that these photographs show the oldest engravings."
+    },
+    "sources": [
+      {
+        "title": "UNESCO World Heritage Centre — Ḥimā Cultural Area",
+        "url": "https://whc.unesco.org/en/list/1619/",
+        "supports": [
+          "Najran and southwest Saudi Arabia",
+          "ancient caravan route",
+          "rock art spanning at least 7,000 years",
+          "hunting, fauna and daily life",
+          "multiple inscription scripts",
+          "ancient wells at least 3,000 years old",
+          "UNESCO inscription in 2021"
+        ]
+      },
+      {
+        "title": "مركز التراث العالمي — منطقة حمى الثقافية",
+        "url": "https://whc.unesco.org/ar/list/1619/",
+        "supports": [
+          "official Arabic site name",
+          "Arabic factual cross-check",
+          "2021 inscription"
+        ]
+      }
+    ],
+    "assets": [
+      {
+        "file": "hima-panorama-original.jpg",
+        "suggestedRole": "hero",
+        "title": "Inscriptions of Hima mountain2.jpg",
+        "imagePage": "https://commons.wikimedia.org/wiki/File:Inscriptions_of_Hima_mountain2.jpg",
+        "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/3/3f/Inscriptions_of_Hima_mountain2.jpg",
+        "author": "Heritage Commission (Saudi Arabia)",
+        "authorAr": "هيئة التراث",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "width": 12388,
+        "height": 5112,
+        "capturedOn": "2020-09-20",
+        "permissionEvidence": "Commons file page identifies the Heritage Commission as author, gives CC BY-SA 4.0, and records Wikimedia VRT ticket 2020090210004107. Donated by the Saudi Heritage Commission in cooperation with the Saudi Wikimedians User Group.",
+        "visualCheck": "Viewed local original. Real wide photograph of Hima rock face, with extensive inscriptions and figures beneath blue sky; matches official Commons caption naming Hima Cultural Area, Najran.",
+        "altEn": "Ancient inscriptions across a rock face in Ḥimā Cultural Area, Najran.",
+        "altAr": "كتابات قديمة على واجهة صخرية في منطقة حمى الثقافية بنجران.",
+        "attributionEn": "Photo: Heritage Commission / Wikimedia Commons · CC BY-SA 4.0",
+        "attributionAr": "الصورة: هيئة التراث / ويكيميديا كومنز · CC BY-SA 4.0",
+        "changes": "Original downloaded unchanged. If resized or cropped for the mobile page, record that change in its image credit and retain CC BY-SA 4.0 for that image adaptation."
+      },
+      {
+        "file": "hima-inscriptions-original.jpg",
+        "suggestedRole": "detail",
+        "title": "Inscriptions of Hima mountain1.jpg",
+        "imagePage": "https://commons.wikimedia.org/wiki/File:Inscriptions_of_Hima_mountain1.jpg",
+        "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/2/29/Inscriptions_of_Hima_mountain1.jpg",
+        "author": "Heritage Commission (Saudi Arabia)",
+        "authorAr": "هيئة التراث",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "width": 8256,
+        "height": 5504,
+        "capturedOn": "2020-09-20",
+        "permissionEvidence": "Commons file page identifies the Heritage Commission as author, gives CC BY-SA 4.0, and records Wikimedia VRT ticket 2020090210004107. Donated by the Saudi Heritage Commission in cooperation with the Saudi Wikimedians User Group.",
+        "visualCheck": "Viewed local original. Real close photograph of engraved figures on a dark weathered rock surface; matches official Commons caption naming Hima Cultural Area, Najran.",
+        "altEn": "Detail of ancient engraved figures on a rock at Ḥimā, Najran.",
+        "altAr": "تفاصيل رسوم قديمة منقوشة على صخرة في حمى بنجران.",
+        "attributionEn": "Photo: Heritage Commission / Wikimedia Commons · CC BY-SA 4.0",
+        "attributionAr": "الصورة: هيئة التراث / ويكيميديا كومنز · CC BY-SA 4.0",
+        "changes": "Original downloaded unchanged. If resized or cropped for the mobile page, record that change in its image credit and retain CC BY-SA 4.0 for that image adaptation."
+      }
+    ]
+  },
+  "webAssets": [
+    {
+      "original": "makkah/kaaba-richard-mortel-2020.jpg",
+      "file": "makkah-hero.webp",
+      "changes": "Resized and converted to WebP; CSS crops for responsive display. Original attribution and license retained."
+    },
+    {
+      "original": "makkah/kaaba-richard-mortel-2022.jpg",
+      "file": "makkah-detail.webp",
+      "changes": "Resized and converted to WebP; CSS crops for responsive display. Original attribution and license retained."
+    },
+    {
+      "original": "hima/hima-panorama-original.jpg",
+      "file": "hima-hero.webp",
+      "changes": "Resized and converted to WebP; CSS crops for responsive display. Original attribution and license retained."
+    },
+    {
+      "original": "hima/hima-inscriptions-original.jpg",
+      "file": "hima-detail.webp",
+      "changes": "Resized and converted to WebP; CSS crops for responsive display. Original attribution and license retained."
+    }
+  ]
+}

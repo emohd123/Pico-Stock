@@ -64,6 +64,10 @@ out/
 !/public/company-profile/team-khalid.png
 !/public/company-profile/team-sufyan.png
 
+# Approved artwork for the two landmark postcards
+!/public/landmark-stories/makkah-reference-postcard.png
+!/public/landmark-stories/hima-reference-postcard.png
+
 # dotnet install script
 dotnet-install.ps1
 .dotnet/
