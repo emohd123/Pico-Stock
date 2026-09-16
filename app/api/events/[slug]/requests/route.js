@@ -8,6 +8,7 @@ import {
 import { buildEventCatalogue } from '@/lib/eventMarketplacePricing';
 import { getProducts } from '@/lib/store';
 import { sendEventRequestEmail } from '@/lib/email';
+import { eventRequestPdfFilename, generateEventRequestPdf } from '@/lib/eventRequestPdf';
 
 export const dynamic = 'force-dynamic';
 
@@ -82,7 +83,17 @@ export async function POST(request, { params }) {
 
         let emailWarning = null;
         try {
-            const result = await sendEventRequestEmail({ event: config, request: created });
+            let pdfAttachment = null;
+            try {
+                pdfAttachment = {
+                    filename: eventRequestPdfFilename(config, created),
+                    content: await generateEventRequestPdf(config, created),
+                    contentType: 'application/pdf',
+                };
+            } catch (pdfError) {
+                console.error('Event request PDF for email failed:', pdfError);
+            }
+            const result = await sendEventRequestEmail({ event: config, request: created, pdfAttachment });
             if (!result.success) emailWarning = 'Request saved, but the notification email could not be sent.';
         } catch (emailError) {
             console.error('Event request email failed:', emailError);

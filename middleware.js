@@ -13,7 +13,8 @@ function isProtectedApiRequest(pathname, method) {
         // everything else (configuration, request management) is admin-only.
         const publicCatalogue = method === 'GET' && /^\/api\/events\/[^/]+\/?$/.test(pathname);
         const publicRequest = method === 'POST' && /^\/api\/events\/[^/]+\/requests\/?$/.test(pathname);
-        return !(publicCatalogue || publicRequest);
+        const publicRequestForm = method === 'POST' && /^\/api\/events\/[^/]+\/request-form\/?$/.test(pathname);
+        return !(publicCatalogue || publicRequest || publicRequestForm);
     }
     if (pathname.startsWith('/api/pico-ai/admin')) return true;
     if (pathname.startsWith('/api/quotations')) return true;

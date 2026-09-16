@@ -59,6 +59,7 @@ export default function EventMarketplace({ slug }) {
     const [submitting, setSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState('');
     const [result, setResult] = useState(null);
+    const [downloading, setDownloading] = useState(false);
 
     const showToast = useCallback((message) => {
         setToast(message);
@@ -218,6 +219,57 @@ export default function EventMarketplace({ slug }) {
         }
     }
 
+    /**
+     * Download the request form as a PDF in the Pico quotation layout.
+     * `stored` is a submitted request (success screen); otherwise the current
+     * basket and form details are sent as a draft.
+     */
+    async function downloadRequestForm(stored = null) {
+        setSubmitError('');
+        const lines = stored ? stored.items : basketLines;
+        if (!lines || lines.length === 0) {
+            setSubmitError('Add at least one item to your request first.');
+            return;
+        }
+        setDownloading(true);
+        try {
+            const payload = stored ? {
+                reference: stored.reference,
+                company: stored.company,
+                contact: stored.contact,
+                items: stored.items.map((line) => ({ id: line.id, quantity: line.quantity, comment: line.comment })),
+            } : {
+                company: form.company,
+                contact: { name: form.name, email: form.email, phone: form.phone, stand: form.stand, notes: form.notes },
+                items: lines.map((line) => ({ id: line.id, quantity: line.quantity, comment: line.comment })),
+            };
+            const response = await fetch(`/api/events/${encodeURIComponent(slug)}/request-form`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
+                throw new Error(data?.error || 'Could not generate the request form.');
+            }
+            const blob = await response.blob();
+            const disposition = response.headers.get('content-disposition') || '';
+            const match = disposition.match(/filename="([^"]+)"/);
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = match ? match[1] : `${slug}-request-form.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        } catch (error) {
+            setSubmitError(error.message || 'Could not generate the request form.');
+        } finally {
+            setDownloading(false);
+        }
+    }
+
     const dateRange = event ? formatDateRange(event.startDate, event.endDate) : '';
     const isOpen = event?.status === 'open';
 
@@ -252,7 +304,15 @@ export default function EventMarketplace({ slug }) {
                     <div className="evm-notice error">{loadError}</div>
                 </div>
             ) : result ? (
-                <SuccessPanel event={event} result={result} currency={currency} onNewRequest={() => setResult(null)} />
+                <SuccessPanel
+                    event={event}
+                    result={result}
+                    currency={currency}
+                    downloading={downloading}
+                    downloadError={submitError}
+                    onDownload={() => downloadRequestForm(result.request)}
+                    onNewRequest={() => { setSubmitError(''); setResult(null); }}
+                />
             ) : (
                 <>
                     <section className="evm-hero" style={event?.heroImage ? { backgroundImage: `linear-gradient(180deg, rgba(11,17,32,0.55), rgba(11,17,32,0.96)), url(${event.heroImage})` } : undefined}>
@@ -423,9 +483,13 @@ export default function EventMarketplace({ slug }) {
                                                         <span>Notes</span>
                                                         <textarea rows={3} value={form.notes} onChange={handleFormChange('notes')} placeholder="Delivery timing, branding, colours, anything else we should know" />
                                                     </label>
-                                                    <button type="submit" className="evm-cta" disabled={submitting}>
+                                                    <button type="submit" className="evm-cta" disabled={submitting || downloading}>
                                                         {submitting ? 'Sending…' : `Send request · ${formatMoney(totals.total, currency)}`}
                                                     </button>
+                                                    <button type="button" className="evm-cta secondary" disabled={submitting || downloading} onClick={() => downloadRequestForm()}>
+                                                        {downloading ? 'Preparing PDF…' : 'Download request form (PDF)'}
+                                                    </button>
+                                                    <p className="evm-form-hint">The PDF lists your items with pictures and prices in the Pico quotation layout. You can send it to your team before submitting.</p>
                                                     <button type="button" className="evm-link-btn" onClick={() => setShowForm(false)}>Back to items</button>
                                                 </form>
                                             )}
@@ -540,7 +604,7 @@ function ItemCard({ item, days, currency, quantity, onAdd, onQuantity }) {
     );
 }
 
-function SuccessPanel({ event, result, currency, onNewRequest }) {
+function SuccessPanel({ event, result, currency, downloading, downloadError, onDownload, onNewRequest }) {
     const request = result.request;
     return (
         <main className="evm-container evm-main">
@@ -574,8 +638,13 @@ function SuccessPanel({ event, result, currency, onNewRequest }) {
                     </tfoot>
                 </table>
                 {result.warning && <div className="evm-notice small">{result.warning} Please keep your reference number.</div>}
+                {downloadError && <div className="evm-notice error small">{downloadError}</div>}
+                <button type="button" className="evm-cta" disabled={downloading} onClick={onDownload}>
+                    {downloading ? 'Preparing PDF…' : 'Download request form (PDF)'}
+                </button>
+                <p className="evm-form-hint">Your request form with item pictures and prices, in the Pico quotation layout.</p>
                 {event.paymentTerms && <p className="evm-success-terms">{event.paymentTerms}</p>}
-                <button type="button" className="evm-cta" onClick={onNewRequest}>Send another request</button>
+                <button type="button" className="evm-cta secondary" onClick={onNewRequest}>Send another request</button>
             </div>
         </main>
     );

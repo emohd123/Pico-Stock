@@ -301,6 +301,7 @@ export default function EventMarketplaceAdmin({ slug }) {
 
             {tab === 'requests' && (
                 <RequestsTab
+                    slug={slug}
                     config={config}
                     requests={requests}
                     onReload={loadAll}
@@ -596,7 +597,7 @@ function CatalogueTab({ config, catalogue, updateItemSetting, setAllVisible, upd
     );
 }
 
-function RequestsTab({ config, requests, onReload, onUpdate, onDelete, onExport }) {
+function RequestsTab({ slug, config, requests, onReload, onUpdate, onDelete, onExport }) {
     const [openId, setOpenId] = useState(null);
     const [statusFilter, setStatusFilter] = useState('all');
     const [notesDraft, setNotesDraft] = useState({});
@@ -731,6 +732,14 @@ function RequestsTab({ config, requests, onReload, onUpdate, onDelete, onExport 
                                         >
                                             Save notes
                                         </button>
+                                        <a
+                                            className="btn btn-secondary btn-sm"
+                                            href={`/api/events/${slug}/requests/${request.id}/pdf`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            Download PDF
+                                        </a>
                                         {request.contact?.email && (
                                             <a
                                                 className="btn btn-secondary btn-sm"

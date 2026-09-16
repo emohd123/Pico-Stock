@@ -299,6 +299,9 @@
 
 .evm-cta { width: 100%; padding: 0.85rem 1rem; font-size: 0.95rem; margin-top: 0.75rem; }
 .evm-cta:disabled { opacity: 0.6; cursor: wait; transform: none; }
+.evm-cta.secondary { background: transparent; color: var(--pico-teal-light); border: 1px solid var(--border-teal); }
+.evm-cta.secondary:hover { background: rgba(0, 199, 177, 0.1); }
+.evm-form-hint { font-size: 0.74rem; color: var(--text-muted); margin: 0.35rem 0 0; line-height: 1.5; }
 
 .evm-link-btn {
   background: none;
