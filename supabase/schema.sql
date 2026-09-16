@@ -242,6 +242,42 @@ CREATE TABLE IF NOT EXISTS grid_measure_projects (
 CREATE INDEX IF NOT EXISTS grid_measure_projects_updated_at_idx ON grid_measure_projects (updated_at DESC);
 
 -- ============================================================
+-- EVENT MARKETPLACES (client showcase pages per event)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS event_marketplaces (
+    id           TEXT        PRIMARY KEY,
+    name         TEXT        NOT NULL,
+    status       TEXT        NOT NULL DEFAULT 'draft',
+    days         INTEGER     NOT NULL DEFAULT 1,
+    config       JSONB       NOT NULL DEFAULT '{}'::jsonb,
+    items        JSONB       NOT NULL DEFAULT '{}'::jsonb,
+    custom_items JSONB       NOT NULL DEFAULT '[]'::jsonb,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS event_marketplace_requests (
+    id          TEXT        PRIMARY KEY,
+    event_id    TEXT        NOT NULL REFERENCES event_marketplaces(id) ON DELETE CASCADE,
+    reference   TEXT        NOT NULL,
+    company     TEXT        NOT NULL,
+    contact     JSONB       NOT NULL DEFAULT '{}'::jsonb,
+    items       JSONB       NOT NULL DEFAULT '[]'::jsonb,
+    subtotal    NUMERIC     NOT NULL DEFAULT 0,
+    vat_percent NUMERIC     NOT NULL DEFAULT 10,
+    vat_amount  NUMERIC     NOT NULL DEFAULT 0,
+    total       NUMERIC     NOT NULL DEFAULT 0,
+    currency    TEXT        NOT NULL DEFAULT 'BHD',
+    status      TEXT        NOT NULL DEFAULT 'new',
+    admin_notes TEXT        NOT NULL DEFAULT '',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS event_marketplace_requests_event_idx ON event_marketplace_requests (event_id, created_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS event_marketplace_requests_reference_idx ON event_marketplace_requests (reference);
+
+-- ============================================================
 -- ROW LEVEL SECURITY
 -- ============================================================
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
@@ -255,6 +291,8 @@ ALTER TABLE news_automation_runs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE news_automation_actions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE stand_designs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE grid_measure_projects ENABLE ROW LEVEL SECURITY;
+ALTER TABLE event_marketplaces ENABLE ROW LEVEL SECURITY;
+ALTER TABLE event_marketplace_requests ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "service_role_all_products" ON products FOR ALL TO service_role USING (true) WITH CHECK (true);
 CREATE POLICY "service_role_all_orders" ON orders FOR ALL TO service_role USING (true) WITH CHECK (true);
@@ -267,5 +305,7 @@ CREATE POLICY "service_role_all_news_automation_runs" ON news_automation_runs FO
 CREATE POLICY "service_role_all_news_automation_actions" ON news_automation_actions FOR ALL TO service_role USING (true) WITH CHECK (true);
 CREATE POLICY "service_role_all_stand_designs" ON stand_designs FOR ALL TO service_role USING (true) WITH CHECK (true);
 CREATE POLICY "service_role_all_grid_measure_projects" ON grid_measure_projects FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY "service_role_all_event_marketplaces" ON event_marketplaces FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY "service_role_all_event_marketplace_requests" ON event_marketplace_requests FOR ALL TO service_role USING (true) WITH CHECK (true);
 
 CREATE POLICY "anon_read_products" ON products FOR SELECT TO anon USING (true);

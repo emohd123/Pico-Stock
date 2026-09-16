@@ -8,6 +8,7 @@ function getAdminSection(pathname) {
     if (pathname.startsWith('/admin/quotations')) return 'quotations';
     if (pathname.startsWith('/admin/stand-design')) return 'stand-design';
     if (pathname.startsWith('/admin/grid-measure')) return 'grid-measure';
+    if (pathname.startsWith('/admin/royal-bahrain-concours-2026')) return 'royal-bahrain-concours-2026';
     return '';
 }
 
