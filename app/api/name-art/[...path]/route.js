@@ -14,7 +14,15 @@ const table = () => db().from('pico_ai_internal');
 async function read(key) { const row = await checked(table().select('value').eq('name', key).maybeSingle()); return row ? JSON.parse(row.value) : null; }
 async function write(key, value) { await checked(table().upsert({ name: key, value: JSON.stringify(value) })); }
 async function swap(key, previous, next) { return (await checked(table().update({ value: JSON.stringify(next) }).eq('name', key).eq('value', JSON.stringify(previous)).select('name'))).length > 0; }
-async function list(prefix) { return (await checked(table().select('name,value').like('name', `${prefix}%`).limit(5000))).map(row => ({ key: row.name, ...JSON.parse(row.value) })); }
+async function list(prefix) {
+  const rows = [];
+  // PostgREST caps a response at 1,000 rows. Later guests must remain visible.
+  for (let offset = 0; ; offset += 1000) {
+    const page = await checked(table().select('name,value').like('name', `${prefix}%`).order('name').range(offset, offset + 999));
+    rows.push(...page.map(row => ({ key: row.name, ...JSON.parse(row.value) })));
+    if (page.length < 1000) return rows;
+  }
+}
 async function settings() { return { ...NAME_ART_DEFAULTS, ...await read('name-art:settings') }; }
 async function body(request) {
   const text = await request.text(); if (text.length > 4096) fail('Request too large', 413);
@@ -110,7 +118,7 @@ async function handler(request, { params }) {
       await rate(`name-art-create:${device.id}`,12,60);
       const config = await settings(); if (config.paused) fail('The experience is paused. Please ask the event team.',409);
       const jobs = await list('name-art:job:');
-      if (jobs.filter(job => ['rendering','queued'].includes(job.status) && Date.parse(job.expiresAt)>Date.now()).length >= 25) fail('The screen queue is full. Please try again shortly.',429);
+      if (jobs.filter(job => Date.parse(job.expiresAt)>Date.now() && ((job.status==='queued' && Date.parse(job.createdAt)>Date.now()-3600000) || (job.status==='rendering' && Date.parse(job.createdAt)>Date.now()-120000))).length >= 25) fail('The screen queue is full. Please try again shortly.',429);
       const now = Date.now(), shareToken = secret();
       const job = {id,deviceId:device.id,name,background:config.background,shareToken,status:'rendering',createdAt:new Date(now).toISOString(),expiresAt:new Date(now+48*3600000).toISOString(),duration:config.duration};
       const inserted = await checked(table().upsert({name:key,value:JSON.stringify(job)},{onConflict:'name',ignoreDuplicates:true}).select('name'));
