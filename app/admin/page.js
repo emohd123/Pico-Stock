@@ -4,6 +4,16 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { extractCleanName, inferProductType, formatOrderReference, getProductSpecs } from '@/lib/nameHelpers';
+import { computeSellingFromInternal } from '@/lib/quotationCommercial';
+
+/** Pico's standard selling rule: the shown price is the internal cost / 0.70. */
+const SELLING_RULE = '0.70';
+
+function sellingFromCost(costValue) {
+    const cost = Number(costValue);
+    if (!Number.isFinite(cost) || cost <= 0) return '';
+    return String(Math.round(computeSellingFromInternal(cost, SELLING_RULE) * 1000) / 1000);
+}
 
 /**
  * Returns the serial portion of the internal ID without the PICO- prefix.
@@ -88,7 +98,7 @@ export default function AdminDashboard() {
 
     // Product form
     const [productForm, setProductForm] = useState({
-        name: '', description: '', category: 'furniture', price: '', image: '/products/table.svg', stock: '', featured: false
+        name: '', description: '', category: 'furniture', costPrice: '', price: '', image: '/products/table.svg', stock: '', featured: false
     });
 
     useEffect(() => {
@@ -146,9 +156,10 @@ export default function AdminDashboard() {
         e.preventDefault();
         try {
             const method = editProduct ? 'PUT' : 'POST';
+            const costPrice = productForm.costPrice === '' ? null : parseFloat(productForm.costPrice);
             const body = editProduct
-                ? { ...productForm, id: editProduct.id, price: parseFloat(productForm.price) }
-                : { ...productForm, price: parseFloat(productForm.price) };
+                ? { ...productForm, id: editProduct.id, price: parseFloat(productForm.price), costPrice }
+                : { ...productForm, price: parseFloat(productForm.price), costPrice };
 
             const res = await fetch('/api/products', {
                 method,
@@ -236,6 +247,7 @@ export default function AdminDashboard() {
             name: product.name,
             description: product.description,
             category: product.category,
+            costPrice: product.costPrice != null ? String(product.costPrice) : '',
             price: product.price.toString(),
             image: product.image,
             stock: product.stock != null ? String(product.stock) : '',
@@ -254,7 +266,7 @@ export default function AdminDashboard() {
 
     const resetProductForm = () => {
         setProductForm({
-            name: '', description: '', category: 'furniture', price: '', image: '/products/table.svg', stock: '', featured: false
+            name: '', description: '', category: 'furniture', costPrice: '', price: '', image: '/products/table.svg', stock: '', featured: false
         });
         setParsedSpecsForm(buildParsedSpecsState({
             name: '',
@@ -1606,14 +1618,35 @@ export default function AdminDashboard() {
                                         <option value="furniture">Furniture</option>
                                         <option value="tv-led">TV / LED</option>
                                         <option value="graphics">Graphics</option>
+                                        <option value="accessories">Accessories</option>
                                     </select>
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">Price (BHD) *</label>
+                                    <label className="form-label">Our Price (BHD)</label>
                                     <input
                                         className="form-input"
                                         type="number"
-                                        step="0.01"
+                                        step="0.001"
+                                        min="0"
+                                        value={productForm.costPrice}
+                                        onChange={e => {
+                                            const costPrice = e.target.value;
+                                            const price = sellingFromCost(costPrice);
+                                            setProductForm(p => ({ ...p, costPrice, ...(price === '' ? {} : { price }) }));
+                                            if (price !== '') setParsedSpecsForm(prev => ({ ...prev, unitRate: price }));
+                                        }}
+                                        placeholder="0.000"
+                                    />
+                                    <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                                        Our own price. The website price below fills in as this ÷ 0.70.
+                                    </p>
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Website Price (BHD) *</label>
+                                    <input
+                                        className="form-input"
+                                        type="number"
+                                        step="0.001"
                                         min="0"
                                         value={productForm.price}
                                         onChange={e => {
@@ -1621,9 +1654,12 @@ export default function AdminDashboard() {
                                             setProductForm(p => ({ ...p, price }));
                                             setParsedSpecsForm(prev => ({ ...prev, unitRate: price }));
                                         }}
-                                        placeholder="0.00"
+                                        placeholder="0.000"
                                         required
                                     />
+                                    <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                                        Shown to clients. Edit to override the calculated price.
+                                    </p>
                                 </div>
                             </div>
                             <div className="form-group">

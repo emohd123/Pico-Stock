@@ -15,6 +15,7 @@ const ADMIN_NAV_ITEMS = [
     { key: 'landmark-qr', href: '/admin/pico-ai/landmark-qr-reports', label: '　Landmark QR Reports' },
     { key: 'name-art', href: '/admin/pico-ai/name-art', label: '　Name Art Experience' },
     { key: 'grid-measure', href: '/admin/grid-measure', label: 'Grid Measure' },
+    { key: 'royal-bahrain-concours-2026', href: '/admin/royal-bahrain-concours-2026', label: 'ROYAL BAHRAIN CONCOURS 2026' },
     { key: 'quotations', href: '/admin/quotations', label: 'Quotation Studio' },
     { key: 'ministry', href: '/quotations', label: 'Ministry Quotations' },
 ];
