@@ -11,7 +11,9 @@ export default function AppChrome({ children }) {
     }
     // Ministry quotation links (/q/[token]) are sent to external recipients —
     // render them bare, without the site navbar/footer.
-    if (pathname && (pathname.startsWith('/q/') || pathname.startsWith('/pico-ai/photo/'))) {
+    // Event marketplace pages (/events/[slug]) are shared with clients for a
+    // specific event and carry their own branded header and footer.
+    if (pathname && (pathname.startsWith('/q/') || pathname.startsWith('/pico-ai/photo/') || pathname.startsWith('/events/'))) {
         return <main style={{ position: 'relative', zIndex: 1 }}>{children}</main>;
     }
     return (

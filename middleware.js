@@ -8,6 +8,14 @@ function isAdminPage(pathname) {
 }
 
 function isProtectedApiRequest(pathname, method) {
+    if (pathname.startsWith('/api/events/')) {
+        // Clients may read an open event's catalogue and submit a request;
+        // everything else (configuration, request management) is admin-only.
+        const publicCatalogue = method === 'GET' && /^\/api\/events\/[^/]+\/?$/.test(pathname);
+        const publicRequest = method === 'POST' && /^\/api\/events\/[^/]+\/requests\/?$/.test(pathname);
+        const publicRequestForm = method === 'POST' && /^\/api\/events\/[^/]+\/request-form\/?$/.test(pathname);
+        return !(publicCatalogue || publicRequest || publicRequestForm);
+    }
     if (pathname.startsWith('/api/pico-ai/admin')) return true;
     if (pathname.startsWith('/api/quotations')) return true;
     if (pathname.startsWith('/api/stand-design')) return true;
