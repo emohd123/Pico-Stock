@@ -68,7 +68,7 @@ export async function POST(request) {
                 .map(p => String(p.name).toLowerCase().trim())
         );
 
-        const CAT_PREFIX = { furniture: 'FRN', 'tv-led': 'TVL', graphics: 'GFX' };
+        const CAT_PREFIX = { furniture: 'FRN', 'tv-led': 'TVL', graphics: 'GFX', accessories: 'ACC' };
 
         const productsToCreate = Array.isArray(body) ? body : [body];
         const newProducts = productsToCreate
@@ -89,6 +89,9 @@ export async function POST(request) {
                     description: item.description || '',
                     category: item.category || 'furniture',
                     price: parseFloat(item.price) || 0,
+                    costPrice: item.costPrice === undefined || item.costPrice === null || item.costPrice === ''
+                        ? null
+                        : parseFloat(item.costPrice),
                     currency: 'BHD',
                     image: item.image || '/products/table.svg',
                     stock: stock !== undefined ? stock : null,
@@ -125,6 +128,11 @@ export async function PUT(request) {
         }
 
         if (updates.price !== undefined) updates.price = parseFloat(updates.price);
+        if (updates.costPrice !== undefined) {
+            updates.costPrice = updates.costPrice === null || updates.costPrice === ''
+                ? null
+                : parseFloat(updates.costPrice);
+        }
         if (updates.stock !== undefined) {
             const parsedStock = updates.stock === '' || updates.stock === null ? null : parseInt(updates.stock);
             updates.stock = parsedStock;
