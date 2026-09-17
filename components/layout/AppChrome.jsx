@@ -6,7 +6,7 @@ import Navbar from '@/components/layout/Navbar';
 export default function AppChrome({ children }) {
     const pathname = usePathname();
     // Printed landmark QR pages use the BIA guest experience, without rental navigation.
-    if (pathname === '/landmarks/ksa-makkah-masjid-al-haram-kaaba' || pathname === '/landmarks/ksa-hima-rock-art') {
+    if (pathname === '/landmarks' || pathname?.startsWith('/landmarks/') || pathname?.startsWith('/name-art/')) {
         return <div style={{ position: 'relative', zIndex: 1 }}>{children}</div>;
     }
     // Ministry quotation links (/q/[token]) are sent to external recipients —

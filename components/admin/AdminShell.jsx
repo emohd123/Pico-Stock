@@ -13,6 +13,7 @@ const ADMIN_NAV_ITEMS = [
     { key: 'pico-ai', href: '/admin/pico-ai', label: '✦ Pico AI' },
     { key: 'traditional-ai', href: '/admin/pico-ai/traditional-ai-cloth-change', label: '　Traditional AI Cloth Change' },
     { key: 'landmark-qr', href: '/admin/pico-ai/landmark-qr-reports', label: '　Landmark QR Reports' },
+    { key: 'name-art', href: '/admin/pico-ai/name-art', label: '　Name Art Experience' },
     { key: 'grid-measure', href: '/admin/grid-measure', label: 'Grid Measure' },
     { key: 'quotations', href: '/admin/quotations', label: 'Quotation Studio' },
     { key: 'ministry', href: '/quotations', label: 'Ministry Quotations' },

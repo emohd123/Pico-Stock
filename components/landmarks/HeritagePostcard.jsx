@@ -5,6 +5,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import styles from './HeritagePostcard.module.css';
+import HeritageCelebration from './HeritageCelebration';
+import LandmarkNavigation from './LandmarkNavigation';
 
 const EASE = [0.22, 1, 0.36, 1];
 const COPY = {
@@ -13,10 +15,10 @@ const COPY = {
     story: 'Read the landmark story',
     settings: 'Language, story and sources',
     next: 'Discover',
-    sources: 'Sources & photography',
+    sources: 'Sources & artwork',
     close: 'Close story',
     switchLanguage: 'Read in Arabic',
-    artwork: 'Postcard artwork supplied for this experience.',
+    artwork: 'Illustrated postcard artwork created for this experience.',
     readMore: 'Full story',
   },
   ar: {
@@ -24,7 +26,7 @@ const COPY = {
     story: 'اقرأ حكاية المعلم',
     settings: 'اللغة والحكاية والمصادر',
     next: 'اكتشف',
-    sources: 'المصادر والصور',
+    sources: 'المصادر والتصميم',
     close: 'إغلاق الحكاية',
     switchLanguage: 'Read in English',
     artwork: 'تصميم البطاقة مقدم لهذه التجربة.',
@@ -39,12 +41,13 @@ const COPY = {
  * All story data remains real, selectable HTML in the accessible reading layer.
  * New landmarks supply a postcard asset and its fact bounds in landmarkStories.
  */
-export default function HeritagePostcard({ story }) {
+export default function HeritagePostcard({ story, landmarks = [] }) {
   const [language, setLanguage] = useState('en');
   const [activeFact, setActiveFact] = useState(null);
   const [readerOpen, setReaderOpen] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
+  const [artworkReady, setArtworkReady] = useState(false);
   const reducedMotion = useReducedMotion();
   const dialog = useRef(null);
   const opener = useRef(null);
@@ -96,13 +99,13 @@ export default function HeritagePostcard({ story }) {
   };
 
   return (
-    <main className={styles.stage} lang={language}>
+    <main className={styles.stage} data-country={story.country} lang={language} style={{ '--art-ratio': postcard.width / postcard.height }}>
       <motion.article
         className={styles.postcard}
         aria-labelledby={headingId}
         data-landmark={story.kind}
         style={{ '--art-ratio': postcard.width / postcard.height, '--fact-top': `${postcard.factTop}%`, '--fact-height': `${postcard.factHeight}%` }}
-        initial={false}
+        initial={reducedMotion ? false : { opacity: 0, y: 8 }}
         animate={leaving ? { opacity: 0, y: -5, scale: 0.995 } : { opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: leaving ? 0.24 : 1.2, ease: EASE }}
       >
@@ -117,7 +120,10 @@ export default function HeritagePostcard({ story }) {
           unoptimized
           draggable={false}
           onError={() => setLoadFailed(true)}
+          onLoad={() => setArtworkReady(true)}
         />
+        <HeritageCelebration ready={artworkReady} country={story.country} />
+        <div className={styles.archLight} aria-hidden="true" />
 
         <div className={styles.screenReaderText}>
           <h1 id={headingId}><span lang="ar" dir="rtl">{story.title.ar}</span> · <span lang="en">{story.title.en}</span></h1>
@@ -135,7 +141,7 @@ export default function HeritagePostcard({ story }) {
               type="button"
               className={styles.factTarget}
               key={item.icon}
-              aria-label={`${item.cardTitle?.[language] || item.value[language]} — ${item.label[language]}`}
+              aria-label={[item.cardTitle?.[language] || item.value[language], item.label[language]].filter((value, index, values) => values.indexOf(value) === index).join(' — ')}
               aria-haspopup="dialog"
               aria-controls={storyId}
               onClick={(event) => openReader(event, index)}
@@ -151,6 +157,7 @@ export default function HeritagePostcard({ story }) {
           <Link className={styles.footerTarget} href={`/landmarks/${postcard.nextId}`} aria-label={`${copy.next} ${postcard.nextTitle[language]}`} onClick={nextDestination} />
         </footer>
       </motion.article>
+      <LandmarkNavigation story={story} landmarks={landmarks} language={language} />
 
       <dialog
         ref={dialog}
@@ -190,7 +197,7 @@ export default function HeritagePostcard({ story }) {
                 <p className={styles.factArabic} lang="ar" dir="rtl">{fact.cardTitle?.ar || fact.value.ar}</p>
                 <p className={styles.factEnglish} lang="en" dir="ltr">{fact.cardTitle?.en || fact.value.en}</p>
                 {fact.metric && <strong className={styles.metric} dir="ltr">{fact.value[language]}</strong>}
-                <p>{fact.label[language]}</p>
+                <p>{fact.description?.[language] || fact.label[language]}</p>
               </section>
             ) : (
               <figure className={styles.readingPhoto}>
@@ -200,7 +207,7 @@ export default function HeritagePostcard({ story }) {
             )}
             <div className={styles.storyText}>
               <p>{story.lead[language]}</p>
-              <p>{story.paragraph[language]}</p>
+              {!fact && <p>{story.paragraph[language]}</p>}
             </div>
             {fact && <button className={styles.readFull} type="button" onClick={() => setActiveFact(null)}>{copy.readMore} <span aria-hidden="true">↗</span></button>}
             <details className={styles.sources}>

@@ -65,6 +65,7 @@ out/
 !/public/company-profile/team-sufyan.png
 
 # Approved artwork for the two landmark postcards
+!/public/name-art/*.png
 !/public/landmark-stories/makkah-reference-postcard.png
 !/public/landmark-stories/hima-reference-postcard.png
 

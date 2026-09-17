@@ -62,14 +62,14 @@ async function handler(r,{params}) {
     const daily=Array.from({length:Math.min(trendDays,365)},(_,i)=>{const date=new Date(Date.now()-(Math.min(trendDays,365)-1-i)*86400000),key=date.toISOString().slice(0,10);return {date:key,label:date.toLocaleDateString('en-GB',{day:'2-digit',month:'short'}),scans:dailyMap.get(key)||0};});
     const devices=Object.entries(deviceCounts).map(([key,value])=>({key,label:key[0].toUpperCase()+key.slice(1),scans:value}));
     const scannedLandmarks=landmarksReport.filter(item=>item.scans>0).length;
-    const insight=topLandmark?{title:`${topLandmark.name} is leading guest interest`,body:`It represents ${Math.round(topLandmark.scans/Math.max(rows.length,1)*100)}% of scans in this period. Keep its QR visible and compare nearby landmarks after more traveller traffic is recorded.`}:{title:'The report is ready for the first traveller scan',body:'Download any landmark QR below, scan it on a phone, and return here to see the visit recorded. The QR opens a mobile landmark page before the final content is approved.'};
+    const insight=topLandmark?{title:`${topLandmark.name} is leading guest interest`,body:`It represents ${Math.round(topLandmark.scans/Math.max(rows.length,1)*100)}% of scans in this period. Keep its QR visible and compare nearby landmarks after more traveller traffic is recorded.`}:{title:'The report is ready for the first traveller scan',body:'Download any landmark QR below, scan it on a phone, and return here to see the visit recorded. The QR opens the illustrated, bilingual landmark story.'};
     return json({installed,storageMode,range,summary:{totalScans:rows.length,uniqueVisitors:allVisitors.size,scannedLandmarks,totalLandmarks:LANDMARK_SCAN_CATALOG.length,topLandmark},daily,devices,landmarks:landmarksReport,insight});
    }
    if(p[1]==='landmark-qr' && method==='GET') {
     const landmark=findLandmarkScanItem(p[2]);if(!landmark)fail('Landmark not found',404);
     const QRCode=(await import('qrcode')).default;
     const trackingUrl=`${new URL(r.url).origin}/l/${landmark.reference.toLowerCase()}`;
-    const svg=await QRCode.toString(trackingUrl,{type:'svg',errorCorrectionLevel:'H',margin:4,color:{dark:'#143f34',light:'#fffdf6'}});
+    const svg=await QRCode.toString(trackingUrl,{type:'svg',errorCorrectionLevel:'H',margin:4,color:landmark.country==='Bahrain'?{dark:'#681b28',light:'#fff8e9'}:{dark:'#143f34',light:'#fffdf6'}});
     return new Response(svg,{headers:{'Content-Type':'image/svg+xml; charset=utf-8','Content-Disposition':`attachment; filename="${landmark.reference}-${landmark.id}-QR.svg"`,'Cache-Control':'no-store','X-QR-Target':trackingUrl}});
    }
    if(p[1]==='events' && method==='PATCH') {

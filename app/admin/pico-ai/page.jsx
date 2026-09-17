@@ -16,5 +16,6 @@ export default function Page(){return <AdminShell activeSection="pico-ai"><div c
       <strong>LIVE SCAN PULSE</strong><small>50 LANDMARK STORIES</small>
     </div>
   </Link>
-  <div className="pai-home-notes"><span>01 / Create the tracking QR</span><span>02 / Guests scan the landmark</span><span>03 / Review the live report</span></div>
+  <Link href="/admin/pico-ai/name-art" className="pai-experience-link"><div><span className="pai-eyebrow">03 / NAME ART</span><h2>Your name.<br/>A beautiful memory.</h2><p>iPad entry, a live poster-screen reveal,<br/>and a private QR keepsake.</p><span className="pai-open">Manage Name Art ↗</span></div><img src="/name-art/pearls.webp" alt="Pearl and ribbon Name Art background" style={{height:280,width:'auto',borderRadius:8}}/></Link>
+  <div className="pai-home-notes"><span>Create</span><span>Celebrate</span><span>Take the memory home</span></div>
 </div></AdminShell>}
