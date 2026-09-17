@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS products (
     description TEXT        NOT NULL DEFAULT '',
     category    TEXT        NOT NULL DEFAULT 'furniture',
     price       NUMERIC     NOT NULL DEFAULT 0,
+    cost_price  NUMERIC,
     currency    TEXT        NOT NULL DEFAULT 'BHD',
     image       TEXT        NOT NULL DEFAULT '/products/table.svg',
     gallery     JSONB       NOT NULL DEFAULT '[]'::jsonb,
@@ -26,6 +27,10 @@ CREATE TABLE IF NOT EXISTS products (
 
 -- Run this if the table already exists:
 -- ALTER TABLE products ADD COLUMN IF NOT EXISTS gallery JSONB NOT NULL DEFAULT '[]'::jsonb;
+-- ALTER TABLE products ADD COLUMN IF NOT EXISTS cost_price NUMERIC;
+
+-- cost_price is Pico's own (internal) price for the item. The customer-facing
+-- `price` is derived from it with the standard selling rule, cost / 0.70.
 
 CREATE INDEX IF NOT EXISTS products_category_idx ON products (category);
 
