@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "eventId": "royal-bahrain-concours-2026",
+  "generatedAt": "2026-09-18T14:10:33.288Z",
+  "units": "m",
+  "source": {
+    "name": "RBC2026_Site Development_210726.pdf",
+    "objects": 870,
+    "tents": 95,
+    "furniture": 238
+  },
+  "files": [
+    {
+      "path": "Royal-Bahrain-Concours-2026.blend",
+      "bytes": 3116036,
+      "sha256": "87afbe212d19cc8807cde72dcc817fc833ca3201108e6d21eaadb3c680f3a397",
+      "url": "/api/pico-ai/admin/event-layouts/royal-bahrain-concours-2026/assets/Royal-Bahrain-Concours-2026.blend"
+    },
+    {
+      "path": "Royal-Concours-Editable-Kit.zip",
+      "bytes": 11748710,
+      "sha256": "e773a0c7018f9e2af47ce65f9442093d301672f2398a36030f1dd25d8d44cc32",
+      "url": "/api/pico-ai/admin/event-layouts/royal-bahrain-concours-2026/assets/Royal-Concours-Editable-Kit.zip"
+    },
+    {
+      "path": "furniture-library.blend",
+      "bytes": 13144143,
+      "sha256": "e004ae2c58e0a6d6df91760691f53558a2b4d31b3f618f9ab748227ce0493afd",
+      "url": "/api/pico-ai/admin/event-layouts/royal-bahrain-concours-2026/assets/furniture-library.blend"
+    },
+    {
+      "path": "furniture-library.zip",
+      "bytes": 44356947,
+      "sha256": "9ddfa827421e48242bb8ddcc2cbaea186c986fc74a36de5a335ebbd861e37883",
+      "url": "/api/pico-ai/admin/event-layouts/royal-bahrain-concours-2026/assets/furniture-library.zip"
+    },
+    {
+      "path": "Royal-Concours-Walkthrough-1080p.mp4",
+      "bytes": 29160108,
+      "sha256": "f3a1f4d86df889fc0d3dccb958f455eb757840dc39a248aa41a62a087a5adc73",
+      "url": "/api/pico-ai/admin/event-layouts/royal-bahrain-concours-2026/assets/Royal-Concours-Walkthrough-1080p.mp4"
+    },
+    {
+      "path": "renders/01-overview.png",
+      "bytes": 7604580,
+      "sha256": "57719f18e5a209de6fc4dfcedb2955d0fc2edb4768cf639afc30c50afc424175",
+      "url": "/api/pico-ai/admin/event-layouts/royal-bahrain-concours-2026/assets/renders/01-overview.png"
+    },
+    {
+      "path": "renders/02-waterfront.png",
+      "bytes": 7766088,
+      "sha256": "148f60b8c35cff49378d69f4b679aa548b35325dea2e055c4cb7c41d08265351",
+      "url": "/api/pico-ai/admin/event-layouts/royal-bahrain-concours-2026/assets/renders/02-waterfront.png"
+    },
+    {
+      "path": "renders/03-arrival.png",
+      "bytes": 6871080,
+      "sha256": "cf4cbfad9a2a199d5d3ddbb64e5b7705ba139ab093e6632795ff12048e44b740",
+      "url": "/api/pico-ai/admin/event-layouts/royal-bahrain-concours-2026/assets/renders/03-arrival.png"
+    },
+    {
+      "path": "renders/04-concours.png",
+      "bytes": 8169040,
+      "sha256": "c3f876073daf05ba590a8ff38139874ee521fdb20c10508cac13b34ca8bc63b1",
+      "url": "/api/pico-ai/admin/event-layouts/royal-bahrain-concours-2026/assets/renders/04-concours.png"
+    },
+    {
+      "path": "renders/05-lounges.png",
+      "bytes": 8342449,
+      "sha256": "6eb8edbbd4b21e5dd49265f9e3625c14ffd292421f80112b738d1e98af71f6e1",
+      "url": "/api/pico-ai/admin/event-layouts/royal-bahrain-concours-2026/assets/renders/05-lounges.png"
+    },
+    {
+      "path": "renders/06-interior.png",
+      "bytes": 7439740,
+      "sha256": "e5b8f4a929baed64beb5b67f63d914da72f27e83a543d7a5dbf829c82138b473",
+      "url": "/api/pico-ai/admin/event-layouts/royal-bahrain-concours-2026/assets/renders/06-interior.png"
+    },
+    {
+      "path": "site-seed.json",
+      "bytes": 826337,
+      "sha256": "3d03b6f93a7f4a4ec5046917c0d5d13e58005e219bed8aec43cd7e7f08020a67",
+      "url": "/api/pico-ai/admin/event-layouts/royal-bahrain-concours-2026/assets/site-seed.json"
+    },
+    {
+      "path": "furniture-assets.json",
+      "bytes": 124785,
+      "sha256": "cacc03c89eb102f5ec5f8d2a1d02e644098a1519e626f67c29e7744a0bc63240",
+      "url": "/api/pico-ai/admin/event-layouts/royal-bahrain-concours-2026/assets/furniture-assets.json"
+    },
+    {
+      "path": "Source-Site-Plan.pdf",
+      "bytes": 4829820,
+      "sha256": "49e828bb647e5e87c09b6a8a34abd63a2bce372dedef403fb69f22a74b6776b0",
+      "url": "/api/pico-ai/admin/event-layouts/royal-bahrain-concours-2026/assets/Source-Site-Plan.pdf"
+    },
+    {
+      "path": "Studio-User-Guide.md",
+      "bytes": 4569,
+      "sha256": "21261e2c3aedfa7db61f4abd8afc64bf4dc01e89d075142aa73ccd23a6b8fce1",
+      "url": "/api/pico-ai/admin/event-layouts/royal-bahrain-concours-2026/assets/Studio-User-Guide.md"
+    },
+    {
+      "path": "READ-ME.md",
+      "bytes": 3239,
+      "sha256": "0875ffa1e84089e5d8e57a2bd5294bdf27d54560b28dfa3e878209e88ec7d2e0",
+      "url": "/api/pico-ai/admin/event-layouts/royal-bahrain-concours-2026/assets/READ-ME.md"
+    },
+    {
+      "path": "calibration-report.json",
+      "bytes": 3992,
+      "sha256": "bba6d6a01ea83c179283a6f3858d137fc5d0343d0832afdf8ff2e097c7ee82f0",
+      "url": "/api/pico-ai/admin/event-layouts/royal-bahrain-concours-2026/assets/calibration-report.json"
+    },
+    {
+      "path": "furnishing-report.json",
+      "bytes": 1145,
+      "sha256": "5de060ed0f1ce7f1c216968077397bf77cf8349fd12a60c706415e5857034c35",
+      "url": "/api/pico-ai/admin/event-layouts/royal-bahrain-concours-2026/assets/furnishing-report.json"
+    },
+    {
+      "path": "blender-roundtrip-report.json",
+      "bytes": 600,
+      "sha256": "2817b7e77b91905bf4b8c21270986888c18a1d716a354664f28790474e0110ab",
+      "url": "/api/pico-ai/admin/event-layouts/royal-bahrain-concours-2026/assets/blender-roundtrip-report.json"
+    },
+    {
+      "path": "blender-edited-import-report.json",
+      "bytes": 292,
+      "sha256": "f3867758c01ceaaa55292973e1069693b1bd6b524e2b2581e7a412aaec64f0d7",
+      "url": "/api/pico-ai/admin/event-layouts/royal-bahrain-concours-2026/assets/blender-edited-import-report.json"
+    },
+    {
+      "path": "blender-render-report.json",
+      "bytes": 1582,
+      "sha256": "a87542360aa437d2517e166c7adbd37a30e96c177cd7a168ea9af1f1ea76e15e",
+      "url": "/api/pico-ai/admin/event-layouts/royal-bahrain-concours-2026/assets/blender-render-report.json"
+    },
+    {
+      "path": "editable-kit-report.json",
+      "bytes": 8428,
+      "sha256": "39cbee7d262e51e911d6b381cf18eb00931ca5df9847eee62e7e66dcb37f8949",
+      "url": "/api/pico-ai/admin/event-layouts/royal-bahrain-concours-2026/assets/editable-kit-report.json"
+    },
+    {
+      "path": "browser-verification.json",
+      "bytes": 1238,
+      "sha256": "9e1c8bd105ef17909bccfa6dbc0918b22e5e347894ae21db3b6ce0ec6e952354",
+      "url": "/api/pico-ai/admin/event-layouts/royal-bahrain-concours-2026/assets/browser-verification.json"
+    }
+  ]
+}

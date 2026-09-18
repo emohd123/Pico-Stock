@@ -107,6 +107,7 @@ scripts/replace_css.py
 !/private/event-studio/rbc/calibration-report.json
 !/private/event-studio/rbc/furnishing-report.json
 !/private/event-studio/rbc/blender-roundtrip-report.json
+!/private/event-studio/rbc/blender-render-report.json
 !/private/event-studio/rbc/blender-edited-import-report.json
 !/private/event-studio/rbc/editable-kit-report.json
 !/private/event-studio/rbc/browser-verification.json

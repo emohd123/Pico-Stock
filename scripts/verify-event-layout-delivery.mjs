@@ -18,14 +18,19 @@ const protectionCookies = process.argv[3] ? (await readFile(process.argv[3], 'ut
   .map(fields => `${fields[5]}=${fields[6]}`).join('; ') : '';
 const protectionHeaders = protectionCookies ? { cookie: protectionCookies } : {};
 const headers = { cookie: [protectionCookies, `${getAdminCookieName()}=${await createAdminSessionToken()}`].filter(Boolean).join('; ') };
-const manifest = JSON.parse(await readFile(process.argv[4] || 'private/event-studio/rbc/delivery-manifest.json', 'utf8'));
+const manifestBytes = await readFile(process.argv[4] || 'private/event-studio/rbc/delivery-manifest.json');
+const manifest = JSON.parse(manifestBytes.toString('utf8'));
+const expectedFiles = [...manifest.files];
+if (manifest.eventId === EVENT_LAYOUT_ID && manifest.generatedAt) {
+  expectedFiles.push({ path: 'delivery-manifest.json', bytes: manifestBytes.length, sha256: createHash('sha256').update(manifestBytes).digest('hex'), url: `${prefix}/assets/delivery-manifest.json` });
+}
 const anonymous = await fetch(new URL(`${prefix}/downloads`, base), { headers: protectionHeaders, redirect: 'manual' });
 assert.equal(anonymous.status, 401, 'Download listing must require admin authentication');
 const listing = await fetch(new URL(`${prefix}/downloads`, base), { headers, redirect: 'manual' });
 assert.equal(listing.status, 200, 'Authenticated download listing must succeed');
 const { files } = await listing.json();
 const results = [];
-for (const expected of manifest.files) {
+for (const expected of expectedFiles) {
   const entry = files.find(item => item.url === expected.url);
   assert.ok(entry, `Missing download listing: ${expected.path}`);
   assert.equal(entry.bytes, expected.bytes, `Metadata size mismatch: ${expected.path}`);

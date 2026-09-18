@@ -1,0 +1,44 @@
+{
+  "blend": "C:\\Users\\PICO\\Desktop\\New folder\\apps\\Pico Stock\\private\\event-studio\\rbc\\Royal-Bahrain-Concours-2026.blend",
+  "objectCount": 870,
+  "missingModels": [],
+  "renders": [
+    {
+      "path": "C:\\Users\\PICO\\Desktop\\New folder\\apps\\Pico Stock\\private\\event-studio\\rbc\\renders\\01-overview.png",
+      "width": 3840,
+      "height": 2160,
+      "seconds": 12.937999999994645
+    },
+    {
+      "path": "C:\\Users\\PICO\\Desktop\\New folder\\apps\\Pico Stock\\private\\event-studio\\rbc\\renders\\02-waterfront.png",
+      "width": 3840,
+      "height": 2160,
+      "seconds": 9.562000000005355
+    },
+    {
+      "path": "C:\\Users\\PICO\\Desktop\\New folder\\apps\\Pico Stock\\private\\event-studio\\rbc\\renders\\03-arrival.png",
+      "width": 3840,
+      "height": 2160,
+      "seconds": 7.35899999999674
+    },
+    {
+      "path": "C:\\Users\\PICO\\Desktop\\New folder\\apps\\Pico Stock\\private\\event-studio\\rbc\\renders\\04-concours.png",
+      "width": 3840,
+      "height": 2160,
+      "seconds": 7.421999999991385
+    },
+    {
+      "path": "C:\\Users\\PICO\\Desktop\\New folder\\apps\\Pico Stock\\private\\event-studio\\rbc\\renders\\05-lounges.png",
+      "width": 3840,
+      "height": 2160,
+      "seconds": 7.203000000008615
+    },
+    {
+      "path": "C:\\Users\\PICO\\Desktop\\New folder\\apps\\Pico Stock\\private\\event-studio\\rbc\\renders\\06-interior.png",
+      "width": 3840,
+      "height": 2160,
+      "seconds": 9.297000000005937
+    }
+  ],
+  "elapsedSeconds": 99.64100000000326
+}
