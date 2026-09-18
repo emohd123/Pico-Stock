@@ -1,0 +1,22 @@
+{
+  "objectsExpected": 870,
+  "objectsPresent": 870,
+  "maximumPositionErrorMetres": 3.348670956372799e-05,
+  "identityAndPositionPass": true,
+  "errors": [],
+  "cameras": [
+    "CAM \u00b7 Arrival and Owners Enclosure",
+    "CAM \u00b7 Concours lawn and hospitality",
+    "CAM \u00b7 Full event overview",
+    "CAM \u00b7 Guided tour 90 seconds",
+    "CAM \u00b7 Hospitality lounges",
+    "CAM \u00b7 Owners Enclosure furnished interior",
+    "CAM \u00b7 Waterfront pavilions"
+  ],
+  "missingFurnitureAssets": [],
+  "frameRange": [
+    1,
+    2160
+  ],
+  "framesPerSecond": 24
+}

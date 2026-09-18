@@ -22,6 +22,13 @@ output/
 
 # Next.js build output
 .next/
+.playwright-cli/
 
 # Local uploads (generated at runtime — use Vercel Blob or DB for production)
 public/uploads/stand-design/generated/
+
+# The Event Studio runtime reads only the small seed and catalogue registry.
+# Source extraction caches and finished Blender/render files are held in private cloud storage.
+private/event-studio/rbc/*
+!private/event-studio/rbc/site-seed.json
+!private/event-studio/rbc/furniture-assets.json

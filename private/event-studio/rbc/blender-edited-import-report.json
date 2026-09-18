@@ -1,0 +1,15 @@
+{
+  "editedRectangleHeightMetres": 7.0,
+  "editedPolygonDimensions": [
+    16.43535041809082,
+    10.120847702026367
+  ],
+  "expectedPolygonDimensions": [
+    16.43535,
+    10.120848
+  ],
+  "furnitureParentVerified": true,
+  "missingAssets": [],
+  "errors": [],
+  "pass": true
+}

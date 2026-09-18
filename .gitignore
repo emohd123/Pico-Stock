@@ -56,6 +56,7 @@ out/
 
 # Screenshots / temp images
 *.png
+!public/event-studio/**/*.png
 !/public/branding/pico-logo.png
 !/public/branding/Pico logo horizontal 3265c.png
 !/public/company-profile/furn-lounge1.png
@@ -98,3 +99,20 @@ scripts/replace_css.py
 # Ministry portal assets (override blanket *.png ignore)
 !/public/brand/*.png
 !/public/ministry-items/*.png
+
+# Event Studio extraction caches and local delivery outputs (published to private storage)
+/private/event-studio/rbc/*
+!/private/event-studio/rbc/site-seed.json
+!/private/event-studio/rbc/furniture-assets.json
+!/private/event-studio/rbc/calibration-report.json
+!/private/event-studio/rbc/furnishing-report.json
+!/private/event-studio/rbc/blender-roundtrip-report.json
+!/private/event-studio/rbc/blender-edited-import-report.json
+!/private/event-studio/rbc/editable-kit-report.json
+!/private/event-studio/rbc/browser-verification.json
+!/private/event-studio/rbc/Studio-User-Guide.md
+!/private/event-studio/rbc/READ-ME.md
+!/private/event-studio/rbc/delivery-manifest.json
+/scripts/__pycache__/
+
+/scripts/event-studio/__pycache__/

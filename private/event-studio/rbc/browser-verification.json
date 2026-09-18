@@ -1,0 +1,45 @@
+{
+  "host": "http://localhost:3120",
+  "date": "2026-09-18",
+  "checks": [
+    "Tent numeric movement saved",
+    "All contained furniture moves with tent",
+    "Contained furniture follows tent rotation",
+    "Locked dimensions disabled",
+    "Catalogue furniture placement saved",
+    "Placed furniture linked to selected tent",
+    "Furniture colour override saved",
+    "Furniture replacement preserves identity and quantity",
+    "Undo and redo operate after replacement",
+    "Version restore returns exact baseline",
+    "Cloud layout persists after reload"
+  ],
+  "passed": 11,
+  "baselineRestoredRevision": 12,
+  "renderer": "ANGLE NVIDIA GeForce GTX 1080 Ti Direct3D11",
+  "recording": {
+    "resolution": [
+      1920,
+      1080
+    ],
+    "durationSeconds": 90,
+    "medianFps": 30,
+    "minimumFps": 14,
+    "maximumFps": 60,
+    "note": "Realtime capture; varying view complexity. Constant 30fps MP4 conversion repeats frames when rendering is slower."
+  },
+  "postRecordingOverviewFps": 32,
+  "mobile": {
+    "viewport": [
+      375,
+      812
+    ],
+    "fps": 38,
+    "horizontalOverflow": false,
+    "libraryDrawer": "passed"
+  },
+  "interiorFpsRange": [
+    48,
+    60
+  ]
+}

@@ -1,0 +1,195 @@
+{
+  "source": {
+    "bounds": {
+      "minX": -286.20489499999996,
+      "maxX": 286.20489499999996,
+      "minZ": -140.742175,
+      "maxZ": 140.56734
+    },
+    "originPdf": [
+      1685,
+      1192
+    ],
+    "metresPerPoint": 0.174835,
+    "groundY": 0,
+    "sourceName": "RBC2026_Site Development_210726.pdf",
+    "sourceSha256": "49e828bb647e5e87c09b6a8a34abd63a2bce372dedef403fb69f22a74b6776b0",
+    "sourceRotation": 270,
+    "displayPagePoints": [
+      3370,
+      2384
+    ],
+    "assumptions": [
+      "Dimension annotations are millimetres; 50000 = 50 metres.",
+      "Only horizontal geometry is dimension-calibrated. No elevation survey or tent supplier sections were supplied.",
+      "Roof heights and profiles, terrain, materials, generic vehicle bodies and vegetation are editable visual estimates.",
+      "Source labels A1-A27, S1-S19 and V1-V6 are preserved; A27 is an open booth in the drawing."
+    ]
+  },
+  "calibration": [
+    {
+      "name": "south-west 50m",
+      "expectedMetres": 50,
+      "measuredMetres": 50.001062,
+      "errorMetres": 0.001062,
+      "pdfEndpoints": [
+        [
+          1427.125,
+          1612.545
+        ],
+        [
+          1713.115,
+          1612.545
+        ]
+      ]
+    },
+    {
+      "name": "south-east 50m",
+      "expectedMetres": 50,
+      "measuredMetres": 50.001062,
+      "errorMetres": 0.001062,
+      "pdfEndpoints": [
+        [
+          2021.545,
+          1612.545
+        ],
+        [
+          2307.535,
+          1612.545
+        ]
+      ]
+    },
+    {
+      "name": "east depth",
+      "expectedMetres": 17.273,
+      "measuredMetres": 17.27195,
+      "errorMetres": -0.00105,
+      "pdfEndpoints": [
+        [
+          2373.625,
+          1642.305
+        ],
+        [
+          2373.625,
+          1741.095
+        ]
+      ]
+    },
+    {
+      "name": "east frontage",
+      "expectedMetres": 67.545,
+      "measuredMetres": 67.545754,
+      "errorMetres": 0.000754,
+      "pdfEndpoints": [
+        [
+          1971.355,
+          1762.875
+        ],
+        [
+          2357.695,
+          1762.875
+        ]
+      ]
+    },
+    {
+      "name": "west depth",
+      "expectedMetres": 17.273,
+      "measuredMetres": 17.27195,
+      "errorMetres": -0.00105,
+      "pdfEndpoints": [
+        [
+          1367.005,
+          1642.305
+        ],
+        [
+          1367.005,
+          1741.095
+        ]
+      ]
+    },
+    {
+      "name": "west frontage",
+      "expectedMetres": 61.893,
+      "measuredMetres": 61.89159,
+      "errorMetres": -0.00141,
+      "pdfEndpoints": [
+        [
+          1393.135,
+          1767.915
+        ],
+        [
+          1747.135,
+          1767.915
+        ]
+      ]
+    }
+  ],
+  "counts": {
+    "path": 12,
+    "ground": 15,
+    "water": 1,
+    "tent": 95,
+    "stage": 2,
+    "building": 7,
+    "sign": 1,
+    "car": 234,
+    "tree": 265
+  },
+  "labelledZones": [
+    "A1",
+    "A10",
+    "A11",
+    "A12",
+    "A13",
+    "A14",
+    "A15",
+    "A16",
+    "A17",
+    "A18",
+    "A19",
+    "A2",
+    "A20",
+    "A21",
+    "A22",
+    "A23",
+    "A24",
+    "A25",
+    "A26",
+    "A27",
+    "A3",
+    "A4",
+    "A5",
+    "A6",
+    "A7",
+    "A8",
+    "A9",
+    "S1",
+    "S10",
+    "S11",
+    "S12",
+    "S13",
+    "S14",
+    "S15",
+    "S16",
+    "S17",
+    "S18",
+    "S19",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7",
+    "S8",
+    "S9",
+    "V1",
+    "V2",
+    "V3",
+    "V4",
+    "V5",
+    "V6"
+  ],
+  "missingLabels": [],
+  "largestCalibrationErrorMetres": 0.00141,
+  "method": "PDF rotation matrix + vector endpoint rectangle detection; filled triangle union; text anchor matching; CAD stroke component clustering. No screenshot-derived site placement. Rectangle endpoint quantization 0.1 PDF point (1.75 cm), vector fill simplification 0.7 point (12.2 cm)."
+}
