@@ -3,7 +3,7 @@ import {
     getQuotationByShareToken, getMinistryById, getQuotationLines, getMinistryQuotations,
     getProductionAssignments,
 } from '@/lib/ministry/queries';
-import { isProductionItem, deriveSchedule } from '@/lib/ministry/production';
+import { isProductionItem, deriveSchedule, currentRevisionsOnly } from '@/lib/ministry/production';
 import { itemImage } from '@/lib/ministry/itemImages';
 import { fmtIso } from '@/components/ministry/ClashNotice';
 import { renderProductionSheetPdf, registerArabic } from '@/components/ministry/ProductionSheetPdf';
@@ -49,10 +49,11 @@ export async function GET(req, { params }) {
         getMinistryQuotations(quote.ministryId),
     ]);
     // A meeting can be covered by more than one quotation; the sheet shows all
-    // of them, exactly as the page does.
-    const meetingQuotes = siblings
-        .filter((q) => (q.eventDate || '') === (quote.eventDate || ''))
-        .sort((a, b) => a.id - b.id);
+    // of them, exactly as the page does — current revisions only, or a quotation
+    // revised five times prints its items five times over.
+    const meetingQuotes = currentRevisionsOnly(
+        siblings.filter((q) => (q.eventDate || '') === (quote.eventDate || '')),
+    ).sort((a, b) => a.id - b.id);
 
     const [overrides, ...lineSets] = await Promise.all([
         getProductionAssignments(meetingQuotes.map((q) => q.id)),

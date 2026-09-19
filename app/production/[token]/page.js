@@ -4,7 +4,7 @@ import {
     getProductionAssignments, getProductionFiles, getSharedNotes,
 } from '@/lib/ministry/queries';
 import {
-    isProductionItem, SINGLE_STOCK_ITEM_NOS,
+    isProductionItem, SINGLE_STOCK_ITEM_NOS, currentRevisionsOnly,
     TITLE_ITEM_NOS, pickListFor, PICK_LIST_EN, selectionFit, deriveSchedule, fmtSize,
 } from '@/lib/ministry/production';
 import { itemImage } from '@/lib/ministry/itemImages';
@@ -35,9 +35,12 @@ export default async function SharedProductionPage({ params }) {
     // second room quoted separately). The token unlocks the meeting, so the
     // sheet must show all of them — otherwise production builds half the job.
     // They stay separate: quantities across quotations are not additive.
-    const meetingQuotes = siblings
-        .filter((q) => (q.eventDate || '') === (quote.eventDate || ''))
-        .sort((a, b) => a.id - b.id);
+    // Superseded revisions are dropped first — they share the event date, so
+    // without that the same items are listed once per revision and the job
+    // gets built twice.
+    const meetingQuotes = currentRevisionsOnly(
+        siblings.filter((q) => (q.eventDate || '') === (quote.eventDate || '')),
+    ).sort((a, b) => a.id - b.id);
     const multi = meetingQuotes.length > 1;
 
     const [overrides, ...lineSets] = await Promise.all([
