@@ -25,20 +25,8 @@ var STEPS = [
   { at: 3300, en: 'Almost ready…',               ar: 'اقتربنا…' }
 ];
 
-/* The journey line anchors the poster to this airport on this day. The venue and date need
-   no tap at all; picking arriving or departing just makes the line more personal. */
-var JOURNEYS = [
-  { id: 'arriving',  en: 'Arriving in Bahrain',  ar: 'وصول إلى البحرين' },
-  { id: 'departing', en: 'Departing Bahrain',    ar: 'مغادرة البحرين' }
-];
-
 var $ = function (id) { return document.getElementById(id); };
-var chosen = DESIGNS[0], journey = null, idleTimer = null, stepTimers = [];
-
-function journeyLine() {
-  var when = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-  return (journey ? journey.en : 'Bahrain International Airport') + ' · ' + when;
-}
+var chosen = DESIGNS[0], idleTimer = null, stepTimers = [];
 
 function cleanGuestName(value) {
   if (typeof value !== 'string') return '';
@@ -63,8 +51,8 @@ function loadImage(src) {
    masked on its own for the writing reveal. The saved file is always drawn with the
    background in the same call, so the two can never drift apart.
 
-   Up to three lines: what the guest typed, their name in Arabic calligraphy when we are sure
-   of it, and its meaning when that is well established. An unknown name is simply one line. */
+   Two lines: what the guest typed, and their name in Arabic calligraphy when we are sure of
+   it. An unknown name is simply one line. */
 function drawPoster(ctx, image, rawName, design) {
   ctx.clearRect(0, 0, W, H);
   if (image) ctx.drawImage(image, 0, 0, W, H);
@@ -78,8 +66,6 @@ function drawPoster(ctx, image, rawName, design) {
     ? { text: rawName, face: 'calligraphy', size: 250 }
     : { text: rawName.toLocaleUpperCase('en'), face: 'latin', size: 210 });
   if (!typedArabic && entry) lines.push({ text: entry.ar, face: 'calligraphy', size: 158 });
-  if (entry && entry.meaning) lines.push({ text: entry.meaning, face: 'meaning', size: 54 });
-  lines.push({ text: journeyLine(), face: 'journey', size: 38 });
 
   lines.forEach(function (line, index) {
     ctx.font = faceFont(line.face, line.size);
@@ -89,10 +75,7 @@ function drawPoster(ctx, image, rawName, design) {
     }
     // Ruqaa swings well below the baseline, so it is given more room than the Latin face.
     line.height = line.size * (line.face === 'calligraphy' ? 1.02 : 0.76);
-    line.lead = index === 0 ? 0
-      : line.face === 'meaning' ? line.size * 1.7
-      : line.face === 'journey' ? line.size * 1.5
-      : line.size * 0.40;
+    line.lead = index === 0 ? 0 : line.size * 0.40;
   });
 
   var total = lines.reduce(function (sum, line) { return sum + line.height + line.lead; }, 0);
@@ -106,8 +89,7 @@ function drawPoster(ctx, image, rawName, design) {
     y += line.lead + line.height / 2;
     ctx.font = faceFont(line.face, line.size);
     ctx.direction = line.face === 'calligraphy' ? 'rtl' : 'ltr';
-    if (line.face === 'meaning' || line.face === 'journey') drawMeaning(ctx, line.text, W / 2, y, line.face);
-    else drawEngraved(ctx, line.text, W / 2, y, line.size);
+    drawEngraved(ctx, line.text, W / 2, y, line.size);
     y += line.height / 2;
   });
 }
@@ -135,37 +117,6 @@ function drawEngraved(ctx, text, x, y, size) {
   fill.addColorStop(1, '#163d2b');
   ctx.fillStyle = fill;
   ctx.fillText(text, x, y);
-}
-
-/* Captions, not second titles: no gold, no weight, well back. The journey line sits further
-   back still, so it dates the poster without competing with the name. */
-function drawMeaning(ctx, text, x, y, face) {
-  var caption = face === 'journey';
-  ctx.shadowColor = 'transparent';
-  if ('letterSpacing' in ctx) ctx.letterSpacing = caption ? '4px' : '6px';
-  ctx.fillStyle = caption ? '#9c8763' : '#7d6539';
-  ctx.fillText(text.toLocaleUpperCase('en'), x, y);
-  if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
-}
-
-function buildJourneyPicker() {
-  var host = $('journeys');
-  JOURNEYS.forEach(function (option) {
-    var button = document.createElement('button');
-    button.type = 'button';
-    button.setAttribute('aria-pressed', 'false');
-    button.innerHTML = option.en + ' <i dir="rtl">' + option.ar + '</i>';
-    button.addEventListener('click', function () {
-      // tapping the chosen one again clears it, so nobody is forced into an answer
-      journey = journey === option ? null : option;
-      Array.prototype.forEach.call(host.children, function (child, index) {
-        child.setAttribute('aria-pressed', String(JOURNEYS[index] === journey));
-      });
-      refreshPreview();
-      touch();
-    });
-    host.appendChild(button);
-  });
 }
 
 function buildDesignPicker() {
@@ -216,10 +167,6 @@ function reset() {
   chosen = DESIGNS[0];
   Array.prototype.forEach.call($('designs').children, function (child, index) {
     child.setAttribute('aria-pressed', String(index === 0));
-  });
-  journey = null;
-  Array.prototype.forEach.call($('journeys').children, function (child) {
-    child.setAttribute('aria-pressed', 'false');
   });
   $('err').hidden = true;
   $('saveNote').hidden = true;
@@ -385,6 +332,5 @@ $('finish').addEventListener('click', reset);
 document.addEventListener('touchstart', touch, { passive: true });
 
 buildDesignPicker();
-buildJourneyPicker();
 validate();
 refreshPreview();

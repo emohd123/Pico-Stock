@@ -6,9 +6,10 @@
    here: a guest's name misspelled in Arabic on a keepsake they take home is worse than no
    Arabic at all. So an unknown name simply stays in Latin and the poster is still correct.
 
-   `meaning` is omitted wherever the meaning is disputed or uncertain - those entries still
-   get their Arabic form. Anything printed here should be checked by a native speaker before
-   the event; the list is the place to correct it.
+   `meaning` is kept alongside each entry but is NOT rendered on the poster - the poster shows
+   the two names and nothing else. It is retained because it is the natural place for it if it
+   is ever wanted again; it has not been checked by a native speaker, so anything that turns it
+   back on needs to do that first.
 
    Latin spellings are matched loosely (see normalise): case, spaces, hyphens, apostrophes
    and doubled letters are all ignored, so "Abdul Rahman", "abdulrahman" and "Abdurrahman"
