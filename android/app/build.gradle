@@ -1,0 +1,12 @@
+plugins { id 'com.android.application' }
+android {
+ namespace 'com.pico.nameart'
+ compileSdk 35
+ defaultConfig { applicationId 'com.pico.nameart'; minSdk 29; targetSdk 35; versionCode 1; versionName '1.0.0' }
+ signingConfigs { booth { storeFile file(System.getenv('NAME_ART_SIGNING_STORE') ?: '../.signing/name-art.jks'); storePassword System.getenv('NAME_ART_SIGNING_PASSWORD'); keyAlias 'name-art'; keyPassword System.getenv('NAME_ART_SIGNING_PASSWORD') } }
+ buildTypes { release { signingConfig signingConfigs.booth; minifyEnabled false } }
+ compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+}
+// WebViewAssetLoader serves the bundled booth from a real https origin,
+// so canvas.toDataURL() is not blocked by a tainted file:// canvas.
+dependencies { implementation 'androidx.webkit:webkit:1.12.1' }

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Name Art</title>
+<style>
+@font-face{font-family:NameArtSerif;src:url('font/Cinzel.ttf') format('truetype');font-weight:600;font-display:block}
+@font-face{font-family:NameArtArabic;src:url('font/NotoSansArabic-Bold.ttf') format('truetype');font-weight:700;font-display:block}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{--green:#153e2e;--gold:#aa8145;background:radial-gradient(ellipse at 0 0,#eedac0,transparent 65%),#f8f4ec;color:var(--green);font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;padding:26px 4vw;-webkit-user-select:none;user-select:none;overflow:hidden}
+.grid{width:min(1400px,100%);display:grid;grid-template-columns:minmax(260px,.85fr) minmax(320px,1fr);gap:clamp(26px,5vw,72px);align-items:center}
+.poster{position:relative;width:100%;aspect-ratio:2/3;max-height:88vh;margin:auto;overflow:hidden;background:#f0e5d3;box-shadow:0 14px 60px #674c2a20}
+.poster img,.poster canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
+.panel{display:flex;flex-direction:column;gap:20px;max-width:520px}
+.eyebrow{font-size:10px;font-weight:700;letter-spacing:.2em;color:#8a663c}
+h1{font-family:NameArtSerif,Georgia,serif;font-size:clamp(30px,3.6vw,52px);font-weight:500;line-height:1.14;margin:0;letter-spacing:-.03em}
+p{font-size:15px;line-height:1.6;margin:0;color:#6b665d}
+.ar{font-family:NameArtArabic,Arial,sans-serif}
+label.field{display:flex;flex-direction:column;gap:9px;font-size:13px;font-weight:600}
+input[type=text]{height:68px;padding:12px 18px;border:1px solid #b79b7080;border-radius:6px;background:#fffdf8;color:var(--green);font-size:26px;outline-offset:4px}
+.designs{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
+.designs button{display:flex;flex-direction:column;gap:7px;padding:7px;border:1px solid #b79b7080;border-radius:8px;background:#fffdf8;color:var(--green);font:600 12px/1.3 Arial,sans-serif;cursor:pointer}
+.designs button[aria-pressed=true]{border-color:#ae7e36;box-shadow:inset 0 0 0 2px #ae7e36}
+.designs img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:4px;display:block;background:#f0e5d3}
+.consent{display:flex;gap:11px;font-size:12px;line-height:1.6;color:#655e51;font-weight:400;align-items:flex-start}
+.consent input{width:22px;height:22px;flex:0 0 auto;accent-color:#173e2f;margin-top:2px}
+.primary{display:flex;align-items:center;justify-content:space-between;gap:18px;min-height:60px;border:0;border-radius:6px;background:#173e2f;color:#fff8e8;padding:16px 24px;font:600 15px/1.5 Arial,sans-serif;cursor:pointer}
+.primary:disabled{opacity:.45}
+small{color:#777064;font-size:12px;line-height:1.6}
+.err{color:#982c3d;font-size:13px;margin:0}
+.saved{color:#2c6c50;font-size:13px;margin:0}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="grid">
+  <div class="poster" id="stage">
+    <img id="bg" alt="">
+    <canvas id="preview"></canvas>
+  </div>
+
+  <section class="panel" id="formPanel">
+    <span class="eyebrow">A NAME. A MEMORY.</span>
+    <h1>Make this<br>moment yours.</h1>
+    <p class="ar" dir="rtl">اكتب اسمك وشاهد بطاقتك</p>
+    <label class="field">Your first name / الاسم
+      <input id="name" type="text" maxlength="30" placeholder="Faisal / فيصل" dir="auto" autocomplete="off" spellcheck="false">
+    </label>
+    <span class="eyebrow">CHOOSE YOUR DESIGN · اختر التصميم</span>
+    <div class="designs" id="designs"></div>
+    <label class="consent"><input type="checkbox" id="consent"><span>Show my name on the poster screen and save a copy on this tablet.</span></label>
+    <button class="primary" id="create" disabled>Create my name art <span>&#8599;</span></button>
+    <p class="err" id="err" hidden></p>
+    <small>English and Arabic names welcome. Works without internet.</small>
+  </section>
+
+  <section class="panel" id="donePanel" hidden>
+    <span class="eyebrow">YOUR PERSONAL KEEPSAKE</span>
+    <h1>Your poster<br>is ready.</h1>
+    <p id="doneMsg">Saved on this tablet, ready for the poster screen.</p>
+    <p class="saved" id="savedAs"></p>
+    <button class="primary" id="finish">Finish <span>&#8599;</span></button>
+    <small>Tap Finish for the next guest. This resets on its own after 90 seconds.</small>
+  </section>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
