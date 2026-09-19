@@ -17,3 +17,10 @@
 
 .es-mobile-rail-heading{display:none}.es-section-label{font-size:9px;color:#6c8062}.es-location small{font-size:10px;color:#738567}.es-location>span:nth-last-child(2){font-size:12px}.es-muted{color:#657a5d}.es-accuracy p,.es-accuracy small{font-size:10px;color:#776b50}.es-number>span,.es-text-field,.es-material-row label{font-size:10px;color:#687d5b}.es-file span{font-size:11px;color:#587843}.es-file small,.es-version small{font-size:9px;color:#7a8c69}.es-product p{font-size:10px;color:#728761}.es-version strong{font-size:10px;color:#597840}.es-shortcuts{font-size:10px;color:#768964}
 @media(max-width:760px){.es-mobile-rail-heading{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-bottom:1px solid #e3e7df;color:#637b54;font-size:11px}.es-mobile-rail-heading button{border:0;background:none;font-size:23px;color:#617554;line-height:1;padding:2px 6px}.es-product h3{font-size:12px}.es-inspector-heading{font-size:9px}.es-tool{min-height:34px}}
+
+/* A structure standing on a bunker, green or tee: a build problem, not a drawing problem. */
+.es-ground-warning {
+  border-color: rgba(214, 149, 91, .55);
+  background: rgba(214, 149, 91, .12);
+}
+.es-ground-warning strong { color: #e6b183; }

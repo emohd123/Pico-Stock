@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { EventStudioEngine, localGroundPoint, tentFootprint, tentWallSegments } from '../lib/eventStudioEngine.js';
 import { scaledFootprint, perimeterExtrusion, pagodaGeometry, gableGeometry, clubhouseRoofGeometry } from '../lib/eventStudioGeometry.js';
-import { freeFloorSlot, clampIntoFootprint, rectsOverlap, rectInsideFootprint, occupantsOf, worldGroundPoint, polygonContains } from '../lib/eventStudioLayout.js';
+import { freeFloorSlot, clampIntoFootprint, rectsOverlap, rectInsideFootprint, occupantsOf, worldGroundPoint, polygonContains, terrainHeight, standingHeight, courseFeaturesUnder } from '../lib/eventStudioLayout.js';
+import { readFileSync } from 'node:fs';
 
 let tests=0;
 async function test(name, fn){await fn();tests++;console.log(`PASS ${name}`);}
@@ -128,6 +129,47 @@ await test('pieces in a turned tent map back to the site through the same yaw th
   const [local]=occupantsOf([seated],rectangle);
   assert.ok(Math.abs(local.x-2)<1e-6&&Math.abs(local.z+1.5)<1e-6);
   assert.ok(Math.abs(local.angle)<1e-6);
+});
+
+await test('the measured ground falls towards the lake end and is level across the width',()=>{
+  const site={terrain:{model:'plane',northFallPerMetre:-0.006685,crossFallPerMetre:0,referenceX:0}};
+  assert.equal(terrainHeight(site,0,0),0);
+  assert.ok(Math.abs(terrainHeight(site,286.2,0)+1.913)<0.002,'north end sits 1.91 m low');
+  assert.ok(Math.abs(terrainHeight(site,-286.2,0)-1.913)<0.002,'south end sits 1.91 m high');
+  assert.equal(terrainHeight(site,100,140),terrainHeight(site,100,-140),'no cross fall is claimed');
+  assert.equal(terrainHeight({},10,10),0,'a site without a measured plane stays flat');
+});
+await test('a piece inside a tent rides that tent’s level floor, not the slope under itself',()=>{
+  const site={terrain:{model:'plane',northFallPerMetre:-0.01,crossFallPerMetre:0,referenceX:0}};
+  const tent={id:'T',kind:'tent',position:[100,0,0],dimensions:[20,5,40],rotation:[0,0,0]};
+  const piece={id:'F',kind:'furniture',position:[112,.13,0],dimensions:[1,1,1],rotation:[0,0,0],metadata:{parentTentId:'T'}};
+  const scene={site,objects:[tent,piece]};
+  assert.equal(standingHeight(scene,piece),standingHeight(scene,tent),'it sits on the tent floor');
+  assert.notEqual(standingHeight(scene,piece),terrainHeight(site,piece.position[0],piece.position[2]));
+});
+await test('a tent pitched over a bunker is reported',()=>{
+  const bunker={id:'venue-bunker-99',name:'Bunker',kind:'ground',position:[0,0,0],rotation:[0,0,0],dimensions:[20,.02,20],
+    points:[[-10,-10],[10,-10],[10,10],[-10,10]],metadata:{surface:'bunker'}};
+  const over={id:'A',name:'Over it',kind:'tent',position:[4,0,4],rotation:[0,0,0],dimensions:[6,4,6]};
+  const clear={id:'B',name:'Clear of it',kind:'tent',position:[60,0,60],rotation:[0,0,0],dimensions:[6,4,6]};
+  const scene={site:{},objects:[bunker,over,clear]};
+  assert.deepEqual(courseFeaturesUnder(scene,over),['a bunker']);
+  assert.deepEqual(courseFeaturesUnder(scene,clear),[]);
+});
+await test('the delivered site carries the measured ground and the traced course',()=>{
+  const scene=JSON.parse(readFileSync('private/event-studio/rbc/site-seed.json','utf8'));
+  const terrain=scene.site.terrain;
+  assert.equal(terrain.model,'plane');
+  assert.ok(terrain.northFallPerMetre<-0.006&&terrain.northFallPerMetre>-0.008,'the fall matches the measurement');
+  assert.equal(terrain.crossFallPerMetre,0,'no cross fall is invented');
+  assert.ok(terrain.notes.includes('cannot resolve'),'the limits of the source data travel with the model');
+  const course=scene.objects.filter(o=>o.metadata?.surface);
+  assert.ok(course.length>=40,`the course features are present: ${course.length}`);
+  assert.ok(course.every(o=>o.locked),'course features are locked so they are not dragged by accident');
+  const b=scene.site.bounds;
+  for(const o of course) for(const [x,z] of o.points)
+    assert.ok(o.position[0]+x>=b.minX-.5&&o.position[0]+x<=b.maxX+.5&&o.position[2]+z>=b.minZ-.5&&o.position[2]+z<=b.maxZ+.5,`${o.id} stays inside the event footprint`);
+  assert.ok(scene.site.references.some(r=>r.notes?.includes('OpenStreetMap')),'the traced source is credited');
 });
 
 console.log(JSON.stringify({ok:true,tests}));

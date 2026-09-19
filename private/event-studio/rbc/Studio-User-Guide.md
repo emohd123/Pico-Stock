@@ -11,7 +11,13 @@ Open https://pico-stock.vercel.app/admin/pico-ai/royal-bahrain-concours-2026 and
 - Roofs, walls, location labels, and evening lighting have separate controls along the bottom of the view.
 - **Views** contains saved cameras and the guided tour. Save your own viewpoint with a name.
 
-The starting layout contains 871 editable scene objects. The clubhouse and Majlis appearance has been refined using official venue photographs, with event photographs guiding tent surfaces, lawn and outdoor details. These visual references help recognize the venue; they do not supply survey measurements.
+The starting layout contains 916 scene objects: the event kit, plus the existing course features, which are locked. The clubhouse and Majlis appearance has been refined using official venue photographs, with event photographs guiding tent surfaces, lawn and outdoor details. These visual references help recognize the venue; they do not supply survey measurements.
+
+## The ground and the existing course
+
+The site is modelled on its measured slope: it falls 3.8 m from the clubhouse end down to the lake end, 1 in 122. Tent floors stay level, so a tent on the slope stands proud of the ground on its low side, which is what happens on site. Local mounding, bunker depth and green contours are not modelled; no survey of them was supplied and public elevation data is too coarse to resolve them.
+
+The bunkers, greens, teeing grounds, fairway, practice ground and cart paths that already exist on the course are drawn in and locked, so you can see what the event is being built on. Select any tent or stage standing on one and the inspector says so, because a marquee over a bunker needs the hollow filled or decked before it can be built. The overview panel counts how many structures this affects.
 
 ## Edit tents and furniture
 
