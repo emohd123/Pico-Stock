@@ -1,6 +1,6 @@
 # Royal Bahrain Concours 2026 - editable scene handoff
 
-Open `private/event-studio/rbc/Royal-Bahrain-Concours-2026.blend` in Blender 4.5 or newer. The file is self-contained: geometry and materials are embedded, with 870 source and furniture objects, presentation cameras, and an editable 90-second camera animation.
+Open `private/event-studio/rbc/Royal-Bahrain-Concours-2026.blend` in Blender 4.5 or newer. The file is self-contained: geometry and materials are embedded, with 871 source and furniture objects, presentation cameras, and an editable 90-second camera animation.
 
 Each tent is a named parent with separate roof, frame, walls, glazing and floor. Furniture is attached to its host tent and keeps its catalogue product ID. The original scene, calibration and furnishing records are embedded as Blender text blocks as well as included JSON files.
 
@@ -16,7 +16,7 @@ Use the model's custom properties to locate its source object ID, dimensions, me
 
 The 2D drawing is the horizontal reference. All six explicit dimension spans agree with the chosen scale within 1.5 mm; dimension annotations are assumed to be millimetres. Rectangular footprint detection quantizes vector endpoints to 1.75 cm. Water and landscape curves are simplified within approximately 12.2 cm. Heights, tent roof sections, openings, site levels, materials, generic cars and tree geometry are editable visual estimates because construction sections and an elevation survey were not provided.
 
-The 238 furniture placements across 28 zones are proposed arrangements. Catalogue stock was checked at creation; no stock was reserved. Furniture that lacked source dimensions retains an estimated measurement status.
+The 238 furniture placements across 28 zones are proposed arrangements. Catalogue stock was checked at creation; no stock was reserved. The studio offers only what the Pico Stock product catalogue lists, and takes each item's size and stock from its product record: where the record publishes dimensions, such as `H79*D47*W51cm`, the item is shown at exactly that size; the remainder keep an estimated measurement status until their records carry measurements.
 
 The six 3840 x 2160 PNG renders are supplied as separate downloads and are not packed in the editable kit. The animated camera in Blender covers frames 1-2160 at 24 fps. The delivered browser walkthrough is a separate real-time recording.
 
@@ -25,3 +25,5 @@ To reproduce source extraction, install Python packages `pymupdf shapely numpy o
 The included `Studio-User-Guide.md` explains browser navigation, saved versions, stock guidance, render capture and the JSON exchange workflow.
 
 `Royal-Concours-Editable-Kit.zip` contains the Blender file, all 99 furniture GLBs, scripts, source PDF, guides and JSON records. Presentation renders and the recorded walkthrough are separate downloads to keep this kit below the storage upload limit.
+
+Venue refinement: the official Royal Golf Club photographs and the DP World Tour 2026 aerial-map inset corroborate the clubhouse and circular Majlis. The Majlis footprint is the original source vector 14482 (19.06577m diameter). Its 15m height, the main clubhouse 12m height, glazing, roof profile and narrow stone shoreline are editable photographic estimates. Existing source positions and footprints are retained. See `references/venue-research.md` and JSON for the evidence and confidence. The golf-tournament map is used only for permanent architecture.

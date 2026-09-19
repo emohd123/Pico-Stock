@@ -27,7 +27,43 @@
       "Dimension annotations are millimetres; 50000 = 50 metres.",
       "Only horizontal geometry is dimension-calibrated. No elevation survey or tent supplier sections were supplied.",
       "Roof heights and profiles, terrain, materials, generic vehicle bodies and vegetation are editable visual estimates.",
-      "Source labels A1-A27, S1-S19 and V1-V6 are preserved; A27 is an open booth in the drawing."
+      "Source labels A1-A27, S1-S19 and V1-V6 are preserved; A27 is an open booth in the drawing.",
+      "Venue appearance refined from official organizer and venue photographs plus DP World Tour 2026 aerial site map. Clubhouse/Majlis identity is corroborated; all heights and architectural detailing remain estimates. The map is used for permanent architecture only, not golf-tournament temporary structures."
+    ],
+    "appearance": {
+      "turfColor": "#71924c"
+    },
+    "references": [
+      {
+        "title": "2026 source site plan",
+        "url": "https://1drv.ms/b/c/a3fd1f828162dbab/IQADX25t099mRapXmiVoiV3cAQYnHXpOlhl8p153_kMA_UY",
+        "kind": "plan",
+        "notes": "User-supplied vector plan controls horizontal positions, footprints and metre scale."
+      },
+      {
+        "title": "Official venue and clubhouse photograph",
+        "url": "https://royalconcours.com/venue/",
+        "kind": "venue",
+        "notes": "Venue photographs guide turf, palms and materials. Heights remain estimates."
+      },
+      {
+        "title": "Royal Golf Club Majlis photograph",
+        "url": "https://www.theroyalgolfclub.com/gallery/events-majlis.jpg",
+        "kind": "venue",
+        "notes": "Circular glazing and diamond lattice appearance; dimensions other than plan footprint are estimates."
+      },
+      {
+        "title": "2026 DP World Tour venue map",
+        "url": "https://www.europeantour.com/dpworld-tour/bapco-energies-bahrain-championship-2026/spectator-info/detail/bapco-energies-bahrain-championship-2026-spectator-information/",
+        "kind": "venue",
+        "notes": "Aerial inset corroborates permanent clubhouse and Majlis identity only. Golf-tournament temporary structures are not copied."
+      },
+      {
+        "title": "2025 Royal Bahrain Concours gallery",
+        "url": "https://royalconcours.com/gallery/",
+        "kind": "event",
+        "notes": "Previous-year photographs guide appearance, not 2026 object positions or allocations."
+      }
     ]
   },
   "objects": [
@@ -3948,7 +3984,13 @@
         "measurementStatus": "plan-derived",
         "eaveHeight": 3.2,
         "openingSide": "front",
-        "notes": "Footprint traced from transformed PDF vector paths. Terrain height and material are provisional."
+        "notes": "Footprint traced from transformed PDF vector paths. Terrain height and material are provisional.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/11/Bahrain-Concours-Classic-Waterfront-Header.jpg",
+          "https://www.theroyalgolfclub.com/gallery/clubhouse-18th.jpg"
+        ],
+        "shorelineDetail": "Pale irregular stone edge; visual-detail width 0.32m and height 0.24m are estimates and do not change the source shoreline.",
+        "stoneEdge": true
       }
     },
     {
@@ -8732,7 +8774,7 @@
     },
     {
       "id": "existing-west-building",
-      "name": "Existing west building",
+      "name": "Royal Golf Club \u00b7 glazed wing",
       "kind": "building",
       "position": [
         -132.42657,
@@ -8749,7 +8791,7 @@
         8,
         53.20578
       ],
-      "color": "#c8baa1",
+      "color": "#c7c6bd",
       "points": [
         [
           8.78326,
@@ -8791,9 +8833,18 @@
         "measurementStatus": "mixed",
         "eaveHeight": 4.2,
         "openingSide": "front",
-        "notes": "Footprint traced from transformed PDF vector paths. Terrain height and material are provisional.",
+        "notes": "Permanent architecture identified by matching the source plan with the official 2026 DP World Tour site-map aerial inset and current Royal Golf Club photographs. Footprint and position are plan-derived. Height, glazing grid, roof section and facade detailing are visual estimates; no measured elevations were available.",
         "sourceIndices": [
           14548
+        ],
+        "architecture": "royal-clubhouse-wing",
+        "identityConfidence": "high",
+        "footprintStatus": "plan-derived",
+        "heightStatus": "estimated",
+        "visualReferences": [
+          "https://www.europeantour.com/dpworld-tour/bapco-energies-bahrain-championship-2026/spectator-info/detail/bapco-energies-bahrain-championship-2026-spectator-information/",
+          "https://drive.google.com/file/d/15c97fvX-mj1N1E_nIMZet7FOWsnWNaDt/view",
+          "https://www.theroyalgolfclub.com/gallery/clubhouse-18th.jpg"
         ]
       },
       "zoneId": "existing-west-building"
@@ -9119,7 +9170,7 @@
     },
     {
       "id": "arrival-building",
-      "name": "Arrival building",
+      "name": "Royal Golf Club \u00b7 main clubhouse",
       "kind": "building",
       "position": [
         -158.31832,
@@ -9133,10 +9184,10 @@
       ],
       "dimensions": [
         61.81813,
-        9,
+        12,
         61.03142
       ],
-      "color": "#ccbea4",
+      "color": "#c7c6bd",
       "points": [
         [
           -30.90906,
@@ -9162,7 +9213,46 @@
         "measurementStatus": "mixed",
         "eaveHeight": 4.2,
         "openingSide": "front",
-        "notes": "Footprint traced from transformed PDF vector paths. Terrain height and material are provisional."
+        "notes": "Permanent architecture identified by matching the source plan with the official 2026 DP World Tour site-map aerial inset and current Royal Golf Club photographs. Footprint and position are plan-derived. Height, glazing grid, roof section and facade detailing are visual estimates; no measured elevations were available.",
+        "architecture": "royal-clubhouse-main",
+        "identityConfidence": "high",
+        "footprintStatus": "plan-derived",
+        "heightStatus": "estimated",
+        "visualReferences": [
+          "https://www.europeantour.com/dpworld-tour/bapco-energies-bahrain-championship-2026/spectator-info/detail/bapco-energies-bahrain-championship-2026-spectator-information/",
+          "https://drive.google.com/file/d/15c97fvX-mj1N1E_nIMZet7FOWsnWNaDt/view",
+          "https://www.theroyalgolfclub.com/gallery/clubhouse-18th.jpg"
+        ],
+        "roofAxis": [
+          0.73785669,
+          0.67495741
+        ],
+        "roofProfile": [
+          [
+            0,
+            0.96
+          ],
+          [
+            0.35,
+            0.99
+          ],
+          [
+            0.65,
+            1
+          ],
+          [
+            0.78,
+            0.97
+          ],
+          [
+            0.9,
+            0.87
+          ],
+          [
+            1,
+            0.72
+          ]
+        ]
       },
       "zoneId": "arrival-building"
     },
@@ -17965,7 +18055,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -17992,7 +18086,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18019,7 +18117,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18046,7 +18148,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18073,7 +18179,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18100,7 +18210,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18127,7 +18241,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18154,7 +18272,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18181,7 +18303,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18208,7 +18334,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18235,7 +18365,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18262,7 +18396,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18289,7 +18427,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18316,7 +18458,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18343,7 +18489,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18370,7 +18520,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18397,7 +18551,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18424,7 +18582,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18451,7 +18613,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18478,7 +18644,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18505,7 +18675,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18532,7 +18706,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18559,7 +18737,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18586,7 +18768,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18613,7 +18799,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18640,7 +18830,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18667,7 +18861,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18694,7 +18892,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18721,7 +18923,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18748,7 +18954,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18775,7 +18985,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18802,7 +19016,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18829,7 +19047,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18856,7 +19078,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18883,7 +19109,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18910,7 +19140,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18937,7 +19171,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18964,7 +19202,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -18991,7 +19233,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19018,7 +19264,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19045,7 +19295,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19072,7 +19326,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19099,7 +19357,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19126,7 +19388,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19153,7 +19419,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19180,7 +19450,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19207,7 +19481,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19234,7 +19512,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19261,7 +19543,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19288,7 +19574,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19315,7 +19605,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19342,7 +19636,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19369,7 +19667,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19396,7 +19698,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19423,7 +19729,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19450,7 +19760,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19477,7 +19791,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19504,7 +19822,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19531,7 +19853,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19558,7 +19884,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19585,7 +19915,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19612,7 +19946,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19639,7 +19977,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19666,7 +20008,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19693,7 +20039,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19720,7 +20070,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19747,7 +20101,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19774,7 +20132,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19801,7 +20163,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19828,7 +20194,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19855,7 +20225,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19882,7 +20256,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19909,7 +20287,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19936,7 +20318,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19963,7 +20349,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -19990,7 +20380,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20017,7 +20411,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20044,7 +20442,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20071,7 +20473,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20098,7 +20504,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20125,7 +20535,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20152,7 +20566,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20179,7 +20597,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20206,7 +20628,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20233,7 +20659,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20260,7 +20690,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20287,7 +20721,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20314,7 +20752,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20341,7 +20783,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20368,7 +20814,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20395,7 +20845,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20422,7 +20876,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20449,7 +20907,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20476,7 +20938,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20503,7 +20969,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20530,7 +21000,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20557,7 +21031,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20584,7 +21062,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20611,7 +21093,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20638,7 +21124,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20665,7 +21155,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20692,7 +21186,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20719,7 +21217,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20746,7 +21248,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20773,7 +21279,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20800,7 +21310,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20827,7 +21341,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20854,7 +21372,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20881,7 +21403,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20908,7 +21434,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20935,7 +21465,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20962,7 +21496,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -20989,7 +21527,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21016,7 +21558,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21043,7 +21589,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21070,7 +21620,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21097,7 +21651,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21124,7 +21682,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21151,7 +21713,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21178,7 +21744,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21205,7 +21775,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21232,7 +21806,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21259,7 +21837,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21286,7 +21868,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21313,7 +21899,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21340,7 +21930,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21367,7 +21961,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21394,7 +21992,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21421,7 +22023,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21448,7 +22054,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21475,7 +22085,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21502,7 +22116,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21529,7 +22147,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21556,7 +22178,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21583,7 +22209,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21610,7 +22240,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21637,7 +22271,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21664,7 +22302,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21691,7 +22333,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21718,7 +22364,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21745,7 +22395,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21772,7 +22426,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21799,7 +22457,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21826,7 +22488,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21853,7 +22519,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21880,7 +22550,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21907,7 +22581,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21934,7 +22612,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21961,7 +22643,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -21988,7 +22674,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22015,7 +22705,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22042,7 +22736,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22069,7 +22767,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22096,7 +22798,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22123,7 +22829,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22150,7 +22860,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22177,7 +22891,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22204,7 +22922,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22231,7 +22953,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22258,7 +22984,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22285,7 +23015,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22312,7 +23046,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22339,7 +23077,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22366,7 +23108,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22393,7 +23139,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22420,7 +23170,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22447,7 +23201,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22474,7 +23232,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22501,7 +23263,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22528,7 +23294,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22555,7 +23325,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22582,7 +23356,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22609,7 +23387,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22636,7 +23418,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22663,7 +23449,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22690,7 +23480,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22717,7 +23511,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22744,7 +23542,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22771,7 +23573,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22798,7 +23604,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22825,7 +23635,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22852,7 +23666,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22879,7 +23697,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22906,7 +23728,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22933,7 +23759,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22960,7 +23790,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -22987,7 +23821,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23014,7 +23852,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23041,7 +23883,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23068,7 +23914,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23095,7 +23945,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23122,7 +23976,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23149,7 +24007,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23176,7 +24038,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23203,7 +24069,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23230,7 +24100,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23257,7 +24131,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23284,7 +24162,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23311,7 +24193,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23338,7 +24224,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23365,7 +24255,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23392,7 +24286,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23419,7 +24317,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23446,7 +24348,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23473,7 +24379,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23500,7 +24410,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23527,7 +24441,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23554,7 +24472,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23581,7 +24503,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23608,7 +24534,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23635,7 +24565,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23662,7 +24596,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23689,7 +24627,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23716,7 +24658,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23743,7 +24689,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23770,7 +24720,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23797,7 +24751,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23824,7 +24782,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23851,7 +24813,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23878,7 +24844,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23905,7 +24875,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23932,7 +24906,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23959,7 +24937,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -23986,7 +24968,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24013,7 +24999,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24040,7 +25030,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24067,7 +25061,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24094,7 +25092,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24121,7 +25123,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24148,7 +25154,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24175,7 +25185,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24202,7 +25216,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24229,7 +25247,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24256,7 +25278,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24283,7 +25309,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24310,7 +25340,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24337,7 +25371,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24364,7 +25402,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24391,7 +25433,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24418,7 +25464,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24445,7 +25495,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24472,7 +25526,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24499,7 +25557,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24526,7 +25588,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24553,7 +25619,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24580,7 +25650,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24607,7 +25681,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24634,7 +25712,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24661,7 +25743,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24688,7 +25774,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24715,7 +25805,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24742,7 +25836,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24769,7 +25867,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24796,7 +25898,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24823,7 +25929,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24850,7 +25960,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24877,7 +25991,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24904,7 +26022,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24931,7 +26053,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24958,7 +26084,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -24985,7 +26115,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -25012,7 +26146,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -25039,7 +26177,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -25066,7 +26208,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -25093,7 +26239,11 @@
       "visible": true,
       "metadata": {
         "measurementStatus": "mixed",
-        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates."
+        "notes": "Tree centre detected from vegetation vector symbol. Species, crown and height are visual estimates.",
+        "visualReferences": [
+          "https://royalconcours.com/wp-content/uploads/2025/03/the-royal-golf-club-bahrain.jpg"
+        ],
+        "appearanceStatus": "Palm leaf structure supported by venue photographs; exact species and per-tree size remain estimates."
       }
     },
     {
@@ -32711,6 +33861,439 @@
         "sourceDimensions": "Banquet Chair\nCafe Chairs. Black banquet chair with upholstered seat.",
         "notes": "Proposed furnishing arrangement for review. Furniture photos and catalogue dimension provenance are retained in the asset registry; this placement does not reserve stock."
       }
+    },
+    {
+      "id": "royal-majlis",
+      "name": "Royal Golf Club \u00b7 Majlis",
+      "kind": "building",
+      "position": [
+        -134.87556,
+        0,
+        -26.16144
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "dimensions": [
+        19.06577,
+        15,
+        19.06577
+      ],
+      "color": "#729395",
+      "points": [
+        [
+          9.53288,
+          0.0
+        ],
+        [
+          9.51247,
+          0.62348
+        ],
+        [
+          9.45133,
+          1.24429
+        ],
+        [
+          9.34971,
+          1.85977
+        ],
+        [
+          9.20806,
+          2.46729
+        ],
+        [
+          9.02697,
+          3.06424
+        ],
+        [
+          8.80724,
+          3.64808
+        ],
+        [
+          8.54978,
+          4.21629
+        ],
+        [
+          8.25572,
+          4.76644
+        ],
+        [
+          7.9263,
+          5.29619
+        ],
+        [
+          7.56294,
+          5.80325
+        ],
+        [
+          7.1672,
+          6.28547
+        ],
+        [
+          6.74077,
+          6.74077
+        ],
+        [
+          6.28547,
+          7.1672
+        ],
+        [
+          5.80325,
+          7.56294
+        ],
+        [
+          5.29619,
+          7.9263
+        ],
+        [
+          4.76644,
+          8.25572
+        ],
+        [
+          4.21629,
+          8.54978
+        ],
+        [
+          3.64808,
+          8.80724
+        ],
+        [
+          3.06424,
+          9.02697
+        ],
+        [
+          2.46729,
+          9.20806
+        ],
+        [
+          1.85977,
+          9.34971
+        ],
+        [
+          1.24429,
+          9.45133
+        ],
+        [
+          0.62348,
+          9.51247
+        ],
+        [
+          0.0,
+          9.53288
+        ],
+        [
+          -0.62348,
+          9.51247
+        ],
+        [
+          -1.24429,
+          9.45133
+        ],
+        [
+          -1.85977,
+          9.34971
+        ],
+        [
+          -2.46729,
+          9.20806
+        ],
+        [
+          -3.06424,
+          9.02697
+        ],
+        [
+          -3.64808,
+          8.80724
+        ],
+        [
+          -4.21629,
+          8.54978
+        ],
+        [
+          -4.76644,
+          8.25572
+        ],
+        [
+          -5.29619,
+          7.9263
+        ],
+        [
+          -5.80325,
+          7.56294
+        ],
+        [
+          -6.28547,
+          7.1672
+        ],
+        [
+          -6.74077,
+          6.74077
+        ],
+        [
+          -7.1672,
+          6.28547
+        ],
+        [
+          -7.56294,
+          5.80325
+        ],
+        [
+          -7.9263,
+          5.29619
+        ],
+        [
+          -8.25572,
+          4.76644
+        ],
+        [
+          -8.54978,
+          4.21629
+        ],
+        [
+          -8.80724,
+          3.64808
+        ],
+        [
+          -9.02697,
+          3.06424
+        ],
+        [
+          -9.20806,
+          2.46729
+        ],
+        [
+          -9.34971,
+          1.85977
+        ],
+        [
+          -9.45133,
+          1.24429
+        ],
+        [
+          -9.51247,
+          0.62348
+        ],
+        [
+          -9.53288,
+          0.0
+        ],
+        [
+          -9.51247,
+          -0.62348
+        ],
+        [
+          -9.45133,
+          -1.24429
+        ],
+        [
+          -9.34971,
+          -1.85977
+        ],
+        [
+          -9.20806,
+          -2.46729
+        ],
+        [
+          -9.02697,
+          -3.06424
+        ],
+        [
+          -8.80724,
+          -3.64808
+        ],
+        [
+          -8.54978,
+          -4.21629
+        ],
+        [
+          -8.25572,
+          -4.76644
+        ],
+        [
+          -7.9263,
+          -5.29619
+        ],
+        [
+          -7.56294,
+          -5.80325
+        ],
+        [
+          -7.1672,
+          -6.28547
+        ],
+        [
+          -6.74077,
+          -6.74077
+        ],
+        [
+          -6.28547,
+          -7.1672
+        ],
+        [
+          -5.80325,
+          -7.56294
+        ],
+        [
+          -5.29619,
+          -7.9263
+        ],
+        [
+          -4.76644,
+          -8.25572
+        ],
+        [
+          -4.21629,
+          -8.54978
+        ],
+        [
+          -3.64808,
+          -8.80724
+        ],
+        [
+          -3.06424,
+          -9.02697
+        ],
+        [
+          -2.46729,
+          -9.20806
+        ],
+        [
+          -1.85977,
+          -9.34971
+        ],
+        [
+          -1.24429,
+          -9.45133
+        ],
+        [
+          -0.62348,
+          -9.51247
+        ],
+        [
+          -0.0,
+          -9.53288
+        ],
+        [
+          0.62348,
+          -9.51247
+        ],
+        [
+          1.24429,
+          -9.45133
+        ],
+        [
+          1.85977,
+          -9.34971
+        ],
+        [
+          2.46729,
+          -9.20806
+        ],
+        [
+          3.06424,
+          -9.02697
+        ],
+        [
+          3.64808,
+          -8.80724
+        ],
+        [
+          4.21629,
+          -8.54978
+        ],
+        [
+          4.76644,
+          -8.25572
+        ],
+        [
+          5.29619,
+          -7.9263
+        ],
+        [
+          5.80325,
+          -7.56294
+        ],
+        [
+          6.28547,
+          -7.1672
+        ],
+        [
+          6.74077,
+          -6.74077
+        ],
+        [
+          7.1672,
+          -6.28547
+        ],
+        [
+          7.56294,
+          -5.80325
+        ],
+        [
+          7.9263,
+          -5.29619
+        ],
+        [
+          8.25572,
+          -4.76644
+        ],
+        [
+          8.54978,
+          -4.21629
+        ],
+        [
+          8.80724,
+          -3.64808
+        ],
+        [
+          9.02697,
+          -3.06424
+        ],
+        [
+          9.20806,
+          -2.46729
+        ],
+        [
+          9.34971,
+          -1.85977
+        ],
+        [
+          9.45133,
+          -1.24429
+        ],
+        [
+          9.51247,
+          -0.62348
+        ]
+      ],
+      "roofType": "flat",
+      "zoneId": "royal-majlis",
+      "locked": false,
+      "visible": true,
+      "metadata": {
+        "measurementStatus": "mixed",
+        "architecture": "royal-majlis",
+        "identityConfidence": "high",
+        "footprintStatus": "plan-derived",
+        "heightStatus": "estimated",
+        "sourceIndices": [
+          14482
+        ],
+        "sourceDimensions": "PDF circle diameter 19.06577 m",
+        "sourcePdfCentre": [
+          913.55517578125,
+          1042.364990234375
+        ],
+        "visualReferences": [
+          "https://www.europeantour.com/dpworld-tour/bapco-energies-bahrain-championship-2026/spectator-info/detail/bapco-energies-bahrain-championship-2026-spectator-information/",
+          "https://drive.google.com/file/d/15c97fvX-mj1N1E_nIMZet7FOWsnWNaDt/view",
+          "https://www.theroyalgolfclub.com/gallery/events-majlis.jpg",
+          "https://www.theroyalgolfclub.com/gallery/clubhouse-18th.jpg"
+        ],
+        "notes": "Permanent architecture identified by matching the source plan with the official 2026 DP World Tour site-map aerial inset and current Royal Golf Club photographs. Footprint and position are plan-derived. Height, glazing grid, roof section and facade detailing are visual estimates; no measured elevations were available. Circular outline is source path 14482, sampled into 96 vertices. The 15m overall height and diamond lattice proportions are editable photographic estimates."
+      }
     }
   ],
   "zones": [
@@ -34094,7 +35677,7 @@
     },
     {
       "id": "existing-west-building",
-      "name": "Existing west building",
+      "name": "Royal Golf Club \u00b7 glazed wing",
       "position": [
         -132.42657,
         0,
@@ -34142,7 +35725,7 @@
     },
     {
       "id": "arrival-building",
-      "name": "Arrival building",
+      "name": "Royal Golf Club \u00b7 main clubhouse",
       "position": [
         -158.31832,
         0,
@@ -34596,6 +36179,18 @@
         "car-232",
         "car-233",
         "car-234"
+      ]
+    },
+    {
+      "id": "royal-majlis",
+      "name": "Royal Golf Club \u00b7 Majlis",
+      "position": [
+        -134.87556,
+        0,
+        -26.16144
+      ],
+      "objectIds": [
+        "royal-majlis"
       ]
     }
   ],

@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { EventStudioEngine, localGroundPoint, tentFootprint, tentWallSegments } from '../lib/eventStudioEngine.js';
+import { scaledFootprint, perimeterExtrusion, pagodaGeometry, gableGeometry, clubhouseRoofGeometry } from '../lib/eventStudioGeometry.js';
+import { freeFloorSlot, clampIntoFootprint, rectsOverlap, rectInsideFootprint, occupantsOf, worldGroundPoint, polygonContains } from '../lib/eventStudioLayout.js';
 
 let tests=0;
 async function test(name, fn){await fn();tests++;console.log(`PASS ${name}`);}
-function engine(objects=[]){const value=Object.create(EventStudioEngine.prototype);Object.assign(value,{data:{site:{bounds:{minX:-100,maxX:100,minZ:-100,maxZ:100}},objects},walls:true,materials:new Map(),modelCache:new Map(),modelTemplates:new Map(),roots:new Map(),callbacks:{},failures:new Set(),pending:0,generation:1,content:new THREE.Group(),labels:new THREE.Group(),transform:{detach(){}},mode:'orbit'});return value;}
+function engine(objects=[]){const value=Object.create(EventStudioEngine.prototype);Object.assign(value,{data:{site:{bounds:{minX:-100,maxX:100,minZ:-100,maxZ:100}},objects},walls:true,materials:new Map(),modelCache:new Map(),modelTemplates:new Map(),roots:new Map(),callbacks:{},failures:new Set(),pending:0,generation:1,content:new THREE.Group(),labels:new THREE.Group(),floorGrid:new THREE.Group(),transform:{detach(){}},mode:'orbit'});return value;}
 const rectangle={id:'rect',name:'Test tent',kind:'tent',position:[12,0,8],rotation:[0,Math.PI/4,0],dimensions:[12,5,12],color:'#ffffff'};
 const hexagon={...rectangle,id:'hex',roofType:'hexagon',rotation:[0,Math.PI/3,0],points:[[0,-6],[-5,-3],[-5,3],[0,6],[5,3],[5,-3]],dimensions:[10,6,12]};
 function world(object,x,z){return new THREE.Vector3(x,0,z).applyAxisAngle(new THREE.Vector3(0,1,0),object.rotation[1]).add(new THREE.Vector3(...object.position));}
@@ -64,4 +66,68 @@ await test('furniture instancing preserves per-item transforms, IDs and colour g
 await test('per-object tent batching keeps independent roof and wall visibility',()=>{
   const e=engine(),root=new THREE.Group();e.tent(rectangle,root);const before=root.children.length;e.batchObject(root);assert.ok(root.children.length<before);assert.ok(root.children.some(child=>child.userData.part==='roof'));assert.equal(root.children.filter(child=>child.userData.part==='wall').length,1);
 });
+await test('irregular buildings retain their traced outline and do not block empty bounding-box corners',()=>{
+  const o={...rectangle,id:'irregular',kind:'building',rotation:[0,0,0],points:[[-6,-6],[6,-6],[-6,6]]};
+  const e=engine([o]);assert.equal(e.canWalk(o.position[0]+5,o.position[2]+5),true);assert.equal(e.canWalk(o.position[0]-3,o.position[2]-3),false);
+  const geometry=perimeterExtrusion(scaledFootprint(o),5);geometry.computeBoundingBox();assert.equal(geometry.boundingBox.max.y,5);geometry.dispose();
+});
+await test('resizing a traced pavilion changes render and walking perimeter without altering source points',()=>{
+  const original=JSON.stringify(hexagon.points),o={...hexagon,dimensions:[20,9,6]};const points=tentFootprint(o);
+  assert.equal(Math.max(...points.map(p=>p[0]))-Math.min(...points.map(p=>p[0])),20);assert.equal(Math.max(...points.map(p=>p[1]))-Math.min(...points.map(p=>p[1])),6);assert.equal(JSON.stringify(hexagon.points),original);
+  for(const geometry of [pagodaGeometry(points,3,9),gableGeometry(points,3,9)]){geometry.computeBoundingBox();assert.equal(geometry.boundingBox.max.y,9);assert.ok(Array.from(geometry.attributes.position.array).every(Number.isFinite));geometry.dispose();}
+});
+await test('curved clubhouse roof follows a rotated plan perimeter and its requested height',()=>{
+  const points=[[-12,-10],[14,8],[10,14],[-16,-4]],{geometry,top}=clubhouseRoofGeometry(points,12,[.82,.57]);geometry.computeBoundingBox();assert.ok(Math.abs(geometry.boundingBox.max.y-12)<.001);assert.ok(points.every(p=>top(p)>=8.63&&top(p)<=12.01));geometry.dispose();
+});
+await test('photo-refined architecture batches without losing visibility or finite geometry',()=>{
+  const e=engine();for(const architecture of ['royal-majlis','royal-clubhouse-main','royal-clubhouse-wing']){const root=new THREE.Group();e.venueBuilding({...rectangle,metadata:{architecture,roofAxis:[1,0]}},root);e.batchObject(root);assert.ok(root.children.length<=5);assert.ok(root.children.some(m=>m.userData.part==='roof'));root.traverse(m=>{if(m.geometry)assert.ok(Array.from(m.geometry.attributes.position.array).every(Number.isFinite));});}
+});
+await test('the plan grid sets out one-metre lines clipped to the tent floor',()=>{
+  const e=engine([rectangle]);e.selectedId=rectangle.id;e.updateFloorGrid();
+  const lines=e.floorGrid.children[0];assert.ok(lines,'a grid is drawn for the selected tent');
+  const position=lines.geometry.getAttribute('position');
+  assert.equal(position.count,48); // 12 lines each way across a 12 m floor, two ends apiece
+  for(let i=0;i<position.count;i++){assert.ok(Math.abs(position.getX(i))<=6.001);assert.ok(Math.abs(position.getZ(i))<=6.001);}
+  assert.equal(lines.rotation.y,rectangle.rotation[1]);
+  assert.deepEqual(lines.position.toArray(),[rectangle.position[0],rectangle.position[1]+.155,rectangle.position[2]]);
+  e.selectedId=null;e.updateFloorGrid();assert.equal(e.floorGrid.visible,false);
+});
+await test('the grid follows a hexagonal pavilion outline rather than its bounding box',()=>{
+  const e=engine([hexagon]);e.selectedId=hexagon.id;e.updateFloorGrid();
+  const position=e.floorGrid.children[0].geometry.getAttribute('position'),outline=tentFootprint(hexagon);
+  for(let i=0;i<position.count;i+=2){
+    const mx=(position.getX(i)+position.getX(i+1))/2,mz=(position.getZ(i)+position.getZ(i+1))/2;
+    // Lines that run along a wall sit exactly on the outline, so test just inside it.
+    assert.ok(polygonContains(outline,mx*.98,mz*.98),'every grid line lies on the pavilion floor');
+  }
+});
+await test('placed pieces take a free spot inside the tent and keep their distance',()=>{
+  const footprint=scaledFootprint(rectangle),placed=[];
+  for(const size of [[2.2,.9],[1.6,.8],[3,1.1],[.6,.6]]){
+    const slot=freeFloorSlot({footprint,width:size[0],depth:size[1],occupied:placed});
+    assert.ok(slot,'a free spot is found');
+    const piece={x:slot[0],z:slot[1],width:size[0],depth:size[1],angle:0};
+    assert.ok(rectInsideFootprint(footprint,piece.x,piece.z,piece.width,piece.depth,0,.2),'the whole piece is inside the walls');
+    for(const other of placed)assert.ok(!rectsOverlap(piece,other),'pieces do not overlap');
+    assert.ok(Math.abs(slot[0]%.5)<1e-9&&Math.abs(slot[1]%.5)<1e-9,`the spot sits on the half-metre lattice: ${slot}`);
+    placed.push(piece);
+  }
+});
+await test('a piece dragged past the wall is brought back onto its own tent floor',()=>{
+  const footprint=scaledFootprint(rectangle);
+  const [x,z]=clampIntoFootprint(footprint,40,-25,1.8,.9,0);
+  assert.ok(rectInsideFootprint(footprint,x,z,1.8,.9,0,.04),'the piece ends up inside');
+  assert.ok(Math.hypot(x,z)>3,'and stays near the side it was dragged towards');
+  const inside=clampIntoFootprint(footprint,1,2,1,1,0);assert.deepEqual(inside,[1,2]); // already inside, so untouched
+});
+await test('pieces in a turned tent map back to the site through the same yaw the renderer uses',()=>{
+  const piece={id:'p',kind:'furniture',position:worldGroundPoint(rectangle,2,-1.5).flatMap((v,i)=>i?[v]:[v,0]).slice(0,3),dimensions:[1,1,1],rotation:[0,rectangle.rotation[1],0],metadata:{parentTentId:rectangle.id}};
+  piece.position=[piece.position[0],0,piece.position[1]===0?piece.position[2]:piece.position[1]];
+  const world=worldGroundPoint(rectangle,2,-1.5);
+  const seated={...piece,position:[world[0],0,world[1]]};
+  const [local]=occupantsOf([seated],rectangle);
+  assert.ok(Math.abs(local.x-2)<1e-6&&Math.abs(local.z+1.5)<1e-6);
+  assert.ok(Math.abs(local.angle)<1e-6);
+});
+
 console.log(JSON.stringify({ok:true,tests}));

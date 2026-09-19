@@ -123,18 +123,36 @@ def clone_children(templates,parent,scale=(1,1,1)):
 def palm_template():
  key='palm'
  if key in ASSET_CACHE:return ASSET_CACHE[key]
- root=bpy.data.objects.new('Palm template',None);bpy.context.collection.objects.link(root);trunk=material('Palm trunk','#807156',.9);leaf=material('Palm foliage','#4d703e',.88)
- rod('Palm trunk',(0,0,0),(.18,0,6.2),.16,trunk,root,8)
+ root=bpy.data.objects.new('Palm template',None);bpy.context.collection.objects.link(root)
+ trunk=material('Palm ringed bark','#806649',.92);leaf=material('Palm date fronds','#486d37',.78)
+ # Venue photographs show dense arching pinnate crowns, not thin wire symbols.
+ verts=[];faces=[];sides=12;rows=32
+ for j in range(rows+1):
+  t=j/rows;radius=(.21-.065*t)*(1+.045*math.sin(j*math.pi/2));verts.extend([(.11*t*t+radius*math.cos(i*math.tau/sides),radius*math.sin(i*math.tau/sides),t*5.65) for i in range(sides)])
+ for j in range(rows):
+  for i in range(sides):faces.append((j*sides+i,j*sides+(i+1)%sides,(j+1)*sides+(i+1)%sides,(j+1)*sides+i))
+ mesh('Palm textured trunk',verts,faces,trunk,root)
  verts=[];faces=[]
- for j in range(10):
-  a=j*math.tau/10
-  for k in range(1,10):
-   t=k/10;r=t*3.0;z=6.3+math.sin(t*math.pi)*.9-t*t*.8;cx=math.cos(a)*r;cy=math.sin(a)*r
-   for sg in [-1,1]:
-    length=(1-t*.7)*.65;start=len(verts);verts.extend([(cx,cy,z),(cx+math.cos(a+sg*1.0)*length,cy+math.sin(a+sg*1.0)*length,z-.2),(cx+math.cos(a)*.3,cy+math.sin(a)*.3,z-.02)]);faces.append((start,start+1,start+2))
- mesh('Palm fronds',verts,faces,leaf,root);ASSET_CACHE[key]=[o for o in root.children]
- for o in root.children:o.hide_render=True;o.hide_set(True)
- root.hide_render=True;return ASSET_CACHE[key]
+ for j in range(24):
+  a=j*2.399963;layer=j%3
+  def stem(t):
+   r=(2.45-.22*layer)*t;z=5.66+.48*layer+math.sin(t*math.pi)*(.9-.1*layer)-t*t*(1.05-.33*layer)
+   return Vector((.11+math.cos(a)*r,math.sin(a)*r,z))
+  # Central rib is a tapered ribbon; paired tapered leaflets catch the light.
+  for k in range(16):
+   t=k/16;u=(k+1)/16;c=stem(t);n=stem(u);side=Vector((-math.sin(a),math.cos(a),0))*(.028*(1-t)+.006);idx=len(verts);verts.extend([tuple(c-side),tuple(c+side),tuple(n+side*.9),tuple(n-side*.9)]);faces.append((idx,idx+1,idx+2,idx+3))
+  for k in range(2,19):
+   t=k/20;c=stem(t);length=.66*math.sin(math.pi*t)**.6*(1-.3*t)
+   for sign in [-1,1]:
+    lateral=Vector((math.cos(a+sign*.95),math.sin(a+sign*.95),-.34));tip=c+lateral*length;along=Vector((math.cos(a),math.sin(a),0))*.07;mid=c+lateral*length*.5;idx=len(verts);verts.extend([tuple(c-along*.45),tuple(mid-along),tuple(tip),tuple(mid+along),tuple(c+along*.45)]);faces.append((idx,idx+1,idx+2,idx+3,idx+4))
+ mesh('Palm full pinnate crown',verts,faces,leaf,root)
+ templates=list(root.children);allv=[v.co for obj in templates for v in obj.data.vertices];mn=[min(v[i] for v in allv) for i in range(3)];mx=[max(v[i] for v in allv) for i in range(3)]
+ # Canonical exact5x5x7m template; existing per-tree declared dimensions remain authoritative.
+ for obj in templates:
+  for v in obj.data.vertices:v.co=((v.co.x-(mn[0]+mx[0])/2)*5/(mx[0]-mn[0]),(v.co.y-(mn[1]+mx[1])/2)*5/(mx[1]-mn[1]),(v.co.z-mn[2])*7/(mx[2]-mn[2]))
+  obj.hide_render=True;obj.hide_set(True)
+ ASSET_CACHE[key]=templates;root.hide_render=True;return templates
+
 def furniture(o,parent,registry):
  a=registry.get(o.get('assetId'))
  if not a:return False
@@ -157,11 +175,86 @@ def furniture(o,parent,registry):
      if mat and ('body' in mat.name.lower() or 'upholstery' in mat.name.lower()):child.data.materials[i]=tint
  return True
 
+def detailed_surface(kind,col):
+ mat=material(kind+' detailed '+col,col,.2 if kind=='water' else .87,.28 if kind=='water' else 0)
+ if mat.get('venue_detail'):return mat
+ mat['venue_detail']=True;n=mat.node_tree.nodes;links=mat.node_tree.links;p=n.get('Principled BSDF');geo=n.new('ShaderNodeNewGeometry');noise=n.new('ShaderNodeTexNoise');links.new(geo.outputs['Position'],noise.inputs['Vector']);noise.inputs['Scale'].default_value=.7 if kind=='water' else 35;noise.inputs['Detail'].default_value=2
+ bump=n.new('ShaderNodeBump');bump.inputs['Strength'].default_value=.24 if kind=='water' else .16;bump.inputs['Distance'].default_value=.035 if kind=='water' else .018;links.new(noise.outputs['Fac'],bump.inputs['Height']);links.new(bump.outputs['Normal'],p.inputs['Normal'])
+ if kind!='water':
+  broad=n.new('ShaderNodeTexNoise');broad.inputs['Scale'].default_value=.065;broad.inputs['Detail'].default_value=2;links.new(geo.outputs['Position'],broad.inputs['Vector']);ramp=n.new('ShaderNodeValToRGB');base=p.inputs['Base Color'].default_value[:];ramp.color_ramp.elements[0].color=tuple(v*.8 for v in base[:3])+(1,);ramp.color_ramp.elements[1].color=tuple(min(1,v*1.15) for v in base[:3])+(1,);links.new(broad.outputs['Fac'],ramp.inputs['Fac']);links.new(ramp.outputs['Color'],p.inputs['Base Color'])
+ return mat
+
+def stone_edge(o,parent):
+ pts=footprint(o);verts=[];faces=[]
+ # Narrow visual coping follows the exact source shoreline; thickness is an estimate.
+ for i,(x,z) in enumerate(pts):
+  nx,nz=pts[(i+1)%len(pts)];length=math.hypot(nx-x,nz-z)
+  if length<.001:continue
+  px=-(nz-z)/length*.16;pz=(nx-x)/length*.16;idx=len(verts)
+  verts.extend([(xx,-zz,yy) for yy in [.01,.25] for xx,zz in [(x+px,z+pz),(nx+px,nz+pz),(nx-px,nz-pz),(x-px,z-pz)]])
+  faces.extend([tuple(idx+j for j in f) for f in [(0,1,5,4),(1,2,6,5),(2,3,7,6),(3,0,4,7),(4,5,6,7)]])
+ mat=detailed_surface('stone','#b2aa96');n=mat.node_tree.nodes;links=mat.node_tree.links;p=n.get('Principled BSDF');geo=n.new('ShaderNodeNewGeometry');vor=n.new('ShaderNodeTexVoronoi');vor.distance='EUCLIDEAN';vor.feature='DISTANCE_TO_EDGE';vor.inputs['Scale'].default_value=5;links.new(geo.outputs['Position'],vor.inputs['Vector']);b=n.new('ShaderNodeBump');b.inputs['Strength'].default_value=.6;b.inputs['Distance'].default_value=.065;links.new(vor.outputs['Distance'],b.inputs['Height']);links.new(b.outputs['Normal'],p.inputs['Normal'])
+ edge=mesh(parent.name+' | Pale stone shoreline coping',verts,faces,mat,parent);edge['component']='shoreline';edge['measurement_status']='estimated detail; source shoreline retained'
+
+def venue_building(o,parent):
+ arch=o.get('metadata',{}).get('architecture');pts=footprint(o);w,h,d=o['dimensions'];frame=material('Venue pale structural frame '+o.get('color','#c7c6bd'),o.get('color','#c7c6bd'),.38,.2);glass=material('Venue reflective blue-grey glazing','#657d83',.17,.35)
+ def ring(name,level,radius_scale=1):
+  n=len(pts);v=[(x*radius_scale,-z*radius_scale,y) for y in [level-.09,level+.09] for x,z in pts];faces=[(i,(i+1)%n,(i+1)%n+n,i+n) for i in range(n)];return mesh(parent.name+' | '+name,v,faces,frame,parent)
+ if arch=='royal-majlis':
+  frame=material('Majlis dark metal diamond frame','#687475',.29,.6);glass=material('Majlis reflective glazing '+o.get('color','#729395'),o.get('color','#729395'),.15,.4);roofmat=material('Majlis pale roof cap','#b3b7b3',.5,.15)
+  n=len(pts);v=[(x,-z,y) for y in [.1,h-.1] for x,z in pts];body=mesh(parent.name+' | Circular glass envelope',v,[(i,(i+1)%n,(i+1)%n+n,i+n) for i in range(n)],glass,parent);body['component']='wall';polyfloor(parent.name+' | Roof',pts,h,roofmat,parent)['component']='roof';polyfloor(parent.name+' | Floor',pts,.1,frame,parent)['component']='floor';ring('Top rim',h-.1);ring('Base rim',.12)
+  verts=[];faces=[];rx=w/2;rz=d/2
+  for sign in [-1,1]:
+   for line in range(24):
+    for k in range(28):
+     j=len(verts)
+     for t in [k/28,(k+1)/28]:
+      a=line*math.tau/24+sign*t*math.pi*.95
+      for offset in [-.0035,.0035]:verts.append(((rx+.015)*math.cos(a+offset),-(rz+.015)*math.sin(a+offset),.16+t*(h-.32)))
+     faces.append((j,j+1,j+3,j+2))
+  grid=mesh(parent.name+' | Diamond facade lattice',verts,faces,frame,parent);grid['component']='frame'
+  door=cube(parent.name+' | West entrance glazing',(-rx-.025,0,1.55),(.045,2.5,3.1),material('Venue dark entrance glass','#365257',.2,.3),parent);door['component']='wall'
+  for y in [-1.28,1.28]:rod(parent.name+' | Door frame',(-rx-.06,y,0),(-rx-.06,y,3.15),.055,frame,parent)
+  return
+ # Existing architecture keeps the exact concave/rotated source footprint.
+ ismain=arch=='royal-clubhouse-main';low=.70*h if ismain else h-.3;profile=o.get('metadata',{}).get('roofProfile',[[0,.96],[.35,.99],[.65,1],[.78,.97],[.9,.87],[1,.72]])
+ a,b=pts[:2];axis=Vector((b[0]-a[0],b[1]-a[1]));axis.normalize();projs=[x*axis.x+z*axis.y for x,z in pts];lo=min(projs);hi=max(projs)
+ def roofheight(x,z):
+  if not ismain:return h
+  t=max(0,min(1,((x*axis.x+z*axis.y)-lo)/(hi-lo)))
+  for i,(u,yy) in enumerate(profile[1:],1):
+   if t<=u:
+    u0,y0=profile[i-1];f=(t-u0)/(u-u0);return h*(y0+(yy-y0)*f)
+  return h*profile[-1][1]
+ n=len(pts);verts=[(x,-z,y) for y in [.25,low] for x,z in pts];walls=mesh(parent.name+' | Glazed facade',verts,[(i,(i+1)%n,(i+1)%n+n,i+n) for i in range(n)],glass,parent);walls['component']='wall'
+ for level in [.2,low*.48,low]:
+  slab=polyfloor(parent.name+' | Structural floor slab',pts,level,frame,parent);slab['component']='floor';ring('Horizontal fascia',level)
+ for i,(x,z) in enumerate(pts):
+  nx,nz=pts[(i+1)%n];length=math.hypot(nx-x,nz-z);count=max(1,math.ceil(length/2.8))
+  for k in range(count):
+   t=k/count;cx=x+(nx-x)*t;cz=z+(nz-z)*t;post=rod(parent.name+' | Facade mullion',(cx,-cz,.1),(cx,-cz,low),.05,frame,parent,6);post['component']='frame'
+ if ismain and len(pts)==4:
+  # Roof strips interpolate inside the original four boundary edges.
+  verts=[];faces=[];a,b,c,d0=pts
+  for i in range(49):
+   t=i/48
+   for pa,pb in [(a,b),(d0,c)]:
+    x=pa[0]+(pb[0]-pa[0])*t;z=pa[1]+(pb[1]-pa[1])*t;verts.append((x,-z,roofheight(x,z)))
+  for i in range(48):faces.append((i*2,i*2+1,i*2+3,i*2+2))
+  roof=mesh(parent.name+' | Asymmetric curved roof',verts,faces,frame,parent);roof['component']='roof';solid=roof.modifiers.new('Roof slab thickness','SOLIDIFY');solid.thickness=.22
+  for side in [0,1]:
+   v=[];f=[]
+   for i in range(49):
+    x,y,z=verts[i*2+side];v.extend([(x,y,low),(x,y,z-.2)])
+   for i in range(48):f.append((i*2,i*2+2,i*2+3,i*2+1))
+   panel=mesh(parent.name+' | Upper clerestory glazing',v,f,glass,parent);panel['component']='wall'
+ else:polyfloor(parent.name+' | Flat roof',pts,h,frame,parent)['component']='roof'
+
 def import_scene(scene,clear=True):
  if clear:bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
  sc=bpy.context.scene;sc.unit_settings.system='METRIC';sc.unit_settings.scale_length=1
  registry_path=ROOT/'private/event-studio/rbc/furniture-assets.json';registry={a['id']:a for a in json.loads(registry_path.read_text())['items']} if registry_path.exists() else {}
- turf=material('Fine event turf','#83936a',.9);p=turf.node_tree.nodes.get('Principled BSDF');noise=turf.node_tree.nodes.new('ShaderNodeTexNoise');noise.inputs['Scale'].default_value=3;noise.inputs['Detail'].default_value=2;ramp=turf.node_tree.nodes.new('ShaderNodeValToRGB');ramp.color_ramp.elements[0].color=(.05,.095,.027,1);ramp.color_ramp.elements[1].color=(.22,.32,.095,1);turf.node_tree.links.new(noise.outputs['Fac'],ramp.inputs['Fac']);turf.node_tree.links.new(ramp.outputs['Color'],p.inputs['Base Color'])
+ turf=detailed_surface('ground',scene['site'].get('appearance',{}).get('turfColor','#71924c'))
  b=scene['site']['bounds'];cube('Event site terrain',((b['minX']+b['maxX'])/2,-(b['minZ']+b['maxZ'])/2,-.2),(b['maxX']-b['minX'],b['maxZ']-b['minZ'],.3),turf)
  missing=[];parents={}
  for n,o in enumerate(scene['objects']):
@@ -169,10 +262,12 @@ def import_scene(scene,clear=True):
   if kind=='tent':tent(o,par)
   elif kind=='furniture':
    if not furniture(o,par,registry):missing.append(o['assetId']);cube('Missing model proxy',(0,0,h/2),(w,d,h),material('Missing furniture',col),par)
+  elif kind=='building' and o.get('metadata',{}).get('architecture'):venue_building(o,par)
   elif kind=='car':clone_children(car_template(col),par,(w/1.9,d/4.7,h/1.5))
   elif kind=='tree':clone_children(palm_template(),par,(w/5,d/5,h/7))
   elif kind in ['ground','path','water','stage']:
-   mat=material(kind+' '+col,col,.26 if kind=='water' else .85,.25 if kind=='water' else 0);pts=footprint(o);polyfloor(par.name+' | Surface',pts,.025 if kind=='water' else .04 if kind=='ground' else max(h,.06),mat,par)
+   mat=detailed_surface(kind,'#567f85' if kind=='water' else col) if kind in ['ground','water'] else material(kind+' '+col,col,.85);pts=footprint(o);polyfloor(par.name+' | Surface',pts,.025 if kind=='water' else .04 if kind=='ground' else max(h,.06),mat,par)
+   if kind=='water' and o.get('metadata',{}).get('stoneEdge'):stone_edge(o,par)
   elif kind=='sign':
    mat=material('Arch ivory',col);cube('Arch left',(-w/2+.2,0,h/2),(.4,d,h),mat,par);cube('Arch right',(w/2-.2,0,h/2),(.4,d,h),mat,par);cube('Arch header',(0,0,h-.3),(w,d,.6),mat,par)
   else:

@@ -73,6 +73,28 @@ try {
     for (const name of ['../.env.local', 'nested/../../.env.local', 'C:\\secrets', 'file.js']) await assert.rejects(store.getEventLayoutAsset(EVENT_LAYOUT_ID, name), error => error.status === 404);
     const response = await request('GET', '/assets/site-plan.png'); assert.equal(response.status, 200); assert.equal(response.headers.get('content-type'), 'image/png');
   });
+  await test('registered private release takes precedence over an older bundled file', async () => {
+    const originalFetch = globalThis.fetch;
+    process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://event-layout-test.invalid'; process.env.SUPABASE_SERVICE_KEY = 'local-test-key';
+    const calls = [];
+    globalThis.fetch = async (input) => {
+      const url = new URL(typeof input === 'string' ? input : input.url); calls.push(url.pathname);
+      assert.equal(url.origin, 'https://event-layout-test.invalid');
+      if (url.pathname.startsWith('/rest/v1/')) return Response.json({ storage_path: 'sha256/new/site-plan.png', filename: 'site-plan.png', content_type: 'image/png' });
+      return Response.json({ signedURL: '/object/sign/event-layout-private/sha256/new/site-plan.png?token=unit-test' });
+    };
+    try {
+      const asset = await store.getEventLayoutAsset(EVENT_LAYOUT_ID, 'site-plan.png');
+      assert.ok(asset.signedUrl.includes('/sha256/new/site-plan.png')); assert.equal(asset.bytes, undefined); assert.equal(calls.length, 2);
+    } finally { globalThis.fetch = originalFetch; delete process.env.NEXT_PUBLIC_SUPABASE_URL; delete process.env.SUPABASE_SERVICE_KEY; }
+  });
+  await test('unregistered private file still has the small-file local fallback', async () => {
+    const originalFetch = globalThis.fetch;
+    process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://event-layout-test.invalid'; process.env.SUPABASE_SERVICE_KEY = 'local-test-key';
+    globalThis.fetch = async () => Response.json([]);
+    try { const asset = await store.getEventLayoutAsset(EVENT_LAYOUT_ID, 'site-plan.png'); assert.equal(asset.bytes.toString(), 'test-png'); }
+    finally { globalThis.fetch = originalFetch; delete process.env.NEXT_PUBLIC_SUPABASE_URL; delete process.env.SUPABASE_SERVICE_KEY; }
+  });
   await test('export preserves metre units, exact transforms and provenance', async () => {
     const response = await request('GET', '/export'); assert.equal(response.status, 200); assert.deepEqual(await response.json(), scene);
   });

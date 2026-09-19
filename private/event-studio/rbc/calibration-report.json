@@ -23,7 +23,43 @@
       "Dimension annotations are millimetres; 50000 = 50 metres.",
       "Only horizontal geometry is dimension-calibrated. No elevation survey or tent supplier sections were supplied.",
       "Roof heights and profiles, terrain, materials, generic vehicle bodies and vegetation are editable visual estimates.",
-      "Source labels A1-A27, S1-S19 and V1-V6 are preserved; A27 is an open booth in the drawing."
+      "Source labels A1-A27, S1-S19 and V1-V6 are preserved; A27 is an open booth in the drawing.",
+      "Venue appearance refined from official organizer and venue photographs plus DP World Tour 2026 aerial site map. Clubhouse/Majlis identity is corroborated; all heights and architectural detailing remain estimates. The map is used for permanent architecture only, not golf-tournament temporary structures."
+    ],
+    "appearance": {
+      "turfColor": "#71924c"
+    },
+    "references": [
+      {
+        "title": "2026 source site plan",
+        "url": "https://1drv.ms/b/c/a3fd1f828162dbab/IQADX25t099mRapXmiVoiV3cAQYnHXpOlhl8p153_kMA_UY",
+        "kind": "plan",
+        "notes": "User-supplied vector plan controls horizontal positions, footprints and metre scale."
+      },
+      {
+        "title": "Official venue and clubhouse photograph",
+        "url": "https://royalconcours.com/venue/",
+        "kind": "venue",
+        "notes": "Venue photographs guide turf, palms and materials. Heights remain estimates."
+      },
+      {
+        "title": "Royal Golf Club Majlis photograph",
+        "url": "https://www.theroyalgolfclub.com/gallery/events-majlis.jpg",
+        "kind": "venue",
+        "notes": "Circular glazing and diamond lattice appearance; dimensions other than plan footprint are estimates."
+      },
+      {
+        "title": "2026 DP World Tour venue map",
+        "url": "https://www.europeantour.com/dpworld-tour/bapco-energies-bahrain-championship-2026/spectator-info/detail/bapco-energies-bahrain-championship-2026-spectator-information/",
+        "kind": "venue",
+        "notes": "Aerial inset corroborates permanent clubhouse and Majlis identity only. Golf-tournament temporary structures are not copied."
+      },
+      {
+        "title": "2025 Royal Bahrain Concours gallery",
+        "url": "https://royalconcours.com/gallery/",
+        "kind": "event",
+        "notes": "Previous-year photographs guide appearance, not 2026 object positions or allocations."
+      }
     ]
   },
   "calibration": [
@@ -130,7 +166,7 @@
     "water": 1,
     "tent": 95,
     "stage": 2,
-    "building": 7,
+    "building": 8,
     "sign": 1,
     "car": 234,
     "tree": 265
@@ -191,5 +227,21 @@
   ],
   "missingLabels": [],
   "largestCalibrationErrorMetres": 0.00141,
-  "method": "PDF rotation matrix + vector endpoint rectangle detection; filled triangle union; text anchor matching; CAD stroke component clustering. No screenshot-derived site placement. Rectangle endpoint quantization 0.1 PDF point (1.75 cm), vector fill simplification 0.7 point (12.2 cm)."
+  "method": "PDF rotation matrix + vector endpoint rectangle detection; filled triangle union; text anchor matching; CAD stroke component clustering. No screenshot-derived site placement. Rectangle endpoint quantization 0.1 PDF point (1.75 cm), vector fill simplification 0.7 point (12.2 cm).",
+  "venueRefinement": {
+    "addedSourceObject": "royal-majlis",
+    "sourcePath": 14482,
+    "position": [
+      -134.87556,
+      0,
+      -26.16144
+    ],
+    "identityEvidence": [
+      "https://www.europeantour.com/dpworld-tour/bapco-energies-bahrain-championship-2026/spectator-info/detail/bapco-energies-bahrain-championship-2026-spectator-information/",
+      "https://drive.google.com/file/d/15c97fvX-mj1N1E_nIMZet7FOWsnWNaDt/view",
+      "https://www.theroyalgolfclub.com/gallery/events-majlis.jpg"
+    ],
+    "existingFootprintsMoved": false,
+    "totalObjectsWithFurniture": 871
+  }
 }

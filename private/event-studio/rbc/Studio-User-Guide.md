@@ -5,10 +5,13 @@ Open https://pico-stock.vercel.app/admin/pico-ai/royal-bahrain-concours-2026 and
 ## Explore the event
 
 - **Orbit:** drag to rotate, scroll to zoom, and right-drag to pan. Select a named location in the Site panel to move directly to it.
-- **Plan:** view the calibrated layout from above. The minimap also takes you to another part of the site.
+- **Plan:** view the calibrated layout from above, with the roofs lifted off so you can see inside. The minimap also takes you to another part of the site.
+- **Plan interior:** with a tent selected, this frames that tent alone and draws a one-metre setting-out grid across its floor, so you can read and check furniture positions against real distances.
 - **Walk:** drag to look and use WASD or arrow keys. Shift moves faster. Touch devices have on-screen directional buttons. Use **Enter tent** in the inspector for an interior view.
 - Roofs, walls, location labels, and evening lighting have separate controls along the bottom of the view.
 - **Views** contains saved cameras and the guided tour. Save your own viewpoint with a name.
+
+The starting layout contains 871 editable scene objects. The clubhouse and Majlis appearance has been refined using official venue photographs, with event photographs guiding tent surfaces, lawn and outdoor details. These visual references help recognize the venue; they do not supply survey measurements.
 
 ## Edit tents and furniture
 
@@ -16,7 +19,9 @@ Select an object and press **Edit layout** to use movement or rotation handles. 
 
 Moving or rotating a tent carries its attached furniture. Furniture can also be moved individually. An optional shared **Move with group** name links other objects for movement and rotation. Duplicating a tent duplicates its contents. Removing a tent leaves its furniture in place; use Undo to restore the tent.
 
-The Furniture panel contains all 99 supplied catalogue items with photographs, metre dimensions, and measurement status. Select a tent before adding an item to place it in that tent. With furniture selected, inspect another catalogue item and choose **Replace selected furniture** to retain the placement. Colours recolour the main opaque surface while retaining metal and glass finishes. Furniture models are editable reconstructions from photographs; they are not manufacturer CAD files.
+The Furniture panel contains the 99 items Pico Stock rents, taken from the live product catalogue with photographs, metre dimensions, and measurement status. An item whose product record publishes its size, such as `H79*D47*W51cm`, is shown at exactly that size and marked **Dimensions listed**; the rest are marked **Estimated size** until their product records carry measurements.
+
+Select a tent, or any piece already standing in it, and the next item you add is placed on a clear patch of that tent's floor: the studio reads the item's own width and depth, sets it out on the half-metre grid, and keeps it clear of the walls and of everything already placed. If the floor is full, the studio says so rather than stacking pieces. A piece dragged or typed past the tent walls is returned to the floor it belongs to, and resizing a tent brings its contents back inside. With furniture selected, inspect another catalogue item and choose **Replace selected furniture** to retain the placement. Colours recolour the main opaque surface while retaining metal and glass finishes. Furniture models are editable reconstructions from photographs; they are not manufacturer CAD files.
 
 The initial 238 furniture instances are a proposed arrangement across 28 zones. Stock warnings compare placed quantities against the catalogue snapshot. They do not reserve inventory. Use **Furniture schedule** for a CSV of the proposed quantities.
 
@@ -27,6 +32,8 @@ Changes autosave to the event's private cloud layout. **Save layout** saves imme
 If another browser saves first, the studio stops overwriting and asks you to download your work and reload the latest version. If the network fails, your current unsaved work remains in the open tab. Use **Download my work** before closing it.
 
 **Editable layout** exports metre-based JSON. **Import layout JSON** reopens that document in the studio. The same JSON can rebuild a Blender file using the importer in the editable project kit. This is an explicit export/import workflow; Blender and the browser do not synchronize automatically.
+
+In the **Files** tab, **Venue references** opens the official source pages in a new tab. 2026 plan sets positions and scale. Venue photos guide appearance; heights remain estimates. The DP World aerial map is a reference for permanent venue architecture only; its tournament layout is not the Concours layout.
 
 ## Render and record
 

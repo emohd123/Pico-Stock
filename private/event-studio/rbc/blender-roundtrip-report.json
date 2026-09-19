@@ -1,6 +1,6 @@
 {
-  "objectsExpected": 870,
-  "objectsPresent": 870,
+  "objectsExpected": 871,
+  "objectsPresent": 871,
   "maximumPositionErrorMetres": 3.348670956372799e-05,
   "identityAndPositionPass": true,
   "errors": [],
