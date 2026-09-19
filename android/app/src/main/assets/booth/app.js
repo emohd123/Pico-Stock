@@ -129,7 +129,6 @@ function reset() {
   clearSteps();
   stage.classList.remove('working', 'revealed');
   $('name').value = '';
-  $('consent').checked = false;
   chosen = DESIGNS[0];
   Array.prototype.forEach.call($('designs').children, function (child, index) {
     child.setAttribute('aria-pressed', String(index === 0));
@@ -145,7 +144,7 @@ function reset() {
 }
 
 function validate() {
-  $('create').disabled = !(cleanGuestName($('name').value) && $('consent').checked);
+  $('create').disabled = !cleanGuestName($('name').value);
 }
 
 function fail(message) {
@@ -197,7 +196,7 @@ function wait(ms) {
 
 async function create() {
   var name = cleanGuestName($('name').value);
-  if (!name || !$('consent').checked) return;
+  if (!name) return;
   $('create').disabled = true;
   $('err').hidden = true;
 
@@ -263,7 +262,6 @@ async function create() {
 }
 
 $('name').addEventListener('input', function () { validate(); refreshPreview(); touch(); });
-$('consent').addEventListener('change', function () { validate(); touch(); });
 $('create').addEventListener('click', create);
 $('finish').addEventListener('click', reset);
 document.addEventListener('touchstart', touch, { passive: true });

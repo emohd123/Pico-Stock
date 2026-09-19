@@ -85,7 +85,14 @@ public class MainActivity extends Activity {
         s.setAllowFileAccess(true);
         s.setMediaPlaybackRequiresUserGesture(false);
         s.setSupportMultipleWindows(false);
+        // A kiosk layout must not move. Pinch and double-tap zoom are refused here as well as in
+        // the page viewport, because a guest who zooms in has no way to get back out.
         s.setTextZoom(100);
+        s.setSupportZoom(false);
+        s.setBuiltInZoomControls(false);
+        s.setDisplayZoomControls(false);
+        s.setUseWideViewPort(false);
+        s.setLoadWithOverviewMode(false);
 
         web.setWebChromeClient(new WebChromeClient());
         web.setWebViewClient(new WebViewClient() {
