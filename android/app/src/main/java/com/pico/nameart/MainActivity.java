@@ -1,55 +1,70 @@
 package com.pico.nameart;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.text.InputType;
 import android.util.Base64;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
-import android.webkit.WebResourceResponse;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.webkit.WebViewAssetLoader;
 
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
+
+import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Kiosk shell for the Name Art booth.
  *
- * The booth runs entirely from bundled assets, so it works with no network at all: the
- * poster is rendered on the device and written to shared storage, where the LED screen's
- * Huidu app can pick it up. The shell exists to give an unattended tablet what a browser
- * tab cannot: a screen that never sleeps, no browser chrome to wander out of, a back
- * button that does nothing, and a way to save a file.
+ * The booth runs entirely from bundled assets, so it works with no network at all: the poster
+ * is rendered on the device, written to shared storage for the LED screen's Huidu app, and
+ * served to guests over the tablet's own address behind a fixed QR code.
  */
 public class MainActivity extends Activity {
     private static final String PREFS = "name-art-kiosk";
     private static final String KEY_URL = "url";
+    private static final String KEY_PASSCODE = "passcode";
+    private static final String DEFAULT_PASSCODE = "1155";
+
     // Served through WebViewAssetLoader: a real https origin, so the canvas is not tainted
     // by file:// assets and toDataURL() works. Still entirely local - nothing leaves the device.
     private static final String ASSET_HOST = "appassets.androidplatform.net";
-    private static final String OFFLINE_URL =
-            "https://" + ASSET_HOST + "/assets/booth/index.html";
+    private static final String OFFLINE_URL = "https://" + ASSET_HOST + "/assets/booth/index.html";
 
-    /** Volume-Down this many times in a row opens the operator dialog. */
+    /** Volume-Down this many times in a row asks for the passcode. */
     private static final int UNLOCK_PRESSES = 5;
     private static final long UNLOCK_WINDOW_MS = 3000;
 
     private WebView web;
     private WebViewAssetLoader assetLoader;
+    private final BoothServer server = new BoothServer();
     private int presses;
     private long firstPressAt;
 
@@ -66,7 +81,6 @@ public class MainActivity extends Activity {
         web = new WebView(this);
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
-        // A remote booth keeps its pairing token in localStorage.
         s.setDomStorageEnabled(true);
         s.setAllowFileAccess(true);
         s.setMediaPlaybackRequiresUserGesture(false);
@@ -82,21 +96,41 @@ public class MainActivity extends Activity {
 
             @Override
             public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest request) {
-                // Anything outside the booth is refused rather than opened.
                 return !inBooth(request.getUrl().toString());
             }
         });
         web.addJavascriptInterface(new Bridge(), "AndroidBooth");
 
         setContentView(web);
+        server.start();
         web.loadUrl(boothUrl());
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Lock task mode is what actually stops a guest swiping the system bars into view;
+        // immersive mode alone only hides them until the next swipe.
+        try {
+            ActivityManager manager = getSystemService(ActivityManager.class);
+            if (manager != null
+                    && manager.getLockTaskModeState() == ActivityManager.LOCK_TASK_MODE_NONE) {
+                startLockTask();
+            }
+        } catch (Exception ignored) { }
+    }
+
+    @Override
+    protected void onDestroy() {
+        server.stop();
+        super.onDestroy();
     }
 
     /** Exposed to the booth page as window.AndroidBooth. */
     private class Bridge {
         /**
-         * Writes a rendered poster into Pictures/NameArt so the Huidu app can push it to
-         * the LED screen. Returns the saved path, or an empty string if it could not be written.
+         * Writes a rendered poster into Pictures/NameArt so the Huidu app can push it to the LED
+         * screen, and publishes it behind the fixed guest QR. Returns the saved path, or "".
          */
         @JavascriptInterface
         public String savePoster(String dataUrl, String fileName) {
@@ -104,6 +138,8 @@ public class MainActivity extends Activity {
                 int comma = dataUrl.indexOf(',');
                 if (comma < 0) return "";
                 byte[] bytes = Base64.decode(dataUrl.substring(comma + 1), Base64.DEFAULT);
+
+                server.publish(bytes, fileName);
 
                 ContentValues values = new ContentValues();
                 values.put(MediaStore.Images.Media.DISPLAY_NAME, fileName);
@@ -119,6 +155,41 @@ public class MainActivity extends Activity {
                     out.write(bytes);
                 }
                 return "Pictures/NameArt/" + fileName;
+            } catch (Exception error) {
+                return "";
+            }
+        }
+
+        /** The fixed address behind the guest QR, or "" when the tablet is on no network. */
+        @JavascriptInterface
+        public String boothAddress() {
+            return BoothServer.address();
+        }
+
+        /** A QR encoded on the device, returned as a PNG data URL. */
+        @JavascriptInterface
+        public String qrDataUrl(String text, int size) {
+            try {
+                Map<EncodeHintType, Object> hints = new HashMap<>();
+                hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.M);
+                hints.put(EncodeHintType.MARGIN, 2);
+                hints.put(EncodeHintType.CHARACTER_SET, "UTF-8");
+
+                BitMatrix matrix = new QRCodeWriter()
+                        .encode(text, BarcodeFormat.QR_CODE, size, size, hints);
+
+                int w = matrix.getWidth(), h = matrix.getHeight();
+                int[] pixels = new int[w * h];
+                for (int y = 0; y < h; y++) {
+                    for (int x = 0; x < w; x++) {
+                        pixels[y * w + x] = matrix.get(x, y) ? 0xFF123C2C : 0xFFFFFFFF;
+                    }
+                }
+                Bitmap bitmap = Bitmap.createBitmap(pixels, w, h, Bitmap.Config.ARGB_8888);
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+                return "data:image/png;base64,"
+                        + Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP);
             } catch (Exception error) {
                 return "";
             }
@@ -157,7 +228,7 @@ public class MainActivity extends Activity {
             }
             if (++presses >= UNLOCK_PRESSES) {
                 presses = 0;
-                showOperatorDialog();
+                askPasscode();
             }
             return true;
         }
@@ -172,33 +243,80 @@ public class MainActivity extends Activity {
         return prefs().getString(KEY_URL, OFFLINE_URL);
     }
 
+    private String passcode() {
+        return prefs().getString(KEY_PASSCODE, DEFAULT_PASSCODE);
+    }
+
     private boolean inBooth(String url) {
-        String current = boothUrl();
-        if (Uri.parse(url).getHost() != null && ASSET_HOST.equals(Uri.parse(url).getHost())) return true;
-        Uri a = Uri.parse(url), b = Uri.parse(current);
+        String host = Uri.parse(url).getHost();
+        if (host != null && ASSET_HOST.equals(host)) return true;
+        Uri a = Uri.parse(url), b = Uri.parse(boothUrl());
         return a.getScheme() != null && a.getScheme().equals(b.getScheme())
                 && a.getAuthority() != null && a.getAuthority().equals(b.getAuthority());
     }
 
-    private void showOperatorDialog() {
+    private void askPasscode() {
         final EditText field = new EditText(this);
-        field.setSingleLine(true);
-        field.setText(boothUrl());
-        field.setSelectAllOnFocus(true);
+        field.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
+        field.setHint("Passcode");
 
         new AlertDialog.Builder(this)
-                .setTitle("Booth address")
-                .setMessage("Offline booth: " + OFFLINE_URL
-                        + "\nOnline booth ends in /name-art/tablet.")
+                .setTitle("Operator")
                 .setView(field)
+                .setPositiveButton("Unlock", (d, w) -> {
+                    if (passcode().equals(field.getText().toString().trim())) showOperatorDialog();
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private TextView label(String text) {
+        TextView view = new TextView(this);
+        view.setText(text);
+        int gap = (int) (12 * getResources().getDisplayMetrics().density);
+        view.setPadding(0, gap, 0, 0);
+        return view;
+    }
+
+    private void showOperatorDialog() {
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        int pad = (int) (18 * getResources().getDisplayMetrics().density);
+        box.setPadding(pad, pad, pad, pad);
+
+        TextView guest = new TextView(this);
+        String address = BoothServer.address();
+        guest.setText("Guest QR address:\n" + (address.isEmpty() ? "no network" : address)
+                + "\n\nPrint this address as a QR to use one fixed code at the booth.");
+        box.addView(guest);
+
+        box.addView(label("Booth address"));
+        final EditText urlField = new EditText(this);
+        urlField.setSingleLine(true);
+        urlField.setText(boothUrl());
+        box.addView(urlField);
+
+        box.addView(label("Operator passcode"));
+        final EditText codeField = new EditText(this);
+        codeField.setSingleLine(true);
+        codeField.setInputType(InputType.TYPE_CLASS_NUMBER);
+        codeField.setText(passcode());
+        box.addView(codeField);
+
+        new AlertDialog.Builder(this)
+                .setTitle("Booth settings")
+                .setView(box)
                 .setPositiveButton("Save and reload", (d, w) -> {
-                    String next = field.getText().toString().trim();
-                    if (!next.isEmpty()) prefs().edit().putString(KEY_URL, next).apply();
+                    String url = urlField.getText().toString().trim();
+                    String code = codeField.getText().toString().trim();
+                    SharedPreferences.Editor edit = prefs().edit();
+                    if (!url.isEmpty()) edit.putString(KEY_URL, url);
+                    if (!code.isEmpty()) edit.putString(KEY_PASSCODE, code);
+                    edit.apply();
                     web.loadUrl(boothUrl());
                 })
-                .setNeutralButton("Offline booth", (d, w) -> {
-                    prefs().edit().putString(KEY_URL, OFFLINE_URL).apply();
-                    web.loadUrl(OFFLINE_URL);
+                .setNeutralButton("Leave kiosk", (d, w) -> {
+                    try { stopLockTask(); } catch (Exception ignored) { }
                 })
                 .setNegativeButton("Cancel", null)
                 .show();

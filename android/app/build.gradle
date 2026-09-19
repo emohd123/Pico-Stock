@@ -9,4 +9,8 @@ android {
 }
 // WebViewAssetLoader serves the bundled booth from a real https origin,
 // so canvas.toDataURL() is not blocked by a tainted file:// canvas.
-dependencies { implementation 'androidx.webkit:webkit:1.12.1' }
+dependencies {
+ implementation 'androidx.webkit:webkit:1.12.1'
+ // QR encoding happens on the device; the booth never calls a QR service.
+ implementation 'com.google.zxing:core:3.5.3'
+}

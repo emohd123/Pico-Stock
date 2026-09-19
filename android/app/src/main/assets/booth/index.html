@@ -11,8 +11,28 @@
 html,body{margin:0;height:100%}
 body{--green:#153e2e;--gold:#aa8145;background:radial-gradient(ellipse at 0 0,#eedac0,transparent 65%),#f8f4ec;color:var(--green);font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;padding:26px 4vw;-webkit-user-select:none;user-select:none;overflow:hidden}
 .grid{width:min(1400px,100%);display:grid;grid-template-columns:minmax(260px,.85fr) minmax(320px,1fr);gap:clamp(26px,5vw,72px);align-items:center}
+
 .poster{position:relative;width:100%;aspect-ratio:2/3;max-height:88vh;margin:auto;overflow:hidden;background:#f0e5d3;box-shadow:0 14px 60px #674c2a20}
 .poster img,.poster canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
+
+/* The finished poster is drawn immediately, then resolves out of a blur across the
+   generating window, so the guest watches their own name come into focus. */
+#preview{transition:filter .5s linear,opacity .5s linear,transform .5s ease}
+.poster.working #preview{filter:blur(22px) saturate(.75);opacity:.35;transform:scale(1.04);animation:settle var(--gen) cubic-bezier(.3,.7,.2,1) forwards}
+@keyframes settle{to{filter:blur(0) saturate(1);opacity:1;transform:scale(1)}}
+
+/* Gold sweep that travels the poster while it works. */
+.sweep{position:absolute;inset:0;pointer-events:none;opacity:0}
+.poster.working .sweep{opacity:1;background:linear-gradient(110deg,transparent 38%,#f4e3b866 48%,#fff8e0aa 50%,#f4e3b866 52%,transparent 62%);background-size:260% 100%;animation:sweep var(--gen) ease-in-out infinite}
+@keyframes sweep{0%{background-position:140% 0}100%{background-position:-60% 0}}
+
+/* One soft gold bloom at the moment of reveal. */
+.flash{position:absolute;inset:0;pointer-events:none;opacity:0;background:radial-gradient(ellipse at 50% 46%,#fff3cf 0%,#f5e2ae55 35%,transparent 70%)}
+.poster.revealed .flash{animation:flash 1s ease-out}
+@keyframes flash{0%{opacity:0}18%{opacity:.85}100%{opacity:0}}
+.poster.revealed #preview{animation:pop .9s cubic-bezier(.2,.8,.25,1)}
+@keyframes pop{0%{transform:scale(1.015)}100%{transform:scale(1)}}
+
 .panel{display:flex;flex-direction:column;gap:20px;max-width:520px}
 .eyebrow{font-size:10px;font-weight:700;letter-spacing:.2em;color:#8a663c}
 h1{font-family:NameArtSerif,Georgia,serif;font-size:clamp(30px,3.6vw,52px);font-weight:500;line-height:1.14;margin:0;letter-spacing:-.03em}
@@ -30,8 +50,20 @@ input[type=text]{height:68px;padding:12px 18px;border:1px solid #b79b7080;border
 .primary:disabled{opacity:.45}
 small{color:#777064;font-size:12px;line-height:1.6}
 .err{color:#982c3d;font-size:13px;margin:0}
-.saved{color:#2c6c50;font-size:13px;margin:0}
 [hidden]{display:none!important}
+
+/* Generating panel */
+.track{height:6px;border-radius:3px;background:#e3d6bd;overflow:hidden}
+.track i{display:block;height:100%;width:0;border-radius:3px;background:linear-gradient(90deg,#b8914c,#e8d29a);animation:fill var(--gen) cubic-bezier(.35,.6,.25,1) forwards}
+@keyframes fill{to{width:100%}}
+#stage2 h1{min-height:1.2em}
+.stepline{font-size:14px;color:#7a7364;min-height:1.4em;transition:opacity .25s}
+
+/* Done panel */
+.qrRow{display:flex;gap:18px;align-items:center}
+.qrRow img{width:190px;height:190px;background:#fff;border:1px solid #e5d8bc;border-radius:8px;padding:6px}
+.qrRow div{min-width:0}
+.addr{font:12px/1.5 monospace;color:#6f6858;word-break:break-all}
 </style>
 </head>
 <body>
@@ -39,6 +71,8 @@ small{color:#777064;font-size:12px;line-height:1.6}
   <div class="poster" id="stage">
     <img id="bg" alt="">
     <canvas id="preview"></canvas>
+    <div class="sweep"></div>
+    <div class="flash"></div>
   </div>
 
   <section class="panel" id="formPanel">
@@ -56,11 +90,26 @@ small{color:#777064;font-size:12px;line-height:1.6}
     <small>English and Arabic names welcome. Works without internet.</small>
   </section>
 
+  <section class="panel" id="genPanel" hidden>
+    <span class="eyebrow">CREATING YOUR NAME ART</span>
+    <h1 id="genTitle">Setting your<br>name in gold.</h1>
+    <div class="track"><i id="bar"></i></div>
+    <p class="stepline" id="step">Preparing your design…</p>
+    <p class="ar stepline" dir="rtl" id="stepAr">نجهّز تصميمك…</p>
+  </section>
+
   <section class="panel" id="donePanel" hidden>
     <span class="eyebrow">YOUR PERSONAL KEEPSAKE</span>
     <h1>Your poster<br>is ready.</h1>
-    <p id="doneMsg">Saved on this tablet, ready for the poster screen.</p>
-    <p class="saved" id="savedAs"></p>
+    <div class="qrRow">
+      <img id="qr" alt="Scan to download your poster" hidden>
+      <div>
+        <p id="qrLead">Scan to download your poster.</p>
+        <p class="ar" dir="rtl">امسح الرمز لحفظ بطاقتك</p>
+        <p class="addr" id="addr"></p>
+      </div>
+    </div>
+    <p class="err" id="saveNote" hidden></p>
     <button class="primary" id="finish">Finish <span>&#8599;</span></button>
     <small>Tap Finish for the next guest. This resets on its own after 90 seconds.</small>
   </section>
