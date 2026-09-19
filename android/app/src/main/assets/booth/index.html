@@ -7,6 +7,9 @@
 <style>
 @font-face{font-family:NameArtSerif;src:url('font/Cinzel.ttf') format('truetype');font-weight:600;font-display:block}
 @font-face{font-family:NameArtArabic;src:url('font/NotoSansArabic-Bold.ttf') format('truetype');font-weight:700;font-display:block}
+/* Aref Ruqaa (SIL OFL, licence in font/OFL-ArefRuqaa.txt): a Ruqaa calligraphic face, so a
+   guest's name is written rather than merely set. */
+@font-face{font-family:NameArtCalligraphy;src:url('font/ArefRuqaa-Bold.ttf') format('truetype');font-weight:700;font-display:block}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
 /* touch-action also kills double-tap-to-zoom, which user-scalable=no alone does not. */
@@ -19,11 +22,20 @@ body{--cream:#f4f2db;--green:#00b258;--rule:#4a5e8c;--panel:#151d44;background:u
 .poster{position:relative;width:100%;aspect-ratio:2/3;max-height:88vh;margin:auto;overflow:hidden;background:#f0e5d3;box-shadow:0 18px 64px #04091f99}
 .poster img,.poster canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
 
-/* The finished poster is drawn immediately, then resolves out of a blur across the
-   generating window, so the guest watches their own name come into focus. */
-#preview{transition:filter .5s linear,opacity .5s linear,transform .5s ease}
-.poster.working #preview{filter:blur(22px) saturate(.75);opacity:.35;transform:scale(1.04);animation:settle var(--gen) cubic-bezier(.3,.7,.2,1) forwards}
-@keyframes settle{to{filter:blur(0) saturate(1);opacity:1;transform:scale(1)}}
+/* The name is written on. #preview carries the lettering alone on a transparent canvas and
+   #bg carries the backdrop, so a soft-edged mask can sweep the letters while the artwork
+   behind them stays put. Masking is done on the compositor - redrawing a 1536x2304 canvas
+   every frame would not hold 60fps on the tablet. */
+.poster.working #preview{
+  -webkit-mask-image:linear-gradient(90deg,#000 0 33%,transparent 41% 100%);
+          mask-image:linear-gradient(90deg,#000 0 33%,transparent 41% 100%);
+  -webkit-mask-size:300% 100%;mask-size:300% 100%;
+  -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
+  will-change:mask-position;
+  animation:writeOn var(--gen) cubic-bezier(.32,.12,.24,1) forwards}
+@keyframes writeOn{
+  from{-webkit-mask-position:100% 0;mask-position:100% 0}
+  to{-webkit-mask-position:0% 0;mask-position:0% 0}}
 
 /* Gold sweep that travels the poster while it works. */
 .sweep{position:absolute;inset:0;pointer-events:none;opacity:0}
@@ -129,6 +141,7 @@ small{color:#8fa6c4;font-size:12px;line-height:1.6}
   </aside>
 </div>
 
+<script src="names.js"></script>
 <script src="profanity.js"></script>
 <script src="app.js"></script>
 </body>

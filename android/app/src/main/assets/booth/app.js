@@ -44,35 +44,73 @@ function loadImage(src) {
 }
 
 /* Mirrors renderNameArt(): backdrop, shrink-to-fit, gold stroke, then the emerald gradient fill. */
+/* The name block.
+
+   `image` may be null, which draws the lettering alone on a transparent canvas. The preview
+   uses that so the backdrop can sit in its own <img> underneath and the lettering can be
+   masked on its own for the writing reveal. The saved file is always drawn with the
+   background in the same call, so the two can never drift apart.
+
+   Up to three lines: what the guest typed, their name in Arabic calligraphy when we are sure
+   of it, and its meaning when that is well established. An unknown name is simply one line. */
 function drawPoster(ctx, image, rawName, design) {
   ctx.clearRect(0, 0, W, H);
-  ctx.drawImage(image, 0, 0, W, H);
+  if (image) ctx.drawImage(image, 0, 0, W, H);
   if (!rawName) return;
 
-  var arabic = /\p{Script=Arabic}/u.test(rawName);
-  var text = arabic ? rawName : rawName.toLocaleUpperCase('en');
-  var size = arabic ? 205 : 210;
-  var font = function () {
-    return (arabic ? '700 ' : '600 ') + size + 'px ' + (arabic ? 'NameArtArabic' : 'NameArtSerif');
-  };
+  var typedArabic = /\p{Script=Arabic}/u.test(rawName);
+  var entry = window.NameTable ? window.NameTable.lookup(rawName) : null;
 
-  ctx.font = font();
-  while (ctx.measureText(text).width > W * design.width && size > 50) { size -= 2; ctx.font = font(); }
+  var lines = [];
+  lines.push(typedArabic
+    ? { text: rawName, face: 'calligraphy', size: 250 }
+    : { text: rawName.toLocaleUpperCase('en'), face: 'latin', size: 210 });
+  if (!typedArabic && entry) lines.push({ text: entry.ar, face: 'calligraphy', size: 158 });
+  if (entry && entry.meaning) lines.push({ text: entry.meaning, face: 'meaning', size: 54 });
+
+  lines.forEach(function (line, index) {
+    ctx.font = faceFont(line.face, line.size);
+    while (ctx.measureText(line.text).width > W * design.width && line.size > 40) {
+      line.size -= 2;
+      ctx.font = faceFont(line.face, line.size);
+    }
+    // Ruqaa swings well below the baseline, so it is given more room than the Latin face.
+    line.height = line.size * (line.face === 'calligraphy' ? 1.02 : 0.76);
+    line.lead = index === 0 ? 0 : (line.face === 'meaning' ? line.size * 1.7 : line.size * 0.40);
+  });
+
+  var total = lines.reduce(function (sum, line) { return sum + line.height + line.lead; }, 0);
 
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.direction = arabic ? 'rtl' : 'ltr';
-
-  var x = W / 2, y = H * design.centre;
   ctx.lineJoin = 'round';
 
-  ctx.lineWidth = 5;
+  var y = H * design.centre - total / 2;
+  lines.forEach(function (line) {
+    y += line.lead + line.height / 2;
+    ctx.font = faceFont(line.face, line.size);
+    ctx.direction = line.face === 'calligraphy' ? 'rtl' : 'ltr';
+    if (line.face === 'meaning') drawMeaning(ctx, line.text, W / 2, y);
+    else drawEngraved(ctx, line.text, W / 2, y, line.size);
+    y += line.height / 2;
+  });
+}
+
+function faceFont(face, size) {
+  if (face === 'calligraphy') return '700 ' + size + 'px NameArtCalligraphy';
+  if (face === 'meaning') return '600 ' + size + 'px NameArtSerif';
+  return '600 ' + size + 'px NameArtSerif';
+}
+
+/* Gold edge over a deep green fill - the same treatment the server renderer uses. */
+function drawEngraved(ctx, text, x, y, size) {
+  ctx.lineWidth = Math.max(3, size * 0.024);
   ctx.shadowColor = '#44301880'; ctx.shadowBlur = 6; ctx.shadowOffsetX = 3; ctx.shadowOffsetY = 8;
   ctx.strokeStyle = '#76501e';
   ctx.strokeText(text, x, y + 2);
 
   ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
-  ctx.lineWidth = 3;
+  ctx.lineWidth = Math.max(2, size * 0.014);
   ctx.strokeStyle = '#d8b76f';
   ctx.strokeText(text, x, y);
 
@@ -82,6 +120,15 @@ function drawPoster(ctx, image, rawName, design) {
   fill.addColorStop(1, '#163d2b');
   ctx.fillStyle = fill;
   ctx.fillText(text, x, y);
+}
+
+/* The meaning is a caption, not a second title: no gold, no weight, well back. */
+function drawMeaning(ctx, text, x, y) {
+  ctx.shadowColor = 'transparent';
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '6px';
+  ctx.fillStyle = '#7d6539';
+  ctx.fillText(text.toLocaleUpperCase('en'), x, y);
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
 }
 
 function buildDesignPicker() {
@@ -109,11 +156,9 @@ document.documentElement.style.setProperty('--gen', GENERATE_MS + 'ms');
 
 function refreshPreview() {
   $('bg').src = chosen.src;
-  loadImage(chosen.src).then(function (image) {
-    // Screened, not merely well-formed: a blocked word must never reach the preview either.
-    // The tablet faces the queue, so drawing it there would defeat the point of refusing it.
-    drawPoster(pctx, image, nameIsUsable($('name').value) || '', chosen);
-  }).catch(function () {});
+  // Screened, not merely well-formed: a blocked word must never reach the preview either.
+  // The tablet faces the queue, so drawing it there would defeat the point of refusing it.
+  drawPoster(pctx, null, nameIsUsable($('name').value) || '', chosen);
 }
 
 function touch() {
@@ -245,6 +290,7 @@ async function create() {
     // Canvas silently falls back to a system font unless the face is actually loaded first.
     await document.fonts.load('600 210px NameArtSerif');
     await document.fonts.load('700 205px NameArtArabic');
+    await document.fonts.load('700 250px NameArtCalligraphy');
 
     var image = await loadImage(chosen.src);
     var out = document.createElement('canvas');
@@ -252,7 +298,7 @@ async function create() {
     drawPoster(out.getContext('2d'), image, name, chosen);
 
     // Draw the finished poster straight away; the CSS resolves it out of a blur.
-    drawPoster(pctx, image, name, chosen);
+    drawPoster(pctx, null, name, chosen);
 
     var dataUrl = out.toDataURL('image/jpeg', 0.94);
 
