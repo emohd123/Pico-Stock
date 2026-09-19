@@ -95,7 +95,7 @@ function drawPoster(ctx, image, rawName, design) {
 }
 
 function faceFont(face, size) {
-  if (face === 'calligraphy') return '700 ' + size + 'px NameArtCalligraphy';
+  if (face === 'calligraphy') return '400 ' + size + 'px NameArtCalligraphy';
   return '600 ' + size + 'px NameArtSerif';
 }
 
@@ -278,7 +278,7 @@ async function create() {
     // Canvas silently falls back to a system font unless the face is actually loaded first.
     await document.fonts.load('600 210px NameArtSerif');
     await document.fonts.load('700 205px NameArtArabic');
-    await document.fonts.load('700 250px NameArtCalligraphy');
+    await document.fonts.load('400 250px NameArtCalligraphy');
 
     var image = await loadImage(chosen.src);
     var out = document.createElement('canvas');
@@ -331,6 +331,20 @@ $('create').addEventListener('click', create);
 $('finish').addEventListener('click', reset);
 document.addEventListener('touchstart', touch, { passive: true });
 
+/* Canvas never triggers @font-face loading - only text in the document does. NameArtSerif and
+   NameArtArabic are pulled in by the markup, but the calligraphic face appears nowhere except
+   in a canvas call, so without this it silently falls back to a system Naskh and the guest
+   gets ordinary type where the calligraphy should be. Prime it, then redraw. */
+function primeFonts() {
+  if (!document.fonts || !document.fonts.load) return;
+  Promise.all([
+    document.fonts.load('600 210px NameArtSerif'),
+    document.fonts.load('700 205px NameArtArabic'),
+    document.fonts.load('400 250px NameArtCalligraphy')
+  ]).then(refreshPreview, function () {});
+}
+
 buildDesignPicker();
+primeFonts();
 validate();
 refreshPreview();

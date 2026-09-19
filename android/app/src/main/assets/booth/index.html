@@ -7,9 +7,11 @@
 <style>
 @font-face{font-family:NameArtSerif;src:url('font/Cinzel.ttf') format('truetype');font-weight:600;font-display:block}
 @font-face{font-family:NameArtArabic;src:url('font/NotoSansArabic-Bold.ttf') format('truetype');font-weight:700;font-display:block}
-/* Aref Ruqaa (SIL OFL, licence in font/OFL-ArefRuqaa.txt): a Ruqaa calligraphic face, so a
-   guest's name is written rather than merely set. */
-@font-face{font-family:NameArtCalligraphy;src:url('font/ArefRuqaa-Bold.ttf') format('truetype');font-weight:700;font-display:block}
+/* Rakkas (SIL OFL, licence in font/OFL-Rakkas.txt): a heavy Diwani-flavoured display face.
+   Chosen over Aref Ruqaa for the weight and the sweeping descenders of ornate Arabic
+   calligraphy. Note it ships one weight only, so the face is never asked for bold - a
+   synthesised bold would thicken the strokes unevenly and lose the calligraphic contrast. */
+@font-face{font-family:NameArtCalligraphy;src:url('font/Rakkas-Regular.ttf') format('truetype');font-weight:400;font-display:block}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
 /* touch-action also kills double-tap-to-zoom, which user-scalable=no alone does not. */
