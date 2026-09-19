@@ -49,3 +49,7 @@
 @keyframes pearlFloat{0%,100%{transform:translateY(0);opacity:.25}50%{transform:translateY(-18px);opacity:.7}}
 @media(max-width:720px){.pairLayout,.tabletGrid{grid-template-columns:1fr;gap:28px}.pairLayout>.poster{width:160px}.tabletPreview{height:35svh}.panel{margin:auto;width:100%;gap:18px}.device{padding:24px}.tabletHeader{margin-bottom:20px}.tabletHeader .connection{max-width:130px;text-align:right}.panel h1{font-size:34px}.screenQr{padding:8px;gap:9px}.screenQr img{width:98px}}
 @media(prefers-reduced-motion:reduce){.poster *,.poster::after{animation:none!important;transition:none!important}}
+.designs{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.designs button{display:flex;flex-direction:column;gap:8px;padding:8px;border:1px solid #b79b7080;border-radius:8px;background:#fffdf8;color:#153e2e;font:600 12px/1.35 Arial,sans-serif;cursor:pointer;text-align:center}
+.designs button[data-active='true']{border-color:#ae7e36;box-shadow:inset 0 0 0 2px #ae7e36}
+.designs img{display:block;width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:4px;background:#f0e5d3}

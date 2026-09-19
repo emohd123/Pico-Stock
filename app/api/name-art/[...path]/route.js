@@ -42,7 +42,7 @@ async function share(token) {
   if (!job || !['queued', 'showing', 'displayed'].includes(job.status) || Date.parse(job.expiresAt) < Date.now()) fail('This poster link has expired', 410);
   return job;
 }
-function publicJob(job) { return { id: job.id, name: job.name, background: job.background, status: job.status, shareToken: job.shareToken, expiresAt: job.expiresAt, startedAt: job.startedAt, duration: job.duration }; }
+function publicJob(job) { return { id: job.id, name: job.name, background: job.background, status: job.status, shareToken: job.shareToken, expiresAt: job.expiresAt, startedAt: job.startedAt, duration: job.duration, finishAt: job.finishAt || null }; }
 async function cleanupExpired() {
   const expired = (await list('name-art:job:')).filter(job => Date.parse(job.expiresAt) < Date.now());
   for (const job of expired.slice(0, 100)) {
@@ -64,8 +64,10 @@ async function handler(request, { params }) {
       }
       if (p[1] === 'settings' && method === 'PATCH') {
         const b = await body(request), next = await settings();
-        if (!NAME_ART_BACKGROUNDS.some(item => item.id === b.background) || !Number.isInteger(b.duration) || b.duration < 8 || b.duration > 60 || !['reveal','gentle','none'].includes(b.motion) || typeof b.drift !== 'boolean' || typeof b.paused !== 'boolean') fail('Choose valid display settings');
-        Object.assign(next, { background:b.background, duration:b.duration, motion:b.motion, drift:b.drift, paused:b.paused });
+        if (!NAME_ART_BACKGROUNDS.some(item => item.id === b.background) || !Number.isInteger(b.duration) || b.duration < 8 || b.duration > 60 || !['reveal','gentle','none'].includes(b.motion) || typeof b.drift !== 'boolean' || typeof b.paused !== 'boolean' || !Number.isInteger(b.finishGrace) || b.finishGrace < 0 || b.finishGrace > 60) fail('Choose valid display settings');
+        // An empty permanent code disables it and leaves only one-use codes.
+        if (typeof b.pairingCode !== 'string' || !(b.pairingCode === '' || /^\d{8}$/.test(b.pairingCode))) fail('The permanent pairing code must be eight digits, or empty to switch it off');
+        Object.assign(next, { background:b.background, duration:b.duration, motion:b.motion, drift:b.drift, paused:b.paused, finishGrace:b.finishGrace, pairingCode:b.pairingCode });
         await write('name-art:settings', next); return json(next);
       }
       if (p[1] === 'pair' && method === 'POST') {
@@ -85,6 +87,14 @@ async function handler(request, { params }) {
     if (p[0] === 'pair' && method === 'POST') {
       await rate(`name-art-pair:${request.headers.get('x-forwarded-for') || 'local'}`,10,600);
       const b = await body(request); if (!/^\d{8}$/.test(b.code || '')) fail('Enter the eight-digit code');
+      // An unattended booth must be able to re-pair itself, so the permanent code is reusable and never expires.
+      // The role comes from the page the device is on, because a permanent code cannot carry one.
+      const config = await settings();
+      if (config.pairingCode && b.code === config.pairingCode) {
+        if (!['tablet','screen'].includes(b.role)) fail('Choose iPad or poster screen');
+        const token = secret(), device = { id:randomUUID(), role:b.role, label:b.role==='tablet'?'Name Art iPad':'Name Art poster screen', createdAt:new Date().toISOString(), revoked:false };
+        await write(`name-art:device:${hash(token)}`,device); return json({...device,token});
+      }
       const key = `name-art:pair:${hash(b.code)}`, pair = await read(key);
       if (!pair || pair.used || pair.expiresAt < Date.now()) fail('Pairing code expired or already used',401);
       if (b.role && b.role !== pair.role) fail('This code is for the other device. Use the matching iPad or screen code.',400);
@@ -113,6 +123,8 @@ async function handler(request, { params }) {
       if (device.role !== 'tablet') fail('Use the paired iPad to enter a name',403);
       const b = await body(request), name = cleanGuestName(b.name);
       if (!name || b.accepted !== true || !/^[a-f0-9-]{36}$/i.test(b.requestId || '')) fail('Enter a name up to 30 letters and confirm it may appear on screen');
+      // The guest picks the backdrop; it is baked into the rendered poster, so it must be chosen before generating.
+      if (!NAME_ART_BACKGROUNDS.some(item => item.id === b.background)) fail('Choose one of the National Day designs');
       const id = hash(`${device.id}:${b.requestId}`).slice(0,32), key = `name-art:job:${id}`, existing = await read(key);
       if (existing) { if (existing.status === 'rendering') fail('Poster is still being created. Please retry in a moment.',409); if(existing.status==='failed') fail('Creation failed; start a new poster',409); return json(publicJob(existing)); }
       await rate(`name-art-create:${device.id}`,12,60);
@@ -120,16 +132,28 @@ async function handler(request, { params }) {
       const jobs = await list('name-art:job:');
       if (jobs.filter(job => Date.parse(job.expiresAt)>Date.now() && ((job.status==='queued' && Date.parse(job.createdAt)>Date.now()-3600000) || (job.status==='rendering' && Date.parse(job.createdAt)>Date.now()-120000))).length >= 25) fail('The screen queue is full. Please try again shortly.',429);
       const now = Date.now(), shareToken = secret();
-      const job = {id,deviceId:device.id,name,background:config.background,shareToken,status:'rendering',createdAt:new Date(now).toISOString(),expiresAt:new Date(now+48*3600000).toISOString(),duration:config.duration};
+      const job = {id,deviceId:device.id,name,background:b.background,shareToken,status:'rendering',createdAt:new Date(now).toISOString(),expiresAt:new Date(now+48*3600000).toISOString(),duration:config.duration,finishAt:null};
       const inserted = await checked(table().upsert({name:key,value:JSON.stringify(job)},{onConflict:'name',ignoreDuplicates:true}).select('name'));
       if (!inserted.length) fail('Poster is already being created. Please retry shortly.',409);
       try {
-        const bytes = await renderNameArt(name,config.background);
+        const bytes = await renderNameArt(name,b.background);
         const {error} = await db().storage.from(bucket).upload(`name-art/${id}.jpg`,bytes,{contentType:'image/jpeg',upsert:false});
         if(error) fail('Poster storage unavailable',503);
         await write(`name-art:share:${hash(shareToken)}`,{id});
         job.status='queued'; await write(key,job); return json(publicJob(job));
       } catch(error) { await write(key,{...job,status:'failed'}); throw error; }
+    }
+    if (p[0] === 'finish' && method === 'POST') {
+      if (device.role !== 'tablet') fail('Use the paired iPad to finish a poster',403);
+      const b = await body(request);
+      if (!/^[a-f0-9]{32}$/.test(b.id || '')) fail('Poster not found',404);
+      const key = `name-art:job:${b.id}`, job = await read(key);
+      if (!job || job.deviceId !== device.id) fail('Poster not found',404);
+      if (job.finishAt || !['queued','showing'].includes(job.status)) return json(publicJob(job));
+      const config = await settings(), next = {...job,finishAt:new Date(Date.now()+config.finishGrace*1000).toISOString()};
+      // Compare-and-swap: the screen may be claiming this same job on its own poll.
+      if (!await swap(key,job,next)) return json(publicJob(await read(key)));
+      return json(publicJob(next));
     }
     if (p[0] === 'display' && method === 'GET') {
       if(device.role !== 'screen') fail('Use the paired poster screen',403);
@@ -137,7 +161,9 @@ async function handler(request, { params }) {
       const jobs=(await list('name-art:job:')).filter(job=>Date.parse(job.expiresAt)>Date.now()).sort((a,b)=>a.createdAt.localeCompare(b.createdAt));
       for(const record of jobs.filter(job=>job.status==='showing')) {
         const {key,...job}=record;
-        if(Date.parse(job.startedAt)+job.duration*1000>Date.now()) return json({settings:config,job:publicJob(job)});
+        // Whichever comes first: the display timer running out, or the grace period after the guest tapped Finish.
+        const until=Math.min(Date.parse(job.startedAt)+job.duration*1000, job.finishAt?Date.parse(job.finishAt):Infinity);
+        if(until>Date.now()) return json({settings:config,job:publicJob(job)});
         await swap(key,job,{...job,status:'displayed'});
       }
       const queued=jobs.find(job=>job.status==='queued'&&Date.parse(job.createdAt)>Date.now()-3600000);
