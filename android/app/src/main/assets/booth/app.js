@@ -110,7 +110,9 @@ document.documentElement.style.setProperty('--gen', GENERATE_MS + 'ms');
 function refreshPreview() {
   $('bg').src = chosen.src;
   loadImage(chosen.src).then(function (image) {
-    drawPoster(pctx, image, cleanGuestName($('name').value) || '', chosen);
+    // Screened, not merely well-formed: a blocked word must never reach the preview either.
+    // The tablet faces the queue, so drawing it there would defeat the point of refusing it.
+    drawPoster(pctx, image, nameIsUsable($('name').value) || '', chosen);
   }).catch(function () {});
 }
 
@@ -143,8 +145,36 @@ function reset() {
   refreshPreview();
 }
 
+/* A blocked name is refused quietly. The guest is told the name cannot be used, not which
+   rule caught it, so the screening does not become a game to beat. */
+var NAME_HINT = 'Please enter the name you would like on your poster.';
+
+function screener() {
+  return window.NameArtProfanity || null;
+}
+
+/* Returns the name to use, or '' when it is malformed or not fit for a public screen. */
+function nameIsUsable(raw) {
+  var name = cleanGuestName(raw);
+  if (!name) return '';
+  var guard = screener();
+  if (guard && !guard.isClean(name)) return '';
+  return name;
+}
+
 function validate() {
-  $('create').disabled = !cleanGuestName($('name').value);
+  var formatted = cleanGuestName($('name').value);
+  var usable = nameIsUsable($('name').value);
+  var box = $('err');
+  $('create').disabled = !usable;
+
+  // Only speak up once what they typed is a plausible name but not one we can display.
+  if (formatted && !usable) {
+    box.textContent = NAME_HINT;
+    box.hidden = false;
+  } else if (box.textContent === NAME_HINT) {
+    box.hidden = true;
+  }
 }
 
 function fail(message) {
@@ -195,8 +225,9 @@ function wait(ms) {
 }
 
 async function create() {
-  var name = cleanGuestName($('name').value);
-  if (!name) return;
+  // Re-screened here as well: validate() guards the button, this guards the render.
+  var name = nameIsUsable($('name').value);
+  if (!name) { validate(); return; }
   $('create').disabled = true;
   $('err').hidden = true;
 
