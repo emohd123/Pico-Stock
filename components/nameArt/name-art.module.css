@@ -30,7 +30,10 @@
 .tabletPreview{width:min(100%,52svh);aspect-ratio:2/3;justify-self:center}.tabletPreview>.poster{width:100%;height:auto}
 .arabicIntro{font-family:NameArtArabic,Arial,sans-serif}
 .downloadQr{width:160px;height:160px;align-self:flex-start;background:#fff;padding:0;border:1px solid #e5d8bc;border-radius:6px}
-.screen{position:relative;height:100svh;height:100dvh;overflow:hidden;display:grid;place-items:center;background:#e9dcc8}
+.screen{position:relative;height:100svh;height:100dvh;overflow:hidden;display:grid;place-items:center;background:#0d1533}
+/* The idle plate: the National Day key artwork, full bleed. It is a finished composition, so it
+   is shown whole rather than washed or blurred the way a guest backdrop is. */
+.screenIdle{position:absolute;inset:0;background:url('/name-art/idle-national-day.webp') center/cover no-repeat #0d1533}
 .screenWash{position:absolute;inset:-35px;background-size:cover;background-position:center;filter:blur(25px);opacity:.6}
 .screen>.poster{height:min(100dvh,150vw);width:min(100vw,66.6667dvh);box-shadow:none}
 .invitation{position:absolute;left:10%;right:10%;top:37%;text-align:center;pointer-events:none}

@@ -35,9 +35,12 @@ export default function NameArtDevice({ role }) {
   if(!loaded)return <main className={styles.device}><p>Opening Name Art…</p></main>;
   if(!token)return <main className={styles.device}><div className={styles.pairLayout}><NamePoster name="FAISAL"/><form className={styles.panel} onSubmit={pair}><span className={styles.eyebrow}>PICO · NAME ART</span><h1>{role==='screen'?'Connect your poster screen.':'Connect your iPad.'}</h1><p>Enter the one-use code from Name Art in the admin.</p><label>Pairing code<input inputMode="numeric" autoComplete="off" maxLength={8} value={code} onChange={e=>setCode(e.target.value.replace(/\D/g,''))} placeholder="8-digit code" required/></label><button className={styles.primary} disabled={busy||code.length!==8}>{busy?'Connecting…':'Connect device'}</button>{error&&<p className={styles.error} role="alert">{error}</p>}{install&&<button type="button" className={styles.secondary} onClick={()=>install.prompt()}>Install on this Android screen</button>}<small>Android: Chrome menu → Install app or Add to Home screen. iPad: Safari → Share → Add to Home Screen.</small></form></div></main>;
   if(role==='screen')return <main className={styles.screen}>
-    <div className={styles.screenWash} style={{backgroundImage:`url(/name-art/${job?.background||config.background}.webp)`}}/>
-    <NamePoster name={job?.name} background={job?.background||config.background} image={job?`${API}/poster/${job.shareToken}/image`:null} motion={config.motion} drift={!job&&config.drift}/>
-    {/* Between guests the screen rests on the National Day artwork alone: no name, no overlay, no QR. */}
+    {/* Between guests the screen rests on the fixed National Day artwork alone: no name, no
+        overlay, no QR. A guest's poster replaces it outright rather than sitting on top of it. */}
+    {job
+      ? <><div className={styles.screenWash} style={{backgroundImage:`url(/name-art/${job.background}.webp)`}}/>
+          <NamePoster name={job.name} background={job.background} image={`${API}/poster/${job.shareToken}/image`} motion={config.motion} drift={false}/></>
+      : <div className={styles.screenIdle}/>}
     <div className={styles.screenTools}><button onClick={fullscreen} aria-label="Full screen">⛶</button>{install&&<button onClick={()=>install.prompt()}>Install</button>}<span data-connected={connected}>{connected?'Connected':'Reconnecting…'}</span></div>
     {error&&<p className={styles.connectionError} role="status">{error}</p>}
   </main>;
