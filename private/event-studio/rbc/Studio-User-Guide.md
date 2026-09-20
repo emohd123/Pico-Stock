@@ -7,7 +7,7 @@ Open https://pico-stock.vercel.app/admin/pico-ai/royal-bahrain-concours-2026 and
 - **Orbit:** drag to rotate, scroll to zoom, and right-drag to pan. Select a named location in the Site panel to move directly to it.
 - **Plan:** view the calibrated layout from above, with the roofs lifted off so you can see inside. The minimap also takes you to another part of the site.
 - **Plan interior:** with a tent selected, this frames that tent alone and draws a one-metre setting-out grid across its floor, so you can read and check furniture positions against real distances.
-- **Walk:** drag to look and use WASD or arrow keys. Shift moves faster. Touch devices have on-screen directional buttons. Use **Enter tent** in the inspector for an interior view.
+- **Walk:** click the view once and the mouse turns your head; press Escape to give the mouse back, or just drag if you prefer holding on. **W** walks forward and **S** back, **A** and **D** turn you left and right, **Q** and **E** step sideways without turning, and Shift hurries. Arrow keys do the same as WASD. Touch devices have on-screen buttons for walking and turning. Use **Enter tent** in the inspector for an interior view.
 - Roofs, walls, location labels, and evening lighting have separate controls along the bottom of the view.
 - **Views** contains saved cameras and the guided tour. Save your own viewpoint with a name.
 
