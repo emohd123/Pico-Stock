@@ -156,6 +156,43 @@ await test('a tent pitched over a bunker is reported',()=>{
   assert.deepEqual(courseFeaturesUnder(scene,over),['a bunker']);
   assert.deepEqual(courseFeaturesUnder(scene,clear),[]);
 });
+await test('the everyday playing surface is not reported as a problem',()=>{
+  // the whole event stands on the fairway and the practice ground, so flagging those buries the real cases
+  const surface=kind=>({id:'venue-'+kind,name:kind,kind:'ground',position:[0,0,0],rotation:[0,0,0],dimensions:[40,.02,40],
+    points:[[-20,-20],[20,-20],[20,20],[-20,20]],metadata:{surface:kind}});
+  const tent={id:'T',name:'T',kind:'tent',position:[0,0,0],rotation:[0,0,0],dimensions:[6,4,6]};
+  for(const benign of ['fairway','driving_range'])
+    assert.deepEqual(courseFeaturesUnder({site:{},objects:[surface(benign),tent]},tent),[],`${benign} is not a build problem`);
+  assert.deepEqual(courseFeaturesUnder({site:{},objects:[surface('cartpath'),tent]},tent),['a cart path']);
+  const scene=JSON.parse(readFileSync('private/event-studio/rbc/site-seed.json','utf8'));
+  const flagged=scene.objects.filter(o=>courseFeaturesUnder(scene,o).length);
+  assert.equal(flagged.length,9,`the delivered layout has nine structures needing ground works, got ${flagged.length}`);
+});
+await test('dragging a piece across the slope does not make it climb',()=>{
+  // the renderer draws a root at stored elevation PLUS the ground under it; the write-back has to
+  // take the ground back off, using the ground where the piece was dropped
+  const site={terrain:{model:'plane',northFallPerMetre:-0.006685,crossFallPerMetre:0,referenceX:0}};
+  const tent={id:'T',kind:'tent',position:[200,0,0],dimensions:[10,4,10],rotation:[0,0,0]};
+  const scene={site,objects:[tent]};
+  const groundAt=(x,z)=>standingHeight(scene,{...tent,position:[x,0,z]});
+  let stored=tent.position[1], x=200, z=0;
+  for(const [nx,nz] of [[200,0],[-260,40],[0,-120],[286,140],[-286,-140]]){
+    const worldY=stored+groundAt(x,z);        // where the gizmo picked it up
+    stored=+(worldY-groundAt(nx,nz)).toFixed(3); // what the write-back stores after the move
+    x=nx;z=nz;
+    assert.ok(Math.abs(stored+groundAt(x,z)-worldY)<1.5e-3,'it is redrawn at the height the user left it, within the stored precision');
+  }
+  assert.ok(Math.abs(stored)<3.9,`stored elevation stays sane, got ${stored}`);
+});
+await test('the delivered site states which way north is, because the names do not',()=>{
+  const scene=JSON.parse(readFileSync('private/event-studio/rbc/site-seed.json','utf8'));
+  assert.equal(scene.site.terrain.orientation.northAxis,'+X');
+  assert.equal(scene.site.terrain.orientation.eastAxis,'+Z');
+  // the trap: objects named north sit at negative Z, which is west once the sheet is turned
+  const north=scene.objects.find(o=>o.id==='toilet-north-a'),south=scene.objects.find(o=>o.id==='toilet-south');
+  assert.ok(north.position[2]<south.position[2],'the names follow the drawing sheet, not the compass');
+  assert.ok(scene.site.assumptions.some(a=>a.includes('Read the geometry, not the names')));
+});
 await test('the delivered site carries the measured ground and the traced course',()=>{
   const scene=JSON.parse(readFileSync('private/event-studio/rbc/site-seed.json','utf8'));
   const terrain=scene.site.terrain;

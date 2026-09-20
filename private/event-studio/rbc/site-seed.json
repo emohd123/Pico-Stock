@@ -29,8 +29,9 @@
       "Roof heights and profiles, terrain, materials, generic vehicle bodies and vegetation are editable visual estimates.",
       "Source labels A1-A27, S1-S19 and V1-V6 are preserved; A27 is an open booth in the drawing.",
       "Venue appearance refined from official organizer and venue photographs plus DP World Tour 2026 aerial site map. Clubhouse/Majlis identity is corroborated; all heights and architectural detailing remain estimates. The map is used for permanent architecture only, not golf-tournament temporary structures.",
-      "Ground falls 3.8 m from the clubhouse end down to the lake end, 1 in 122, measured from public elevation models. Local mounding, bunker depth and green contours are not surveyed and are not modelled.",
-      "Existing course features are traced from OpenStreetMap and placed by fitting the plan lake to the mapped lake, which matched to 3.05 m. They are locked, and show where the event stands on the playing surface."
+      "Ground falls 3.8 m from the clubhouse end down to the lake end, 1 in 150 down the length of the site, measured from public elevation models. Local mounding, bunker depth and green contours are not surveyed and are not modelled.",
+      "Existing course features are traced from OpenStreetMap and placed by fitting the plan lake to the mapped lake, which matched to 3.05 m. They are locked, and show where the event stands on the playing surface.",
+      "True north is plan +X and east is plan +Z, established by fitting the plan lake to the mapped lake and confirmed by the clubhouse position. Object names containing north, south or east follow the source drawing sheet instead, which is turned from north (see sourceRotation), so \"North toilets\" sits on the west side of the site. Read the geometry, not the names."
     ],
     "appearance": {
       "turfColor": "#71924c"
@@ -85,7 +86,12 @@
         "ASTER GDEM 30 m",
         "Mapzen 30 m"
       ],
-      "notes": "Fall measured over 276 points on a 25 m grid across the event footprint. The two independent models agree on the north fall within 6% (-6.48 and -6.89 mm per metre) and give 1 in 122. They disagree on the direction of the cross fall, so the model carries none. After removing this plane the models still differ by 1.4-1.7 m RMS and correlate only 0.36, so local mounding, bunker depth and green contours are NOT represented: a 30-90 m elevation model cannot resolve them. Surveyed levels or a drone survey are needed for those."
+      "notes": "Fall measured over 276 points on a 25 m grid across the event footprint. The two independent models agree on the north fall within 6% (-6.48 and -6.89 mm per metre) and the north fall alone renders as 1 in 150. They disagree on the direction of the cross fall, so the model carries none; the 1 in 122 quoted by the plane fit was the combined gradient including that cross fall, and is not what is rendered. After removing this plane the models still differ by 1.4-1.7 m RMS and correlate only 0.36, so local mounding, bunker depth and green contours are NOT represented: a 30-90 m elevation model cannot resolve them. Surveyed levels or a drone survey are needed for those.",
+      "orientation": {
+        "northAxis": "+X",
+        "eastAxis": "+Z",
+        "note": "True north is plan +X and east is plan +Z, established by fitting the plan lake to the mapped lake and confirmed by the clubhouse position. Object names containing north, south or east follow the source drawing sheet instead, which is turned from north (see sourceRotation), so \"North toilets\" sits on the west side of the site. Read the geometry, not the names."
+      }
     }
   },
   "objects": [
