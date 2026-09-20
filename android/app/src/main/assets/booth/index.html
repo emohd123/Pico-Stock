@@ -7,11 +7,15 @@
 <style>
 @font-face{font-family:NameArtSerif;src:url('font/Cinzel.ttf') format('truetype');font-weight:600;font-display:block}
 @font-face{font-family:NameArtArabic;src:url('font/NotoSansArabic-Bold.ttf') format('truetype');font-weight:700;font-display:block}
-/* Rakkas (SIL OFL, licence in font/OFL-Rakkas.txt): a heavy Diwani-flavoured display face.
-   Chosen over Aref Ruqaa for the weight and the sweeping descenders of ornate Arabic
-   calligraphy. Note it ships one weight only, so the face is never asked for bold - a
-   synthesised bold would thicken the strokes unevenly and lose the calligraphic contrast. */
-@font-face{font-family:NameArtCalligraphy;src:url('font/Rakkas-Regular.ttf') format('truetype');font-weight:400;font-display:block}
+/* Three styles, each a PAIR: a Latin face and an Arabic hand chosen to sit together, so one
+   choice sets both lines of the poster. All SIL OFL, licences alongside the fonts. The Arabic
+   faces each ship a single weight, so they are asked for 400 - a synthesised bold would
+   thicken the strokes unevenly and lose exactly the contrast that makes them calligraphic. */
+@font-face{font-family:LatinOrnate;src:url('font/CinzelDecorative-Bold.ttf') format('truetype');font-weight:700;font-display:block}
+@font-face{font-family:LatinDelicate;src:url('font/Italiana-Regular.ttf') format('truetype');font-weight:400;font-display:block}
+@font-face{font-family:CalliOrnate;src:url('font/Rakkas-Regular.ttf') format('truetype');font-weight:400;font-display:block}
+@font-face{font-family:CalliClassic;src:url('font/Amiri-Bold.ttf') format('truetype');font-weight:400;font-display:block}
+@font-face{font-family:CalliDelicate;src:url('font/Vibes-Regular.ttf') format('truetype');font-weight:400;font-display:block}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
 /* touch-action also kills double-tap-to-zoom, which user-scalable=no alone does not. */
@@ -51,9 +55,9 @@ body{--cream:#f4f2db;--green:#00b258;--rule:#4a5e8c;--panel:#151d44;background:u
 .poster.revealed #preview{animation:pop .9s cubic-bezier(.2,.8,.25,1)}
 @keyframes pop{0%{transform:scale(1.015)}100%{transform:scale(1)}}
 
-.panel{display:flex;flex-direction:column;gap:20px;max-width:520px}
+.panel{display:flex;flex-direction:column;gap:13px;max-width:520px}
 .eyebrow{font-size:10px;font-weight:700;letter-spacing:.2em;color:#8eabc9}
-h1{font-family:NameArtSerif,Georgia,serif;font-size:clamp(30px,3.6vw,52px);font-weight:500;line-height:1.14;margin:0;letter-spacing:-.03em}
+h1{font-family:NameArtSerif,Georgia,serif;font-size:clamp(28px,3.1vw,45px);font-weight:500;line-height:1.14;margin:0;letter-spacing:-.03em}
 p{font-size:15px;line-height:1.6;margin:0;color:#b2c6e0}
 .ar{font-family:NameArtArabic,Arial,sans-serif}
 label.field{display:flex;flex-direction:column;gap:9px;font-size:13px;font-weight:600}
@@ -63,9 +67,17 @@ input[type=text]::placeholder{color:#8ca2c2}
 .inputRow input{flex:1;min-width:0}
 /* height matched to the field, width left to the browser: the flag is never stretched. */
 .flag{flex:none;height:68px;width:auto;display:block;border:2px solid #eef2fa}
-.designs{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
+.designs{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;max-width:76%}
 .designs button{display:flex;flex-direction:column;gap:7px;padding:7px;border:1px solid var(--rule);border-radius:8px;background:var(--panel);color:#dce6f4;font:600 12px/1.3 Arial,sans-serif;cursor:pointer}
 .designs button[aria-pressed=true]{border-color:var(--green);box-shadow:inset 0 0 0 2px var(--green)}
+/* Each chip shows the same word in its own hand, so the choice is made by eye rather than
+   from a style name nobody outside calligraphy would recognise. */
+.scripts{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
+.scripts button{display:flex;flex-direction:column;align-items:center;gap:0;padding:2px 6px 6px;border:1px solid var(--rule);border-radius:8px;background:var(--panel);color:#dce6f4;cursor:pointer}
+.scripts b{font-weight:400;font-size:29px;line-height:1.5;color:#f0e6c8}
+.scripts i{font-style:normal;font-size:12px;letter-spacing:.14em;color:#8eabc9}
+.scripts button[aria-pressed=true]{border-color:var(--green);box-shadow:inset 0 0 0 2px var(--green)}
+.scripts button[aria-pressed=true] i{color:#cfead9}
 .designs img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:4px;display:block;background:#f0e5d3}
 .primary{display:flex;align-items:center;justify-content:space-between;gap:18px;min-height:60px;border:0;border-radius:6px;background:var(--green);color:#06291a;padding:16px 24px;font:600 15px/1.5 Arial,sans-serif;cursor:pointer}
 .primary:disabled{opacity:.45}
@@ -108,6 +120,8 @@ small{color:#8fa6c4;font-size:12px;line-height:1.6}
     </label>
     <span class="eyebrow">CHOOSE YOUR DESIGN · اختر التصميم</span>
     <div class="designs" id="designs"></div>
+    <span class="eyebrow">CHOOSE YOUR STYLE · اختر النمط</span>
+    <div class="scripts" id="scripts"></div>
     <button class="primary" id="create" disabled>Create my name art <span>&#8599;</span></button>
     <p class="err" id="err" hidden></p>
     <small>English and Arabic names welcome. Works without internet.</small>

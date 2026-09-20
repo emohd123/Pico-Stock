@@ -25,8 +25,21 @@ var STEPS = [
   { at: 3300, en: 'Almost ready…',               ar: 'اقتربنا…' }
 ];
 
+/* The three styles. Each pairs a Latin face with an Arabic hand, so one tap restyles both
+   lines of the poster rather than leaving an ornate Arabic name under a plain Latin one.
+   The chip shows the Arabic word in its hand and its own label in its Latin face, so both
+   halves of the pairing are visible before the guest commits. All SIL OFL - see font/. */
+var SCRIPTS = [
+  { id: 'ornate',   face: 'CalliOrnate',   latin: 'LatinOrnate',   latinWeight: '700',
+    label: 'ORNATE',   sample: 'اسمك' },
+  { id: 'classic',  face: 'CalliClassic',  latin: 'NameArtSerif',  latinWeight: '600',
+    label: 'CLASSIC',  sample: 'اسمك' },
+  { id: 'delicate', face: 'CalliDelicate', latin: 'LatinDelicate', latinWeight: '400',
+    label: 'DELICATE', sample: 'اسمك' }
+];
+
 var $ = function (id) { return document.getElementById(id); };
-var chosen = DESIGNS[0], idleTimer = null, stepTimers = [];
+var chosen = DESIGNS[0], script = SCRIPTS[0], idleTimer = null, stepTimers = [];
 
 function cleanGuestName(value) {
   if (typeof value !== 'string') return '';
@@ -95,8 +108,8 @@ function drawPoster(ctx, image, rawName, design) {
 }
 
 function faceFont(face, size) {
-  if (face === 'calligraphy') return '400 ' + size + 'px NameArtCalligraphy';
-  return '600 ' + size + 'px NameArtSerif';
+  if (face === 'calligraphy') return '400 ' + size + 'px ' + script.face;
+  return script.latinWeight + ' ' + size + 'px ' + script.latin;
 }
 
 /* Gold edge over a deep green fill - the same treatment the server renderer uses. */
@@ -117,6 +130,27 @@ function drawEngraved(ctx, text, x, y, size) {
   fill.addColorStop(1, '#163d2b');
   ctx.fillStyle = fill;
   ctx.fillText(text, x, y);
+}
+
+function buildScriptPicker() {
+  var host = $('scripts');
+  SCRIPTS.forEach(function (option) {
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.setAttribute('aria-pressed', String(option === script));
+    button.innerHTML = '<b style="font-family:' + option.face + '">' + option.sample +
+                       '</b><i style="font-family:' + option.latin + ';font-weight:' +
+                       option.latinWeight + '">' + option.label + '</i>';
+    button.addEventListener('click', function () {
+      script = option;
+      Array.prototype.forEach.call(host.children, function (child, index) {
+        child.setAttribute('aria-pressed', String(SCRIPTS[index] === script));
+      });
+      refreshPreview();
+      touch();
+    });
+    host.appendChild(button);
+  });
 }
 
 function buildDesignPicker() {
@@ -166,6 +200,10 @@ function reset() {
   $('name').value = '';
   chosen = DESIGNS[0];
   Array.prototype.forEach.call($('designs').children, function (child, index) {
+    child.setAttribute('aria-pressed', String(index === 0));
+  });
+  script = SCRIPTS[0];
+  Array.prototype.forEach.call($('scripts').children, function (child, index) {
     child.setAttribute('aria-pressed', String(index === 0));
   });
   $('err').hidden = true;
@@ -276,9 +314,9 @@ async function create() {
   var startedAt = Date.now();
   try {
     // Canvas silently falls back to a system font unless the face is actually loaded first.
-    await document.fonts.load('600 210px NameArtSerif');
+    await document.fonts.load(script.latinWeight + ' 210px ' + script.latin);
     await document.fonts.load('700 205px NameArtArabic');
-    await document.fonts.load('400 250px NameArtCalligraphy');
+    await document.fonts.load('400 250px ' + script.face);
 
     var image = await loadImage(chosen.src);
     var out = document.createElement('canvas');
@@ -337,14 +375,16 @@ document.addEventListener('touchstart', touch, { passive: true });
    gets ordinary type where the calligraphy should be. Prime it, then redraw. */
 function primeFonts() {
   if (!document.fonts || !document.fonts.load) return;
-  Promise.all([
-    document.fonts.load('600 210px NameArtSerif'),
-    document.fonts.load('700 205px NameArtArabic'),
-    document.fonts.load('400 250px NameArtCalligraphy')
-  ]).then(refreshPreview, function () {});
+  var wanted = [document.fonts.load('700 205px NameArtArabic')];
+  SCRIPTS.forEach(function (option) {
+    wanted.push(document.fonts.load('400 250px ' + option.face));
+    wanted.push(document.fonts.load(option.latinWeight + ' 210px ' + option.latin));
+  });
+  Promise.all(wanted).then(refreshPreview, function () {});
 }
 
 buildDesignPicker();
+buildScriptPicker();
 primeFonts();
 validate();
 refreshPreview();
