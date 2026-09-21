@@ -187,9 +187,23 @@ class BoothServer implements Runnable {
        the image on a timer, so the picture only changes when a guest actually makes one. */
     private String screenPage() {
         return "<!doctype html><html><head><meta charset=\"utf-8\">"
-                + "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
+                + "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1,"
+                + "maximum-scale=1,user-scalable=no,viewport-fit=cover\">"
+                /* These three are what let an iPad run this from the Home Screen with no
+                   address bar and no status bar. Mirrored to the LED through HDMI, any browser
+                   chrome would be on the wall all day, so this is the difference between the
+                   screen showing a poster and showing a web browser. */
+                + "<meta name=\"apple-mobile-web-app-capable\" content=\"yes\">"
+                + "<meta name=\"mobile-web-app-capable\" content=\"yes\">"
+                + "<meta name=\"apple-mobile-web-app-status-bar-style\" content=\"black-translucent\">"
+                + "<meta name=\"apple-mobile-web-app-title\" content=\"Name Art\">"
+                + "<meta name=\"theme-color\" content=\"#000000\">"
                 + "<title>Name Art</title><style>"
-                + "html,body{margin:0;height:100%;background:#0d1533;overflow:hidden;cursor:none}"
+                /* Black, not navy: whatever the panel does not fill is letterbox, and black
+                   letterbox on an LED wall reads as the wall ending rather than as a border. */
+                + "html,body{margin:0;height:100%;background:#000;overflow:hidden;cursor:none;"
+                + "-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;"
+                + "overscroll-behavior:none;touch-action:none}"
                 + "img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;"
                 + "transition:opacity .45s ease}"
                 + "</style></head><body>"
