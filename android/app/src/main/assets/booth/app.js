@@ -18,6 +18,7 @@ var W = 1536, H = 2304, IDLE_RESET_MS = 90000;
 // The render itself takes well under a second. The booth deliberately holds the moment so the
 // guest watches their name resolve, rather than having it appear before they have looked up.
 var GENERATE_MS = 4000;
+var SCREEN_STEP = { en: 'Putting your name on the big screen…', ar: 'نضع اسمك على الشاشة…' };
 var STEPS = [
   { at: 0,    en: 'Preparing your design…',      ar: 'نجهّز تصميمك…' },
   { at: 1100, en: 'Setting your name in gold…',  ar: 'نكتب اسمك بالذهب…' },
@@ -293,6 +294,25 @@ function runSteps() {
   });
 }
 
+/* Resolves once the poster is on the screen, or once we have waited long enough. Returns
+   immediately when nothing is being published, so an offline booth is not slowed down. */
+async function waitForScreen() {
+  if (!window.AndroidBooth || !window.AndroidBooth.cloudState) return;
+  var state = '';
+  try { state = window.AndroidBooth.cloudState(); } catch (error) { return; }
+  if (state === 'off' || state === 'failed') return;
+
+  $('step').textContent = SCREEN_STEP.en;
+  $('stepAr').textContent = SCREEN_STEP.ar;
+
+  var until = Date.now() + 13000;
+  while (Date.now() < until) {
+    await wait(400);
+    try { state = window.AndroidBooth.cloudState(); } catch (error) { return; }
+    if (state === 'shown' || state === 'failed' || state === 'off') return;
+  }
+}
+
 function wait(ms) {
   return new Promise(function (resolve) { setTimeout(resolve, ms); });
 }
@@ -356,6 +376,15 @@ async function create() {
 
     // Hold the full window even when the render finished in a fraction of it.
     await wait(Math.max(0, GENERATE_MS - (Date.now() - startedAt)));
+
+    /* Then hold a moment longer, until the name is actually on the big screen.
+
+       The upload and the screen's own poll take a couple of seconds, and handing a guest
+       their QR while the wall is still blank makes the booth look broken. So the generating
+       sequence simply continues with a line about the screen, and the QR arrives once the
+       poster is up. This waits on the real state rather than a guessed delay - and it caps
+       itself, so a screen that is switched off or offline never strands anybody. */
+    await waitForScreen();
 
     clearSteps();
     stage.classList.remove('working');

@@ -73,6 +73,14 @@ public class MainActivity extends Activity {
        The code is the booth's permanent pairing code: a kiosk has to recover unattended. */
     private static final String CLOUD_ENDPOINT = "https://pico-stock.vercel.app/api/name-art/booth";
     private static final String CLOUD_CODE = "23157741";
+    private static final String CLOUD_POSTER = "https://pico-stock.vercel.app/api/name-art/poster/";
+
+    /* Where the booth's poster has got to on its way to the big screen. The booth page waits
+       on this instead of guessing, so the QR appears when the name is actually on the wall
+       rather than while the guest is still looking at a blank screen.
+       off -> nothing in flight | uploading | waiting -> queued, not yet claimed
+       shown -> the screen is displaying it | failed -> gave up, carry on regardless */
+    private volatile String cloudState = "off";
 
     private final BoothServer server = new BoothServer();
     private int presses;
@@ -144,6 +152,19 @@ public class MainActivity extends Activity {
         super.onDestroy();
     }
 
+    private static String readAll(InputStream in) throws Exception {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        byte[] buffer = new byte[4096];
+        int read;
+        while ((read = in.read(buffer)) != -1) out.write(buffer, 0, read);
+        return out.toString("UTF-8");
+    }
+
+    /** One string field out of a small JSON reply, without pulling in a parser. */
+    private static String valueOf(String json, String key) {
+        try { return new JSONObject(json).optString(key, ""); } catch (Exception error) { return ""; }
+    }
+
     /** The National Day plate the poster screen rests on between guests. */
     private byte[] readAsset(String name) {
         try (InputStream in = getAssets().open(name)) {
@@ -204,6 +225,7 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void publishToCloud(final String dataUrl, final String name,
                                    final String background, final String requestId) {
+            cloudState = "uploading";
             new Thread(new Runnable() {
                 @Override public void run() {
                     HttpURLConnection connection = null;
@@ -224,8 +246,33 @@ public class MainActivity extends Activity {
                         byte[] out = payload.toString().getBytes("UTF-8");
                         connection.setFixedLengthStreamingMode(out.length);
                         try (OutputStream stream = connection.getOutputStream()) { stream.write(out); }
-                        Log.i("NameArt", "cloud publish: " + connection.getResponseCode());
+                        String reply = readAll(connection.getInputStream());
+                        String share = valueOf(reply, "shareToken");
+                        if (share.isEmpty()) { cloudState = "failed"; return; }
+
+                        /* Now wait for the screen to actually claim it. The laptop polls the
+                           site about once a second, so this is usually a second or two; the
+                           cap exists so a screen that is switched off never strands a guest. */
+                        cloudState = "waiting";
+                        long until = System.currentTimeMillis() + 12000;
+                        while (System.currentTimeMillis() < until) {
+                            Thread.sleep(700);
+                            HttpURLConnection look = null;
+                            try {
+                                look = (HttpURLConnection) new URL(CLOUD_POSTER + share).openConnection();
+                                look.setConnectTimeout(5000);
+                                look.setReadTimeout(8000);
+                                String status = valueOf(readAll(look.getInputStream()), "status");
+                                if ("showing".equals(status) || "displayed".equals(status)) {
+                                    cloudState = "shown";
+                                    return;
+                                }
+                            } catch (Exception ignored) {
+                            } finally { if (look != null) look.disconnect(); }
+                        }
+                        cloudState = "failed";
                     } catch (Exception error) {
+                        cloudState = "failed";
                         Log.i("NameArt", "cloud publish skipped: " + error.getMessage());
                     } finally {
                         if (connection != null) connection.disconnect();
@@ -233,6 +280,10 @@ public class MainActivity extends Activity {
                 }
             }, "cloud-publish").start();
         }
+
+        /** Where the poster has got to on its way to the screen; see cloudState. */
+        @JavascriptInterface
+        public String cloudState() { return cloudState; }
 
         /** Finish returns the poster screen to the idle plate for the next guest. */
         @JavascriptInterface

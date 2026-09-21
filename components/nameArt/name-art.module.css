@@ -49,7 +49,10 @@
 .invitation>span{font-size:clamp(12px,2vw,26px);color:#74654e}
 .screenQr{position:absolute;bottom:2.5%;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:16px;border:1px solid #b5965c;background:#fffcf4f5;border-radius:10px;padding:12px 18px;box-shadow:0 4px 24px #50381820;white-space:nowrap}
 .screenQr img{width:clamp(96px,17vw,220px);height:auto}.screenQr strong{display:block;font:500 clamp(18px,2.5vw,32px)/1.4 NameArtSerif,serif}.screenQr span{display:block;margin-top:8px;font-size:clamp(11px,1.6vw,20px);line-height:1.6;color:#76634b}.screenQr b{font-weight:400}
-.screenTools{position:absolute;left:10px;top:10px;display:flex;align-items:center;gap:8px;opacity:.45;transition:opacity .2s}.screenTools:hover,.screenTools:focus-within{opacity:1}.screenTools button{border:1px solid #a28a6044;background:#fffae9bd;border-radius:6px;padding:9px;color:#163d2b;cursor:pointer}.screenTools>span{font-size:10px}.screenTools>span[data-connected='false']{color:#9a1832}
+/* Invisible on the wall. The controls sit in a corner the operator can find with the
+   mouse; everything here is chrome, and chrome on a two-metre LED is a defect.
+   opacity:0 still takes pointer events, so the corner stays reachable. */
+.screenTools{position:absolute;left:0;top:0;display:flex;align-items:center;gap:8px;padding:10px 26px 26px 10px;opacity:0;transition:opacity .18s}.screenTools:hover,.screenTools:focus-within{opacity:1}.screenTools button{border:1px solid #a28a6044;background:#fffae9bd;border-radius:6px;padding:9px;color:#163d2b;cursor:pointer}.screenTools>span{font-size:10px}.screenTools>span[data-connected='false']{color:#9a1832}
 .connectionError{position:absolute;bottom:0;left:0;right:0;margin:0;padding:10px;background:#fff7e9;color:#902437;font-size:12px;text-align:center}
 .downloadPage{min-height:100svh;background:#f7f1e6;padding:34px 20px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:20px}.downloadPage h1{font-size:28px}.downloadPoster{width:min(100%,420px);box-shadow:0 12px 35px #74572c25}.downloadPage>.primary{width:min(100%,420px)}
 .device button:focus-visible,.screen button:focus-visible,.downloadPage a:focus-visible{outline:3px solid #ae7e36;outline-offset:4px}
