@@ -9,9 +9,10 @@
 
 // centre/width are fractions of the canvas: where the name sits and how wide it may run.
 var DESIGNS = [
-  { id: 'pearls',  name: 'Pearls & ribbons', src: 'img/pearls.webp',  centre: 0.46, width: 0.82 },
-  { id: 'skyline', name: 'Shared skyline',   src: 'img/skyline.webp', centre: 0.39, width: 0.82 },
-  { id: 'arch',    name: 'Heritage arch',    src: 'img/arch.webp',    centre: 0.45, width: 0.64 }
+  { id: 'gateway', name: 'Two shores',      src: 'img/gateway.webp', centre: 0.34, width: 0.80 },
+  { id: 'arch2',   name: 'Heritage arch',   src: 'img/arch2.webp',   centre: 0.46, width: 0.46 },
+  { id: 'shore',   name: 'Shared skyline',  src: 'img/shore.webp',   centre: 0.49, width: 0.68 },
+  { id: 'waves',   name: 'Gulf waves',      src: 'img/waves.webp',   centre: 0.49, width: 0.70 }
 ];
 var W = 1536, H = 2304, IDLE_RESET_MS = 90000;
 
