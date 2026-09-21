@@ -37,10 +37,12 @@ export default function NameArtDevice({ role }) {
   if(role==='screen')return <main className={styles.screen}>
     {/* Between guests the screen rests on the fixed National Day artwork alone: no name, no
         overlay, no QR. A guest's poster replaces it outright rather than sitting on top of it. */}
-    {job
-      ? <><div className={styles.screenWash} style={{backgroundImage:`url(/name-art/${job.background}.webp)`}}/>
-          <NamePoster name={job.name} background={job.background} image={`${API}/poster/${job.shareToken}/image`} motion={config.motion} drift={false}/></>
-      : <div className={styles.screenIdle}/>}
+    <div className={styles.screenStage}>
+      {job
+        ? <><div className={styles.screenWash} style={{backgroundImage:`url(/name-art/${job.background}.webp)`}}/>
+            <NamePoster name={job.name} background={job.background} image={`${API}/poster/${job.shareToken}/image`} motion={config.motion} drift={false}/></>
+        : <div className={styles.screenIdle}/>}
+    </div>
     <div className={styles.screenTools}><button onClick={fullscreen} aria-label="Full screen">⛶</button>{install&&<button onClick={()=>install.prompt()}>Install</button>}<span data-connected={connected}>{connected?'Connected':'Reconnecting…'}</span></div>
     {error&&<p className={styles.connectionError} role="status">{error}</p>}
   </main>;

@@ -30,12 +30,18 @@
 .tabletPreview{width:min(100%,52svh);aspect-ratio:2/3;justify-self:center}.tabletPreview>.poster{width:100%;height:auto}
 .arabicIntro{font-family:NameArtArabic,Arial,sans-serif}
 .downloadQr{width:160px;height:160px;align-self:flex-start;background:#fff;padding:0;border:1px solid #e5d8bc;border-radius:6px}
-.screen{position:relative;height:100svh;height:100dvh;overflow:hidden;display:grid;place-items:center;background:#0d1533}
+.screen{position:relative;height:100svh;height:100dvh;overflow:hidden;display:grid;place-items:center;background:#000}
+/* The LED panel is 2m tall by 1m wide - exactly 1:2. The stage is locked to that shape and
+   centred, so whatever the laptop's own aspect is, the picture the controller captures has
+   the panel's proportions and nothing is stretched or cropped to fit. Everything outside it
+   is black, which on an LED wall reads as the wall ending rather than as a border. */
+.screenStage{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  aspect-ratio:1/2;height:min(100dvh,200vw);overflow:hidden;background:#0d1533}
 /* The idle plate: the National Day key artwork, full bleed. It is a finished composition, so it
    is shown whole rather than washed or blurred the way a guest backdrop is. */
-.screenIdle{position:absolute;inset:0;background:url('/name-art/idle-national-day.webp') center/cover no-repeat #0d1533}
+.screenIdle{position:absolute;inset:0;background:url('/name-art/idle-national-day.webp') center/100% 100% no-repeat #0d1533}
 .screenWash{position:absolute;inset:-35px;background-size:cover;background-position:center;filter:blur(25px);opacity:.6}
-.screen>.poster{height:min(100dvh,150vw);width:min(100vw,66.6667dvh);box-shadow:none}
+.screenStage>.poster{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:100%;height:auto;max-height:100%;box-shadow:none}
 .invitation{position:absolute;left:10%;right:10%;top:37%;text-align:center;pointer-events:none}
 .invitation small{font-size:clamp(9px,1.8vw,22px);letter-spacing:.24em;color:#92713d}
 .invitation h1{font:700 clamp(30px,6vw,85px)/1.8 NameArtArabic,serif;color:#163d2b;margin:12px 0 0}

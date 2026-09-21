@@ -204,10 +204,15 @@ class BoothServer implements Runnable {
                 + "html,body{margin:0;height:100%;background:#000;overflow:hidden;cursor:none;"
                 + "-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;"
                 + "overscroll-behavior:none;touch-action:none}"
+                /* The LED panel is 2m by 1m - exactly 1:2. The stage is locked to that shape
+                   and centred, so whatever the display's own aspect is, what the controller
+                   captures has the panel's proportions with nothing stretched or cropped. */
+                + "#stage{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);"
+                + "aspect-ratio:1/2;height:min(100dvh,200vw);overflow:hidden;background:#0d1533}"
                 + "img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;"
                 + "transition:opacity .45s ease}"
                 + "</style></head><body>"
-                + "<img id=\"a\" src=\"/current.jpg?v=0\" alt=\"\">"
+                + "<div id=\"stage\"><img id=\"a\" src=\"/current.jpg?v=0\" alt=\"\"></div>"
                 + "<script>"
                 + "var shown=-1,img=document.getElementById('a');"
                 + "function tick(){"
