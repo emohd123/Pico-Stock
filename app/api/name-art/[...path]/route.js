@@ -28,6 +28,14 @@ async function body(request) {
   const text = await request.text(); if (text.length > 4096) fail('Request too large', 413);
   try { return JSON.parse(text); } catch { fail('Invalid request'); }
 }
+/* The booth posts a rendered poster, which is megabytes rather than the few hundred bytes
+   every other endpoint takes. It gets its own reader so the tight 4KB cap keeps protecting
+   the rest; the ceiling here is set by the platform's own request limit, and the byte check
+   on the decoded image is what actually bounds what gets stored. */
+async function largeBody(request) {
+  const text = await request.text(); if (text.length > 4400000) fail('Poster image too large', 413);
+  try { return JSON.parse(text); } catch { fail('Invalid request'); }
+}
 async function paired(request, role) {
   const token = request.headers.get('x-name-art-token') || '';
   if (!/^[a-f0-9]{64}$/.test(token)) fail('Pair this device to continue', 401);
@@ -128,7 +136,7 @@ async function handler(request, { params }) {
        because the booth is a kiosk that must recover on its own after a reboot with nobody
        there to pair it. */
     if (p[0] === 'booth' && method === 'POST') {
-      const b = await body(request);
+      const b = await largeBody(request);
       const config = await settings();
       if (!b.code || String(b.code) !== String(config.pairingCode)) fail('Not found', 404);
       if (config.paused) fail('The experience is paused', 409);
@@ -141,7 +149,7 @@ async function handler(request, { params }) {
       const comma = jpeg.indexOf(',');
       const bytes = Buffer.from(comma > -1 ? jpeg.slice(comma + 1) : jpeg, 'base64');
       // A poster is a few hundred KB; anything outside this is not one.
-      if (bytes.length < 20000 || bytes.length > 4000000) fail('Poster image missing or too large');
+      if (bytes.length < 20000 || bytes.length > 3000000) fail('Poster image missing or too large');
       // Trust the extension for nothing: check it really is a JPEG.
       if (bytes[0] !== 0xff || bytes[1] !== 0xd8) fail('Poster must be a JPEG');
 
