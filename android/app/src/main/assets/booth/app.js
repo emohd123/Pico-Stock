@@ -341,6 +341,19 @@ async function create() {
       saved = window.AndroidBooth.savePoster(dataUrl, file);
     }
 
+    /* Mirror the poster to the website so a laptop on any network can show it. Fire and
+       forget: the booth works offline, so this must never delay or fail a guest's poster. */
+    try {
+      if (window.AndroidBooth && window.AndroidBooth.publishToCloud) {
+        var requestId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+          : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+              var r = Math.random() * 16 | 0;
+              return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+            });
+        window.AndroidBooth.publishToCloud(dataUrl, name, chosen.id, requestId);
+      }
+    } catch (error) { }
+
     // Hold the full window even when the render finished in a fraction of it.
     await wait(Math.max(0, GENERATE_MS - (Date.now() - startedAt)));
 

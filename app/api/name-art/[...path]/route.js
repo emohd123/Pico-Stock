@@ -117,6 +117,54 @@ async function handler(request, { params }) {
       }
       return json(publicJob(job));
     }
+    /* The offline booth publishes here.
+
+       It posts the poster it already rendered rather than a name to render: the booth draws
+       Arabic calligraphy and a chosen pair of faces that this server's renderer knows nothing
+       about, so re-rendering here would put a different poster on the screen from the one in
+       the guest's hands. The bytes are stored exactly as the tablet made them.
+
+       It authenticates with the booth's permanent pairing code rather than a device token,
+       because the booth is a kiosk that must recover on its own after a reboot with nobody
+       there to pair it. */
+    if (p[0] === 'booth' && method === 'POST') {
+      const b = await body(request);
+      const config = await settings();
+      if (!b.code || String(b.code) !== String(config.pairingCode)) fail('Not found', 404);
+      if (config.paused) fail('The experience is paused', 409);
+      const name = cleanGuestName(b.name);
+      if (!name) fail('Enter a name up to 30 letters');
+      if (!NAME_ART_BACKGROUNDS.some(item => item.id === b.background)) fail('Choose one of the National Day designs');
+      if (!/^[a-f0-9-]{36}$/i.test(b.requestId || '')) fail('Missing request id');
+
+      const jpeg = String(b.image || '');
+      const comma = jpeg.indexOf(',');
+      const bytes = Buffer.from(comma > -1 ? jpeg.slice(comma + 1) : jpeg, 'base64');
+      // A poster is a few hundred KB; anything outside this is not one.
+      if (bytes.length < 20000 || bytes.length > 4000000) fail('Poster image missing or too large');
+      // Trust the extension for nothing: check it really is a JPEG.
+      if (bytes[0] !== 0xff || bytes[1] !== 0xd8) fail('Poster must be a JPEG');
+
+      const id = hash(`booth:${b.requestId}`).slice(0, 32), key = `name-art:job:${id}`;
+      const existing = await read(key);
+      if (existing) return json(publicJob(existing));
+      await rate('name-art-booth', 40, 60);
+
+      const now = Date.now(), shareToken = secret();
+      const job = { id, deviceId: 'booth', name, background: b.background, shareToken, status: 'rendering',
+        createdAt: new Date(now).toISOString(), expiresAt: new Date(now + 48 * 3600000).toISOString(),
+        duration: config.duration, finishAt: null };
+      const inserted = await checked(table().upsert({ name: key, value: JSON.stringify(job) }, { onConflict: 'name', ignoreDuplicates: true }).select('name'));
+      if (!inserted.length) return json(publicJob(await read(key)));
+      try {
+        const { error } = await db().storage.from(bucket).upload(`name-art/${id}.jpg`, bytes, { contentType: 'image/jpeg', upsert: false });
+        if (error) fail('Poster storage unavailable', 503);
+        await write(`name-art:share:${hash(shareToken)}`, { id });
+        job.status = 'queued'; await write(key, job);
+        return json(publicJob(job));
+      } catch (error) { await write(key, { ...job, status: 'failed' }); throw error; }
+    }
+
     const device = await paired(request);
     if (p[0] === 'bootstrap' && method === 'GET') return json({ device:{role:device.role,label:device.label},settings:await settings() });
     if (p[0] === 'jobs' && method === 'POST') {

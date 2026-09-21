@@ -35,6 +35,10 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 
+import java.net.HttpURLConnection;
+import java.net.URL;
+import org.json.JSONObject;
+import android.util.Log;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -65,6 +69,11 @@ public class MainActivity extends Activity {
 
     private WebView web;
     private WebViewAssetLoader assetLoader;
+    /* Where the booth mirrors finished posters so a laptop on any network can display them.
+       The code is the booth's permanent pairing code: a kiosk has to recover unattended. */
+    private static final String CLOUD_ENDPOINT = "https://pico-stock.vercel.app/api/name-art/booth";
+    private static final String CLOUD_CODE = "23157741";
+
     private final BoothServer server = new BoothServer();
     private int presses;
     private long firstPressAt;
@@ -180,6 +189,49 @@ public class MainActivity extends Activity {
             } catch (Exception error) {
                 return "";
             }
+        }
+
+        /**
+         * Publishes the finished poster to the website so a laptop anywhere can show it.
+         *
+         * The bytes already rendered on this tablet are what get uploaded - the server's own
+         * renderer does not know about the calligraphy faces, so asking it to re-render would
+         * put a different poster on the screen from the one in the guest's hands.
+         *
+         * Runs on its own thread and swallows every failure. The booth is offline-first: no
+         * guest should ever wait on this, and a dead network must not cost them their poster.
+         */
+        @JavascriptInterface
+        public void publishToCloud(final String dataUrl, final String name,
+                                   final String background, final String requestId) {
+            new Thread(new Runnable() {
+                @Override public void run() {
+                    HttpURLConnection connection = null;
+                    try {
+                        JSONObject payload = new JSONObject();
+                        payload.put("code", CLOUD_CODE);
+                        payload.put("name", name);
+                        payload.put("background", background);
+                        payload.put("requestId", requestId);
+                        payload.put("image", dataUrl);
+
+                        connection = (HttpURLConnection) new URL(CLOUD_ENDPOINT).openConnection();
+                        connection.setRequestMethod("POST");
+                        connection.setRequestProperty("Content-Type", "application/json");
+                        connection.setConnectTimeout(8000);
+                        connection.setReadTimeout(20000);
+                        connection.setDoOutput(true);
+                        byte[] out = payload.toString().getBytes("UTF-8");
+                        connection.setFixedLengthStreamingMode(out.length);
+                        try (OutputStream stream = connection.getOutputStream()) { stream.write(out); }
+                        Log.i("NameArt", "cloud publish: " + connection.getResponseCode());
+                    } catch (Exception error) {
+                        Log.i("NameArt", "cloud publish skipped: " + error.getMessage());
+                    } finally {
+                        if (connection != null) connection.disconnect();
+                    }
+                }
+            }, "cloud-publish").start();
         }
 
         /** Finish returns the poster screen to the idle plate for the next guest. */
