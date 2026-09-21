@@ -25,6 +25,11 @@ class BoothServer implements Runnable {
 
     private volatile byte[] latest;
     private volatile String latestName = "name-art.jpg";
+    /* The plate the screen rests on between guests, handed over once at startup. */
+    private volatile byte[] idle;
+    /* Bumped on every publish. /screen polls this and swaps the image only when it changes,
+       so the display does not flicker once a second for no reason. */
+    private volatile int version;
     private ServerSocket socket;
     private Thread thread;
 
@@ -44,6 +49,17 @@ class BoothServer implements Runnable {
     void publish(byte[] jpeg, String fileName) {
         latest = jpeg;
         if (fileName != null && !fileName.isEmpty()) latestName = fileName;
+        version++;
+    }
+
+    void setIdlePlate(byte[] jpeg) {
+        idle = jpeg;
+    }
+
+    /** Clears the screen back to the idle plate when a guest finishes. */
+    void clearPoster() {
+        latest = null;
+        version++;
     }
 
     /** The address a guest's phone should open; empty when the tablet is on no network. */
@@ -99,6 +115,35 @@ class BoothServer implements Runnable {
         OutputStream out = client.getOutputStream();
         byte[] poster = latest;
 
+        /* The poster screen. Served before the no-poster check because the screen has to show
+           something between guests too - an LED wall that goes blank until the first guest of
+           the day arrives looks broken rather than idle. */
+        if (path.startsWith("/screen")) {
+            byte[] body = screenPage().getBytes(StandardCharsets.UTF_8);
+            writeHead(out, "200 OK", "text/html; charset=utf-8", body.length, null);
+            out.write(body);
+            out.flush();
+            return;
+        }
+        if (path.startsWith("/version")) {
+            byte[] body = String.valueOf(version).getBytes(StandardCharsets.UTF_8);
+            writeHead(out, "200 OK", "text/plain; charset=utf-8", body.length, null);
+            out.write(body);
+            out.flush();
+            return;
+        }
+        if (path.startsWith("/current.jpg")) {
+            byte[] shown = poster != null ? poster : idle;
+            if (shown == null) {
+                writeHead(out, "404 Not Found", "text/plain; charset=utf-8", 0, null);
+            } else {
+                writeHead(out, "200 OK", "image/jpeg", shown.length, null);
+                out.write(shown);
+            }
+            out.flush();
+            return;
+        }
+
         if (poster == null) {
             byte[] body = page("<h1>Nothing yet</h1><p>Create your name art on the tablet, then scan again.</p>")
                     .getBytes(StandardCharsets.UTF_8);
@@ -135,6 +180,31 @@ class BoothServer implements Runnable {
         if (disposition != null) head.append("Content-Disposition: ").append(disposition).append("\r\n");
         head.append("\r\n");
         out.write(head.toString().getBytes(StandardCharsets.UTF_8));
+    }
+
+    /* Full-bleed, no chrome, no cursor: this is shown on an LED wall through an HDMI source,
+       so anything that is not the poster is a defect. It polls /version rather than reloading
+       the image on a timer, so the picture only changes when a guest actually makes one. */
+    private String screenPage() {
+        return "<!doctype html><html><head><meta charset=\"utf-8\">"
+                + "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
+                + "<title>Name Art</title><style>"
+                + "html,body{margin:0;height:100%;background:#0d1533;overflow:hidden;cursor:none}"
+                + "img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;"
+                + "transition:opacity .45s ease}"
+                + "</style></head><body>"
+                + "<img id=\"a\" src=\"/current.jpg?v=0\" alt=\"\">"
+                + "<script>"
+                + "var shown=-1,img=document.getElementById('a');"
+                + "function tick(){"
+                + "fetch('/version',{cache:'no-store'}).then(function(r){return r.text();})"
+                + ".then(function(v){v=parseInt(v,10);if(v===shown)return;"
+                + "var next=new Image();"
+                + "next.onload=function(){img.src=next.src;shown=v;};"
+                + "next.src='/current.jpg?v='+v;})"
+                + "['catch'](function(){});}"
+                + "tick();setInterval(tick,1000);"
+                + "</script></body></html>";
     }
 
     private String page(String body) {

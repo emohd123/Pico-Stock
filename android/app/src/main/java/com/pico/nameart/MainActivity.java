@@ -36,6 +36,7 @@ import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
@@ -109,6 +110,7 @@ public class MainActivity extends Activity {
         web.addJavascriptInterface(new Bridge(), "AndroidBooth");
 
         setContentView(web);
+        server.setIdlePlate(readAsset("booth/img/idle.jpg"));
         server.start();
         web.loadUrl(boothUrl());
     }
@@ -131,6 +133,19 @@ public class MainActivity extends Activity {
     protected void onDestroy() {
         server.stop();
         super.onDestroy();
+    }
+
+    /** The National Day plate the poster screen rests on between guests. */
+    private byte[] readAsset(String name) {
+        try (InputStream in = getAssets().open(name)) {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] buffer = new byte[16384];
+            int read;
+            while ((read = in.read(buffer)) != -1) out.write(buffer, 0, read);
+            return out.toByteArray();
+        } catch (Exception error) {
+            return null;
+        }
     }
 
     /** Exposed to the booth page as window.AndroidBooth. */
@@ -165,6 +180,12 @@ public class MainActivity extends Activity {
             } catch (Exception error) {
                 return "";
             }
+        }
+
+        /** Finish returns the poster screen to the idle plate for the next guest. */
+        @JavascriptInterface
+        public void clearScreen() {
+            server.clearPoster();
         }
 
         /** The fixed address behind the guest QR, or "" when the tablet is on no network. */

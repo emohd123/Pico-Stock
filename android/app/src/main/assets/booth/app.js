@@ -196,6 +196,8 @@ function clearSteps() {
 function reset() {
   clearTimeout(idleTimer);
   clearSteps();
+  // The poster screen follows the booth: once this guest is done their name comes off it.
+  try { if (window.AndroidBooth && window.AndroidBooth.clearScreen) window.AndroidBooth.clearScreen(); } catch (error) { }
   stage.classList.remove('working', 'revealed');
   $('name').value = '';
   chosen = DESIGNS[0];
