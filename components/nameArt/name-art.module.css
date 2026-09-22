@@ -5,7 +5,7 @@
 .device{min-height:100svh;padding:28px 5vw;background:radial-gradient(ellipse at 0 0,#eedac0,transparent 65%),#f8f4ec;display:flex;flex-direction:column;justify-content:center}
 .pairLayout,.tabletGrid{width:min(1200px,100%);margin:auto;display:grid;grid-template-columns:minmax(280px,.9fr) minmax(320px,1fr);gap:clamp(30px,7vw,100px);align-items:center}
 .pairLayout>.poster{width:min(100%,54svh);justify-self:center}
-.poster{position:relative;width:100%;aspect-ratio:2/3;overflow:hidden;isolation:isolate;background:#f0e5d3;box-shadow:0 14px 60px #674c2a20}
+.poster{position:relative;width:100%;aspect-ratio:1/2;overflow:hidden;isolation:isolate;background:#f0e5d3;box-shadow:0 14px 60px #674c2a20}
 .background,.resultLayer,.namePreview{display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
 .namePreview{overflow:visible}
 .resultLayer{clip-path:inset(25% 3% 33% 3%)}
@@ -27,7 +27,7 @@
 .panel .error,.error{color:#982c3d;font-size:13px}
 .tabletHeader{display:flex;justify-content:space-between;gap:20px;width:min(1200px,100%);margin:0 auto 24px}
 .connection{font-size:11px;color:#87685d}.connection[data-connected='true']{color:#2c6c50}
-.tabletPreview{width:min(100%,52svh);aspect-ratio:2/3;justify-self:center}.tabletPreview>.poster{width:100%;height:auto}
+.tabletPreview{width:min(100%,52svh);aspect-ratio:1/2;justify-self:center}.tabletPreview>.poster{width:100%;height:auto}
 .arabicIntro{font-family:NameArtArabic,Arial,sans-serif}
 .downloadQr{width:160px;height:160px;align-self:flex-start;background:#fff;padding:0;border:1px solid #e5d8bc;border-radius:6px}
 .screen{position:relative;height:100svh;height:100dvh;overflow:hidden;display:grid;place-items:center;background:#000}
@@ -64,4 +64,4 @@
 .designs{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .designs button{display:flex;flex-direction:column;gap:8px;padding:8px;border:1px solid #b79b7080;border-radius:8px;background:#fffdf8;color:#153e2e;font:600 12px/1.35 Arial,sans-serif;cursor:pointer;text-align:center}
 .designs button[data-active='true']{border-color:#ae7e36;box-shadow:inset 0 0 0 2px #ae7e36}
-.designs img{display:block;width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:4px;background:#f0e5d3}
+.designs img{display:block;width:100%;aspect-ratio:1/2;object-fit:cover;border-radius:4px;background:#f0e5d3}

@@ -9,12 +9,14 @@
 
 // centre/width are fractions of the canvas: where the name sits and how wide it may run.
 var DESIGNS = [
-  { id: 'gateway', name: 'Two shores',      src: 'img/gateway.webp', centre: 0.34, width: 0.80 },
-  { id: 'arch2',   name: 'Heritage arch',   src: 'img/arch2.webp',   centre: 0.46, width: 0.46 },
-  { id: 'shore',   name: 'Shared skyline',  src: 'img/shore.webp',   centre: 0.49, width: 0.68 },
-  { id: 'waves',   name: 'Gulf waves',      src: 'img/waves.webp',   centre: 0.49, width: 0.70 }
+  { id: 'gateway', name: 'Two shores',      src: 'img/gateway.webp', centre: 0.394, width: 0.80 },
+  { id: 'arch2',   name: 'Heritage arch',   src: 'img/arch2.webp',   centre: 0.445, width: 0.46 },
+  { id: 'shore',   name: 'Shared skyline',  src: 'img/shore.webp',   centre: 0.486, width: 0.68 },
+  { id: 'waves',   name: 'Gulf waves',      src: 'img/waves.webp',   centre: 0.486, width: 0.70 }
 ];
-var W = 1536, H = 2304, IDLE_RESET_MS = 90000;
+// The poster is 1:2, the shape of the LED panel, so it fills the screen edge to edge
+// instead of leaving bands above and below it.
+var W = 1536, H = 3072, IDLE_RESET_MS = 90000;
 
 // The render itself takes well under a second. The booth deliberately holds the moment so the
 // guest watches their name resolve, rather than having it appear before they have looked up.

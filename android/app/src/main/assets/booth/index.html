@@ -25,7 +25,9 @@ body{--cream:#f4f2db;--green:#00b258;--rule:#4a5e8c;--panel:#151d44;background:u
 .rail{align-self:start;display:flex;flex-direction:column;align-items:flex-end;gap:clamp(18px,3vh,34px);padding-top:10px}
 .rail img{display:block;width:100%;height:auto}
 
-.poster{position:relative;width:100%;aspect-ratio:2/3;max-height:88vh;margin:auto;overflow:hidden;background:#f0e5d3;box-shadow:0 18px 64px #04091f99}
+/* Driven by height, not width: max-height would otherwise override the ratio and the
+   preview would not be the shape of the poster the guest is about to get. */
+.poster{position:relative;aspect-ratio:1/2;height:86vh;width:auto;max-width:100%;margin:auto;overflow:hidden;background:#f0e5d3;box-shadow:0 18px 64px #04091f99}
 .poster img,.poster canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
 
 /* The name is written on. #preview carries the lettering alone on a transparent canvas and
@@ -67,7 +69,7 @@ input[type=text]::placeholder{color:#8ca2c2}
 .inputRow input{flex:1;min-width:0}
 /* height matched to the field, width left to the browser: the flag is never stretched. */
 .flag{flex:none;height:68px;width:auto;display:block;border:2px solid #eef2fa}
-.designs{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;max-width:92%}
+.designs{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;max-width:66%}
 .designs button{display:flex;flex-direction:column;gap:7px;padding:7px;border:1px solid var(--rule);border-radius:8px;background:var(--panel);color:#dce6f4;font:600 12px/1.3 Arial,sans-serif;cursor:pointer}
 .designs button[aria-pressed=true]{border-color:var(--green);box-shadow:inset 0 0 0 2px var(--green)}
 /* Each chip shows the same word in its own hand, so the choice is made by eye rather than
@@ -78,7 +80,7 @@ input[type=text]::placeholder{color:#8ca2c2}
 .scripts i{font-style:normal;font-size:12px;letter-spacing:.14em;color:#8eabc9}
 .scripts button[aria-pressed=true]{border-color:var(--green);box-shadow:inset 0 0 0 2px var(--green)}
 .scripts button[aria-pressed=true] i{color:#cfead9}
-.designs img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:4px;display:block;background:#f0e5d3}
+.designs img{width:100%;aspect-ratio:1/2;object-fit:cover;border-radius:4px;display:block;background:#f0e5d3}
 .primary{display:flex;align-items:center;justify-content:space-between;gap:18px;min-height:60px;border:0;border-radius:6px;background:var(--green);color:#06291a;padding:16px 24px;font:600 15px/1.5 Arial,sans-serif;cursor:pointer}
 .primary:disabled{opacity:.45}
 small{color:#8fa6c4;font-size:12px;line-height:1.6}
