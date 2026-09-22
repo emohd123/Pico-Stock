@@ -9,7 +9,7 @@
 .background,.resultLayer,.namePreview{display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
 .namePreview{overflow:visible}
 .resultLayer{clip-path:inset(25% 3% 33% 3%)}
-.poster[data-motion='reveal'] .resultLayer{animation:engravedReveal 1.5s cubic-bezier(.2,.75,.25,1) both}
+.poster[data-motion='reveal'] .resultLayer{animation:engravedReveal 1s cubic-bezier(.2,.75,.25,1) both}
 .poster[data-motion='gentle'] .resultLayer{animation:softReveal 1.2s ease both}
 .poster[data-drift='true']::after{content:'';position:absolute;inset:5%;pointer-events:none;background:radial-gradient(circle at 30% 50%,#d4ab5950 0 2px,transparent 4px),radial-gradient(circle at 70% 55%,#d4ab5940 0 2px,transparent 4px);animation:pearlFloat 8s ease-in-out infinite}
 .panel{display:flex;flex-direction:column;gap:22px;max-width:490px;align-items:stretch}
@@ -54,7 +54,7 @@
    opacity:0 still takes pointer events, so the corner stays reachable. */
 .screenTools{position:absolute;left:0;top:0;display:flex;align-items:center;gap:8px;padding:10px 26px 26px 10px;opacity:0;transition:opacity .18s}.screenTools:hover,.screenTools:focus-within{opacity:1}.screenTools button{border:1px solid #a28a6044;background:#fffae9bd;border-radius:6px;padding:9px;color:#163d2b;cursor:pointer}.screenTools>span{font-size:10px}.screenTools>span[data-connected='false']{color:#9a1832}
 .connectionError{position:absolute;bottom:0;left:0;right:0;margin:0;padding:10px;background:#fff7e9;color:#902437;font-size:12px;text-align:center}
-.downloadPage{min-height:100svh;background:#f7f1e6;padding:34px 20px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:20px}.downloadPage h1{font-size:28px}.downloadPoster{width:min(100%,420px);box-shadow:0 12px 35px #74572c25}.downloadPage>.primary{width:min(100%,420px)}
+.downloadPage{min-height:100svh;background:#f7f1e6;padding:34px 20px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:20px}.downloadPage h1{font-size:28px}.downloadPoster{width:auto;max-width:min(100%,420px);max-height:58svh;aspect-ratio:1/2;object-fit:contain;box-shadow:0 12px 35px #74572c25}.downloadPage>.primary{width:min(100%,420px)}
 .device button:focus-visible,.screen button:focus-visible,.downloadPage a:focus-visible{outline:3px solid #ae7e36;outline-offset:4px}
 @keyframes engravedReveal{from{opacity:0;filter:blur(5px);transform:translateY(6px)}to{opacity:1;filter:none;transform:none}}
 @keyframes softReveal{from{opacity:0}to{opacity:1}}

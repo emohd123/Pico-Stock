@@ -20,14 +20,38 @@ var W = 1536, H = 3072, IDLE_RESET_MS = 90000;
 
 // The render itself takes well under a second. The booth deliberately holds the moment so the
 // guest watches their name resolve, rather than having it appear before they have looked up.
-var GENERATE_MS = 4000;
+var GENERATE_MS = 3000;
 var SCREEN_STEP = { en: 'Putting your name on the big screen…', ar: 'نضع اسمك على الشاشة…' };
 var STEPS = [
   { at: 0,    en: 'Preparing your design…',      ar: 'نجهّز تصميمك…' },
-  { at: 1100, en: 'Setting your name in gold…',  ar: 'نكتب اسمك بالذهب…' },
-  { at: 2300, en: 'Engraving the lettering…',    ar: 'ننقش الحروف…' },
-  { at: 3300, en: 'Almost ready…',               ar: 'اقتربنا…' }
+  { at: 800,  en: 'Setting your name in gold…',  ar: 'نكتب اسمك بالذهب…' },
+  { at: 1700, en: 'Engraving the lettering…',    ar: 'ننقش الحروف…' },
+  { at: 2500, en: 'Almost ready…',               ar: 'اقتربنا…' }
 ];
+
+/* The selfie moment: once the name is actually on the wall, the guest gets a short countdown
+   to turn round and photograph it. While the band plays - 14:00 to 17:00 - the prompt is to
+   take the selfie with the band instead. Bahrain keeps UTC+3 all year, with no daylight
+   saving, so the window is worked out from UTC and does not depend on the tablet's zone. */
+var SELFIE_SECONDS = 5, BAND_FROM = 14, BAND_TO = 17;
+var SELFIE = {
+  name: { kicker: 'YOUR NAME IS ON THE BIG SCREEN', kickerAr: 'اسمك على الشاشة الكبيرة',
+          target: 'with your name!', ar: 'التقط سيلفي مع اسمك!',
+          turn: 'Turn around \u2014 it\u2019s behind you',
+          chips: [['Turn around', 'استدر'], ['Find your name', 'ابحث عن اسمك'], ['Snap!', 'التقط!']],
+          fx: ['\u2726', '\u2727', '\u2605', '\u2764'] },
+  band: { kicker: 'THE BAND IS LIVE RIGHT NOW', kickerAr: 'الفرقة على المسرح الآن',
+          target: 'with the band!', ar: 'التقط سيلفي مع الفرقة!',
+          turn: 'Turn around \u2014 the band\u2019s behind you',
+          chips: [['Face the stage', 'اتجه للمسرح'], ['Wave at the band', 'لوّح للفرقة'], ['Snap!', 'التقط!']],
+          fx: ['\u266A', '\u266B', '\u266C', '\u2726'] }
+};
+
+function bandIsOn() {
+  var now = new Date();
+  var hour = (now.getUTCHours() + 3) % 24 + now.getUTCMinutes() / 60;
+  return hour >= BAND_FROM && hour < BAND_TO;
+}
 
 /* The three styles. Each pairs a Latin face with an Arabic hand, so one tap restyles both
    lines of the poster rather than leaving an ornate Arabic name under a plain Latin one.
@@ -44,6 +68,8 @@ var SCRIPTS = [
 
 var $ = function (id) { return document.getElementById(id); };
 var chosen = DESIGNS[0], script = SCRIPTS[0], idleTimer = null, stepTimers = [];
+// Bumped on every reset, so a countdown or a QR still arriving for the last guest is dropped.
+var session = 0, selfieTimer = null, fxTimer = null;
 
 function cleanGuestName(value) {
   if (typeof value !== 'string') return '';
@@ -179,6 +205,7 @@ function buildDesignPicker() {
 var preview = $('preview'), pctx = preview.getContext('2d'), stage = $('stage');
 preview.width = W; preview.height = H;
 document.documentElement.style.setProperty('--gen', GENERATE_MS + 'ms');
+document.documentElement.style.setProperty('--selfie', SELFIE_SECONDS + 's');
 
 function refreshPreview() {
   $('bg').src = chosen.src;
@@ -198,8 +225,10 @@ function clearSteps() {
 }
 
 function reset() {
+  session++;
   clearTimeout(idleTimer);
   clearSteps();
+  stopSelfie();
   // The poster screen follows the booth: once this guest is done their name comes off it.
   try { if (window.AndroidBooth && window.AndroidBooth.clearScreen) window.AndroidBooth.clearScreen(); } catch (error) { }
   stage.classList.remove('working', 'revealed');
@@ -217,6 +246,7 @@ function reset() {
   $('qr').hidden = true;
   $('genPanel').hidden = true;
   $('donePanel').hidden = true;
+  $('selfiePanel').hidden = true;
   $('formPanel').hidden = false;
   validate();
   refreshPreview();
@@ -260,31 +290,56 @@ function fail(message) {
   box.hidden = false;
 }
 
-/* The fixed guest QR. It always points at this tablet, and the tablet always serves whatever
-   poster was generated most recently, so one printed code works for every guest. */
-function showGuestQr() {
-  var address = '';
+function bridgeCall(method, arg1, arg2) {
   try {
-    if (window.AndroidBooth && window.AndroidBooth.boothAddress) {
-      address = window.AndroidBooth.boothAddress();
+    var booth = window.AndroidBooth;
+    if (!booth || !booth[method]) return '';
+    return booth[method](arg1, arg2) || '';
+  } catch (error) { return ''; }
+}
+
+function drawQr(url) {
+  var png = bridgeCall('qrDataUrl', url, 480);
+  if (!png) return false;
+  $('qr').src = png;
+  $('qr').hidden = false;
+  return true;
+}
+
+/* The guest's QR opens their own poster on the website, which any phone can reach on any
+   network. It used to point at the tablet's own address, which only worked for a phone on
+   the tablet's Wi-Fi - most guests are on mobile data, so for them it simply did not open.
+
+   The link exists once the upload has returned, which is normally before the name reaches
+   the screen. When it has not arrived yet the panel says so and fills the code in as soon as
+   it does. With no internet at all it falls back to the tablet itself, which then only works
+   on the same Wi-Fi, and says as much. */
+function showGuestQr() {
+  var mine = session;
+  $('qr').hidden = true;
+  $('addr').textContent = '';
+  $('qrLead').textContent = 'Preparing your download link\u2026';
+
+  var until = Date.now() + 12000;
+  (function look() {
+    if (mine !== session) return;
+    var url = bridgeCall('shareUrl');
+    if (url && drawQr(url)) {
+      $('qrLead').textContent = 'Scan to download your poster.';
+      $('addr').textContent = 'pico-stock.vercel.app';
+      return;
     }
-  } catch (error) { address = ''; }
+    var state = bridgeCall('cloudState');
+    var gaveUp = state === 'failed' || state === 'off' || state === '' || Date.now() > until;
+    if (!gaveUp) { setTimeout(look, 400); return; }
 
-  if (!address) {
-    $('qr').hidden = true;
+    var local = bridgeCall('boothAddress');
+    if (local && drawQr(local)) {
+      $('qrLead').textContent = 'Join this tablet\u2019s Wi-Fi, then scan to download.';
+      return;
+    }
     $('qrLead').textContent = 'Your poster is saved on this tablet.';
-    $('addr').textContent = 'No network, so there is nothing for a phone to scan.';
-    return;
-  }
-
-  var png = '';
-  try { png = window.AndroidBooth.qrDataUrl(address, 480); } catch (error) { png = ''; }
-  if (png) {
-    $('qr').src = png;
-    $('qr').hidden = false;
-  }
-  $('qrLead').textContent = 'Scan to download your poster.';
-  $('addr').textContent = address;
+  })();
 }
 
 function runSteps() {
@@ -297,23 +352,107 @@ function runSteps() {
   });
 }
 
-/* Resolves once the poster is on the screen, or once we have waited long enough. Returns
-   immediately when nothing is being published, so an offline booth is not slowed down. */
+/* Resolves true once the poster is on the screen, false when it will not be - no network,
+   screen switched off - or once we have waited long enough. Returns at once when nothing is
+   being published, so an offline booth is not slowed down. */
 async function waitForScreen() {
-  if (!window.AndroidBooth || !window.AndroidBooth.cloudState) return;
-  var state = '';
-  try { state = window.AndroidBooth.cloudState(); } catch (error) { return; }
-  if (state === 'off' || state === 'failed') return;
+  var state = bridgeCall('cloudState');
+  if (state === 'shown') return true;
+  if (!state || state === 'off' || state === 'failed') return false;
 
   $('step').textContent = SCREEN_STEP.en;
   $('stepAr').textContent = SCREEN_STEP.ar;
 
-  var until = Date.now() + 13000;
+  var until = Date.now() + 9000;
   while (Date.now() < until) {
-    await wait(400);
-    try { state = window.AndroidBooth.cloudState(); } catch (error) { return; }
-    if (state === 'shown' || state === 'failed' || state === 'off') return;
+    await wait(250);
+    state = bridgeCall('cloudState');
+    if (state === 'shown') return true;
+    if (!state || state === 'failed' || state === 'off') return false;
   }
+  return false;
+}
+
+/* ---- The selfie moment ---- */
+
+function startFx(glyphs) {
+  var layer = $('fx');
+  clearInterval(fxTimer);
+  fxTimer = setInterval(function () {
+    if (layer.childElementCount > 18) return;          // keep the tablet's frame rate
+    var bit = document.createElement('span');
+    bit.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
+    bit.style.left = (4 + Math.random() * 92) + '%';
+    bit.style.fontSize = (18 + Math.random() * 26) + 'px';
+    bit.style.animationDuration = (2.6 + Math.random() * 1.8) + 's';
+    bit.addEventListener('animationend', function () { bit.remove(); });
+    layer.appendChild(bit);
+  }, 160);
+}
+
+function stopSelfie() {
+  clearInterval(selfieTimer);
+  clearInterval(fxTimer);
+  $('fx').textContent = '';
+  stage.classList.remove('live');
+  document.body.classList.remove('snap', 'bandMode');
+}
+
+function restartAnimation(el, name) {
+  el.classList.remove(name);
+  void el.offsetWidth;                                  // a reflow lets the same animation run again
+  el.classList.add(name);
+}
+
+function runSelfie() {
+  var mine = session;
+  var copy = bandIsOn() ? SELFIE.band : SELFIE.name;
+  document.body.classList.toggle('bandMode', copy === SELFIE.band);
+
+  $('selfieKicker').textContent = copy.kicker;
+  $('selfieKickerAr').textContent = copy.kickerAr;
+  $('selfieTarget').textContent = copy.target;
+  $('selfieAr').textContent = copy.ar;
+  $('turnText').textContent = copy.turn;
+  $('chips').innerHTML = copy.chips.map(function (chip) {
+    return '<li><b>' + chip[0] + '</b><span class="ar" dir="rtl">' + chip[1] + '</span></li>';
+  }).join('');
+
+  $('genPanel').hidden = true;
+  $('selfiePanel').hidden = false;
+  restartAnimation($('selfiePanel'), 'enter');
+  restartAnimation($('ringArc'), 'drain');
+  stage.classList.add('live');
+  startFx(copy.fx);
+
+  return new Promise(function (resolve) {
+    var left = SELFIE_SECONDS;
+    function show() {
+      $('selfieNum').textContent = left;
+      $('ring').classList.toggle('hurry', left <= 2);
+      restartAnimation($('selfieNum'), 'pop');
+      var active = Math.min(2, Math.floor((SELFIE_SECONDS - left) * 3 / SELFIE_SECONDS));
+      Array.prototype.forEach.call($('chips').children, function (chip, index) {
+        chip.classList.toggle('on', index === active);
+      });
+    }
+    show();
+    selfieTimer = setInterval(function () {
+      if (mine !== session) { clearInterval(selfieTimer); return; }
+      left--;
+      if (left > 0) { show(); return; }
+      clearInterval(selfieTimer);
+      $('selfieNum').textContent = 'SNAP!';
+      restartAnimation($('selfieNum'), 'pop');
+      document.body.classList.add('snap');              // the camera flash
+      setTimeout(function () {
+        if (mine !== session) return;
+        stopSelfie();
+        $('selfiePanel').hidden = true;
+        resolve();
+      }, 900);
+    }, 1000);
+  });
 }
 
 function wait(ms) {
@@ -351,7 +490,7 @@ async function create() {
     // Draw the finished poster straight away; the CSS resolves it out of a blur.
     drawPoster(pctx, null, name, chosen);
 
-    var dataUrl = out.toDataURL('image/jpeg', 0.94);
+    var dataUrl = out.toDataURL('image/jpeg', 0.88);
 
     var stamp = new Date();
     var pad = function (n) { return String(n).padStart(2, '0'); };
@@ -387,11 +526,14 @@ async function create() {
        sequence simply continues with a line about the screen, and the QR arrives once the
        poster is up. This waits on the real state rather than a guessed delay - and it caps
        itself, so a screen that is switched off or offline never strands anybody. */
-    await waitForScreen();
+    var onScreen = await waitForScreen();
 
     clearSteps();
     stage.classList.remove('working');
     stage.classList.add('revealed');
+
+    // Only ask for the selfie when the name really is up there to be photographed.
+    if (onScreen) await runSelfie();
 
     showGuestQr();
     if (!saved) {

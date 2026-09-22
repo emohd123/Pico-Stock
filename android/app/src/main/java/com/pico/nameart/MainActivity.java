@@ -74,6 +74,9 @@ public class MainActivity extends Activity {
     private static final String CLOUD_ENDPOINT = "https://pico-stock.vercel.app/api/name-art/booth";
     private static final String CLOUD_CODE = "23157741";
     private static final String CLOUD_POSTER = "https://pico-stock.vercel.app/api/name-art/poster/";
+    /* The guest's own download page. A public web address works on any phone, on any network;
+       the tablet's LAN address only worked for a phone that happened to share its Wi-Fi. */
+    private static final String SHARE_PAGE = "https://pico-stock.vercel.app/name-art/p/";
 
     /* Where the booth's poster has got to on its way to the big screen. The booth page waits
        on this instead of guessing, so the QR appears when the name is actually on the wall
@@ -81,6 +84,8 @@ public class MainActivity extends Activity {
        off -> nothing in flight | uploading | waiting -> queued, not yet claimed
        shown -> the screen is displaying it | failed -> gave up, carry on regardless */
     private volatile String cloudState = "off";
+    /* The share token of the poster just published, or "" until the upload has returned one. */
+    private volatile String shareToken = "";
 
     private final BoothServer server = new BoothServer();
     private int presses;
@@ -226,6 +231,7 @@ public class MainActivity extends Activity {
         public void publishToCloud(final String dataUrl, final String name,
                                    final String background, final String requestId) {
             cloudState = "uploading";
+            shareToken = "";
             new Thread(new Runnable() {
                 @Override public void run() {
                     HttpURLConnection connection = null;
@@ -249,6 +255,7 @@ public class MainActivity extends Activity {
                         String reply = readAll(connection.getInputStream());
                         String share = valueOf(reply, "shareToken");
                         if (share.isEmpty()) { cloudState = "failed"; return; }
+                        shareToken = share;
 
                         /* Now wait for the screen to actually claim it. The laptop polls the
                            site about once a second, so this is usually a second or two; the
@@ -256,7 +263,7 @@ public class MainActivity extends Activity {
                         cloudState = "waiting";
                         long until = System.currentTimeMillis() + 12000;
                         while (System.currentTimeMillis() < until) {
-                            Thread.sleep(700);
+                            Thread.sleep(400);
                             HttpURLConnection look = null;
                             try {
                                 look = (HttpURLConnection) new URL(CLOUD_POSTER + share).openConnection();
@@ -279,6 +286,13 @@ public class MainActivity extends Activity {
                     }
                 }
             }, "cloud-publish").start();
+        }
+
+        /** This guest's public download page, or "" while the upload has not returned yet. */
+        @JavascriptInterface
+        public String shareUrl() {
+            String token = shareToken;
+            return token.isEmpty() ? "" : SHARE_PAGE + token;
         }
 
         /** Where the poster has got to on its way to the screen; see cloudState. */

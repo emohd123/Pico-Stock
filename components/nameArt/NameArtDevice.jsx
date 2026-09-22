@@ -18,7 +18,7 @@ export default function NameArtDevice({ role }) {
   useEffect(()=>{
     if(!token)return;
     let alive=true,timer;
-    const poll=async()=>{try{const data=await api(role==='screen'?'/display':'/bootstrap');if(!alive)return;setConfig(data.settings);setConnected(true);setError('');if(role==='screen'){setJob(data.job);resultUntil.current=data.job?Date.parse(data.job.startedAt)+data.job.duration*1000:0;}}catch(e){if(alive){setConnected(false);setError(e.message);if(role==='screen'&&Date.now()>resultUntil.current)setJob(null);}}finally{if(alive)timer=setTimeout(poll,role==='screen'?2000:6000);}};
+    const poll=async()=>{try{const data=await api(role==='screen'?'/display':'/bootstrap');if(!alive)return;setConfig(data.settings);setConnected(true);setError('');if(role==='screen'){setJob(data.job);resultUntil.current=data.job?Date.parse(data.job.startedAt)+data.job.duration*1000:0;}}catch(e){if(alive){setConnected(false);setError(e.message);if(role==='screen'&&Date.now()>resultUntil.current)setJob(null);}}finally{if(alive)timer=setTimeout(poll,role==='screen'?1000:6000);}};
     poll();return()=>{alive=false;clearTimeout(timer);};
     // The paired token is the lifetime of this connection.
     // eslint-disable-next-line react-hooks/exhaustive-deps
