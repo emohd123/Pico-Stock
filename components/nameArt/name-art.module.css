@@ -41,6 +41,27 @@
    is shown whole rather than washed or blurred the way a guest backdrop is. */
 .screenIdle{position:absolute;inset:0;background:url('/name-art/idle-national-day.webp') center/100% 100% no-repeat #0d1533}
 .screenWash{position:absolute;inset:-35px;background-size:cover;background-position:center;filter:blur(25px);opacity:.6}
+/* The selfie countdown on the big screen, in step with the booth tablet. Sized in the stage's
+   own units so it scales with the panel whatever the laptop's resolution, and kept to the
+   lower part of the poster so the name - what the guest is photographing - stays clear. */
+.screenStage{container-type:size}
+.selfieCue{position:absolute;left:50%;bottom:5cqh;z-index:3;display:flex;flex-direction:column;align-items:center;gap:1.6cqh;transform:translateX(-50%);pointer-events:none;animation:cueIn .45s cubic-bezier(.2,.9,.3,1.25) both}
+@keyframes cueIn{from{opacity:0;transform:translate(-50%,4cqh) scale(.85)}}
+.selfieCall{margin:0;padding:1.1cqh 6cqw;border-radius:999px;background:#0d1533eb;color:#fff;font:800 5.4cqw/1.15 Arial,sans-serif;letter-spacing:.05em;text-transform:uppercase;text-align:center;box-shadow:0 1cqh 4cqh #0009;display:flex;flex-direction:column;align-items:center;white-space:nowrap}
+.selfieCall span{font-family:NameArtArabic,Arial,sans-serif;font-size:4.8cqw;letter-spacing:0;text-transform:none;color:#f0c24b}
+.selfieDial{position:relative;width:32cqw;aspect-ratio:1;display:grid;place-items:center}
+.selfieDial::before{content:"";position:absolute;inset:8%;border-radius:50%;background:radial-gradient(circle at 50% 35%,#223566,#0d1533);box-shadow:0 1cqh 5cqh #000b}
+.selfieDial svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);overflow:visible}
+.selfieTrack,.selfieArc{fill:none;stroke-width:14}
+.selfieTrack{stroke:#ffffff2e}
+.selfieArc{stroke:#35d07f;stroke-linecap:round;stroke-dasharray:553;transition:stroke-dashoffset .1s linear;filter:drop-shadow(0 0 8px #35d07f)}
+.selfieDial b{position:relative;color:#fff;font:700 16cqw/1 NameArtSerif,Georgia,serif;animation:dialPop .5s cubic-bezier(.2,1.6,.4,1)}
+.selfieDial b[data-smile=true]{font:800 6.4cqw/1 Arial,sans-serif;letter-spacing:.04em;color:#f0c24b}
+@keyframes dialPop{from{opacity:0;transform:scale(1.8)}}
+.selfieCue[data-hurry=true] .selfieArc{stroke:#f0c24b;filter:drop-shadow(0 0 8px #f0c24b)}
+.selfieCue[data-hurry=true] .selfieDial b{color:#f0c24b}
+.selfieCue[data-band=true] .selfieArc{stroke:#ff5d8f;filter:drop-shadow(0 0 8px #ff5d8f)}
+.selfieCue[data-band=true] .selfieCall span{color:#ffb03a}
 .screenStage>.poster{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:100%;height:auto;max-height:100%;box-shadow:none}
 .invitation{position:absolute;left:10%;right:10%;top:37%;text-align:center;pointer-events:none}
 .invitation small{font-size:clamp(9px,1.8vw,22px);letter-spacing:.24em;color:#92713d}

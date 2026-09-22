@@ -33,6 +33,7 @@ var STEPS = [
    to turn round and photograph it. While the band plays - 14:00 to 17:00 - the prompt is to
    take the selfie with the band instead. Bahrain keeps UTC+3 all year, with no daylight
    saving, so the window is worked out from UTC and does not depend on the tablet's zone. */
+// These match NAME_ART_SELFIE in lib/nameArt/config.js, which the big screen counts from.
 var SELFIE_SECONDS = 5, BAND_FROM = 14, BAND_TO = 17;
 var SELFIE = {
   name: { kicker: 'YOUR NAME IS ON THE BIG SCREEN', kickerAr: 'اسمك على الشاشة الكبيرة',
@@ -391,7 +392,7 @@ function startFx(glyphs) {
 }
 
 function stopSelfie() {
-  clearInterval(selfieTimer);
+  clearTimeout(selfieTimer);
   clearInterval(fxTimer);
   $('fx').textContent = '';
   stage.classList.remove('live');
@@ -404,8 +405,14 @@ function restartAnimation(el, name) {
   el.classList.add(name);
 }
 
-function runSelfie() {
-  var mine = session;
+/* startAt is when the countdown begins, on this tablet's clock. The server fixed it and the big
+   screen counts from the same moment, so the two show the same number together. Every step is
+   worked out from the time elapsed rather than counted tick by tick, so a tablet that heard
+   late joins at the number the screen is already showing instead of running a second behind. */
+function runSelfie(startAt) {
+  var mine = session, total = SELFIE_SECONDS * 1000;
+  // Joining with under a second to go would be a flicker, not a countdown.
+  if (Date.now() - startAt > total - 1000) return Promise.resolve();
   var copy = bandIsOn() ? SELFIE.band : SELFIE.name;
   document.body.classList.toggle('bandMode', copy === SELFIE.band);
 
@@ -418,16 +425,22 @@ function runSelfie() {
     return '<li><b>' + chip[0] + '</b><span class="ar" dir="rtl">' + chip[1] + '</span></li>';
   }).join('');
 
-  $('genPanel').hidden = true;
-  $('selfiePanel').hidden = false;
-  restartAnimation($('selfiePanel'), 'enter');
-  restartAnimation($('ringArc'), 'drain');
-  stage.classList.add('live');
-  startFx(copy.fx);
-
   return new Promise(function (resolve) {
-    var left = SELFIE_SECONDS;
-    function show() {
+    var started = false, shown = null;
+
+    function begin(elapsed) {
+      started = true;
+      $('genPanel').hidden = true;
+      $('selfiePanel').hidden = false;
+      restartAnimation($('selfiePanel'), 'enter');
+      // A negative delay starts the ring part-drained, level with the screen's.
+      $('ringArc').style.animationDelay = (-elapsed) + 'ms';
+      restartAnimation($('ringArc'), 'drain');
+      stage.classList.add('live');
+      startFx(copy.fx);
+    }
+
+    function show(left) {
       $('selfieNum').textContent = left;
       $('ring').classList.toggle('hurry', left <= 2);
       restartAnimation($('selfieNum'), 'pop');
@@ -436,22 +449,29 @@ function runSelfie() {
         chip.classList.toggle('on', index === active);
       });
     }
-    show();
-    selfieTimer = setInterval(function () {
-      if (mine !== session) { clearInterval(selfieTimer); return; }
-      left--;
-      if (left > 0) { show(); return; }
-      clearInterval(selfieTimer);
+
+    function snap() {
       $('selfieNum').textContent = 'SNAP!';
       restartAnimation($('selfieNum'), 'pop');
       document.body.classList.add('snap');              // the camera flash
-      setTimeout(function () {
+      selfieTimer = setTimeout(function () {
         if (mine !== session) return;
         stopSelfie();
         $('selfiePanel').hidden = true;
         resolve();
       }, 900);
-    }, 1000);
+    }
+
+    (function frame() {
+      if (mine !== session) return;
+      var elapsed = Date.now() - startAt;
+      if (elapsed < 0) { selfieTimer = setTimeout(frame, -elapsed); return; }
+      if (!started) begin(elapsed);
+      if (elapsed >= total) { snap(); return; }
+      var left = SELFIE_SECONDS - Math.floor(elapsed / 1000);
+      if (left !== shown) { shown = left; show(left); }
+      selfieTimer = setTimeout(frame, 1000 - (elapsed % 1000));   // wake on the next second
+    })();
   });
 }
 
@@ -532,8 +552,15 @@ async function create() {
     stage.classList.remove('working');
     stage.classList.add('revealed');
 
-    // Only ask for the selfie when the name really is up there to be photographed.
-    if (onScreen) await runSelfie();
+    // Only ask for the selfie when the name really is up there to be photographed. It starts
+    // when the server says, which is when the big screen starts its own countdown; until then
+    // the tablet keeps saying the name is on its way to the screen.
+    if (onScreen) {
+      var lead = parseInt(bridgeCall('selfieInMs'), 10);
+      $('step').textContent = SCREEN_STEP.en;
+      $('stepAr').textContent = SCREEN_STEP.ar;
+      await runSelfie(Date.now() + (isNaN(lead) ? 0 : lead));
+    }
 
     showGuestQr();
     if (!saved) {

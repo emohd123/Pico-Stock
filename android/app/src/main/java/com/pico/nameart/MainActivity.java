@@ -86,6 +86,10 @@ public class MainActivity extends Activity {
     private volatile String cloudState = "off";
     /* The share token of the poster just published, or "" until the upload has returned one. */
     private volatile String shareToken = "";
+    /* When the selfie countdown starts, on this device's clock, or 0 when unknown. The server
+       says how many milliseconds away it is; the big screen is told the same, so both count
+       down together without either having to trust the other's clock. */
+    private volatile long selfieAt = 0;
 
     private final BoothServer server = new BoothServer();
     private int presses;
@@ -232,6 +236,7 @@ public class MainActivity extends Activity {
                                    final String background, final String requestId) {
             cloudState = "uploading";
             shareToken = "";
+            selfieAt = 0;
             new Thread(new Runnable() {
                 @Override public void run() {
                     HttpURLConnection connection = null;
@@ -266,11 +271,19 @@ public class MainActivity extends Activity {
                             Thread.sleep(400);
                             HttpURLConnection look = null;
                             try {
+                                long sent = System.currentTimeMillis();
                                 look = (HttpURLConnection) new URL(CLOUD_POSTER + share).openConnection();
                                 look.setConnectTimeout(5000);
                                 look.setReadTimeout(8000);
-                                String status = valueOf(readAll(look.getInputStream()), "status");
+                                String answer = readAll(look.getInputStream());
+                                long heard = System.currentTimeMillis();
+                                String status = valueOf(answer, "status");
                                 if ("showing".equals(status) || "displayed".equals(status)) {
+                                    // selfieIn counts from when the server answered, which is
+                                    // roughly halfway through the request.
+                                    try {
+                                        selfieAt = (sent + heard) / 2 + Long.parseLong(valueOf(answer, "selfieIn"));
+                                    } catch (NumberFormatException none) { selfieAt = 0; }
                                     cloudState = "shown";
                                     return;
                                 }
@@ -293,6 +306,13 @@ public class MainActivity extends Activity {
         public String shareUrl() {
             String token = shareToken;
             return token.isEmpty() ? "" : SHARE_PAGE + token;
+        }
+
+        /** Milliseconds until the selfie countdown starts (negative once it has), or "" if unknown. */
+        @JavascriptInterface
+        public String selfieInMs() {
+            long at = selfieAt;
+            return at == 0 ? "" : String.valueOf(at - System.currentTimeMillis());
         }
 
         /** Where the poster has got to on its way to the screen; see cloudState. */

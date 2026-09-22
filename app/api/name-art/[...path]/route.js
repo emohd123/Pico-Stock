@@ -3,7 +3,7 @@ import { randomInt, randomUUID } from 'node:crypto';
 import QRCode from 'qrcode';
 import { getAdminCookieName, verifyAdminSessionToken } from '@/lib/adminAuth';
 import { db, checked, hash, secret, fail, rate, bucket } from '@/lib/picoAi/core';
-import { NAME_ART_DEFAULTS, NAME_ART_BACKGROUNDS, cleanGuestName } from '@/lib/nameArt/config';
+import { NAME_ART_DEFAULTS, NAME_ART_BACKGROUNDS, NAME_ART_SELFIE, cleanGuestName } from '@/lib/nameArt/config';
 import { renderNameArt } from '@/lib/nameArt/render';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -50,7 +50,10 @@ async function share(token) {
   if (!job || !['queued', 'showing', 'displayed'].includes(job.status) || Date.parse(job.expiresAt) < Date.now()) fail('This poster link has expired', 410);
   return job;
 }
-function publicJob(job) { return { id: job.id, name: job.name, background: job.background, status: job.status, shareToken: job.shareToken, expiresAt: job.expiresAt, startedAt: job.startedAt, duration: job.duration, finishAt: job.finishAt || null }; }
+// selfieIn is relative - milliseconds from this response - rather than a clock time, so the
+// tablet and the screen can start the same countdown together without agreeing on the time.
+function selfieIn(job) { return job.status === 'showing' && job.startedAt ? Math.round(Date.parse(job.startedAt) + NAME_ART_SELFIE.leadMs - Date.now()) : null; }
+function publicJob(job) { return { id: job.id, name: job.name, background: job.background, status: job.status, shareToken: job.shareToken, expiresAt: job.expiresAt, startedAt: job.startedAt, duration: job.duration, finishAt: job.finishAt || null, selfieIn: selfieIn(job) }; }
 async function cleanupExpired() {
   const expired = (await list('name-art:job:')).filter(job => Date.parse(job.expiresAt) < Date.now());
   for (const job of expired.slice(0, 100)) {

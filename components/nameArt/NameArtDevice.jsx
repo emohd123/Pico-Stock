@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { NAME_ART_BACKGROUNDS, NAME_ART_DEFAULTS, cleanGuestName } from '@/lib/nameArt/config';
 import NamePoster from './NamePoster';
+import ScreenCountdown from './ScreenCountdown';
 import styles from './name-art.module.css';
 const API='/api/name-art';
 export default function NameArtDevice({ role }) {
@@ -10,6 +11,8 @@ export default function NameArtDevice({ role }) {
   // null means "follow the admin default"; once the guest picks, their choice wins until the next guest.
   const [chosen,setChosen]=useState(null), background=chosen||config.background;
   const requestId=useRef(null), wake=useRef(null), resultUntil=useRef(0);
+  // When this guest's selfie countdown starts, in this machine's clock, and which job it belongs to.
+  const [selfie,setSelfie]=useState({id:null,at:0}), selfieFor=useRef(null);
   async function api(path,options={}) {
     const response=await fetch(API+path,{...options,cache:'no-store',headers:{'Content-Type':'application/json','x-name-art-token':token,...options.headers}});
     const data=await response.json(); if(!response.ok){if(response.status===401 && token){localStorage.removeItem(`name-art-${role}`);setToken('');} throw new Error(data.error || 'Connection unavailable');} return data;
@@ -18,7 +21,7 @@ export default function NameArtDevice({ role }) {
   useEffect(()=>{
     if(!token)return;
     let alive=true,timer;
-    const poll=async()=>{try{const data=await api(role==='screen'?'/display':'/bootstrap');if(!alive)return;setConfig(data.settings);setConnected(true);setError('');if(role==='screen'){setJob(data.job);resultUntil.current=data.job?Date.parse(data.job.startedAt)+data.job.duration*1000:0;}}catch(e){if(alive){setConnected(false);setError(e.message);if(role==='screen'&&Date.now()>resultUntil.current)setJob(null);}}finally{if(alive)timer=setTimeout(poll,role==='screen'?1000:6000);}};
+    const poll=async()=>{try{const sent=Date.now();const data=await api(role==='screen'?'/display':'/bootstrap');const heard=Date.now();if(!alive)return;setConfig(data.settings);setConnected(true);setError('');if(role==='screen'){setJob(data.job);resultUntil.current=data.job?Date.parse(data.job.startedAt)+data.job.duration*1000:0;if(data.job&&data.job.selfieIn!=null&&selfieFor.current!==data.job.id){selfieFor.current=data.job.id;setSelfie({id:data.job.id,at:(sent+heard)/2+data.job.selfieIn});}}}catch(e){if(alive){setConnected(false);setError(e.message);if(role==='screen'&&Date.now()>resultUntil.current)setJob(null);}}finally{if(alive)timer=setTimeout(poll,role==='screen'?1000:6000);}};
     poll();return()=>{alive=false;clearTimeout(timer);};
     // The paired token is the lifetime of this connection.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -40,7 +43,8 @@ export default function NameArtDevice({ role }) {
     <div className={styles.screenStage}>
       {job
         ? <><div className={styles.screenWash} style={{backgroundImage:`url(/name-art/${job.background}.webp)`}}/>
-            <NamePoster name={job.name} background={job.background} image={`${API}/poster/${job.shareToken}/image`} motion={config.motion} drift={false}/></>
+            <NamePoster name={job.name} background={job.background} image={`${API}/poster/${job.shareToken}/image`} motion={config.motion} drift={false}/>
+            {selfie.id===job.id&&<ScreenCountdown at={selfie.at}/>}</>
         : <div className={styles.screenIdle}/>}
     </div>
     <div className={styles.screenTools}><button onClick={fullscreen} aria-label="Full screen">⛶</button>{install&&<button onClick={()=>install.prompt()}>Install</button>}<span data-connected={connected}>{connected?'Connected':'Reconnecting…'}</span></div>
