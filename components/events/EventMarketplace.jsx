@@ -37,6 +37,16 @@ function formatDateRange(startDate, endDate) {
     return start || end || '';
 }
 
+// Known stock caps a request line; unknown stock (null) falls back to 999.
+function maxQuantity(item) {
+    const stock = Number(item?.stock);
+    return Number.isFinite(stock) && item?.stock !== null && stock > 0 ? stock : 999;
+}
+
+function hasKnownStock(item) {
+    return item?.stock !== null && item?.stock !== undefined && Number(item.stock) > 0;
+}
+
 function storageKey(slug) {
     return `pico-event-basket:${slug}`;
 }
@@ -139,7 +149,8 @@ export default function EventMarketplace({ slug }) {
     const setQuantity = useCallback((id, quantity) => {
         setBasket((prev) => {
             const next = { ...prev };
-            const qty = Math.max(0, Math.min(999, Number.parseInt(quantity, 10) || 0));
+            const cap = maxQuantity(itemsById.get(id));
+            const qty = Math.max(0, Math.min(cap, Number.parseInt(quantity, 10) || 0));
             if (qty === 0) {
                 delete next[id];
             } else {
@@ -147,15 +158,21 @@ export default function EventMarketplace({ slug }) {
             }
             return next;
         });
-    }, []);
+    }, [itemsById]);
 
     const addItem = useCallback((item) => {
+        const cap = maxQuantity(item);
+        const current = basket[item.id]?.quantity || 0;
+        if (current >= cap) {
+            showToast(`Only ${cap} available for ${displayName(item)}`);
+            return;
+        }
         setBasket((prev) => {
-            const current = prev[item.id]?.quantity || 0;
-            return { ...prev, [item.id]: { ...(prev[item.id] || {}), quantity: Math.min(999, current + 1) } };
+            const inBasket = prev[item.id]?.quantity || 0;
+            return { ...prev, [item.id]: { ...(prev[item.id] || {}), quantity: Math.min(cap, inBasket + 1) } };
         });
         showToast(`${displayName(item)} added to your request`);
-    }, [showToast]);
+    }, [basket, showToast]);
 
     const setComment = useCallback((id, comment) => {
         setBasket((prev) => (prev[id] ? { ...prev, [id]: { ...prev[id], comment } } : prev));
@@ -430,7 +447,7 @@ export default function EventMarketplace({ slug }) {
                                                                     value={line.quantity}
                                                                     onChange={(e) => setQuantity(line.id, e.target.value)}
                                                                 />
-                                                                <button type="button" onClick={() => setQuantity(line.id, line.quantity + 1)} aria-label="Increase">+</button>
+                                                                <button type="button" onClick={() => setQuantity(line.id, line.quantity + 1)} disabled={line.quantity >= maxQuantity(line)} aria-label="Increase">+</button>
                                                             </div>
                                                             <div className="evm-line-total">
                                                                 {line.eventPrice > 0 ? formatMoney(line.lineTotal, currency) : '—'}
@@ -529,8 +546,10 @@ export default function EventMarketplace({ slug }) {
 function ItemCard({ item, days, currency, quantity, onAdd, onQuantity }) {
     const [open, setOpen] = useState(false);
     const name = displayName(item);
-    const perDay = item.perDayPrice;
+    // A fixed event price (e.g. partner catalogue items) is not a day rate × days.
+    const perDay = item.hasOverride ? null : item.perDayPrice;
     const soldOut = item.stock === 0 || item.inStock === false;
+    const cap = maxQuantity(item);
 
     return (
         <article className={`evm-card${quantity > 0 ? ' selected' : ''}`}>
@@ -546,6 +565,7 @@ function ItemCard({ item, days, currency, quantity, onAdd, onQuantity }) {
                 <span className="evm-card-cat">{categoryLabel(item.category)}</span>
                 <h3>{name}</h3>
                 {item.note && <p className="evm-card-note">{item.note}</p>}
+                {hasKnownStock(item) && !soldOut && <p className="evm-card-stock">{item.stock} available</p>}
                 <div className="evm-card-price">
                     {item.eventPrice > 0 ? (
                         <>
@@ -562,8 +582,8 @@ function ItemCard({ item, days, currency, quantity, onAdd, onQuantity }) {
                     ) : quantity > 0 ? (
                         <div className="evm-qty">
                             <button type="button" onClick={() => onQuantity(quantity - 1)} aria-label="Decrease">−</button>
-                            <input type="number" min={0} value={quantity} onChange={(e) => onQuantity(e.target.value)} />
-                            <button type="button" onClick={() => onQuantity(quantity + 1)} aria-label="Increase">+</button>
+                            <input type="number" min={0} max={cap} value={quantity} onChange={(e) => onQuantity(e.target.value)} />
+                            <button type="button" onClick={() => onQuantity(quantity + 1)} disabled={quantity >= cap} aria-label="Increase">+</button>
                         </div>
                     ) : (
                         <button type="button" className="evm-add" onClick={onAdd}>Add to request</button>
@@ -583,6 +603,7 @@ function ItemCard({ item, days, currency, quantity, onAdd, onQuantity }) {
                             {item.source === 'catalogue' && item.name !== name && <p className="evm-modal-code">{item.name}</p>}
                             {item.description && <p>{item.description}</p>}
                             {item.note && <p className="evm-card-note">{item.note}</p>}
+                            {hasKnownStock(item) && !soldOut && <p className="evm-card-stock">{item.stock} available</p>}
                             <div className="evm-card-price">
                                 {item.eventPrice > 0 ? (
                                     <>

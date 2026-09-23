@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
-const OSFAM_URL = process.env.OSFAM_URL || 'http://osfam3.ossys.org';
+// OSFam moved from osfam3.ossys.org to osfambh.ossys.org (same login). An env
+// value still pointing at the retired host is redirected to the new one.
+const OSFAM_DEFAULT_URL = 'https://osfambh.ossys.org';
+const OSFAM_URL = (() => {
+    const configured = (process.env.OSFAM_URL || '').trim().replace(/\/+$/, '');
+    if (!configured || /osfam3\.ossys\.org/i.test(configured)) return OSFAM_DEFAULT_URL;
+    return configured;
+})();
 const OSFAM_USER = process.env.OSFAM_USER || 'pico';
 const OSFAM_PASS = process.env.OSFAM_PASS || 'picostock';
 const STORAGE_BUCKET = 'product-images';
@@ -14,6 +21,15 @@ function extractAssetCode(name) {
     if (!name) return null;
     const m = name.match(/^ID[\s\d;]+([A-Z][A-Z0-9]+)\s*\[/i);
     return m ? m[1].toUpperCase() : null;
+}
+
+/**
+ * Extract the OSFam numeric asset IDs from a Pico product name.
+ * e.g. "ID 1373 ;1374 FBEANBAGSB1 [25] ..." → ['1373', '1374']
+ */
+function extractAssetIds(name) {
+    const m = String(name || '').match(/^ID([\s\d;]+)/i);
+    return m ? m[1].split(/[\s;]+/).filter(Boolean) : [];
 }
 
 /**
@@ -31,7 +47,7 @@ async function ensureBucket() {
 
 /**
  * Log into OSFam and return the asset map plus the session cookie.
- * { assetMap: { ASSETCODE: { available, imgPath, assetId } }, cookieHeader }
+ * { assetMap: { ASSETCODE: { available, imgPath, assetId } }, assetById: { ID: ASSETCODE }, cookieHeader }
  */
 async function fetchOsfamAssets() {
     // 1. Get initial session cookie
@@ -67,6 +83,7 @@ async function fetchOsfamAssets() {
 
     // 4. Parse rows — extract assetCode, available qty, primary image, and numeric asset ID
     const assetMap = {};
+    const assetById = {};
     const rowRegex = /<tr\s+data-category[^>]*>([\s\S]*?)<\/tr>/g;
     let match;
 
@@ -91,6 +108,8 @@ async function fetchOsfamAssets() {
             const available = parseInt(cells[8], 10);
             if (assetCode && !isNaN(available)) {
                 assetMap[assetCode] = { available, imgPath, assetId };
+                const osfamId = (cells[0] || '').trim();
+                if (/^\d+$/.test(osfamId)) assetById[osfamId] = assetCode;
             }
         }
     }
@@ -99,7 +118,7 @@ async function fetchOsfamAssets() {
         throw new Error('No assets parsed — login may have failed or page structure changed');
     }
 
-    return { assetMap, cookieHeader };
+    return { assetMap, assetById, cookieHeader };
 }
 
 /**
@@ -188,7 +207,7 @@ export async function POST() {
         await ensureBucket();
 
         // Login once and reuse the session for all subsequent requests
-        const { assetMap, cookieHeader } = await fetchOsfamAssets();
+        const { assetMap, assetById, cookieHeader } = await fetchOsfamAssets();
 
         // Get all Pico products
         const { data: products, error: fetchErr } = await supabase
@@ -200,7 +219,13 @@ export async function POST() {
         const skipped = [];
 
         for (const product of products) {
-            const code = extractAssetCode(product.name);
+            let code = extractAssetCode(product.name);
+            if (!code || !(code in assetMap)) {
+                // Codes in product names sometimes drift from OSFam (e.g. FIKEMTBL vs
+                // FIKEAMTBL); the numeric OSFam ID in the name is the reliable fallback.
+                const byId = extractAssetIds(product.name).map((id) => assetById[id]).find(Boolean);
+                if (byId) code = byId;
+            }
             if (!code || !(code in assetMap)) {
                 skipped.push({ id: product.id, name: product.name, reason: code ? 'not in OSFam' : 'no code in name' });
                 continue;
