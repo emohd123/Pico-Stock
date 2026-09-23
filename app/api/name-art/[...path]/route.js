@@ -3,7 +3,7 @@ import { randomInt, randomUUID } from 'node:crypto';
 import QRCode from 'qrcode';
 import { getAdminCookieName, verifyAdminSessionToken } from '@/lib/adminAuth';
 import { db, checked, hash, secret, fail, rate, bucket } from '@/lib/picoAi/core';
-import { NAME_ART_DEFAULTS, NAME_ART_BACKGROUNDS, NAME_ART_SELFIE, cleanGuestName } from '@/lib/nameArt/config';
+import { NAME_ART_DEFAULTS, NAME_ART_BACKGROUNDS, NAME_ART_SELFIE, NAME_ART_REPORT, cleanGuestName } from '@/lib/nameArt/config';
 import { renderNameArt } from '@/lib/nameArt/render';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -54,6 +54,57 @@ async function share(token) {
 // tablet and the screen can start the same countdown together without agreeing on the time.
 function selfieIn(job) { return job.status === 'showing' && job.startedAt ? Math.round(Date.parse(job.startedAt) + NAME_ART_SELFIE.leadMs - Date.now()) : null; }
 function publicJob(job) { return { id: job.id, name: job.name, background: job.background, status: job.status, shareToken: job.shareToken, expiresAt: job.expiresAt, startedAt: job.startedAt, duration: job.duration, finishAt: job.finishAt || null, selfieIn: selfieIn(job) }; }
+/* A permanent, anonymous line per poster, for the client report. Posters and their links are
+   deleted after 48 hours; this keeps only when it was made, which design, where it came from
+   and when it reached the wall - never the name - so the report still adds up afterwards.
+   A failure here is logged and swallowed: counting must never cost a guest their poster. */
+async function record(job, shownAt = null) {
+  try {
+    await write(`name-art:ledger:${job.id}`, { createdAt: job.createdAt, background: job.background,
+      source: job.deviceId === 'booth' ? 'booth' : 'web', shownAt });
+  } catch (error) { console.error('Name Art ledger:', error.message); }
+}
+
+// Bahrain keeps UTC+3 all year: shift once, then read the UTC fields as local time.
+const BAHRAIN_MS = 3 * 3600000;
+const bahrainDay = ms => new Date(ms + BAHRAIN_MS).toISOString().slice(0, 10);
+const bahrainHour = ms => new Date(ms + BAHRAIN_MS).getUTCHours();
+
+async function reportStats() {
+  const [ledger, jobs] = await Promise.all([list('name-art:ledger:'), list('name-art:job:')]);
+  // Posters made before the ledger existed are still live for up to 48 hours: fold them in once.
+  const known = new Set(ledger.map(row => row.key.slice('name-art:ledger:'.length)));
+  for (const job of jobs) {
+    if (known.has(job.id) || !['queued', 'showing', 'displayed'].includes(job.status)) continue;
+    const shownAt = job.status === 'queued' ? null : job.startedAt || null;
+    await record(job, shownAt);
+    ledger.push({ createdAt: job.createdAt, background: job.background, source: job.deviceId === 'booth' ? 'booth' : 'web', shownAt });
+  }
+
+  const now = Date.now(), today = bahrainDay(now), from = Date.parse(`${NAME_ART_REPORT.from}T00:00:00+03:00`);
+  const counted = ledger.filter(row => Date.parse(row.createdAt) >= from);
+  const byDay = {}, byHour = Array(24).fill(0), byDesign = Object.fromEntries(NAME_ART_BACKGROUNDS.map(item => [item.id, 0]));
+  let onWall = 0, earlierDesigns = 0, bandHours = 0, lastAt = 0;
+  for (const row of counted) {
+    const at = Date.parse(row.createdAt); if (!at) continue;
+    const day = bahrainDay(at), hour = bahrainHour(at);
+    byDay[day] = (byDay[day] || 0) + 1;
+    if (day === today) byHour[hour]++;
+    if (hour >= NAME_ART_SELFIE.bandFrom && hour < NAME_ART_SELFIE.bandTo) bandHours++;
+    if (row.background in byDesign) byDesign[row.background]++; else earlierDesigns++;
+    if (row.shownAt) onWall++;
+    lastAt = Math.max(lastAt, at);
+  }
+  // Whether a name is on the wall right now - the design only, never whose name it is.
+  const live = jobs.find(job => job.status === 'showing' && job.startedAt &&
+    Math.min(Date.parse(job.startedAt) + job.duration * 1000, job.finishAt ? Date.parse(job.finishAt) : Infinity) > now);
+  return { from: NAME_ART_REPORT.from, total: counted.length, onWall, today: byDay[today] || 0, todayDate: today, byHour, bandHours,
+    byDay: Object.entries(byDay).sort(([a], [b]) => a.localeCompare(b)).map(([date, count]) => ({ date, count })),
+    byDesign, earlierDesigns, lastAt: lastAt ? new Date(lastAt).toISOString() : null,
+    liveNow: live ? { background: live.background } : null, band: { from: NAME_ART_SELFIE.bandFrom, to: NAME_ART_SELFIE.bandTo },
+    updatedAt: new Date(now).toISOString() };
+}
+
 async function cleanupExpired() {
   const expired = (await list('name-art:job:')).filter(job => Date.parse(job.expiresAt) < Date.now());
   for (const job of expired.slice(0, 100)) {
@@ -113,6 +164,11 @@ async function handler(request, { params }) {
       const token = secret(), device = { id:randomUUID(), role:pair.role, label:pair.label, createdAt:new Date().toISOString(), revoked:false };
       await write(`name-art:device:${hash(token)}`,device); return json({...device,token});
     }
+    /* The client report. Totals only - no names, no links - so it can be shared openly. A few
+       seconds of shared caching keeps a widely forwarded link from hammering the database. */
+    if (p[0] === 'stats' && method === 'GET') {
+      return Response.json(await reportStats(), { headers: { ...headers, 'Cache-Control': 'public, s-maxage=5, stale-while-revalidate=10' } });
+    }
     if (p[0] === 'poster') {
       if (method !== 'GET') fail('Not found',404);
       const job = await share(p[1]);
@@ -171,6 +227,7 @@ async function handler(request, { params }) {
         const { error } = await db().storage.from(bucket).upload(`name-art/${id}.jpg`, bytes, { contentType: 'image/jpeg', upsert: false });
         if (error) fail('Poster storage unavailable', 503);
         await write(`name-art:share:${hash(shareToken)}`, { id });
+        await record(job);
         job.status = 'queued'; await write(key, job);
         return json(publicJob(job));
       } catch (error) { await write(key, { ...job, status: 'failed' }); throw error; }
@@ -199,6 +256,7 @@ async function handler(request, { params }) {
         const {error} = await db().storage.from(bucket).upload(`name-art/${id}.jpg`,bytes,{contentType:'image/jpeg',upsert:false});
         if(error) fail('Poster storage unavailable',503);
         await write(`name-art:share:${hash(shareToken)}`,{id});
+        await record(job);
         job.status='queued'; await write(key,job); return json(publicJob(job));
       } catch(error) { await write(key,{...job,status:'failed'}); throw error; }
     }
@@ -229,6 +287,7 @@ async function handler(request, { params }) {
       if(!queued) return json({settings:config,job:null});
       const {key,...job}=queued, next={...job,status:'showing',startedAt:new Date().toISOString()};
       const claimed=await swap(key,job,next);
+      if(claimed) await record(next,next.startedAt);
       return json({settings:config,job:publicJob(claimed?next:await read(key))});
     }
     fail('Not found',404);
