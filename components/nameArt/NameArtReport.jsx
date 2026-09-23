@@ -62,24 +62,8 @@ function Reveal({ children, className = '' }) {
 
 function Kpi({ label, value, text, note }) {
   const shown = useCountUp(value);
-  return <div className={styles.kpi}><span>{label}</span><strong>{text ?? (value == null ? '—' : shown.toLocaleString('en-US'))}</strong><small>{note}</small></div>;
+  return <div className={`${styles.kpi} brand-corners`}><span>{label}</span><strong>{text ?? (value == null ? '—' : shown.toLocaleString('en-US'))}</strong><small>{note}</small></div>;
 }
-
-const JOURNEY = [
-  { img: '/name-art/report/tablet-create.webp', pos: '58% 50%', title: 'Type a name', text: 'In English or Arabic, on the booth tablet. Four campaign designs and three calligraphy styles to choose from.' },
-  { img: '/name-art/report/screen-countdown.webp', title: 'On the big screen in seconds', text: 'The poster goes straight onto the 2 m × 1 m LED wall, full height, with the name at its heart.', fit: 'contain' },
-  { img: '/name-art/report/tablet-selfie.webp', pos: '62% 50%', title: 'Selfie countdown', text: 'Tablet and wall count down together so the guest can turn round and photograph their name. From 2 to 5 pm, it’s a selfie with the band.' },
-  { img: '/name-art/report/phone-download.webp', bg: '#f7f1e6', title: 'Take it home', text: 'A personal QR opens the guest’s own poster on any phone, on any network, ready to download.', fit: 'contain' },
-];
-
-const DELIVERED = [
-  ['Bilingual by design', 'English and Arabic names, each written in a matched pair of typefaces.'],
-  ['The campaign’s own artwork', 'Four backdrops built on the منورة بشوفتكم identity, including the two-shores design.'],
-  ['Made for the LED wall', 'Posters are rendered in the panel’s exact 1:2 shape and fill it edge to edge.'],
-  ['A moment, not just a picture', 'Synced selfie countdown on tablet and wall, with a band-hours mode from 2 to 5 pm.'],
-  ['Every guest leaves with it', 'A private download link per guest that works on mobile data - no app, no Wi-Fi needed.'],
-  ['Built for a long day', 'Works offline, screens every name before it reaches the wall, and recovers by itself after a restart.'],
-];
 
 export default function NameArtReport() {
   const [stats, setStats] = useState(null);
@@ -113,22 +97,21 @@ export default function NameArtReport() {
   const isToday = stats && stats.todayDate;
 
   return <main className={styles.page}>
-    <header className={styles.hero}>
-      <div className={styles.wrap}>
-        <div className={styles.topline}>
-          <span className={styles.eyebrow}>{NAME_ART_REPORT.event} · {NAME_ART_REPORT.venue}</span>
-          <span className={styles.live} data-state={offline ? 'offline' : 'live'}>
-            <i />{offline ? 'Reconnecting…' : 'LIVE'}<small>{stats ? (stats.lastAt ? `last poster ${ago(stats.lastAt, now)}` : 'waiting for the first guest') : 'loading…'}</small>
-          </span>
-        </div>
-        <h1 className={styles.title}>Name Art — live report</h1>
-        <p className={styles.lede}>Guests type their name, watch it appear on the big screen within seconds, take a selfie with it and carry the poster home on their phone.</p>
-        <p className={styles.lede} dir="rtl">اكتب اسمك، شاهده على الشاشة الكبيرة، التقط صورتك معه واحتفظ ببطاقتك</p>
-        {stats?.liveNow && <div className={styles.onWall}><b />A guest’s name is on the big screen right now</div>}
-      </div>
-    </header>
-
     <div className={styles.wrap}>
+      <div className={styles.bar}>
+        <img className={styles.logo} src="/branding/pico-logo.png" alt="Pico" />
+        <span className={styles.live} data-state={offline ? 'offline' : 'live'}>
+          <i />{offline ? 'Reconnecting…' : 'LIVE'}<small>{stats ? (stats.lastAt ? `last poster ${ago(stats.lastAt, now)}` : 'waiting for the first guest') : 'loading…'}</small>
+        </span>
+      </div>
+
+      <header className={styles.hero}>
+        <span className={`${styles.eyebrow} brand-tick`}>Name Art experience</span>
+        <h1 className={styles.title}>Name Art — <span>live report</span></h1>
+        <p className={styles.event}><b>{NAME_ART_REPORT.event}</b> · {NAME_ART_REPORT.venue}</p>
+        {stats?.liveNow && <div className={styles.onWall}><b />A guest’s name is on the big screen right now</div>}
+      </header>
+
       <section className={styles.kpis} aria-label="Headline numbers">
         <Kpi label="Posters created" value={stats?.total} note={`since ${dayLabel(NAME_ART_REPORT.from)}`} />
         <Kpi label="Shown on the LED wall" value={stats?.onWall} note={stats && stats.total ? `${Math.round(stats.onWall / stats.total * 100)}% of all posters` : 'names that reached the wall'} />
@@ -142,21 +125,21 @@ export default function NameArtReport() {
           Posters created each hour, Bahrain time{peakHour != null ? ` — busiest so far ${hourLabel(peakHour)} with ${peak}` : ''}.
           {stats?.bandHours ? ` ${stats.bandHours} created during the band’s set.` : ''}
         </p>
-        <div className={styles.panel}>
+        <div className={`${styles.panel} brand-corners`}>
           <div className={styles.chart} role="img" aria-label={`Posters per hour today; busiest ${peakHour != null ? hourLabel(peakHour) : 'none yet'}`}>
             <div className={styles.bandZone} style={{ left: `${band.from / 24 * 100}%`, width: `${(band.to - band.from) / 24 * 100}%` }}><em>Live band</em></div>
             {byHour.map((count, hour) => <div key={hour} className={styles.col} data-empty={!count} data-now={hour === current && !!stats}>
               <div className={styles.track}>
                 <span className={styles.count}>{count || ''}</span>
-                <div className={styles.bar} style={{ height: stats ? `${count / scale * 88}%` : '0%' }} />
+                <div className={styles.bar2} style={{ height: stats ? `${count / scale * 88}%` : '0%' }} />
               </div>
               <span className={styles.hour}>{hour % 3 === 0 ? hourLabel(hour).replace(' ', '') : ''}</span>
             </div>)}
           </div>
           <div className={styles.legend}>
-            <span><b style={{ background: 'linear-gradient(#35d07f,#1f9a5c)' }} />Posters created</span>
-            <span><b style={{ background: '#e2477a33', border: '1px dashed #e2477a' }} />Live band, {hourLabel(band.from)}–{hourLabel(band.to)}</span>
-            <span><b style={{ background: '#fff', boxShadow: '0 0 0 2px #d9a93f' }} />Current hour</span>
+            <span><b style={{ background: 'linear-gradient(#6AD1E3,#00C7B1)' }} />Posters created</span>
+            <span><b style={{ background: 'rgba(255,130,0,.2)', border: '1px dashed #FF8200' }} />Live band, {hourLabel(band.from)}–{hourLabel(band.to)}</span>
+            <span><b style={{ background: 'transparent', boxShadow: '0 0 0 2px #6AD1E3' }} />Current hour</span>
           </div>
           {stats?.byDay?.length > 1 && <div className={styles.days}>
             {stats.byDay.map(day => <div key={day.date} className={styles.day}><b>{day.count}</b>{dayLabel(day.date)}</div>)}
@@ -179,31 +162,15 @@ export default function NameArtReport() {
         </div>
       </Reveal>
 
-      <Reveal className={styles.section}>
-        <h2 className={styles.h2}>The guest experience</h2>
-        <p className={styles.sub}>Four steps, about half a minute from start to finish.</p>
-        <div className={styles.journey}>
-          {JOURNEY.map((step, index) => <div key={step.title} className={styles.step}>
-            <div className={styles.shot} data-fit={step.fit || 'cover'} style={step.bg ? { background: step.bg } : undefined}>
-              <img src={step.img} alt={step.title} loading="lazy" style={step.pos ? { objectPosition: step.pos } : undefined} />
-              <span className={styles.stepNo}>{index + 1}</span>
-            </div>
-            <h3>{step.title}</h3><p>{step.text}</p>
-          </div>)}
-        </div>
-      </Reveal>
-
-      <Reveal className={styles.section}>
-        <h2 className={styles.h2}>What we delivered</h2>
-        <p className={styles.sub}>Designed, built and run for the day.</p>
-        <div className={styles.features}>
-          {DELIVERED.map(([title, text]) => <div key={title} className={styles.feature}><b>{title}</b><span>{text}</span></div>)}
-        </div>
-      </Reveal>
-
       <footer className={styles.foot}>
-        <span><strong>Live data</strong> — refreshes every 10 seconds. Counting from {dayLabel(NAME_ART_REPORT.from)}, Bahrain time.</span>
-        <span>Guest names are never shown in this report. Posters are deleted after 48 hours.</span>
+        <div className={styles.brand}>
+          <img className={styles.logo} src="/branding/pico-logo.png" alt="Pico" />
+          <span className={styles.tagline}>Total Brand Activation</span>
+        </div>
+        <div className={styles.notes}>
+          <span><strong>Live data</strong> — refreshes every 10 seconds. Counting from {dayLabel(NAME_ART_REPORT.from)}, Bahrain time.</span>
+          <span>Guest names are never shown in this report. Posters are deleted after 48 hours.</span>
+        </div>
       </footer>
     </div>
   </main>;
