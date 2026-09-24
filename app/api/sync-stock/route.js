@@ -47,7 +47,10 @@ async function ensureBucket() {
 
 /**
  * Log into OSFam and return the asset map plus the session cookie.
- * { assetMap: { ASSETCODE: { available, imgPath, assetId } }, assetById: { ID: ASSETCODE }, cookieHeader }
+ * { assetsById: { ID: { id, code, available, imgPath, assetId } },
+ *   rowsByCode: { ASSETCODE: [row, ...] }, cookieHeader }
+ * OSFam reuses asset codes across different items, so rows are keyed by their
+ * unique numeric ID and codes map to every row that carries them.
  */
 async function fetchOsfamAssets() {
     // 1. Get initial session cookie
@@ -82,8 +85,8 @@ async function fetchOsfamAssets() {
     const html = await assetRes.text();
 
     // 4. Parse rows — extract assetCode, available qty, primary image, and numeric asset ID
-    const assetMap = {};
-    const assetById = {};
+    const assetsById = {};
+    const rowsByCode = {};
     const rowRegex = /<tr\s+data-category[^>]*>([\s\S]*?)<\/tr>/g;
     let match;
 
@@ -106,19 +109,39 @@ async function fetchOsfamAssets() {
         if (cells.length >= 9) {
             const assetCode = (cells[2] || '').toUpperCase().trim();
             const available = parseInt(cells[8], 10);
-            if (assetCode && !isNaN(available)) {
-                assetMap[assetCode] = { available, imgPath, assetId };
-                const osfamId = (cells[0] || '').trim();
-                if (/^\d+$/.test(osfamId)) assetById[osfamId] = assetCode;
+            const osfamId = (cells[0] || '').trim();
+            if (assetCode && /^\d+$/.test(osfamId) && !isNaN(available)) {
+                const row = { id: osfamId, code: assetCode, available, imgPath, assetId: assetId || osfamId };
+                assetsById[osfamId] = row;
+                (rowsByCode[assetCode] ||= []).push(row);
             }
         }
     }
 
-    if (Object.keys(assetMap).length === 0) {
+    if (Object.keys(assetsById).length === 0) {
         throw new Error('No assets parsed — login may have failed or page structure changed');
     }
 
-    return { assetMap, assetById, cookieHeader };
+    return { assetsById, rowsByCode, cookieHeader };
+}
+
+/**
+ * Pick the OSFam row for a Pico product. Names look like
+ * "ID 1373 ;1374 FBEANBAGSB1 [25] ...": the ID whose row carries the same code
+ * wins; if the code has drifted (FIKEMTBL vs FIKEAMTBL) a single listed ID is
+ * trusted; a bare code is only used when OSFam has exactly one row for it.
+ */
+function resolveOsfamRow(name, assetsById, rowsByCode) {
+    const code = extractAssetCode(name);
+    const idRows = extractAssetIds(name).map((id) => assetsById[id]).filter(Boolean);
+    const exact = idRows.find((row) => row.code === code);
+    if (exact) return { row: exact };
+    if (idRows.length === 1) return { row: idRows[0] };
+    if (idRows.length > 1) return { reason: 'several OSFam IDs, none with this code' };
+    const byCode = code ? rowsByCode[code] || [] : [];
+    if (byCode.length === 1) return { row: byCode[0] };
+    if (byCode.length > 1) return { reason: `code ${code} is used by ${byCode.length} OSFam items and no ID matched` };
+    return { reason: code ? 'not in OSFam' : 'no code in name' };
 }
 
 /**
@@ -207,7 +230,7 @@ export async function POST() {
         await ensureBucket();
 
         // Login once and reuse the session for all subsequent requests
-        const { assetMap, assetById, cookieHeader } = await fetchOsfamAssets();
+        const { assetsById, rowsByCode, cookieHeader } = await fetchOsfamAssets();
 
         // Get all Pico products
         const { data: products, error: fetchErr } = await supabase
@@ -219,24 +242,21 @@ export async function POST() {
         const skipped = [];
 
         for (const product of products) {
-            let code = extractAssetCode(product.name);
-            if (!code || !(code in assetMap)) {
-                // Codes in product names sometimes drift from OSFam (e.g. FIKEMTBL vs
-                // FIKEAMTBL); the numeric OSFam ID in the name is the reliable fallback.
-                const byId = extractAssetIds(product.name).map((id) => assetById[id]).find(Boolean);
-                if (byId) code = byId;
-            }
-            if (!code || !(code in assetMap)) {
-                skipped.push({ id: product.id, name: product.name, reason: code ? 'not in OSFam' : 'no code in name' });
+            const { row, reason } = resolveOsfamRow(product.name, assetsById, rowsByCode);
+            if (!row) {
+                skipped.push({ id: product.id, name: product.name, reason });
                 continue;
             }
 
-            const { available: newStock, imgPath, assetId } = assetMap[code];
+            const { code, available: newStock, imgPath, assetId } = row;
+            // Shared codes get the OSFam ID in the storage key so two items never
+            // overwrite each other's photos.
+            const imageKey = (rowsByCode[code] || []).length > 1 ? `${code}-${row.id}` : code;
 
             // Upload primary image
             let newImage = product.image;
             if (imgPath) {
-                const uploaded = await uploadImageToSupabase(imgPath, code, product.image);
+                const uploaded = await uploadImageToSupabase(imgPath, imageKey, product.image);
                 if (uploaded) newImage = uploaded;
             }
 
@@ -247,7 +267,7 @@ export async function POST() {
                 const gPath = galleryPaths[i];
                 // Use a stable key based on asset code + index so reruns skip re-uploads
                 const fileBasename = gPath.split('/').pop().replace(/\.[^.]+$/, '');
-                const storageKey = `${code}_gallery_${fileBasename}`;
+                const storageKey = `${imageKey}_gallery_${fileBasename}`;
                 const uploaded = await uploadImageToSupabase(gPath, storageKey, null);
                 if (uploaded) galleryUrls.push(uploaded);
             }
@@ -307,7 +327,7 @@ export async function POST() {
 
         return NextResponse.json({
             success: true,
-            osfamAssets: Object.keys(assetMap).length,
+            osfamAssets: Object.keys(assetsById).length,
             picoProducts: products.length,
             matched: toUpdate.length,
             changed: changed.length,
@@ -316,6 +336,7 @@ export async function POST() {
             imageUpdates,
             galleryUpdates,
             errors,
+            skipped,
             details: toUpdate,
         });
 
