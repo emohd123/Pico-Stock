@@ -46,6 +46,12 @@ const nextConfig = {
     domains: ['localhost'],
     unoptimized: true,
   },
+  // Short links for sharing event pages with clients.
+  async redirects() {
+    return [
+      { source: '/rbc', destination: '/events/royal-bahrain-concours-2026', permanent: false },
+    ];
+  },
 };
 
 module.exports = nextConfig;

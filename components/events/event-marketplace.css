@@ -531,6 +531,16 @@
 }
 
 .evm-modal-image { width: 100%; max-height: 320px; object-fit: contain; background: #fff; display: block; padding: 12px; }
+.evm-card-photos { position: absolute; right: 8px; bottom: 8px; background: rgba(0, 0, 0, 0.6); color: #fff; font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
+.evm-gallery-main { position: relative; background: #fff; }
+.evm-gallery-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; border-radius: 50%; border: none; background: rgba(0, 0, 0, 0.45); color: #fff; font-size: 1.3rem; line-height: 1; cursor: pointer; }
+.evm-gallery-nav.prev { left: 10px; }
+.evm-gallery-nav.next { right: 10px; }
+.evm-gallery-count { position: absolute; right: 10px; bottom: 10px; background: rgba(0, 0, 0, 0.55); color: #fff; font-size: 0.72rem; padding: 2px 8px; border-radius: 999px; }
+.evm-gallery-thumbs { display: flex; gap: 6px; padding: 8px 12px; overflow-x: auto; border-bottom: 1px solid var(--border-subtle, rgba(255,255,255,0.08)); }
+.evm-gallery-thumbs button { padding: 0; border: 2px solid transparent; border-radius: 6px; background: #fff; cursor: pointer; flex-shrink: 0; }
+.evm-gallery-thumbs button.active { border-color: var(--pico-teal, #14b8a6); }
+.evm-gallery-thumbs img { width: 56px; height: 44px; object-fit: contain; display: block; border-radius: 4px; }
 .evm-modal-body { padding: 1.2rem 1.4rem 1.5rem; display: flex; flex-direction: column; gap: 0.6rem; }
 .evm-modal-body p { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; margin: 0; }
 .evm-modal-code { font-family: monospace; font-size: 0.75rem !important; color: var(--text-muted) !important; }

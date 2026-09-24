@@ -47,6 +47,47 @@ function hasKnownStock(item) {
     return item?.stock !== null && item?.stock !== undefined && Number(item.stock) > 0;
 }
 
+// Same rule as the storefront: a gallery, when present, is the full photo set.
+function itemPhotos(item) {
+    const list = Array.isArray(item?.gallery) && item.gallery.length > 0 ? item.gallery : [item?.image];
+    return [...new Set(list.filter(Boolean))];
+}
+
+function ItemGallery({ photos, name }) {
+    const [active, setActive] = useState(0);
+    if (photos.length === 0) return null;
+    const step = (delta) => setActive((index) => (index + delta + photos.length) % photos.length);
+    return (
+        <div className="evm-gallery">
+            <div className="evm-gallery-main">
+                <img src={photos[active]} alt={name} className="evm-modal-image" />
+                {photos.length > 1 && (
+                    <>
+                        <button type="button" className="evm-gallery-nav prev" onClick={() => step(-1)} aria-label="Previous photo">‹</button>
+                        <button type="button" className="evm-gallery-nav next" onClick={() => step(1)} aria-label="Next photo">›</button>
+                        <span className="evm-gallery-count">{active + 1} / {photos.length}</span>
+                    </>
+                )}
+            </div>
+            {photos.length > 1 && (
+                <div className="evm-gallery-thumbs">
+                    {photos.map((url, index) => (
+                        <button
+                            key={url}
+                            type="button"
+                            className={index === active ? 'active' : ''}
+                            onClick={() => setActive(index)}
+                            aria-label={`Photo ${index + 1}`}
+                        >
+                            <img src={url} alt="" loading="lazy" />
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
 function storageKey(slug) {
     return `pico-event-basket:${slug}`;
 }
@@ -550,6 +591,7 @@ function ItemCard({ item, days, currency, quantity, onAdd, onQuantity }) {
     const perDay = item.hasOverride ? null : item.perDayPrice;
     const soldOut = item.stock === 0 || item.inStock === false;
     const cap = maxQuantity(item);
+    const photos = itemPhotos(item);
 
     return (
         <article className={`evm-card${quantity > 0 ? ' selected' : ''}`}>
@@ -560,6 +602,7 @@ function ItemCard({ item, days, currency, quantity, onAdd, onQuantity }) {
                     <div className="evm-card-placeholder">Pico</div>
                 )}
                 {quantity > 0 && <span className="evm-card-flag">{quantity} in request</span>}
+                {photos.length > 1 && <span className="evm-card-photos">{photos.length} photos</span>}
             </button>
             <div className="evm-card-body">
                 <span className="evm-card-cat">{categoryLabel(item.category)}</span>
@@ -597,7 +640,7 @@ function ItemCard({ item, days, currency, quantity, onAdd, onQuantity }) {
                 <div className="evm-modal-overlay" onClick={() => setOpen(false)}>
                     <div className="evm-modal" onClick={(e) => e.stopPropagation()}>
                         <button type="button" className="evm-modal-close" onClick={() => setOpen(false)} aria-label="Close">×</button>
-                        {item.image && <img src={item.image} alt={name} className="evm-modal-image" />}
+                        <ItemGallery photos={photos} name={name} />
                         <div className="evm-modal-body">
                             <span className="evm-card-cat">{categoryLabel(item.category)}</span>
                             <h3>{name}</h3>
