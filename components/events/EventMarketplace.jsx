@@ -565,6 +565,7 @@ function ItemCard({ item, days, currency, quantity, onAdd, onQuantity }) {
                 <span className="evm-card-cat">{categoryLabel(item.category)}</span>
                 <h3>{name}</h3>
                 {item.note && <p className="evm-card-note">{item.note}</p>}
+                {item.size && <p className="evm-card-size">Size: {item.size}</p>}
                 {hasKnownStock(item) && !soldOut && <p className="evm-card-stock">{item.stock} available</p>}
                 <div className="evm-card-price">
                     {item.eventPrice > 0 ? (
@@ -603,6 +604,7 @@ function ItemCard({ item, days, currency, quantity, onAdd, onQuantity }) {
                             {item.source === 'catalogue' && item.name !== name && <p className="evm-modal-code">{item.name}</p>}
                             {item.description && <p>{item.description}</p>}
                             {item.note && <p className="evm-card-note">{item.note}</p>}
+                            {item.size && <p className="evm-card-size">Size: {item.size}</p>}
                             {hasKnownStock(item) && !soldOut && <p className="evm-card-stock">{item.stock} available</p>}
                             <div className="evm-card-price">
                                 {item.eventPrice > 0 ? (

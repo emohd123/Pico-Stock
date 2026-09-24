@@ -472,6 +472,7 @@ function CatalogueTab({ config, catalogue, updateItemSetting, setAllVisible, upd
                                     <th className="num">Event price ({days} days)</th>
                                     <th>Override</th>
                                     <th>Order</th>
+                                    <th>Size</th>
                                     <th>Note for clients</th>
                                 </tr>
                             </thead>
@@ -524,6 +525,14 @@ function CatalogueTab({ config, catalogue, updateItemSetting, setAllVisible, upd
                                                     style={{ minWidth: 64, width: 64 }}
                                                     value={settings.sortOrder ?? 0}
                                                     onChange={(e) => updateItemSetting(item.id, { sortOrder: e.target.value })}
+                                                />
+                                            </td>
+                                            <td>
+                                                <input
+                                                    type="text"
+                                                    placeholder={item.size || 'e.g. H75 × W85 × L150 cm'}
+                                                    value={settings.size || ''}
+                                                    onChange={(e) => updateItemSetting(item.id, { size: e.target.value })}
                                                 />
                                             </td>
                                             <td>

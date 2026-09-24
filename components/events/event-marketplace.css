@@ -275,6 +275,7 @@
 .evm-card-body h3, .evm-modal-body h3 { font-size: 1rem; font-weight: 700; line-height: 1.3; margin: 0; }
 
 .evm-card-note { color: var(--text-secondary); font-size: 0.8rem; margin: 0; }
+.evm-card-size { color: var(--text-secondary); font-size: 0.78rem; margin: 0; }
 .evm-card-stock { color: #1fa36b; font-size: 0.78rem; font-weight: 600; margin: 0; }
 .evm-qty button:disabled { opacity: 0.35; cursor: not-allowed; }
 
