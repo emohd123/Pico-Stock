@@ -88,11 +88,43 @@ function ItemGallery({ photos, name }) {
     );
 }
 
+/**
+ * Links opened from WhatsApp/Telegram sometimes land in the browser's
+ * "Desktop site" mode: the page is laid out ~980px wide and shrunk onto the
+ * phone, so text is tiny and the desktop two-column layout shows. When a small
+ * touch screen gets a much wider layout, scale the page back to phone size and
+ * switch on the phone layout (media queries can't see the scaling).
+ */
+function useDesktopModeOnPhone() {
+    const [zoom, setZoom] = useState(1);
+    useEffect(() => {
+        const root = document.documentElement;
+        const measure = () => {
+            const screenWidth = Number(window.screen?.width) || 0;
+            const touch = (navigator.maxTouchPoints || 0) > 0 || window.matchMedia?.('(pointer: coarse)').matches;
+            const needed = touch && screenWidth > 0 && screenWidth <= 600 && window.innerWidth >= screenWidth * 1.5;
+            const next = needed ? Math.round((window.innerWidth / screenWidth) * 100) / 100 : 1;
+            setZoom(next);
+            root.style.zoom = next === 1 ? '' : String(next);
+            root.style.setProperty('--evm-zoom', String(next));
+        };
+        measure();
+        window.addEventListener('resize', measure);
+        return () => {
+            window.removeEventListener('resize', measure);
+            root.style.zoom = '';
+            root.style.removeProperty('--evm-zoom');
+        };
+    }, []);
+    return zoom > 1;
+}
+
 function storageKey(slug) {
     return `pico-event-basket:${slug}`;
 }
 
 export default function EventMarketplace({ slug }) {
+    const narrow = useDesktopModeOnPhone();
     const [event, setEvent] = useState(null);
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -332,7 +364,7 @@ export default function EventMarketplace({ slug }) {
     const isOpen = event?.status === 'open';
 
     return (
-        <div className="evm-page">
+        <div className={`evm-page${narrow ? ' evm-narrow' : ''}`}>
             <header className="evm-topbar">
                 <div className="evm-topbar-inner">
                     <a href="/" className="evm-brand" aria-label="Pico">

@@ -588,7 +588,10 @@
 .evm-footer .evm-container { display: flex; flex-wrap: wrap; gap: 0.4rem 1.4rem; align-items: center; }
 .evm-footer strong { color: var(--text-secondary); }
 
-/* Responsive */
+/* Responsive
+   Each phone rule is written twice: once for real phone widths, and once under
+   .evm-narrow, which the page adds when a phone is showing it in "Desktop site"
+   mode (see useDesktopModeOnPhone) — media queries can't see that case. */
 @media (max-width: 960px) {
   .evm-layout { grid-template-columns: 1fr; }
   .evm-summary {
@@ -617,7 +620,45 @@
   .evm-card-actions .evm-qty { justify-content: center; }
   .evm-form-row { grid-template-columns: 1fr; }
   .evm-topbar-title strong { font-size: 0.85rem; }
+  /* Shorter header so the first products show on the first screen. */
+  .evm-hero { padding: 1.4rem 0 1.2rem; }
+  .evm-hero h1 { font-size: 1.75rem; margin: 0.55rem 0 0.4rem; }
+  .evm-hero-tagline { font-size: 0.95rem; margin: 0; }
+  .evm-hero-meta { gap: 0.35rem 1rem; margin-top: 0.8rem; font-size: 0.8rem; }
+  .evm-main { padding-top: 1.2rem; }
+  .evm-intro { font-size: 0.88rem; line-height: 1.55; margin-bottom: 1rem; }
 }
+
+.evm-narrow .evm-layout { grid-template-columns: 1fr; }
+.evm-narrow .evm-summary {
+  position: fixed;
+  inset: auto 0 0 0;
+  top: auto;
+  max-height: calc(88vh / var(--evm-zoom, 1));
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  transform: translateY(105%);
+  transition: transform var(--transition-base);
+  z-index: 55;
+  box-shadow: var(--shadow-lg);
+}
+.evm-narrow .evm-summary.open { transform: translateY(0); }
+.evm-narrow .evm-summary-close { display: block; }
+.evm-narrow .evm-mobile-bar { display: flex; }
+.evm-narrow .evm-basket-btn span:first-child { display: none; }
+.evm-narrow .evm-toast { top: 70px; bottom: auto; }
+.evm-narrow .evm-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.7rem; }
+.evm-narrow .evm-card-body { padding: 0.7rem 0.75rem 0.85rem; }
+.evm-narrow .evm-card-actions { flex-direction: column; align-items: stretch; }
+.evm-narrow .evm-card-actions .evm-qty { justify-content: center; }
+.evm-narrow .evm-form-row { grid-template-columns: 1fr; }
+.evm-narrow .evm-topbar-title strong { font-size: 0.85rem; }
+.evm-narrow .evm-hero { padding: 1.4rem 0 1.2rem; }
+.evm-narrow .evm-hero h1 { font-size: 1.75rem; margin: 0.55rem 0 0.4rem; }
+.evm-narrow .evm-hero-tagline { font-size: 0.95rem; margin: 0; }
+.evm-narrow .evm-hero-meta { gap: 0.35rem 1rem; margin-top: 0.8rem; font-size: 0.8rem; }
+.evm-narrow .evm-main { padding-top: 1.2rem; }
+.evm-narrow .evm-intro { font-size: 0.88rem; line-height: 1.55; margin-bottom: 1rem; }
+.evm-narrow .evm-modal { max-height: calc(92vh / var(--evm-zoom, 1)); }
 
 /* ==========================================================================
    Event marketplace — admin (/admin/<event>)
