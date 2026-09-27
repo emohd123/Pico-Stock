@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getConfirmedEventStockHolds } from '@/lib/eventMarketplaceStore';
 import { getProducts, getProductsByCategory, getOrders, getOrderStockInfo, addProducts, updateProduct, deleteProduct, deleteProducts } from '@/lib/store';
 
 const STOCK_HOLD_STATUSES = new Set(['confirmed', 'processing']);
@@ -47,12 +48,14 @@ export async function GET(request) {
     const category = searchParams.get('category');
 
     try {
-        const [products, orders] = await Promise.all([
+        const [products, orders, eventHolds] = await Promise.all([
             category ? getProductsByCategory(category) : getProducts(),
             getOrderStockInfo().catch(() => []),
+            getConfirmedEventStockHolds().catch(() => []),
         ]);
 
-        return NextResponse.json(applyReservedStock(products, orders));
+        // Confirmed event requests hold stock just like confirmed shop orders.
+        return NextResponse.json(applyReservedStock(products, [...orders, ...eventHolds]));
     } catch (error) {
         return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });
     }

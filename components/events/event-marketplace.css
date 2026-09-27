@@ -588,6 +588,8 @@
 .evm-footer .evm-container { display: flex; flex-wrap: wrap; gap: 0.4rem 1.4rem; align-items: center; }
 .evm-footer strong { color: var(--text-secondary); }
 
+.evm-subchips .evm-chip { font-size: 0.78rem; padding-top: 0.3rem; padding-bottom: 0.3rem; }
+
 /* Responsive
    Each phone rule is written twice: once for real phone widths, and once under
    .evm-narrow, which the page adds when a phone is showing it in "Desktop site"

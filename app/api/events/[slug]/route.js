@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getEventMarketplace } from '@/lib/eventMarketplaceStore';
+import { getConfirmedEventStockHolds, getEventMarketplace } from '@/lib/eventMarketplaceStore';
 import { buildEventCatalogue } from '@/lib/eventMarketplacePricing';
 import { getProducts, getOrderStockInfo } from '@/lib/store';
 
@@ -8,10 +8,12 @@ export const dynamic = 'force-dynamic';
 const STOCK_HOLD_STATUSES = new Set(['confirmed', 'processing']);
 
 async function loadProductsWithAvailability() {
-    const [products, orders] = await Promise.all([
+    const [products, shopOrders, eventHolds] = await Promise.all([
         getProducts(),
         getOrderStockInfo().catch(() => []),
+        getConfirmedEventStockHolds().catch(() => []),
     ]);
+    const orders = [...shopOrders, ...eventHolds];
     const reserved = new Map();
     for (const order of orders) {
         if (!STOCK_HOLD_STATUSES.has(order.status)) continue;

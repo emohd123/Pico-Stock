@@ -19,9 +19,26 @@ function categoryLabel(category) {
 }
 
 function displayName(item) {
-    if (item.source === 'custom') return item.name;
+    // Only raw OSFam names ("ID 1530 FVCHBLU1 [144] ...") need cleaning; the
+    // cleaner would otherwise mangle plain names ("Soft Frame Sofa" → "Soft Sofa").
+    if (item.source === 'custom' || !/^ID\b/i.test(item.name || '')) return item.name;
     const clean = extractCleanName(item.name);
     return clean === '--' ? item.name : clean;
+}
+
+// Furniture splits into seating and tables by the item name; "table" is
+// checked first so "Coffee Table Set" isn't read as seating.
+const FURNITURE_GROUPS = [
+    { value: 'seating', label: 'Seating' },
+    { value: 'tables', label: 'Tables' },
+    { value: 'other', label: 'Other' },
+];
+
+function furnitureGroup(item) {
+    const name = `${displayName(item)} ${item.name}`.toLowerCase();
+    if (/\b(table|console|desk|bar station|counter)\b/.test(name)) return 'tables';
+    if (/\b(chair|stool|sofa|armchair|pouffe|ottoman|bench|bean ?bag|lounge set|seat)/.test(name)) return 'seating';
+    return 'other';
 }
 
 function formatDateRange(startDate, endDate) {
@@ -131,6 +148,7 @@ export default function EventMarketplace({ slug }) {
     const [loadError, setLoadError] = useState('');
 
     const [category, setCategory] = useState('all');
+    const [furnitureFilter, setFurnitureFilter] = useState('all');
     const [query, setQuery] = useState('');
     const [basket, setBasket] = useState({}); // id → { quantity, comment }
     const [basketOpen, setBasketOpen] = useState(false);
@@ -202,10 +220,17 @@ export default function EventMarketplace({ slug }) {
         const q = query.trim().toLowerCase();
         return items.filter((item) => {
             if (category !== 'all' && item.category !== category) return false;
+            if (category === 'furniture' && furnitureFilter !== 'all' && furnitureGroup(item) !== furnitureFilter) return false;
             if (!q) return true;
             return `${item.name} ${displayName(item)} ${item.description} ${item.category}`.toLowerCase().includes(q);
         });
-    }, [items, category, query]);
+    }, [items, category, furnitureFilter, query]);
+
+    const furnitureCounts = useMemo(() => {
+        const counts = { seating: 0, tables: 0, other: 0 };
+        for (const item of items) if (item.category === 'furniture') counts[furnitureGroup(item)] += 1;
+        return counts;
+    }, [items]);
 
     const basketLines = useMemo(() => Object.entries(basket)
         .map(([id, entry]) => {
@@ -450,12 +475,28 @@ export default function EventMarketplace({ slug }) {
                                                     key={value}
                                                     type="button"
                                                     className={`evm-chip${category === value ? ' active' : ''}`}
-                                                    onClick={() => setCategory(value)}
+                                                    onClick={() => { setCategory(value); setFurnitureFilter('all'); }}
                                                 >
                                                     {categoryLabel(value)}
                                                 </button>
                                             ))}
                                         </div>
+                                        {category === 'furniture' && (
+                                            <div className="evm-chips evm-subchips">
+                                                {[{ value: 'all', label: 'All furniture' }, ...FURNITURE_GROUPS]
+                                                    .filter((group) => group.value === 'all' || furnitureCounts[group.value] > 0)
+                                                    .map((group) => (
+                                                        <button
+                                                            key={group.value}
+                                                            type="button"
+                                                            className={`evm-chip${furnitureFilter === group.value ? ' active' : ''}`}
+                                                            onClick={() => setFurnitureFilter(group.value)}
+                                                        >
+                                                            {group.label}{group.value !== 'all' ? ` (${furnitureCounts[group.value]})` : ''}
+                                                        </button>
+                                                    ))}
+                                            </div>
+                                        )}
                                     </div>
 
                                     {items.length === 0 ? (
