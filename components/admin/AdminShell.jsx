@@ -17,6 +17,7 @@ const ADMIN_NAV_ITEMS = [
     { key: 'concours-3d', href: '/admin/pico-ai/royal-bahrain-concours-2026', label: '　Concours 3D Studio' },
     { key: 'grid-measure', href: '/admin/grid-measure', label: 'Grid Measure' },
     { key: 'royal-bahrain-concours-2026', href: '/admin/royal-bahrain-concours-2026', label: 'ROYAL BAHRAIN CONCOURS 2026' },
+    { key: 'reports', href: '/admin/reports', label: 'Reports' },
     { key: 'quotations', href: '/admin/quotations', label: 'Quotation Studio' },
     { key: 'ministry', href: '/quotations', label: 'Ministry Quotations' },
 ];

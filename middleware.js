@@ -17,6 +17,7 @@ function isProtectedApiRequest(pathname, method) {
         return !(publicCatalogue || publicRequest || publicRequestForm);
     }
     if (pathname.startsWith('/api/pico-ai/admin')) return true;
+    if (pathname.startsWith('/api/reports')) return true;
     if (pathname.startsWith('/api/quotations')) return true;
     if (pathname.startsWith('/api/stand-design')) return true;
     if (pathname.startsWith('/api/grid-measure')) return true;

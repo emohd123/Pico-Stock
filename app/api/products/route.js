@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getAdminCookieName, verifyAdminSessionToken } from '@/lib/adminAuth';
 import { getConfirmedEventStockHolds } from '@/lib/eventMarketplaceStore';
 import { getProducts, getProductsByCategory, getOrders, getOrderStockInfo, addProducts, updateProduct, deleteProduct, deleteProducts } from '@/lib/store';
 
@@ -55,7 +56,13 @@ export async function GET(request) {
         ]);
 
         // Confirmed event requests hold stock just like confirmed shop orders.
-        return NextResponse.json(applyReservedStock(products, [...orders, ...eventHolds]));
+        const withStock = applyReservedStock(products, [...orders, ...eventHolds]);
+
+        // Cost prices are supplier costs (our margin is the difference), so only
+        // a signed-in admin gets them; the public shop and event pages don't.
+        const token = request.cookies.get(getAdminCookieName())?.value || '';
+        const isAdmin = token ? await verifyAdminSessionToken(token).catch(() => false) : false;
+        return NextResponse.json(isAdmin ? withStock : withStock.map(({ costPrice, ...rest }) => rest));
     } catch (error) {
         return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });
     }

@@ -509,6 +509,13 @@ export default function AdminDashboard() {
                         Grid Measure
                     </Link>
                     <Link
+                        href="/admin/reports"
+                        className="admin-sidebar-item"
+                        style={{ display: 'block', textDecoration: 'none' }}
+                    >
+                        Reports
+                    </Link>
+                    <Link
                         href="/admin/quotations"
                         className="admin-sidebar-item"
                         style={{ display: 'block', textDecoration: 'none' }}
