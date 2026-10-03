@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { EventStudioEngine, localGroundPoint, tentFootprint, tentWallSegments } from '../lib/eventStudioEngine.js';
 import { scaledFootprint, perimeterExtrusion, pagodaGeometry, gableGeometry, clubhouseRoofGeometry } from '../lib/eventStudioGeometry.js';
-import { freeFloorSlot, clampIntoFootprint, rectsOverlap, rectInsideFootprint, occupantsOf, worldGroundPoint, polygonContains, terrainHeight, standingHeight, courseFeaturesUnder } from '../lib/eventStudioLayout.js';
+import { freeFloorSlot, clampIntoFootprint, rectsOverlap, rectInsideFootprint, occupantsOf, worldGroundPoint, polygonContains, terrainHeight, standingHeight, courseFeaturesUnder, groundHeight, reliefHeight } from '../lib/eventStudioLayout.js';
 import { readFileSync } from 'node:fs';
 
 let tests=0;
@@ -165,8 +165,9 @@ await test('the everyday playing surface is not reported as a problem',()=>{
     assert.deepEqual(courseFeaturesUnder({site:{},objects:[surface(benign),tent]},tent),[],`${benign} is not a build problem`);
   assert.deepEqual(courseFeaturesUnder({site:{},objects:[surface('cartpath'),tent]},tent),['a cart path']);
   const scene=JSON.parse(readFileSync('private/event-studio/rbc/site-seed.json','utf8'));
-  const flagged=scene.objects.filter(o=>courseFeaturesUnder(scene,o).length);
-  assert.equal(flagged.length,9,`the delivered layout has nine structures needing ground works, got ${flagged.length}`);
+  const flagged=scene.objects.filter(o=>o.kind!=='car'&&courseFeaturesUnder(scene,o).length);
+  assert.equal(flagged.length,10,`the delivered layout has ten structures needing ground works, got ${flagged.length}`);
+  assert.deepEqual(courseFeaturesUnder(scene,scene.objects.find(o=>o.id==='coffee-bar')),['a driving-range mound'],'the coffee bar stands on mound 4, as Pico’s overlay shows');
 });
 await test('dragging a piece across the slope does not make it climb',()=>{
   // the renderer draws a root at stored elevation PLUS the ground under it; the write-back has to
@@ -207,6 +208,45 @@ await test('the delivered site carries the measured ground and the traced course
   for(const o of course) for(const [x,z] of o.points)
     assert.ok(o.position[0]+x>=b.minX-.5&&o.position[0]+x<=b.maxX+.5&&o.position[2]+z>=b.minZ-.5&&o.position[2]+z<=b.maxZ+.5,`${o.id} stays inside the event footprint`);
   assert.ok(scene.site.references.some(r=>r.notes?.includes('OpenStreetMap')),'the traced source is credited');
+});
+
+await test('a driving-range mound rises as a smooth dome and only lifts what stands on it',()=>{
+  const site={terrain:{model:'plane',northFallPerMetre:-0.006685,crossFallPerMetre:0,referenceX:0}};
+  const mound={id:'venue-mound-9',name:'Mound',kind:'ground',position:[40,0,10],rotation:[0,0,0],dimensions:[10,1,10],
+    points:Array.from({length:36},(_,i)=>[5*Math.cos(i*Math.PI/18),5*Math.sin(i*Math.PI/18)]),metadata:{surface:'mound',relief:{height:1}}};
+  const scene={site,objects:[mound]};
+  assert.ok(Math.abs(groundHeight(scene,40,10)-terrainHeight(site,40,10)-1)<1e-9,'the crown is a metre above the plane');
+  assert.ok(Math.abs(reliefHeight(scene,45,10))<1e-9&&Math.abs(reliefHeight(scene,50,10))<1e-9,'it meets the lawn at its rim and leaves the rest alone');
+  const half=reliefHeight(scene,42.5,10);assert.ok(Math.abs(half-.5)<1e-9,`half way out it is half height, got ${half}`);
+  assert.equal(standingHeight(scene,mound),terrainHeight(site,40,10),'the mound does not lift itself');
+  const car={id:'car-9',name:'Car',kind:'car',position:[41,0,10],rotation:[0,0,0],dimensions:[2.2,1.5,5]};
+  assert.ok(standingHeight({...scene,objects:[mound,car]},car)>terrainHeight(site,41,10)+.9,'a car on it is lifted');
+  const bunker={...mound,id:'venue-bunker-9',metadata:{surface:'bunker'}};
+  assert.deepEqual(courseFeaturesUnder({site,objects:[mound,car]},car),['a driving-range mound'],'a car on a mound is reported');
+  assert.deepEqual(courseFeaturesUnder({site,objects:[bunker,car]},car),[],'a car is not reported for a bunker, only for a mound');
+});
+await test('the 5 × 5 m booths follow Pico’s elevation: 3.5 m frame, 4.2 m opening, sized graphics',()=>{
+  const scene=JSON.parse(readFileSync('private/event-studio/rbc/site-seed.json','utf8'));
+  const booths=scene.objects.filter(o=>o.metadata?.booth);
+  assert.equal(booths.length,62,'every 5 × 5 m pagoda booth carries the spec');
+  for(const o of booths){
+    assert.equal(o.metadata.eaveHeight,3.5);assert.equal(o.dimensions[1],5.55);
+    assert.deepEqual([o.metadata.booth.fascia.width,o.metadata.booth.fascia.height,o.metadata.booth.fascia.bottom],[4.2,1,2.3]);
+    assert.deepEqual([o.metadata.booth.backwall.width,o.metadata.booth.backwall.height],[4.8,2.4]);
+    const {entrance}=tentWallSegments(o);assert.ok(Math.abs(entrance.width-(o.dimensions[0]-.8))<1e-9,`${o.id} opens the full width between its posts`);
+  }
+  const plain=scene.objects.find(o=>o.kind==='tent'&&!o.metadata?.booth&&!o.metadata?.supplierTent&&o.roofType==='pagoda');
+  assert.ok(tentWallSegments(plain).entrance.width<=3,'other tents keep a doorway');
+});
+await test('the course is aligned by the real shoreline, and the four mounds are in it',()=>{
+  const scene=JSON.parse(readFileSync('private/event-studio/rbc/site-seed.json','utf8'));
+  assert.equal(scene.site.georeference.version,2);
+  const mounds=scene.objects.filter(o=>o.metadata?.surface==='mound');
+  assert.equal(mounds.length,4);
+  for(const m of mounds){assert.ok(m.locked&&m.metadata.relief.height>0&&m.dimensions[0]>=9&&m.dimensions[0]<=12,`${m.id} is a locked dome of measured size`);
+    assert.ok(m.metadata.heightStatus==='estimated','its height is labelled an estimate');}
+  const cars=scene.objects.filter(o=>o.kind==='car'&&courseFeaturesUnder(scene,o).length);
+  assert.ok(cars.length>=1&&cars.every(o=>courseFeaturesUnder(scene,o).join()==='a driving-range mound'),'cars parked on a mound are found');
 });
 
 console.log(JSON.stringify({ok:true,tests}));
