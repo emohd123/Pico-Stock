@@ -6,7 +6,7 @@ ROOT=Path(__file__).resolve().parents[2];OUT=ROOT/'private/event-studio/rbc'
 s=json.loads((OUT/'site-seed.json').read_text());expected={o['id']:o for o in s['objects']};actual={o['event_object_id']:o for o in bpy.data.objects if o.get('event_object_id')};bpy.context.view_layer.update();errors=[];maximum=0
 for id,e in expected.items():
  if id not in actual:errors.append({'id':id,'error':'missing object'});continue
- o=actual[id];p=o.matrix_world.translation;back=[p.x,p.z,-p.y];dist=math.dist(back,e['position']);maximum=max(maximum,dist)
+ o=actual[id];p=o.matrix_world.translation;back=[p.x,p.z-o.get('event_ground_elevation',0),-p.y];dist=math.dist(back,e['position']);maximum=max(maximum,dist)
  if dist>.01:errors.append({'id':id,'positionErrorMetres':dist,'expected':e['position'],'actual':back})
  if max(abs(a-b) for a,b in zip(o['event_dimensions_m'],e['dimensions']))>.01:errors.append({'id':id,'error':'dimension mismatch'})
 for id in [f'A{i}' for i in range(1,28)]+[f'S{i}' for i in range(1,20)]+[f'V{i}' for i in range(1,7)]:

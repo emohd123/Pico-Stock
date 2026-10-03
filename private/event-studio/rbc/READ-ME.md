@@ -1,6 +1,6 @@
 # Royal Bahrain Concours 2026 - editable scene handoff
 
-Open `private/event-studio/rbc/Royal-Bahrain-Concours-2026.blend` in Blender 4.5 or newer. The file is self-contained: geometry and materials are embedded, with 871 source and furniture objects, presentation cameras, and an editable 90-second camera animation. It was built before the ground plane and the traced course features were added, so it is flat and carries no course surfaces; rebuild it from the current browser revision with the importer command below to pick those up.
+Open `private/event-studio/rbc/Royal-Bahrain-Concours-2026.blend` in Blender 4.5 or newer. The file is self-contained: geometry and materials are embedded, with 931 scene objects, 253 preserved furniture placements, presentation cameras, and an editable 90-second camera animation. It includes the current ground plane, mapped course features and supplier-corrected MQ40 lounge tents. All six presentation stills were rebuilt from this revision.
 
 Each tent is a named parent with separate roof, frame, walls, glazing and floor. Furniture is attached to its host tent and keeps its catalogue product ID. The original scene, calibration and furnishing records are embedded as Blender text blocks as well as included JSON files.
 
@@ -31,3 +31,9 @@ The included `Studio-User-Guide.md` explains browser navigation, saved versions,
 `Royal-Concours-Editable-Kit.zip` contains the Blender file, all 99 furniture GLBs, scripts, source PDF, guides and JSON records. Presentation renders and the recorded walkthrough are separate downloads to keep this kit below the storage upload limit.
 
 Venue refinement: the official Royal Golf Club photographs and the DP World Tour 2026 aerial-map inset corroborate the clubhouse and circular Majlis. The Majlis footprint is the original source vector 14482 (19.06577m diameter). Its 15m height, the main clubhouse 12m height, glazing, roof profile and narrow stone shoreline are editable photographic estimates. Existing source positions and footprints are retained. See `references/venue-research.md` and JSON for the evidence and confidence. The golf-tournament map is used only for permanent architecture.
+
+
+Supplier update (24 September 2026): the four car club lounges now use open MQ40 tents at 10.5 × 12 m and 6.8 m peak. The 95 m² supplier area is rounded; the nominal polygon is 94.5 m². The browser offers the three-peaked 12 × 6 m Arabesque alternative, with estimated 5.5 m overall height, and an optional 12 m glass front. Rental rates: MQ40 BHD 2,900; Arabesque BHD 2,400; glass BHD 1,800 extra. Furniture and décor are excluded; flooring, VAT and rental period unspecified. Photo-based curvature, finials, bracing and anchoring are visual approximations. See supplier/tent-options-report.json and the two original images.
+
+
+Supplier comparison library: `supplier/Lounge-Tent-Options.blend` contains three named reusable asset collections. `supplier/Lounge-Tent-Comparison.pdf` compares their matched-scale previews, footprint diagrams and rental rates. Library positions are for display only, not the event site. Each collection retains separate roof, frame, glazing and proposed floor meshes. Rebuild the library with `node --experimental-default-type=module scripts/event-studio/create-tent-library.mjs`, then run `blender --background --factory-startup --python scripts/event-studio/build_tent_library.py` from this project root. The PDF generator uses ReportLab and Windows Arial/Georgia fonts.

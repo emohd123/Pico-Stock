@@ -1,0 +1,14 @@
+import fs from 'node:fs/promises';
+import { LOUNGE_IDS, TENT_OPTIONS, applyTentOption, tentLayoutIssues } from '../../lib/eventStudioTents.js';
+import { validateEventLayout } from '../../lib/eventLayoutSchema.js';
+const input=process.argv[2];if(!input)throw new Error('Provide a reviewed merged scene JSON');
+const scene=validateEventLayout(JSON.parse(await fs.readFile(input,'utf8'))),before=structuredClone(scene);
+scene.objects=scene.objects.map(o=>LOUNGE_IDS.includes(o.id)?applyTentOption({...o,name:o.name.replace('Â·','·')},'mq40'):o);
+validateEventLayout(scene);
+const changed=scene.objects.filter((o,i)=>JSON.stringify(o)!==JSON.stringify(before.objects[i])).map(o=>o.id);
+if(changed.some(id=>!LOUNGE_IDS.includes(id)))throw new Error('Unexpected non-lounge change');
+const report={source:'User-supplied quotation and two supplier images, 24 September 2026',default:'Option A follows the hexagonal plan; Option B is an editable alternative, not an approved substitution.',updatedIds:changed,objects:scene.objects.length,furniturePreserved:scene.objects.filter(o=>o.kind==='furniture').length,positionsPreserved:true,options:TENT_OPTIONS,areaNote:'MQ40 nominal six-sided polygon 94.5 m²; supplier quoted usable area 95 m².',limits:'Ground plan positions are retained. MQ40 roof curvature and bracing are photo reconstructions; Arabesque height is estimated. Neither model is a structural or fabrication drawing. All prices exclude furniture and décor; VAT, flooring and rental period unspecified.',checks:scene.objects.filter(o=>LOUNGE_IDS.includes(o.id)).map(o=>({id:o.id,dimensions:o.dimensions,issues:tentLayoutIssues(scene,o)}))};
+await fs.mkdir('private/event-studio/rbc/supplier',{recursive:true});
+await fs.writeFile('private/event-studio/rbc/site-seed.json',JSON.stringify(scene,null,2));
+await fs.writeFile('private/event-studio/rbc/supplier/tent-options-report.json',JSON.stringify(report,null,2));
+console.log(JSON.stringify(report,null,2));

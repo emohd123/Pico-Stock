@@ -1,7 +1,22 @@
 {
-  "host": "http://localhost:3120",
-  "date": "2026-09-18",
-  "checks": [
+  "testedAt": "2026-09-24",
+  "localPersistenceConfirmed": true,
+  "sceneObjects": 931,
+  "preservedFurniture": 253,
+  "allExistingPositionsPreserved": true,
+  "priorLiveRevision": 46,
+  "newPermanentVenueFeatures": 46,
+  "engineChecks": 27,
+  "supplierChecks": [
+    "Three options: dimensions, price, open/glass collisions, browser/Blender canopy parity",
+    "Neighbour overlap and outside-furniture warnings",
+    "Choice and glass persist after browser reload",
+    "Option switch preserves all furniture properties",
+    "Enter tent and keyboard walk",
+    "Selected tent cost CSV",
+    "No editor errors"
+  ],
+  "editingChecks": [
     "Tent numeric movement saved",
     "All contained furniture moves with tent",
     "Contained furniture follows tent rotation",
@@ -12,34 +27,81 @@
     "Furniture replacement preserves identity and quantity",
     "Undo and redo operate after replacement",
     "Version restore returns exact baseline",
-    "Cloud layout persists after reload"
+    "Local layout persists after reload"
   ],
-  "passed": 11,
-  "baselineRestoredRevision": 12,
-  "renderer": "ANGLE NVIDIA GeForce GTX 1080 Ti Direct3D11",
   "recording": {
-    "resolution": [
-      1920,
-      1080
+    "file": "Royal-Concours-Walkthrough-1080p.webm",
+    "samples": [
+      18,
+      14,
+      20,
+      23,
+      23,
+      25,
+      26,
+      30,
+      28,
+      30,
+      32,
+      31,
+      31,
+      32,
+      40,
+      43,
+      39,
+      44,
+      46,
+      36,
+      40,
+      41,
+      39,
+      39,
+      40,
+      35,
+      31,
+      32,
+      31,
+      30,
+      30,
+      31,
+      31,
+      31,
+      31,
+      33,
+      30,
+      28,
+      32,
+      32,
+      35,
+      32,
+      31,
+      25,
+      35,
+      41,
+      48,
+      44,
+      58,
+      60,
+      58,
+      60,
+      59,
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      57,
+      60
     ],
-    "durationSeconds": 90,
-    "medianFps": 30,
-    "minimumFps": 14,
-    "maximumFps": 60,
-    "note": "Realtime capture; varying view complexity. Constant 30fps MP4 conversion repeats frames when rendering is slower."
-  },
-  "postRecordingOverviewFps": 32,
-  "mobile": {
-    "viewport": [
-      375,
-      812
+    "minimum": 14,
+    "median": 33,
+    "maximum": 60,
+    "canvas": [
+      595,
+      502
     ],
-    "fps": 38,
-    "horizontalOverflow": false,
-    "libraryDrawer": "passed"
+    "error": null
   },
-  "interiorFpsRange": [
-    48,
-    60
-  ]
+  "limits": "Approximate venue surroundings and photographic construction details; Arabesque height estimated. Supplied MQ40 horizontal bounds and peak are modelled. Manufacturer construction drawings and site survey still required for fabrication accuracy."
 }

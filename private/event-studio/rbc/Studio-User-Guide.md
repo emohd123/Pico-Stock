@@ -11,13 +11,25 @@ Open https://pico-stock.vercel.app/admin/pico-ai/royal-bahrain-concours-2026 and
 - Roofs, walls, location labels, and evening lighting have separate controls along the bottom of the view.
 - **Views** contains saved cameras and the guided tour. Save your own viewpoint with a name.
 
-The starting layout contains 916 scene objects: the event kit, plus the existing course features, which are locked. The clubhouse and Majlis appearance has been refined using official venue photographs, with event photographs guiding tent surfaces, lawn and outdoor details. These visual references help recognize the venue; they do not supply survey measurements.
+The starting layout contains 931 scene objects: the event kit, plus the existing course features, which are locked. The clubhouse and Majlis appearance has been refined using official venue photographs, with event photographs guiding tent surfaces, lawn and outdoor details. These visual references help recognize the venue; they do not supply survey measurements.
 
 ## The ground and the existing course
 
 The site is modelled on its measured slope: it falls 3.8 m from the clubhouse end down to the lake end, 1 in 150. Tent floors stay level, so a tent on the slope stands proud of the ground on its low side, which is what happens on site. Local mounding, bunker depth and green contours are not modelled; no survey of them was supplied and public elevation data is too coarse to resolve them.
 
 The bunkers, greens, teeing grounds, fairway, practice ground and cart paths that already exist on the course are drawn in and locked, so you can see what the event is being built on. Select a tent, stage or building and the inspector says so when it stands on a bunker, a putting green, a teeing ground or a cart path, because those change what it costs to build there. Standing on the fairway or the practice ground is not flagged: the whole event stands on those. Nine structures currently need ground works: eight on a bunker and one on a cart path, and the overview panel keeps that count.
+
+## Car club lounge options
+
+Select Lounge 1, Lounge 2 west/east, or Lounge 3. **Lounge tent option** switches between MQ40 and Arabesque while retaining the tent centre, orientation and every furniture position.
+
+Choose **Compare all three configurations** to see matched-scale 3D previews, footprint diagrams and prices together. Each option checks the selected lounge's current neighbours and furniture before you apply it. Choose **Use** to apply an option, or close the comparison to keep your current design. The comparison also has a one-page PDF download.
+
+- **Option A:** open MQ40 hexagon, 10.5 × 12 m, 6.8 m peak. BHD 2,900 per tent. Quoted area is 95 m²; the nominal hexagon is 94.5 m².
+- **Option B:** open Arabesque, 12 m frontage × 6 m depth, three peaks. BHD 2,400 per tent. Its 5.5 m height and 2.8 m eave are visual estimates.
+- **Glass front:** optional on B only, 12 m long, BHD 1,800 extra (BHD 4,200 total). Enter from the open back or sides.
+
+Furniture and décor are excluded. The shown deck is a proposed addition. Flooring, VAT and rental period were not specified. These are supplied rental rates, not an order or confirmed booking. Changing a footprint reports furniture outside or neighbouring tent overlaps; rearrange using Plan interior. Exact-size editing remains available but the supplier rate then needs reconfirmation. Undo, autosave and named versions apply to options too. Files includes a live CSV of selected lounge costs. Reference photos and the distinction between measured dimensions and estimated construction details are in each lounge inspector.
 
 ## Edit tents and furniture
 
@@ -50,5 +62,7 @@ The camera button downloads the current view as PNG. Six prepared 3840 × 2160 r
 ## Blender and source accuracy
 
 Open the delivered `.blend` in Blender 4.5 or newer. Named source objects, individual structural parts, furniture, materials, and cameras remain editable. A 90-second camera animation is included. The project kit preserves the importer, source JSON, registry, and GLB library; see its READ-ME for the rebuild command.
+
+**Lounge-Tent-Options.blend** is a separate library of all three supplier configurations. Each is a named asset collection with editable roof, frame, glazing and proposed deck. Append a collection into your Blender project or add the file's folder as an Asset Library. Its side-by-side arrangement is for comparison only; use the main event file for site positions. The library, comparison PDF and render previews are in **Files & versions** and the editable project kit.
 
 The PDF's six dimension spans establish the horizontal metre scale. Source plot labels A1–A27, S1–S19 and V1–V6 are retained. Shape tracing and simplification introduce small tolerances; the calibration report records them. Heights, roof sections, openings, site levels, materials, generic cars and trees are visualization estimates. Furniture dimensions are labelled as listed, partially estimated, or estimated according to the catalogue. The original source plan and catalogue remain the references for later technical verification.

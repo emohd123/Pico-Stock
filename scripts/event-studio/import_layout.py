@@ -7,6 +7,9 @@ from pathlib import Path
 from mathutils import Vector
 ROOT=Path(__file__).resolve().parents[2]; ASSET_CACHE={}; MATERIALS={}
 def coord(p):return (p[0],-p[2],p[1])
+def terrain_height(site,x,z):
+ t=site.get('terrain',{})
+ return t.get('northFallPerMetre',0)*(x-t.get('referenceX',0))+t.get('crossFallPerMetre',0)*z if t.get('model')=='plane' else 0
 def footprint(o):
  w,h,d=o['dimensions'];pts=o.get('points')
  if not pts:return [[-w/2,-d/2],[w/2,-d/2],[w/2,d/2],[-w/2,d/2]]
@@ -34,6 +37,9 @@ def world_parent(o):
  p=bpy.data.objects.new(o['id']+' · '+o['name'],None);bpy.context.collection.objects.link(p);p.location=coord(o['position']);p.rotation_euler=(0,0,o.get('rotation',[0,0,0])[1]);p['event_object_id']=o['id'];p['event_kind']=o['kind'];p['event_dimensions_m']=o['dimensions'];p['event_metadata']=json.dumps(o.get('metadata',{}));p['event_object_json']=json.dumps(o);p.hide_viewport=not o.get('visible',True);p.hide_render=not o.get('visible',True);return p
 
 def tent(o,parent):
+ if o.get('metadata',{}).get('supplierTent'):
+  from supplier_tents import build
+  return build(o,parent,footprint,mesh,material,polyfloor,rod,cube,coord)
  w,h,d=o['dimensions'];e=o.get('metadata',{}).get('eaveHeight',3.2);e=min(e,h-.2);pts=footprint(o)
  pts=[p for i,p in enumerate(pts) if math.dist(p,pts[i-1])>.025]
  canvas_color=o.get('color','#ece8d9');ivory=material('Tensile canvas '+canvas_color,canvas_color,.68);frame=material('Brushed champagne aluminium','#96958c',.32,.55);floor=material('Warm oak event decking','#ae9168',.8);glass=material('Clear soft-blue glazing','#b1c9c5',.22,.05,.72);dark=material('Tent joinery','#6d695c',.7)
@@ -255,10 +261,13 @@ def import_scene(scene,clear=True):
  sc=bpy.context.scene;sc.unit_settings.system='METRIC';sc.unit_settings.scale_length=1
  registry_path=ROOT/'private/event-studio/rbc/furniture-assets.json';registry={a['id']:a for a in json.loads(registry_path.read_text())['items']} if registry_path.exists() else {}
  turf=detailed_surface('ground',scene['site'].get('appearance',{}).get('turfColor','#71924c'))
- b=scene['site']['bounds'];cube('Event site terrain',((b['minX']+b['maxX'])/2,-(b['minZ']+b['maxZ'])/2,-.2),(b['maxX']-b['minX'],b['maxZ']-b['minZ'],.3),turf)
+ b=scene['site']['bounds'];corners=[(b['minX'],b['minZ']),(b['maxX'],b['minZ']),(b['maxX'],b['maxZ']),(b['minX'],b['maxZ'])];mesh('Event site terrain',[(x,-z,terrain_height(scene['site'],x,z)-.05) for x,z in corners],[(3,2,1,0)],turf)
+ byid={o['id']:o for o in scene['objects']}
+ layers={o['id']:i for i,o in enumerate(sorted([o for o in scene['objects'] if o['kind'] in ['ground','path','water']],key=lambda o:o['id']))}
  missing=[];parents={}
  for n,o in enumerate(scene['objects']):
   par=world_parent(o);parents[o['id']]=par;kind=o['kind'];w,h,d=o['dimensions'];col=o.get('color','#e2dfd0')
+  host=byid.get(o.get('metadata',{}).get('parentTentId'),o);ground=terrain_height(scene['site'],host['position'][0],host['position'][2]);par.location.z+=ground;par['event_ground_elevation']=ground
   if kind=='tent':tent(o,par)
   elif kind=='furniture':
    if not furniture(o,par,registry):missing.append(o['assetId']);cube('Missing model proxy',(0,0,h/2),(w,d,h),material('Missing furniture',col),par)
@@ -266,7 +275,7 @@ def import_scene(scene,clear=True):
   elif kind=='car':clone_children(car_template(col),par,(w/1.9,d/4.7,h/1.5))
   elif kind=='tree':clone_children(palm_template(),par,(w/5,d/5,h/7))
   elif kind in ['ground','path','water','stage']:
-   mat=detailed_surface(kind,'#567f85' if kind=='water' else col) if kind in ['ground','water'] else material(kind+' '+col,col,.85);pts=footprint(o);polyfloor(par.name+' | Surface',pts,.025 if kind=='water' else .04 if kind=='ground' else max(h,.06),mat,par)
+   mat=detailed_surface(kind,'#567f85' if kind=='water' else col) if kind in ['ground','water'] else material(kind+' '+col,col,.85);pts=footprint(o);polyfloor(par.name+' | Surface',pts,({'water':.018,'ground':.005,'path':.065}.get(kind,max(h,.06))+layers.get(o['id'],0)*.001),mat,par)
    if kind=='water' and o.get('metadata',{}).get('stoneEdge'):stone_edge(o,par)
   elif kind=='sign':
    mat=material('Arch ivory',col);cube('Arch left',(-w/2+.2,0,h/2),(.4,d,h),mat,par);cube('Arch right',(w/2-.2,0,h/2),(.4,d,h),mat,par);cube('Arch header',(0,0,h-.3),(w,d,.6),mat,par)
@@ -275,6 +284,12 @@ def import_scene(scene,clear=True):
    if o.get('points'):
     pts=footprint(o);verts=[(x,-z,y) for y in [0,h] for x,z in pts];N=len(pts);faces=[tuple(range(N,N*2))]+[(i,(i+1)%N,(i+1)%N+N,i+N) for i in range(N)];mesh(par.name+' | Building shell',verts,faces,mat,par)
    else:cube(par.name+' | Building shell',(0,0,h/2),(w,d,h),mat,par)
+  if kind in ['ground','path','water']:
+   angle=o.get('rotation',[0,0,0])[1];cs=math.cos(angle);sn=math.sin(angle)
+   for child in par.children:
+    if child.type!='MESH':continue
+    for v in child.data.vertices:
+     x,z=v.co.x,-v.co.y;wx=o['position'][0]+x*cs+z*sn;wz=o['position'][2]-x*sn+z*cs;v.co.z+=terrain_height(scene['site'],wx,wz)-ground
   if n%100==0:print('Imported',n,'/',len(scene['objects']),flush=True)
  sc['event_scene_json']=json.dumps(scene);sc['event_missing_assets']=json.dumps(sorted(set(missing)));sc['event_source']=scene['site']['sourceName'];sc['event_measurement_notice']='Horizontal footprints follow the dimension-calibrated plan. Heights, roofs, furniture reconstructions, terrain and material choices are editable estimates.'
  bpy.context.view_layer.update()

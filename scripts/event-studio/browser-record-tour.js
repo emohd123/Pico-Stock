@@ -1,5 +1,5 @@
 async (page) => {
-  if(new URL(page.url()).hostname!=='localhost')throw new Error('This development verification runs only on localhost.');
+  if(!page.url().startsWith('http://localhost:3121/'))throw new Error('This development verification runs only on localhost.');
   await page.reload();await page.locator('.event-studio canvas').waitFor({timeout:60000});
   await page.waitForFunction(()=>!document.querySelector('.es-model-loading')&&!document.querySelector('.es-model-warning'),{timeout:60000});
   await page.getByRole('button',{name:'Files & versions',exact:true}).click();

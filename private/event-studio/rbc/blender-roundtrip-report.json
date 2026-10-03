@@ -1,7 +1,7 @@
 {
-  "objectsExpected": 871,
-  "objectsPresent": 871,
-  "maximumPositionErrorMetres": 3.348670956372799e-05,
+  "objectsExpected": 931,
+  "objectsPresent": 931,
+  "maximumPositionErrorMetres": 3.3486727627396856e-05,
   "identityAndPositionPass": true,
   "errors": [],
   "cameras": [

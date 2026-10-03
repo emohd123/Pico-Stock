@@ -10,7 +10,7 @@ b=json.loads(json.dumps(byid['lounge-1']));b['dimensions'][0]*=1.5;b['dimensions
 f=json.loads(json.dumps(next(o for o in base['objects'] if o['kind']=='furniture' and o['metadata']['parentTentId']=='owners-enclosure')));f['metadata']['parentTentId']='A1';f['color']='#bc8442';f['position']=[a['position'][0]+1,.13,a['position'][2]+1];f['dimensions']=[v*k for v,k in zip(f['dimensions'],[1.2,.8,.7])];f['visible']=False
 scene={**base,'objects':[a,b,f]};parents,missing=import_scene(scene);bpy.context.view_layer.update();errors=[]
 for o in [a,b,f]:
- p=parents[o['id']];error=(p.matrix_world.translation-Vector(coord(o['position']))).length
+ p=parents[o['id']];expected=Vector(coord(o['position']));expected.z+=p.get('event_ground_elevation',0);error=(p.matrix_world.translation-expected).length
  if error>.01:errors.append(o['id']+' world position')
 roof=next(o for o in parents['A1'].children if o.get('component')=='roof');maxz=max(v.co.z for v in roof.data.vertices)
 if abs(maxz-7)>.001:errors.append('Edited roof height')

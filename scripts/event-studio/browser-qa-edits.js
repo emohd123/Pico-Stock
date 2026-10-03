@@ -1,5 +1,5 @@
 async (page) => {
-  if(new URL(page.url()).hostname!=='localhost')throw new Error('This development verification runs only on localhost.');
+  if(!page.url().startsWith('http://localhost:3121/'))throw new Error('This development verification runs only on localhost.');
   const api='/api/pico-ai/admin/event-layouts/royal-bahrain-concours-2026';
   await page.evaluate(async api=>{const p=await fetch(api).then(r=>r.json());if(p.revision>0)await fetch(api+'/revisions/0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({expectedRevision:p.revision,name:'Restore source baseline for verification'})});},api);
   await page.reload();await page.locator('.event-studio canvas').waitFor({timeout:60000});
@@ -35,6 +35,6 @@ async (page) => {
   await page.locator('.event-studio canvas').waitFor({timeout:60000});current=(await read()).scene;
   check(JSON.stringify(current)===JSON.stringify(baseline),'Version restore returns exact baseline');
   await page.reload();await page.locator('.event-studio canvas').waitFor({timeout:60000});
-  current=(await read()).scene;check(JSON.stringify(current)===JSON.stringify(baseline),'Cloud layout persists after reload');
+  current=(await read()).scene;check(JSON.stringify(current)===JSON.stringify(baseline),'Local layout persists after reload');
   result.revision=(await read()).revision;return result;
 }

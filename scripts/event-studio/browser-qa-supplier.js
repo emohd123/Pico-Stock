@@ -1,0 +1,33 @@
+async (page) => {
+  if(!page.url().startsWith('http://localhost:3121/'))throw new Error('Local test only');
+  const api='/api/pico-ai/admin/event-layouts/royal-bahrain-concours-2026';
+  const read=()=>page.evaluate(async api=>fetch(api).then(r=>r.json()),api);
+  let state=await read();if(state.persistence!=='local')throw new Error('No cloud test writes');
+  const baseline=await page.evaluate(async api=>fetch(api+'/revisions/0').then(r=>r.json()),api);
+  const original=baseline.scene||baseline;
+  const checks=[];const check=(ok,msg)=>{if(!ok)throw new Error(msg);checks.push(msg);};
+  const save=async()=>{await page.getByRole('button',{name:'Save layout',exact:true}).click();await page.waitForFunction(()=>document.querySelector('.es-save-state')?.textContent.startsWith('Saved'));return read();};
+  await page.reload();await page.getByRole('textbox',{name:'Search site locations',exact:true}).fill('Lounge 1');
+  await page.getByRole('button',{name:/^Lounge 1 /}).click();
+  check(await page.getByRole('combobox',{name:'Lounge tent option',exact:true}).inputValue()==='arabesque','Arabesque choice persists after reload');
+  check(await page.getByRole('checkbox',{name:'Add 12 m glass front'}).isChecked(),'Glass option persists after reload');
+  check((await page.getByRole('region',{name:'Supplier tent options'}).innerText()).includes('BHD 4,200'),'Price displays BHD 4,200');
+  const furniture=state.scene.objects.filter(o=>o.kind==='furniture');
+  await page.getByRole('combobox',{name:'Lounge tent option',exact:true}).selectOption('mq40');state=await save();
+  check(state.scene.objects.find(o=>o.id==='lounge-1').dimensions.join(',')==='10.5,6.8,12','MQ40 restores supplier dimensions');
+  check(JSON.stringify(state.scene.objects.filter(o=>o.kind==='furniture'))===JSON.stringify(furniture),'Switching options preserves every furniture property');
+  await page.getByRole('button',{name:'Enter tent',exact:true}).click();
+  await page.locator('.es-viewport canvas').focus();await page.keyboard.down('KeyW');await page.waitForTimeout(600);await page.keyboard.up('KeyW');
+  await page.screenshot({path:'output/playwright/supplier/inside-mq40.png'});
+  checks.push('Enter tent and keyboard walk exercised');
+  await page.getByRole('button',{name:'Orbit view',exact:true}).click();
+  await page.getByRole('combobox',{name:'Lounge tent option',exact:true}).selectOption('arabesque');
+  await page.getByRole('checkbox',{name:'Add 12 m glass front'}).check();await save();
+  await page.getByRole('button',{name:'Enter tent',exact:true}).click();await page.screenshot({path:'output/playwright/supplier/inside-arabesque.png'});
+  await page.getByRole('button',{name:'Orbit view',exact:true}).click();
+  await page.getByRole('combobox',{name:'Lounge tent option',exact:true}).selectOption('mq40');await save();
+  await page.getByRole('button',{name:'Files & versions',exact:true}).click();
+  const download=page.waitForEvent('download');await page.getByRole('button',{name:/^Lounge tent costs/}).click();const csv=await download;await csv.saveAs('output/playwright/supplier/lounge-costs.csv');checks.push('Tent cost CSV downloaded');
+  const end=await read();check(!await page.locator('.es-alert').count(),'No editor errors');
+  return {checks,revision:end.revision,objects:end.scene.objects.length,furniture:furniture.length,fps:await page.locator('.es-performance').innerText()};
+}

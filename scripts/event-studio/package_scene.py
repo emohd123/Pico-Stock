@@ -3,9 +3,12 @@ from pathlib import Path
 import json,zipfile,hashlib
 from PIL import Image
 ROOT=Path(__file__).resolve().parents[2];OUT=ROOT/'private/event-studio/rbc'
-NAMES=['Royal-Bahrain-Concours-2026.blend','site-seed.json','furniture-assets.json','calibration-report.json','furnishing-report.json','blender-roundtrip-report.json','blender-edited-import-report.json','blender-render-report.json','READ-ME.md','Studio-User-Guide.md','Source-Site-Plan.pdf','source-preview.png','source-model-overlay.jpg','venue-refinement-report.json','references/venue-research.json','references/venue-research.md','references/venue-reference-index.json','references/event-photos/event-photo-research.json']
-SCRIPTS=['import_layout.py','build_blender.py','verify_blender.py','test_import_layout.py','extract_site.py','furnish_seed.py','probe_source.py','extract_car_bounds.py','detect_shapes.py','detect_polygons.py','detect_cars.py','validate_source.py','package_scene.py','venue_enhancements.py']
+NAMES=['Royal-Bahrain-Concours-2026.blend','site-seed.json','furniture-assets.json','calibration-report.json','furnishing-report.json','blender-roundtrip-report.json','blender-edited-import-report.json','blender-render-report.json','READ-ME.md','Studio-User-Guide.md','Source-Site-Plan.pdf','source-preview.png','source-model-overlay.jpg','venue-refinement-report.json','references/venue-research.json','references/venue-research.md','references/venue-reference-index.json','references/event-photos/event-photo-research.json','supplier/tent-options-report.json','supplier/mq40-reference.jpg','supplier/arabesque-reference.jpg']
+SCRIPTS=['import_layout.py','build_blender.py','verify_blender.py','test_import_layout.py','extract_site.py','furnish_seed.py','probe_source.py','extract_car_bounds.py','detect_shapes.py','detect_polygons.py','detect_cars.py','validate_source.py','package_scene.py','venue_enhancements.py','supplier_tents.py']
+NAMES += ['supplier/Lounge-Tent-Options.blend','supplier/Lounge-Tent-Comparison.pdf','supplier/tent-library.json','supplier/tent-library-report.json','supplier/mq40-preview.png','supplier/arabesque-preview.png','supplier/arabesque-glass-preview.png']
+SCRIPTS += ['create-tent-library.mjs','build_tent_library.py','build_tent_comparison_pdf.py']
 files=[OUT/n for n in NAMES]+[ROOT/'scripts/event-studio'/n for n in SCRIPTS]
+files += [ROOT/'lib/eventStudioTents.js',ROOT/'lib/eventStudioLayout.js']
 stills=sorted((OUT/'renders').glob('[0-9][0-9]-*.png'))
 assert len(stills)==6
 for f in stills:
