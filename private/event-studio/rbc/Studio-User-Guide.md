@@ -19,6 +19,10 @@ The site is modelled on its measured slope: it falls 3.8 m from the clubhouse en
 
 The bunkers, greens, teeing grounds, fairway, practice ground and cart paths that already exist on the course are drawn in and locked, so you can see what the event is being built on. Select a tent, stage or building and the inspector says so when it stands on a bunker, a putting green, a teeing ground, a cart path or a driving-range mound, because those change what it costs to build there. Select a display car and it says so when the car stands on a mound, where it would sit tilted. Standing on the fairway or the practice ground is not flagged: the whole event stands on those. Ten structures currently need ground works, including the Coffee Bar on a mound, and five cars stand on a mound; the overview panel keeps both counts. The course is placed by matching the plan's lake to the real shoreline in satellite imagery, to within about 3 m.
 
+## The surroundings
+
+Around the event you see the real neighbourhood: fairways and greens, desert sand, roads and the lakes, classified from satellite imagery, and the houses and buildings at their mapped footprints. They are there to orient you and to make the views honest; they cannot be selected or edited, and the heights of the houses are estimates.
+
 ## 5 × 5 m exhibitor booths
 
 Every 5 × 5 m booth follows Pico's elevation of 30 September 2026: a 3.5 m frame on 400 mm red posts, a 4.2 × 1.0 m fascia graphic lit by an LED strip over a 4.2 m wide, 2.3 m high opening, and a 4.8 × 2.4 m backwall graphic inside. Select a booth to see these print sizes in the inspector, and type an exhibitor into **Fascia name** to show it on the fascia; leave it empty to show the plot name. The backwall shows its print size until real artwork is supplied.

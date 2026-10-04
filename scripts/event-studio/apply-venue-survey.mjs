@@ -105,6 +105,17 @@ for (const o of scene.objects) {
 }
 
 const site = scene.site;
+// The ground and buildings around the event, built by scripts/event-studio/build_ground_map.py.
+const surroundings = JSON.parse(await fs.readFile('public/event-studio/rbc-context.json', 'utf8'));
+// A content hash in each address, so a rebuilt map is never shadowed by a cached copy.
+const { createHash } = await import('node:crypto');
+const version = async file => createHash('sha256').update(await fs.readFile(file)).digest('hex').slice(0, 10);
+site.context = {
+  ground: `${surroundings.ground}?v=${await version('public/event-studio/rbc-ground.png')}`,
+  features: `/event-studio/rbc-context.json?v=${await version('public/event-studio/rbc-context.json')}`,
+  bounds: surroundings.bounds, cell: surroundings.cell,
+  buildings: surroundings.buildings.length, sources: surroundings.sources, notes: surroundings.notes,
+};
 site.georeference = {
   version: 2,
   origin: { lat: 26.0932677, lon: 50.5673768 },

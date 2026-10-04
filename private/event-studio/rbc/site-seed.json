@@ -119,6 +119,24 @@
       "method": "The plan’s lake fitted to the shoreline traced from Esri World Imagery, rotation and scale free: mean misfit 0.7 m. The same fit puts the two paved circles beside the Majlis within 0.2 m and 0.4 m of the imagery, unprompted.",
       "supersedes": "The 20 September fit to the OpenStreetMap lake outline, which slid the plan about 12 m along its length.",
       "note": "The plan’s drawing of the existing venue is about 1.4% smaller than the ground. Course features and mounds are placed against the drawn venue, so they line up with the plan as drawn."
+    },
+    "context": {
+      "ground": "/event-studio/rbc-ground.png?v=e3d629af1d",
+      "features": "/event-studio/rbc-context.json?v=89ee1281d1",
+      "bounds": {
+        "minX": -560,
+        "maxX": 560,
+        "minZ": -420,
+        "maxZ": 420
+      },
+      "cell": 0.5,
+      "buildings": 247,
+      "sources": [
+        "Ground cover classified from Esri World Imagery (turf, sand, water, paving), half-metre cells",
+        "Building footprints from Microsoft Global ML Building Footprints, ODbL",
+        "Roads, lakes and further buildings (c) OpenStreetMap contributors, ODbL"
+      ],
+      "notes": "Surroundings for orientation and views. Footprints are mapped; heights are not, so houses are drawn 7.5 m high and long open shelters 4.2 m."
     }
   },
   "tour": [

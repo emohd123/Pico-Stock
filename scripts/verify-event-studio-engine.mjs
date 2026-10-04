@@ -249,4 +249,24 @@ await test('the course is aligned by the real shoreline, and the four mounds are
   assert.ok(cars.length>=1&&cars.every(o=>courseFeaturesUnder(scene,o).join()==='a driving-range mound'),'cars parked on a mound are found');
 });
 
+await test('the surroundings are mapped data, versioned, credited, and never drawn over a planned structure',async()=>{
+  const { createHash }=await import('node:crypto');
+  const scene=JSON.parse(readFileSync('private/event-studio/rbc/site-seed.json','utf8')),context=scene.site.context;
+  const hash=file=>createHash('sha256').update(readFileSync(file)).digest('hex').slice(0,10);
+  assert.equal(context.ground,`/event-studio/rbc-ground.png?v=${hash('public/event-studio/rbc-ground.png')}`,'the ground map address carries its content hash');
+  assert.equal(context.features,`/event-studio/rbc-context.json?v=${hash('public/event-studio/rbc-context.json')}`,'so does the buildings file');
+  const png=readFileSync('public/event-studio/rbc-ground.png'),width=png.readUInt32BE(16),height=png.readUInt32BE(20);
+  assert.equal(width,(context.bounds.maxX-context.bounds.minX)/context.cell,'one pixel per cell across');
+  assert.equal(height,(context.bounds.maxZ-context.bounds.minZ)/context.cell,'and down');
+  const features=JSON.parse(readFileSync('public/event-studio/rbc-context.json','utf8'));
+  assert.equal(features.buildings.length,context.buildings);
+  assert.ok(features.sources.some(s=>s.includes('OpenStreetMap'))&&features.sources.some(s=>s.includes('Microsoft')),'both building sources are credited');
+  const structures=scene.objects.filter(o=>['tent','stage','building'].includes(o.kind));
+  for(const b of features.buildings){
+    const cx=b.points.reduce((t,p)=>t+p[0],0)/b.points.length,cz=b.points.reduce((t,p)=>t+p[1],0)/b.points.length;
+    assert.ok(b.height>2&&b.height<40,'a plausible height');
+    for(const o of structures){const [lx,lz]=localGroundPoint(o,cx,cz);const inside=o.points?.length?polygonContains(scaledFootprint(o),lx,lz):Math.abs(lx)<o.dimensions[0]/2&&Math.abs(lz)<o.dimensions[2]/2;assert.ok(!inside,`a mapped building sits inside ${o.id}`);}
+  }
+});
+
 console.log(JSON.stringify({ok:true,tests}));
