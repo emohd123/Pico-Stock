@@ -27,6 +27,10 @@ Around the event you see the real neighbourhood: fairways and greens, desert san
 
 Every 5 × 5 m booth follows Pico's elevation of 30 September 2026: a 3.5 m frame on 400 mm red posts, a 4.2 × 1.0 m fascia graphic lit by an LED strip over a 4.2 m wide, 2.3 m high opening, and a 4.8 × 2.4 m backwall graphic inside. Select a booth to see these print sizes in the inspector, and type an exhibitor into **Fascia name** to show it on the fascia; leave it empty to show the plot name. The backwall shows its print size until real artwork is supplied.
 
+## Tent roofs, frames and light
+
+The marquees are built the way frame tents are: a pitched marquee spans its short side and grows in 5 m bays, so its ridge runs the long way. Step inside and you see the aluminium frame overhead: a portal rafter at every bay, the ridge beam and, on the wide halls, a purlin halfway up each slope. Pagodas show their hip rafters and king post, and the hexagonal pavilions their hips to the apex. The frame lifts off with the roof in the plan view. White marquee fabric lets light through, so ceilings glow, a little brighter on the sunlit slope. **Evening light** sets a low sun in the west-south-west, lights the marquees from inside and makes the booth fascias glow. Frame spacing and sections are standard practice; a supplier's drawings would fix them exactly.
+
 ## Car club lounge options
 
 Select Lounge 1, Lounge 2 west/east, or Lounge 3. **Lounge tent option** switches between MQ40 and Arabesque while retaining the tent centre, orientation and every furniture position.

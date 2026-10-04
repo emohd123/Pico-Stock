@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { EventStudioEngine, localGroundPoint, tentFootprint, tentWallSegments } from '../lib/eventStudioEngine.js';
-import { scaledFootprint, perimeterExtrusion, pagodaGeometry, gableGeometry, clubhouseRoofGeometry } from '../lib/eventStudioGeometry.js';
+import { scaledFootprint, perimeterExtrusion, pagodaGeometry, gableGeometry, pyramidGeometry, gableFall, roofMembers, clubhouseRoofGeometry } from '../lib/eventStudioGeometry.js';
 import { freeFloorSlot, clampIntoFootprint, rectsOverlap, rectInsideFootprint, occupantsOf, worldGroundPoint, polygonContains, terrainHeight, standingHeight, courseFeaturesUnder, groundHeight, reliefHeight } from '../lib/eventStudioLayout.js';
 import { readFileSync } from 'node:fs';
 
@@ -76,6 +76,49 @@ await test('resizing a traced pavilion changes render and walking perimeter with
   const original=JSON.stringify(hexagon.points),o={...hexagon,dimensions:[20,9,6]};const points=tentFootprint(o);
   assert.equal(Math.max(...points.map(p=>p[0]))-Math.min(...points.map(p=>p[0])),20);assert.equal(Math.max(...points.map(p=>p[1]))-Math.min(...points.map(p=>p[1])),6);assert.equal(JSON.stringify(hexagon.points),original);
   for(const geometry of [pagodaGeometry(points,3,9),gableGeometry(points,3,9)]){geometry.computeBoundingBox();assert.equal(geometry.boundingBox.max.y,9);assert.ok(Array.from(geometry.attributes.position.array).every(Number.isFinite));geometry.dispose();}
+});
+// The Oasis Club's traced outline: a 35 × 10 m marquee with one corner stepped in.
+const notched=[[16.1,-5.23],[-4.79,-5.23],[-7.49,-2.54],[-18.56,-2.54],[-18.56,4.44],[16.1,4.44]];
+await test('every tent roof faces outward whichever way its outline was traced, so only its inside glows',()=>{
+  const a=new THREE.Vector3(),b=new THREE.Vector3(),c=new THREE.Vector3();
+  for(const outline of [[[-5,-10],[5,-10],[5,10],[-5,10]],notched,hexagon.points])for(const points of [outline,[...outline].reverse()]){
+    for(const geometry of [pagodaGeometry(points,3,6),gableGeometry(points,3,6),pyramidGeometry(points,3,6)]){
+      const position=geometry.toNonIndexed().getAttribute('position');
+      for(let i=0;i<position.count;i+=3){
+        a.fromBufferAttribute(position,i);b.fromBufferAttribute(position,i+1);c.fromBufferAttribute(position,i+2);
+        const normal=b.clone().sub(a).cross(c.clone().sub(a));if(normal.length()<1e-9)continue;
+        const away=a.clone().add(b).add(c).divideScalar(3);away.y-=1.5;   // from a point on the tent's axis, below the eaves
+        assert.ok(normal.dot(away)>0,'a roof face looks into the tent');
+      }
+      geometry.dispose();
+    }
+  }
+});
+await test('a marquee spans its short side: the ridge runs the long way unless the tent says otherwise',()=>{
+  assert.equal(gableFall(notched),1,'the 35 × 10 m Oasis Club falls across its 10 m width');
+  assert.equal(gableFall(notched.map(([x,z])=>[z,x])),0);
+  assert.equal(gableFall(notched,'z'),0,'an explicit ridge wins');
+  const geometry=gableGeometry([[-17.3,-4.8],[17.3,-4.8],[17.3,4.8],[-17.3,4.8]],3.2,5.6),position=geometry.getAttribute('position'),ridge=[];
+  for(let i=0;i<position.count;i++)if(position.getY(i)>5.59)ridge.push([position.getX(i),position.getZ(i)]);
+  assert.ok(ridge.every(([,z])=>Math.abs(z)<1e-6),'the ridge sits on the long centre line');
+  assert.ok(Math.min(...ridge.map(([x])=>x))<-17&&Math.max(...ridge.map(([x])=>x))>17,'and runs the full length');
+  geometry.dispose();
+});
+await test('the roof frame hangs under the fabric, with a portal rafter at every bay',()=>{
+  const raycaster=new THREE.Raycaster(),up=new THREE.Vector3(0,1,0),hall=[[-10,-20],[10,-20],[10,20],[-10,20]];
+  for(const [kind,points,eave,height] of [['gable',hall,4.2,8],['gable',notched,3.2,5.6],['pagoda',[[-2.5,-2.5],[2.5,-2.5],[2.5,2.5],[-2.5,2.5]],3.5,5.55],['hexagon',hexagon.points,3,6]]){
+    const geometry=kind==='gable'?gableGeometry(points,eave,height):kind==='pagoda'?pagodaGeometry(points,eave,height):pyramidGeometry(points,eave,height);
+    const roof=new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({side:THREE.DoubleSide})),members=roofMembers(kind,points,eave,height);
+    assert.ok(members.length>0,`${kind} has a frame`);
+    for(const {a,b,size} of members)for(let t=0;t<=1;t+=.125){
+      // The member's top edge, nudged off the centre line so a ray never threads a vertex exactly.
+      const p=new THREE.Vector3(...a).lerp(new THREE.Vector3(...b),t).add(new THREE.Vector3(.0123,size[1]/2+.005,.0071));
+      raycaster.set(p,up);assert.ok(raycaster.intersectObject(roof).length>0,`a ${kind} member pokes through the fabric`);
+    }
+    geometry.dispose();
+  }
+  const portals=roofMembers('gable',hall,4.2,8).filter(m=>m.a[2]===m.b[2]);
+  assert.equal(portals.length,2*9,'a 40 m hall has nine portal frames of two rafters');
 });
 await test('curved clubhouse roof follows a rotated plan perimeter and its requested height',()=>{
   const points=[[-12,-10],[14,8],[10,14],[-16,-4]],{geometry,top}=clubhouseRoofGeometry(points,12,[.82,.57]);geometry.computeBoundingBox();assert.ok(Math.abs(geometry.boundingBox.max.y-12)<.001);assert.ok(points.every(p=>top(p)>=8.63&&top(p)<=12.01));geometry.dispose();
