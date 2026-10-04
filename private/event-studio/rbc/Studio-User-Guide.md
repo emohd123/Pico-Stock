@@ -71,7 +71,7 @@ In the **Files** tab, **Venue references** opens the official source pages in a 
 
 ## Render and record
 
-The camera button downloads the current view as PNG. Six prepared 3840 × 2160 renders and a 90-second 1920 × 1080 MP4 are included with the finished files.
+The camera button downloads the current view as a high-quality PNG: drawn at up to twice the screen resolution, with soft ambient shading where tents meet the turf, under cars and furniture and in corners. The live view is unchanged. Six prepared 3840 × 2160 renders and a 90-second 1920 × 1080 MP4 are included with the finished files.
 
 **Record walkthrough** records the current scene's guided tour to a 1920 × 1080 WebM video for 90 seconds. Keep the tab visible. It captures the 3D canvas without the editor controls. Rendering quality and frame rate depend on the device and other running graphics tasks. Use Chrome or Edge for recording. The prepared MP4 is also suitable for presentation software that does not accept WebM.
 
