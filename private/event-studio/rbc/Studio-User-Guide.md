@@ -47,6 +47,14 @@ Select a tent, or any piece already standing in it, and the next item you add is
 
 The initial 238 furniture instances are a proposed arrangement across 28 zones. Stock warnings compare placed quantities against the catalogue snapshot. They do not reserve inventory. Use **Furniture schedule** for a CSV of the proposed quantities.
 
+## Furnish a tent with AI
+
+Select any tent and open **Furnish with AI** in the inspector. Describe what the tent is for, such as "VIP lounge for 30 guests with a coffee bar" or "client meetings with a reception desk", or pick one of the suggestions, then choose **Suggest three layouts**.
+
+Claude reads the brief and chooses arrangements and catalogue pieces: lounge sets, a majlis along the walls, dining rounds or long tables, cocktail tables, theatre rows, a bar against the back wall, a reception desk by the door. The studio then sets every piece out on that tent's own floor and checks it. The tent never changes size; pieces stay inside the walls and clear of each other, chairs are tucked to their tables, aisles and the entrance stay open, and only Pico Stock items that are in stock are used, counting what the rest of the event already uses. Whatever will not fit is left out and the card says so; when a piece is too large, a smaller one of the same kind is used and named.
+
+Each option shows a scaled plan of the tent with the entrance marked in red, the seats and pieces it actually holds, and the main items. **Use this layout** replaces the tent's furniture in one step (locked pieces stay, and were planned around); **Undo** brings back what was there. Tick **Keep the pieces already here** to add around the existing furniture instead. Planning takes about 15 to 40 seconds. If Claude cannot be reached, the studio's own planner offers three layouts instead and says so. Proposed furniture does not reserve stock.
+
 ## Save, restore, and exchange layouts
 
 Changes autosave to the event's private cloud layout. **Save layout** saves immediately. **Files & versions** lets you name a version and restore any retained version as a new revision. Undo and Redo cover the current editing session.
