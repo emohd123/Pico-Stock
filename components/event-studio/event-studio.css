@@ -41,3 +41,13 @@
 .es-ai-option ul{list-style:none;padding:0;margin:0 0 8px;font-size:10px;color:#6f8562;line-height:1.7}.es-ai-option li{overflow-wrap:anywhere}
 .es-ai-note{color:#7a5f2f!important;background:#f8f0d9;padding:6px 8px;border-radius:3px}
 .es-ai-option .es-primary:disabled,.es-ai-furnish>.es-primary:disabled{opacity:.6;cursor:not-allowed}
+.es-measure{position:absolute;z-index:4;top:119px;left:17px;width:238px;max-height:calc(100% - 210px);overflow-y:auto;background:#f9faf1f2;border:1px solid #dae1d1;border-radius:5px;box-shadow:0 4px 20px #1d382018;padding:10px 11px;color:#345442;scrollbar-width:thin}
+.es-measure-head{display:flex;align-items:center;gap:7px;color:#4d6b4a}.es-measure-head strong{font-size:11px;color:#244a39}.es-measure-head button{margin-left:auto;border:0;background:transparent;font-size:17px;line-height:1;color:#9aa78f;padding:0 3px}
+.es-measure p{font-size:9px;line-height:1.65;color:#6f7f69;margin:8px 0 9px}
+.es-measure ol{list-style:none;margin:8px 0 4px;padding:0;max-height:168px;overflow-y:auto}.es-measure li{display:grid;grid-template-columns:1fr auto;gap:1px 8px;padding:5px 0;border-bottom:1px solid #e6eadf;font-size:10px;color:#5d7356}
+.es-measure li b{font-weight:600;color:#244a39;font-variant-numeric:tabular-nums}.es-measure li small{grid-column:1/-1;font-size:8px;color:#98a48d}
+.es-measure dl{margin:4px 0 9px}.es-measure dl>div{display:flex;justify-content:space-between;align-items:baseline;padding:4px 0}.es-measure dt{font-size:9px;color:#8d9a82}.es-measure dd{margin:0;font-family:Georgia,serif;font-size:17px;color:#1f4636;font-variant-numeric:tabular-nums}
+.es-measure-actions{display:flex;flex-wrap:wrap;gap:5px}.es-measure-actions button{padding:6px 8px;border:1px solid #d4dcc8;border-radius:3px;background:transparent;font-size:9px;color:#567049}.es-measure-actions button:disabled{opacity:.45}.es-measure-actions button.active{background:#254f3e;border-color:#254f3e;color:#f5f5e9}
+.es-measure>small{display:block;font-size:8px;line-height:1.55;color:#98a48d;margin-top:9px}
+@media(max-width:1150px){.es-view-toolbar .es-tool span{display:none}.es-measure{left:10px;width:214px}}
+@media(max-width:760px){.es-measure{top:135px;width:200px;max-height:calc(100% - 230px)}}
