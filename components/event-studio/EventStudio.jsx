@@ -137,7 +137,7 @@ export default function EventStudio() {
     if(loading||!sceneRef.current||!viewport.current||engine.current)return;
     let canceled=false;
     import('@/lib/eventStudioEngine').then(({EventStudioEngine})=>{if(canceled||!viewport.current)return;
-      try {const next=new EventStudioEngine(viewport.current,{onSelect:id=>{selectedRef.current=id;setSelected(id);setInspector(true);setAssetDetail(null);},onTransform:(id,patch)=>updateObject(id,patch),onStats:setStats,onAssets:setAssetLoad,onMode:value=>{setMode(value);if(value==='walk')setEditing(false);},onTour:setTour,onError:setError});engine.current=next;next.setScene(sceneRef.current,assetsRef.current);next.setSnap(true);}
+      try {const next=new EventStudioEngine(viewport.current,{onSelect:id=>{selectedRef.current=id;setSelected(id);setInspector(true);setAssetDetail(null);},onTransform:(id,patch)=>updateObject(id,patch),onStats:setStats,onAssets:setAssetLoad,onMode:value=>{setMode(value);if(value==='walk')setEditing(false);},onTour:setTour,onError:setError});engine.current=next;if(process.env.NODE_ENV!=='production')window.__eventStudioEngine=next;next.setScene(sceneRef.current,assetsRef.current);next.setSnap(true);}
       catch(err){setError(`The 3D view could not start: ${err.message}`);}
     });return()=>{canceled=true;engine.current?.dispose();engine.current=null;};
   // The engine owns its WebGL context for the mounted workspace; scene edits update below.
