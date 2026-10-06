@@ -1,6 +1,6 @@
-import crypto from 'crypto';
 import { NextResponse } from 'next/server';
-import { getEventMarketplace, getEventRequestById, listEventRequests } from '@/lib/eventMarketplaceStore';
+import { getEventRequestById, listEventRequests } from '@/lib/eventMarketplaceStore';
+import { eventForReviewKey } from '@/lib/eventReviewKey';
 import { getProducts } from '@/lib/store';
 import { StockShortageError, availabilityForRequests, updateRequestStatusSafely } from '@/lib/eventStockCheck';
 
@@ -8,20 +8,11 @@ export const dynamic = 'force-dynamic';
 
 const ACTIONS = { confirm: 'confirmed', decline: 'declined' };
 
-/** The event, if the key matches its organizer review key. */
 async function catalogueImages(config) {
     const products = await getProducts().catch(() => []);
     const map = new Map(products.map((product) => [product.id, product.image]));
     for (const custom of config?.customItems || []) if (custom?.id) map.set(custom.id, custom.image || '');
     return map;
-}
-
-async function eventForKey(slug, key) {
-    const config = await getEventMarketplace(slug).catch(() => null);
-    const expected = String(config?.reviewKey || '');
-    const given = String(key || '');
-    if (expected.length < 20 || given.length !== expected.length) return null;
-    return crypto.timingSafeEqual(Buffer.from(given), Buffer.from(expected)) ? config : null;
 }
 
 function forOrganizer(request, availability, imageById) {
@@ -60,7 +51,7 @@ function forOrganizer(request, availability, imageById) {
 }
 
 export async function GET(_request, { params }) {
-    const config = await eventForKey(params.slug, params.key);
+    const config = await eventForReviewKey(params.slug, params.key);
     if (!config) return NextResponse.json({ error: 'This link is not valid.' }, { status: 404 });
     try {
         const requests = await listEventRequests(params.slug);
@@ -77,7 +68,7 @@ export async function GET(_request, { params }) {
 
 /** Body: { requestId, action: 'confirm' | 'decline' } */
 export async function POST(request, { params }) {
-    const config = await eventForKey(params.slug, params.key);
+    const config = await eventForReviewKey(params.slug, params.key);
     if (!config) return NextResponse.json({ error: 'This link is not valid.' }, { status: 404 });
     try {
         const body = await request.json().catch(() => ({}));

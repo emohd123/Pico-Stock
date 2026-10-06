@@ -175,14 +175,16 @@ export default function EventMarketplaceAdmin({ slug }) {
     }
 
     const reviewUrl = config?.reviewKey
-        ? `${typeof window !== 'undefined' ? window.location.origin : ''}/events/${slug}/review/${config.reviewKey}`
+        ? `${typeof window !== 'undefined' ? window.location.origin : ''}/r/${config.reviewKey}`
         : '';
 
     async function createReviewLink() {
         if (config?.reviewKey && !window.confirm('Make a new organizer link? The old link will stop working.')) return;
-        const bytes = new Uint8Array(18);
+        // 10 random letters/digits: short enough to share, too many to guess.
+        const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+        const bytes = new Uint8Array(10);
         window.crypto.getRandomValues(bytes);
-        const reviewKey = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+        const reviewKey = Array.from(bytes, (b) => alphabet[b % alphabet.length]).join('');
         await save({ reviewKey });
     }
 
