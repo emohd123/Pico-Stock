@@ -14,7 +14,9 @@ function isProtectedApiRequest(pathname, method) {
         const publicCatalogue = method === 'GET' && /^\/api\/events\/[^/]+\/?$/.test(pathname);
         const publicRequest = method === 'POST' && /^\/api\/events\/[^/]+\/requests\/?$/.test(pathname);
         const publicRequestForm = method === 'POST' && /^\/api\/events\/[^/]+\/request-form\/?$/.test(pathname);
-        return !(publicCatalogue || publicRequest || publicRequestForm);
+        // The organizer's review link carries its own secret key, checked in the route.
+        const organizerReview = /^\/api\/events\/[^/]+\/review\//.test(pathname);
+        return !(publicCatalogue || publicRequest || publicRequestForm || organizerReview);
     }
     if (pathname.startsWith('/api/pico-ai/admin')) return true;
     if (pathname.startsWith('/api/reports')) return true;

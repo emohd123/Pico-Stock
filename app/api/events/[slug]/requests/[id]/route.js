@@ -3,13 +3,13 @@ import {
     EventMarketplaceStoreError,
     deleteEventRequest,
     getEventRequestById,
-    updateEventRequest,
 } from '@/lib/eventMarketplaceStore';
+import { StockShortageError, updateRequestStatusSafely } from '@/lib/eventStockCheck';
 
 export const dynamic = 'force-dynamic';
 
 function errorResponse(error, fallback) {
-    if (error instanceof EventMarketplaceStoreError) {
+    if (error instanceof EventMarketplaceStoreError || error instanceof StockShortageError) {
         return NextResponse.json({ error: error.message }, { status: error.status });
     }
     console.error(fallback, error);
@@ -29,7 +29,10 @@ export async function GET(_request, { params }) {
 export async function PUT(request, { params }) {
     try {
         const body = await request.json().catch(() => ({}));
-        const updated = await updateEventRequest(params.slug, params.id, body || {});
+        const existing = await getEventRequestById(params.slug, params.id);
+        if (!existing) return NextResponse.json({ error: 'Request not found' }, { status: 404 });
+        // Confirming holds stock, so it is refused when it would oversell.
+        const updated = await updateRequestStatusSafely(params.slug, existing, body || {});
         if (!updated) return NextResponse.json({ error: 'Request not found' }, { status: 404 });
         return NextResponse.json({ success: true, request: updated });
     } catch (error) {

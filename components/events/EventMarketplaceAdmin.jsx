@@ -174,6 +174,27 @@ export default function EventMarketplaceAdmin({ slug }) {
         }
     }
 
+    const reviewUrl = config?.reviewKey
+        ? `${typeof window !== 'undefined' ? window.location.origin : ''}/events/${slug}/review/${config.reviewKey}`
+        : '';
+
+    async function createReviewLink() {
+        if (config?.reviewKey && !window.confirm('Make a new organizer link? The old link will stop working.')) return;
+        const bytes = new Uint8Array(18);
+        window.crypto.getRandomValues(bytes);
+        const reviewKey = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+        await save({ reviewKey });
+    }
+
+    async function copyReviewLink() {
+        try {
+            await navigator.clipboard.writeText(reviewUrl);
+            showFlash('ok', 'Organizer link copied.');
+        } catch {
+            showFlash('warn', 'Could not copy automatically. Select the link and copy it manually.');
+        }
+    }
+
     async function updateRequest(id, patch) {
         try {
             const response = await fetch(`/api/events/${slug}/requests/${id}`, {
@@ -260,6 +281,19 @@ export default function EventMarketplaceAdmin({ slug }) {
                     <code>{publicUrl}</code>
                     <button type="button" className="btn btn-secondary btn-sm" onClick={copyLink}>Copy</button>
                     <a href={`/events/${slug}`} target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-sm">Open page</a>
+                </div>
+                <div className="eva-link-box">
+                    <span style={{ color: 'var(--text-muted)' }} title="Private link for the event organizer to see exhibitor requests and confirm or decline them">Organizer link</span>
+                    {reviewUrl ? (
+                        <>
+                            <code style={{ maxWidth: 360, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{reviewUrl}</code>
+                            <button type="button" className="btn btn-secondary btn-sm" onClick={copyReviewLink}>Copy</button>
+                            <a href={reviewUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm">Open</a>
+                            <button type="button" className="btn btn-secondary btn-sm" onClick={createReviewLink} disabled={saving}>Reset</button>
+                        </>
+                    ) : (
+                        <button type="button" className="btn btn-primary btn-sm" onClick={createReviewLink} disabled={saving}>Create organizer link</button>
+                    )}
                 </div>
             </div>
 
