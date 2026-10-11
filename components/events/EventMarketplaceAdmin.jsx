@@ -213,6 +213,23 @@ export default function EventMarketplaceAdmin({ slug }) {
         }
     }
 
+    async function paymentAction(id, action, note = '') {
+        try {
+            const response = await fetch(`/api/events/${slug}/requests/${id}/payment`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action, note }),
+            });
+            const data = await response.json();
+            if (!response.ok || !data.success) throw new Error(data?.error || 'Update failed');
+            setRequests((prev) => prev.map((item) => (item.id === id ? data.request : item)));
+            if (data.warning) showFlash('warn', data.warning);
+            else showFlash('ok', action === 'verify' ? 'Payment verified. Order confirmed and confirmation emailed.' : 'Exhibitor asked to upload the receipt again.');
+        } catch (error) {
+            showFlash('err', error.message || 'Update failed');
+        }
+    }
+
     async function deleteRequest(id) {
         const target = requests.find((item) => item.id === id);
         if (!window.confirm(`Delete request ${target?.reference || id}? This cannot be undone.`)) return;
@@ -342,6 +359,7 @@ export default function EventMarketplaceAdmin({ slug }) {
                     requests={requests}
                     onReload={loadAll}
                     onUpdate={updateRequest}
+                    onPayment={paymentAction}
                     onDelete={deleteRequest}
                     onExport={exportCsv}
                 />
@@ -642,7 +660,14 @@ function CatalogueTab({ config, catalogue, updateItemSetting, setAllVisible, upd
     );
 }
 
-function RequestsTab({ slug, config, requests, onReload, onUpdate, onDelete, onExport }) {
+const PAYMENT_LABELS = {
+    awaiting: 'Awaiting payment',
+    submitted: 'Receipt uploaded',
+    verified: 'Paid',
+    rejected: 'Receipt not accepted',
+};
+
+function RequestsTab({ slug, config, requests, onReload, onUpdate, onDelete, onExport, onPayment }) {
     const [openId, setOpenId] = useState(null);
     const [statusFilter, setStatusFilter] = useState('all');
     const [notesDraft, setNotesDraft] = useState({});
@@ -700,6 +725,7 @@ function RequestsTab({ slug, config, requests, onReload, onUpdate, onDelete, onE
                                 </div>
                             </div>
                             <span className={`eva-status ${request.status}`}>{request.status}</span>
+                            <span className={`eva-pay ${request.payment?.status || 'awaiting'}`}>{PAYMENT_LABELS[request.payment?.status] || PAYMENT_LABELS.awaiting}</span>
                             <div className="eva-request-total">
                                 {formatMoney(request.total, currency)}
                                 <small>{request.items.length} line{request.items.length === 1 ? '' : 's'} · incl. VAT</small>
@@ -752,6 +778,50 @@ function RequestsTab({ slug, config, requests, onReload, onUpdate, onDelete, onE
                                             <div className="eva-request-notes">{request.contact.notes}</div>
                                         </>
                                     )}
+                                    <h4 style={{ marginTop: '0.9rem' }}>Payment (bank transfer)</h4>
+                                    <div className="eva-kv">
+                                        <span>Status</span><strong>{PAYMENT_LABELS[request.payment?.status] || PAYMENT_LABELS.awaiting}</strong>
+                                        {request.payment?.uploadedAt && (<><span>Receipt</span><div>{formatDateTime(request.payment.uploadedAt)}</div></>)}
+                                        {request.payment?.verifiedAt && (<><span>Verified</span><div>{formatDateTime(request.payment.verifiedAt)}</div></>)}
+                                        {request.payment?.status === 'rejected' && request.payment?.note && (<><span>Reason</span><div>{request.payment.note}</div></>)}
+                                        {request.orderKey && (<><span>Order page</span><div><a href={`/o/${request.orderKey}`} target="_blank" rel="noopener noreferrer">/o/{request.orderKey}</a></div></>)}
+                                    </div>
+                                    <div className="eva-request-tools">
+                                        {request.payment?.proofPath && (
+                                            <a className="btn btn-secondary btn-sm" href={`/api/events/${slug}/requests/${request.id}/payment`} target="_blank" rel="noopener noreferrer">View receipt</a>
+                                        )}
+                                        {request.payment?.status !== 'verified' && request.status !== 'declined' && (
+                                            <button
+                                                type="button"
+                                                className="btn btn-primary btn-sm"
+                                                onClick={() => {
+                                                    const noProof = !request.payment?.proofPath;
+                                                    const question = noProof
+                                                        ? `No receipt was uploaded for ${request.reference}. Mark the payment as received anyway, confirm the order and email the official confirmation?`
+                                                        : `Confirm the transfer of ${formatMoney(request.total, currency)} for ${request.reference} reached the bank account? This confirms the order and emails the official order confirmation.`;
+                                                    if (window.confirm(question)) onPayment(request.id, 'verify');
+                                                }}
+                                            >
+                                                Verify payment &amp; confirm
+                                            </button>
+                                        )}
+                                        {request.payment?.status === 'submitted' && (
+                                            <button
+                                                type="button"
+                                                className="btn btn-secondary btn-sm"
+                                                onClick={() => {
+                                                    const note = window.prompt('Why could the payment not be verified? (sent to the exhibitor)', 'Transfer not received yet');
+                                                    if (note !== null) onPayment(request.id, 'reject', note);
+                                                }}
+                                            >
+                                                Not verified
+                                            </button>
+                                        )}
+                                        {request.payment?.status === 'verified' && (
+                                            <a className="btn btn-secondary btn-sm" href={`/api/events/${slug}/requests/${request.id}/pdf?type=confirmation`} target="_blank" rel="noopener noreferrer">Order confirmation PDF</a>
+                                        )}
+                                    </div>
+
                                     <h4 style={{ marginTop: '0.9rem' }}>Status &amp; internal notes</h4>
                                     <select
                                         className="form-select"

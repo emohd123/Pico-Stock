@@ -80,6 +80,8 @@ export async function POST(request, { params }) {
         const contact = body.contact && typeof body.contact === 'object' ? body.contact : {};
 
         const created = await createEventRequest(params.slug, { company, contact, items }, config);
+        // The exhibitor's private order page: bank details, receipt upload, confirmation.
+        const orderUrl = `${new URL(request.url).origin}/o/${created.orderKey}`;
 
         let emailWarning = null;
         try {
@@ -87,20 +89,21 @@ export async function POST(request, { params }) {
             try {
                 pdfAttachment = {
                     filename: eventRequestPdfFilename(config, created),
-                    content: await generateEventRequestPdf(config, created),
+                    content: await generateEventRequestPdf(config, created, { kind: 'request', orderUrl }),
                     contentType: 'application/pdf',
                 };
             } catch (pdfError) {
                 console.error('Event request PDF for email failed:', pdfError);
             }
-            const result = await sendEventRequestEmail({ event: config, request: created, pdfAttachment });
+            const result = await sendEventRequestEmail({ event: config, request: created, pdfAttachment, orderUrl });
             if (!result.success) emailWarning = 'Request saved, but the notification email could not be sent.';
         } catch (emailError) {
             console.error('Event request email failed:', emailError);
             emailWarning = 'Request saved, but the notification email could not be sent.';
         }
 
-        return NextResponse.json({ success: true, request: created, warning: emailWarning });
+        const { adminNotes, ...publicRequest } = created;
+        return NextResponse.json({ success: true, request: publicRequest, orderUrl, warning: emailWarning });
     } catch (error) {
         return errorResponse(error, 'Failed to submit the request');
     }

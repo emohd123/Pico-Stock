@@ -45,6 +45,7 @@ function forOrganizer(request, availability, imageById) {
         total: request.total,
         currency: request.currency,
         status: request.status,
+        paymentStatus: request.payment?.status || 'awaiting',
         createdAt: request.createdAt,
         updatedAt: request.updatedAt,
     };

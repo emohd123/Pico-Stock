@@ -14,6 +14,13 @@ const FILTERS = [
 
 const PENDING = new Set(['new', 'contacted', 'quoted']);
 
+const PAYMENT_LABELS = {
+    awaiting: 'Awaiting payment',
+    submitted: 'Receipt uploaded',
+    verified: 'Paid',
+    rejected: 'Receipt not accepted',
+};
+
 function itemName(name) {
     if (!/^ID\b/i.test(name || '')) return name;
     const clean = extractCleanName(name);
@@ -107,7 +114,7 @@ export default function OrganizerReview({ slug, reviewKey }) {
                     ) : (
                         <>
                             <p className="evm-intro">
-                                Exhibitor requests received through the Pico event page. Confirm a request to reserve its items; quantities shown as available already take every other confirmed request into account.
+                                Exhibitor orders received through the Pico event page. Exhibitors pay Pico by bank transfer and upload the receipt; Pico confirms the order once the payment is verified. You can also confirm or decline here. Quantities shown as available already take every other confirmed order into account.
                             </p>
 
                             <div className="orv-stats">
@@ -141,7 +148,10 @@ export default function OrganizerReview({ slug, reviewKey }) {
                                                     {[request.contact.name, request.contact.phone, request.contact.email, request.contact.stand && `Stand: ${request.contact.stand}`].filter(Boolean).join(' · ')}
                                                 </p>
                                             </div>
-                                            <span className={`orv-status ${request.status}`}>{statusLabel(request.status)}</span>
+                                            <div className="orv-badges">
+                                                <span className={`orv-status ${request.status}`}>{statusLabel(request.status)}</span>
+                                                <span className={`eva-pay ${request.paymentStatus}`}>{PAYMENT_LABELS[request.paymentStatus] || PAYMENT_LABELS.awaiting}</span>
+                                            </div>
                                         </div>
 
                                         <div className="orv-lines">

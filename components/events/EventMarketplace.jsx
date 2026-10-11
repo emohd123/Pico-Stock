@@ -322,7 +322,7 @@ export default function EventMarketplace({ slug }) {
             if (!response.ok || !data.success) {
                 throw new Error(data?.error || 'We could not send your request. Please try again.');
             }
-            setResult({ request: data.request, warning: data.warning });
+            setResult({ request: data.request, orderUrl: data.orderUrl, warning: data.warning });
             setBasket({});
             setShowForm(false);
             setBasketOpen(false);
@@ -749,9 +749,9 @@ function SuccessPanel({ event, result, currency, downloading, downloadError, onD
         <main className="evm-container evm-main">
             <div className="evm-success">
                 <div className="evm-success-icon">✓</div>
-                <h1>Request received</h1>
+                <h1>Order received</h1>
                 <p>
-                    Thank you, <strong>{request.company}</strong>. Our team will review availability for {event.name} and send your official quotation.
+                    Thank you, <strong>{request.company}</strong>. To confirm your order for {event.name}, pay by bank transfer and upload the transfer receipt on your order page. You will receive the official order confirmation once we have verified the payment.
                 </p>
                 <div className="evm-success-ref">
                     <span>Reference</span>
@@ -776,12 +776,20 @@ function SuccessPanel({ event, result, currency, downloading, downloadError, onD
                         <tr className="evm-success-total"><td colSpan={2}>Total to pay</td><td>{formatMoney(request.total, currency)}</td></tr>
                     </tfoot>
                 </table>
-                {result.warning && <div className="evm-notice small">{result.warning} Please keep your reference number.</div>}
+                {result.orderUrl && (
+                    <div className="evm-pay-next">
+                        <strong>Next: pay and upload your receipt</strong>
+                        <span>Bank details, receipt upload and your order status are on your order page. We have also emailed you this link.</span>
+                        <a className="evm-cta" href={result.orderUrl}>Pay &amp; upload receipt</a>
+                        <code>{result.orderUrl}</code>
+                    </div>
+                )}
+                {result.warning && <div className="evm-notice small">{result.warning} Please keep your reference number and order link.</div>}
                 {downloadError && <div className="evm-notice error small">{downloadError}</div>}
                 <button type="button" className="evm-cta" disabled={downloading} onClick={onDownload}>
-                    {downloading ? 'Preparing PDF…' : 'Download request form (PDF)'}
+                    {downloading ? 'Preparing PDF…' : 'Download order summary (PDF)'}
                 </button>
-                <p className="evm-form-hint">Your request form with item pictures and prices, in the Pico quotation layout.</p>
+                <p className="evm-form-hint">Your order summary with item pictures, prices and our bank details.</p>
                 {event.paymentTerms && <p className="evm-success-terms">{event.paymentTerms}</p>}
                 <button type="button" className="evm-cta secondary" onClick={onNewRequest}>Send another request</button>
             </div>
