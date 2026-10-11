@@ -582,7 +582,7 @@ export default function EventMarketplace({ slug }) {
 
                                             {!showForm ? (
                                                 <button type="button" className="evm-cta" onClick={() => setShowForm(true)}>
-                                                    Request these items
+                                                    Continue to order
                                                 </button>
                                             ) : (
                                                 <form className="evm-form" onSubmit={submitRequest}>
@@ -615,12 +615,12 @@ export default function EventMarketplace({ slug }) {
                                                         <textarea rows={3} value={form.notes} onChange={handleFormChange('notes')} placeholder="Delivery timing, branding, colours, anything else we should know" />
                                                     </label>
                                                     <button type="submit" className="evm-cta" disabled={submitting || downloading}>
-                                                        {submitting ? 'Sending…' : `Send request · ${formatMoney(totals.total, currency)}`}
+                                                        {submitting ? 'Sending…' : `Place order · ${formatMoney(totals.total, currency)}`}
                                                     </button>
                                                     <button type="button" className="evm-cta secondary" disabled={submitting || downloading} onClick={() => downloadRequestForm()}>
-                                                        {downloading ? 'Preparing PDF…' : 'Download request form (PDF)'}
+                                                        {downloading ? 'Preparing PDF…' : 'Download order summary (PDF)'}
                                                     </button>
-                                                    <p className="evm-form-hint">The PDF lists your items with pictures and prices in the Pico quotation layout. You can send it to your team before submitting.</p>
+                                                    <p className="evm-form-hint">The PDF lists your items with pictures, prices and our bank details. You can send it to your team before placing the order.</p>
                                                     <button type="button" className="evm-link-btn" onClick={() => setShowForm(false)}>Back to items</button>
                                                 </form>
                                             )}
