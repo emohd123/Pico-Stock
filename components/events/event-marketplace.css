@@ -924,3 +924,28 @@
   .evm-choice { padding: 0.8rem 0.95rem; }
 }
 .evm-narrow .evm-choices { grid-template-columns: 1fr; gap: 0.6rem; margin-top: 1rem; }
+
+/* "?" How it works pop-up */
+.hiw-btn { margin-left: auto; width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%; border: 1px solid var(--border-teal); background: rgba(0, 199, 177, 0.1); color: var(--pico-teal); font-weight: 800; font-size: 1rem; cursor: pointer; }
+.hiw-btn + .evm-myorder-btn { margin-left: 0.5rem; }
+.hiw-modal { max-width: 560px; }
+.hiw-body { padding: 1.4rem 1.3rem 1.3rem; display: flex; flex-direction: column; gap: 0.9rem; }
+.hiw-body h2 { margin: 0; font-size: 1.25rem; }
+.hiw-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.75rem; }
+.hiw-steps li { display: grid; grid-template-columns: 112px 1fr; gap: 0.9rem; align-items: center; padding: 0.6rem; border-radius: var(--radius-md); background: var(--bg-glass); border: 1px solid var(--border-subtle); }
+.hiw-steps img { width: 112px; height: 84px; object-fit: cover; object-position: top; border-radius: 8px; border: 1px solid var(--border-subtle); }
+.hiw-steps strong { font-size: 0.95rem; }
+.hiw-steps p { margin: 0.2rem 0 0; color: var(--text-secondary); font-size: 0.85rem; line-height: 1.45; }
+.hiw-num { display: inline-grid; place-items: center; width: 22px; height: 22px; margin-right: 0.45rem; border-radius: 50%; background: var(--pico-teal); color: #04221f; font-size: 0.75rem; font-weight: 800; }
+.hiw-body .evm-cta { align-self: stretch; }
+@media (max-width: 520px) {
+  .hiw-steps li { grid-template-columns: 88px 1fr; gap: 0.7rem; }
+  .hiw-steps img { width: 88px; height: 72px; }
+  .hiw-btn { width: 30px; height: 30px; }
+  .evm-myorder-btn { padding: 0.4rem 0.7rem; font-size: 0.78rem; }
+}
+/* Phones: the top bar holds logo + ? + My order + basket; the event name is in the header below. */
+@media (max-width: 520px) {
+  .evm-page:has(.hiw-btn) .evm-topbar-title { display: none; }
+}
+.evm-narrow .evm-topbar-title { display: none; }

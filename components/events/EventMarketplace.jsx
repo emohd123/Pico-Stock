@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { extractCleanName } from '@/lib/nameHelpers';
 import { computeRequestTotals, formatMoney } from '@/lib/eventMarketplacePricing';
+import HowItWorks from './HowItWorks';
 import './event-marketplace.css';
 
 const CATEGORY_LABELS = {
@@ -464,6 +465,7 @@ export default function EventMarketplace({ slug, editKey = '', fromKey = '' }) {
                         <span className="evm-eyebrow">Event marketplace</span>
                         <strong>{event?.name || 'Pico event'}</strong>
                     </div>
+                    <HowItWorks />
                     <a className="evm-myorder-btn" href="/order">My order</a>
                     {isOpen && !result && (
                         <button
