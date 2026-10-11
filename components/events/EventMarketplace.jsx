@@ -464,6 +464,7 @@ export default function EventMarketplace({ slug, editKey = '', fromKey = '' }) {
                         <span className="evm-eyebrow">Event marketplace</span>
                         <strong>{event?.name || 'Pico event'}</strong>
                     </div>
+                    <a className="evm-myorder-btn" href="/order">My order</a>
                     {isOpen && !result && (
                         <button
                             type="button"
@@ -505,6 +506,20 @@ export default function EventMarketplace({ slug, editKey = '', fromKey = '' }) {
                                 <span>💳 Prices shown are for the full {event.days}-day event</span>
                                 <span>🧾 VAT {event.vatPercent}% added at checkout</span>
                             </div>
+                            {!editing && !result && (
+                                <div className="evm-choices">
+                                    {isOpen && (
+                                        <a className="evm-choice primary" href="#catalogue">
+                                            <strong>Browse the catalogue</strong>
+                                            <span>Choose furniture and décor and place your order</span>
+                                        </a>
+                                    )}
+                                    <a className="evm-choice" href="/order">
+                                        <strong>Find my order</strong>
+                                        <span>Check your order status, pay, send your receipt or make changes</span>
+                                    </a>
+                                </div>
+                            )}
                         </div>
                     </section>
 
@@ -523,7 +538,7 @@ export default function EventMarketplace({ slug, editKey = '', fromKey = '' }) {
                             </div>
                         ) : (
                             <div className="evm-layout">
-                                <div className="evm-catalogue">
+                                <div className="evm-catalogue" id="catalogue">
                                     {editing && (
                                         <div className="evm-edit-banner">
                                             <strong>Changing order {editing.reference}.</strong> Add, remove or change items, then save. Your order number stays the same. <a href={`/o/${editing.key}`}>Cancel</a>
@@ -531,11 +546,6 @@ export default function EventMarketplace({ slug, editKey = '', fromKey = '' }) {
                                     )}
                                     {editNotice && <div className="evm-edit-banner">{editNotice}</div>}
                                     {event.description && <p className="evm-intro">{event.description}</p>}
-                                    {!editing && (
-                                        <p className="evm-intro" style={{ marginTop: '-0.6rem' }}>
-                                            <a className="evm-find-link" href="/order">Already ordered? Find your order to pay, upload your receipt or make changes →</a>
-                                        </p>
-                                    )}
 
                                     <div className="evm-filters">
                                         <input

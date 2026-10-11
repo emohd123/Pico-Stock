@@ -908,3 +908,19 @@
 .exo-ways a { color: var(--pico-teal); }
 .exo-status.review { background: rgba(148, 163, 184, 0.18); color: var(--text-secondary); }
 .eva-pay.review { background: rgba(148, 163, 184, 0.18); color: var(--text-secondary); }
+
+/* Two choices at the top of the event page: browse or find my order */
+.evm-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.8rem; margin-top: 1.4rem; max-width: 680px; }
+.evm-choice { display: flex; flex-direction: column; gap: 0.25rem; padding: 0.95rem 1.1rem; border-radius: var(--radius-lg); border: 1px solid var(--border-teal); background: rgba(0, 199, 177, 0.08); color: var(--text-primary); text-decoration: none; transition: transform var(--transition-base), background var(--transition-base); }
+.evm-choice:hover { transform: translateY(-2px); background: rgba(0, 199, 177, 0.14); }
+.evm-choice strong { font-size: 1rem; }
+.evm-choice span { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4; }
+.evm-choice.primary { background: var(--pico-teal); border-color: var(--pico-teal); }
+.evm-choice.primary strong, .evm-choice.primary span { color: #04221f; }
+.evm-myorder-btn { margin-left: auto; padding: 0.45rem 0.9rem; border-radius: 999px; border: 1px solid var(--border-subtle); color: var(--text-primary); font-size: 0.82rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
+.evm-myorder-btn + .evm-basket-btn { margin-left: 0.5rem; }
+@media (max-width: 520px) {
+  .evm-choices { grid-template-columns: 1fr; gap: 0.6rem; margin-top: 1rem; }
+  .evm-choice { padding: 0.8rem 0.95rem; }
+}
+.evm-narrow .evm-choices { grid-template-columns: 1fr; gap: 0.6rem; margin-top: 1rem; }

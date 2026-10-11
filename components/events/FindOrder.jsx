@@ -54,6 +54,7 @@ export default function FindOrder() {
                         {error && <div className="exo-alert">{error}</div>}
                         <button type="submit" className="evm-cta" disabled={busy}>{busy ? 'Looking…' : 'Open my order'}</button>
                         <p className="exo-hint" style={{ margin: 0 }}>Your order number starts with RBC26 and is in the email we sent you.</p>
+                        <a className="evm-link-btn" href="/rbc">← Back to the catalogue</a>
                     </form>
                 </div>
             </main>
