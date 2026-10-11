@@ -5,7 +5,12 @@ const nextConfig = {
     // These furniture photos/GLBs are served by the CDN. Dynamic image/attachment
     // resolvers otherwise copy the whole new library into unrelated email lambdas.
     outputFileTracingExcludes: {
-      '/*': [
+      // '**' (not '/*', which only matched top-level routes): nested routes such as
+      // /api/events/[slug]/requests were each carrying ~350 MB of these files, and
+      // Vercel counts every function of every deployment against Function Storage.
+      '**': [
+        // Local JSON fallback; production quotations are in Supabase.
+        './data/quotations.json',
         './public/event-studio/**/*',
         // Browser-only company/heritage artwork is also pulled in by generic
         // quotation image resolvers. Product photos, branding and fonts stay bundled.
@@ -16,6 +21,11 @@ const nextConfig = {
         './private/event-studio/rbc/*/**',
       ],
       '/api/!(pico-ai)/**': ['./private/event-studio/**/*'],
+      // Generated stand renders are only read by the stand-design API.
+      '/api/!(stand-design)/**': ['./public/uploads/stand-design/**/*'],
+      // Ministry item photos are only read by the ministry quotation routes
+      // (/api/quotations/*) and the ministry gallery/plan/production pages.
+      '/api/!(quotations)/**': ['./public/ministry-items/**/*'],
       '/api/pico-ai/admin/event-layouts/**': [
         './private/pico-ai/**/*',
         './node_modules/onnxruntime-node/**/*',
