@@ -827,7 +827,7 @@ function SuccessPanel({ event, result, currency, downloading, downloadError, onD
                 <div className="evm-success-icon">✓</div>
                 <h1>Order received</h1>
                 <p>
-                    Thank you, <strong>{request.company}</strong>. To confirm your order for {event.name}, pay by bank transfer and upload the transfer receipt on your order page. You will receive the official order confirmation once we have verified the payment.
+                    Thank you, <strong>{request.company}</strong>. We are checking availability for {event.name} and will email you the payment details (bank transfer) once your order is approved. As soon as we receive the payment, the items are locked for you.
                 </p>
                 <div className="evm-success-ref">
                     <span>Reference</span>
@@ -854,9 +854,9 @@ function SuccessPanel({ event, result, currency, downloading, downloadError, onD
                 </table>
                 {result.orderUrl && (
                     <div className="evm-pay-next">
-                        <strong>Next: pay and upload your receipt</strong>
-                        <span>Bank details, receipt upload and your order status are on your order page. We have also emailed you this link.</span>
-                        <a className="evm-cta" href={result.orderUrl}>Pay &amp; upload receipt</a>
+                        <strong>Your order page</strong>
+                        <span>Follow your order status, change the order while we review it, and later pay and send your receipt. We have also emailed you this link. Keep your order number <strong>{request.reference}</strong>.</span>
+                        <a className="evm-cta" href={result.orderUrl}>View my order</a>
                         <code>{result.orderUrl}</code>
                     </div>
                 )}

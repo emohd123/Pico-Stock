@@ -13,7 +13,9 @@ import { eventRequestPdfFilename, generateEventRequestPdf } from '@/lib/eventReq
 import {
     PICO_BANK_DETAILS,
     PaymentProofError,
+    canSendReceipt,
     isOrderEditable,
+    receiptEmailAddress,
     paymentSummary,
     sendProofReceivedEmail,
     storePaymentProof,
@@ -26,7 +28,10 @@ function forExhibitor(request, config) {
     return {
         event: { slug: config?.id, name: config?.name, days: config?.days, contactEmail: config?.contactEmail, contactPhone: config?.contactPhone },
         editable: isOrderEditable(request),
-        bank: PICO_BANK_DETAILS,
+        // Bank details are sent once Pico approves the order.
+        bank: (request.payment?.status || 'review') === 'review' ? null : PICO_BANK_DETAILS,
+        canSendReceipt: canSendReceipt(request),
+        receiptEmail: receiptEmailAddress(config),
         order: {
             reference: request.reference,
             company: request.company,
@@ -87,7 +92,7 @@ export async function PUT(httpRequest, { params }) {
         const { request, config } = await load(params.key);
         if (!request) return NextResponse.json({ error: 'Order not found.' }, { status: 404 });
         if (!isOrderEditable(request)) {
-            return NextResponse.json({ error: 'This order can no longer be changed online. Please contact Pico, or place an additional order.' }, { status: 409 });
+            return NextResponse.json({ error: 'This order is already approved, so it can no longer be changed online. Please contact Pico, or place an additional order.' }, { status: 409 });
         }
         if (config?.status !== 'open') {
             return NextResponse.json({ error: 'This event is not accepting changes at the moment.' }, { status: 403 });
@@ -144,6 +149,9 @@ export async function POST(httpRequest, { params }) {
         }
         if (request.payment?.status === 'verified') {
             return NextResponse.json({ error: 'Payment for this order is already verified.' }, { status: 409 });
+        }
+        if (!canSendReceipt(request)) {
+            return NextResponse.json({ error: 'Your order is still being checked. We will email you the payment details once it is approved.' }, { status: 409 });
         }
 
         const form = await httpRequest.formData().catch(() => null);

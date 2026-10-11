@@ -15,6 +15,7 @@ const FILTERS = [
 const PENDING = new Set(['new', 'contacted', 'quoted']);
 
 const PAYMENT_LABELS = {
+    review: 'Being reviewed by Pico',
     awaiting: 'Awaiting payment',
     submitted: 'Receipt uploaded',
     verified: 'Paid',
@@ -114,7 +115,7 @@ export default function OrganizerReview({ slug, reviewKey }) {
                     ) : (
                         <>
                             <p className="evm-intro">
-                                Exhibitor orders received through the Pico event page. Exhibitors pay Pico by bank transfer and upload the receipt; Pico confirms the order once the payment is verified. You can also confirm or decline here. Quantities shown as available already take every other confirmed order into account.
+                                Exhibitor orders received through the Pico event page. Pico checks each order, emails the exhibitor the payment details, and locks the items once payment is received. You can also confirm or decline here. Quantities shown as available already take every other confirmed order into account.
                             </p>
 
                             <div className="orv-stats">

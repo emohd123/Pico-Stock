@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getEventMarketplace, getEventRequestById, makeLinkKey, updateEventRequest } from '@/lib/eventMarketplaceStore';
-import { StockShortageError, updateRequestStatusSafely } from '@/lib/eventStockCheck';
-import { sendOrderConfirmedEmail, sendPaymentRejectedEmail, signedProofUrl } from '@/lib/eventPayments';
-import { generateEventRequestPdf, orderConfirmationPdfFilename } from '@/lib/eventRequestPdf';
+import { StockShortageError, checkRequestAvailability, shortageMessage, updateRequestStatusSafely } from '@/lib/eventStockCheck';
+import { sendOrderConfirmedEmail, sendPaymentDetailsEmail, sendPaymentRejectedEmail, signedProofUrl } from '@/lib/eventPayments';
+import { eventRequestPdfFilename, generateEventRequestPdf, orderConfirmationPdfFilename } from '@/lib/eventRequestPdf';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,8 +25,9 @@ function stamp() {
 }
 
 /**
- * Body: { action: 'verify' | 'reject', note? }
- * verify: payment verified → order confirmed (stock checked) → official confirmation emailed.
+ * Body: { action: 'approve' | 'verify' | 'reject', note? }
+ * approve: items available → payment details (bank transfer) emailed to the partner.
+ * verify: payment received → order confirmed, stock locked → official confirmation emailed.
  * reject: exhibitor asked to upload again.
  */
 export async function POST(httpRequest, { params }) {
@@ -41,6 +42,42 @@ export async function POST(httpRequest, { params }) {
         let request = existing;
         if (!request.orderKey) request = await updateEventRequest(params.slug, request.id, { orderKey: makeLinkKey(10) });
         const orderUrl = `${origin}/o/${request.orderKey}`;
+
+        if (body.action === 'approve') {
+            if (request.status === 'declined') {
+                return NextResponse.json({ error: 'This request is declined. Set it back before approving.' }, { status: 409 });
+            }
+            if ((request.payment?.status || 'review') !== 'review') {
+                return NextResponse.json({ error: 'This order is already approved.' }, { status: 409 });
+            }
+            // Approving does not lock stock (paying does), but don't ask for money for items we can't supply.
+            const { shortages } = await checkRequestAvailability(request);
+            if (shortages.length) return NextResponse.json({ error: shortageMessage(shortages) }, { status: 409 });
+
+            const updated = await updateEventRequest(params.slug, request.id, {
+                payment: { status: 'awaiting', approvedAt: new Date().toISOString() },
+                adminNotes: [request.adminNotes, `Approved by Pico and payment details sent, ${stamp()}.`].filter(Boolean).join('\n'),
+            });
+            let warning = null;
+            try {
+                const pdf = await generateEventRequestPdf(config, updated, { kind: 'request', orderUrl });
+                const sent = await sendPaymentDetailsEmail({
+                    event: config,
+                    request: updated,
+                    orderUrl,
+                    pdfAttachment: { filename: eventRequestPdfFilename(config, updated), content: pdf, contentType: 'application/pdf' },
+                });
+                if (!sent.success) {
+                    warning = updated.contact?.email
+                        ? 'Approved, but the payment details email could not be sent. Please send them manually.'
+                        : 'Approved. This partner gave no email address, so please send the payment details by phone or WhatsApp.';
+                }
+            } catch (error) {
+                console.error('Payment details email failed:', error);
+                warning = 'Approved, but the payment details email could not be sent. Please send them manually.';
+            }
+            return NextResponse.json({ success: true, request: updated, warning });
+        }
 
         if (body.action === 'verify') {
             if (request.status === 'declined') {

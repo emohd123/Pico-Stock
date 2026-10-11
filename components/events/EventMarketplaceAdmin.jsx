@@ -224,7 +224,11 @@ export default function EventMarketplaceAdmin({ slug }) {
             if (!response.ok || !data.success) throw new Error(data?.error || 'Update failed');
             setRequests((prev) => prev.map((item) => (item.id === id ? data.request : item)));
             if (data.warning) showFlash('warn', data.warning);
-            else showFlash('ok', action === 'verify' ? 'Payment verified. Order confirmed and confirmation emailed.' : 'Exhibitor asked to upload the receipt again.');
+            else showFlash('ok', {
+                approve: 'Approved. Payment details emailed to the partner.',
+                verify: 'Payment received. Items locked and confirmation emailed.',
+                reject: 'Partner asked to send the receipt again.',
+            }[action] || 'Updated.');
         } catch (error) {
             showFlash('err', error.message || 'Update failed');
         }
@@ -661,6 +665,7 @@ function CatalogueTab({ config, catalogue, updateItemSetting, setAllVisible, upd
 }
 
 const PAYMENT_LABELS = {
+    review: 'To approve',
     awaiting: 'Awaiting payment',
     submitted: 'Receipt uploaded',
     verified: 'Paid',
@@ -790,14 +795,26 @@ function RequestsTab({ slug, config, requests, onReload, onUpdate, onDelete, onE
                                         {request.payment?.proofPath && (
                                             <a className="btn btn-secondary btn-sm" href={`/api/events/${slug}/requests/${request.id}/payment`} target="_blank" rel="noopener noreferrer">View receipt</a>
                                         )}
-                                        {request.payment?.status !== 'verified' && request.status !== 'declined' && (
+                                        {request.payment?.status === 'review' && request.status !== 'declined' && (
                                             <button
                                                 type="button"
                                                 className="btn btn-primary btn-sm"
                                                 onClick={() => {
+                                                    const to = request.contact?.email || 'no email on file';
+                                                    if (window.confirm(`Approve ${request.reference} and email the payment details (${formatMoney(request.total, currency)}, our IBAN) to ${to}?`)) onPayment(request.id, 'approve');
+                                                }}
+                                            >
+                                                Approve &amp; send payment details
+                                            </button>
+                                        )}
+                                        {request.payment?.status !== 'verified' && request.status !== 'declined' && (
+                                            <button
+                                                type="button"
+                                                className={`btn ${request.payment?.status === 'review' ? 'btn-secondary' : 'btn-primary'} btn-sm`}
+                                                onClick={() => {
                                                     const noProof = !request.payment?.proofPath;
                                                     const question = noProof
-                                                        ? `No receipt was uploaded for ${request.reference}. Mark the payment as received anyway, confirm the order and email the official confirmation?`
+                                                        ? `No receipt was uploaded for ${request.reference} (it may have come by email). Mark the payment of ${formatMoney(request.total, currency)} as received, lock the items and email the official confirmation?`
                                                         : `Confirm the transfer of ${formatMoney(request.total, currency)} for ${request.reference} reached the bank account? This confirms the order and emails the official order confirmation.`;
                                                     if (window.confirm(question)) onPayment(request.id, 'verify');
                                                 }}

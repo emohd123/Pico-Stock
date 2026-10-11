@@ -6,9 +6,10 @@ import { formatMoney } from '@/lib/eventMarketplacePricing';
 import './event-marketplace.css';
 
 const STEPS = [
-    { stage: 'awaiting', label: 'Order sent' },
-    { stage: 'verifying', label: 'Receipt uploaded' },
-    { stage: 'confirmed', label: 'Payment verified & confirmed' },
+    { stage: 'review', label: 'Order received' },
+    { stage: 'awaiting', label: 'Approved, payment details sent' },
+    { stage: 'verifying', label: 'Receipt sent' },
+    { stage: 'confirmed', label: 'Paid & items locked' },
 ];
 
 function itemName(name) {
@@ -102,8 +103,9 @@ export default function ExhibitorOrder({ orderKey }) {
 
     const { order, payment, bank, event } = data;
     const currency = order.currency || 'BHD';
-    const stageIndex = payment.stage === 'confirmed' ? 2 : payment.stage === 'verifying' ? 1 : 0;
-    const canUpload = payment.stage === 'awaiting' || payment.stage === 'rejected' || payment.stage === 'verifying';
+    const STAGE_INDEX = { review: 0, awaiting: 1, rejected: 1, verifying: 2, confirmed: 3 };
+    const stageIndex = STAGE_INDEX[payment.stage] ?? 0;
+    const canUpload = Boolean(data.canSendReceipt);
 
     return (
         <div className="evm-page">
@@ -152,6 +154,11 @@ export default function ExhibitorOrder({ orderKey }) {
                                 We could not verify your payment receipt{payment.note ? `: ${payment.note}` : '.'} Please check the transfer and upload the receipt again.
                             </div>
                         )}
+                        {payment.stage === 'review' && (
+                            <div className="exo-info">
+                                Thank you for your order. We are checking availability and will email you the payment details (bank transfer) once it is approved. Until then you can still change the order below.
+                            </div>
+                        )}
                         {payment.stage === 'verifying' && (
                             <div className="exo-info">
                                 Thank you. We received <strong>{payment.proofName || 'your receipt'}</strong> on {formatDate(payment.uploadedAt)} and are verifying the payment. You will receive the official order confirmation by email.
@@ -183,11 +190,11 @@ export default function ExhibitorOrder({ orderKey }) {
                             </div>
                         )}
                         {!data.editable && payment.stage !== 'declined' && payment.stage !== 'confirmed' && (
-                            <p className="exo-hint" style={{ marginTop: '0.6rem' }}>Your receipt is with us, so this order can no longer be changed online. Need changes? Contact Pico, or order more items as a new order.</p>
+                            <p className="exo-hint" style={{ marginTop: '0.6rem' }}>This order is approved, so it can no longer be changed online. Need changes? Contact Pico, or order more items as a new order.</p>
                         )}
                     </section>
 
-                    {payment.stage !== 'confirmed' && payment.stage !== 'declined' && (
+                    {bank && canUpload && (
                         <>
                             <section className="exo-card">
                                 <h2>1. Pay by bank transfer</h2>
@@ -204,12 +211,14 @@ export default function ExhibitorOrder({ orderKey }) {
 
                             {canUpload && (
                                 <section className="exo-card">
-                                    <h2>2. Upload your transfer receipt</h2>
+                                    <h2>2. Send us the transfer receipt</h2>
                                     <p className="exo-hint">
-                                        {payment.stage === 'verifying'
-                                            ? 'Uploaded the wrong file? Upload the correct one and it replaces the previous receipt.'
-                                            : 'A PDF, screenshot or photo of the bank transfer confirmation (max 4 MB).'}
+                                        A photo, screenshot or PDF of the bank transfer, either way:
                                     </p>
+                                    <ul className="exo-hint exo-ways">
+                                        <li><strong>By email:</strong> reply to our payment details email, or send it to <a href={`mailto:${data.receiptEmail}?subject=${encodeURIComponent(`Payment receipt ${order.reference}`)}`}>{data.receiptEmail}</a> with your order number {order.reference}.</li>
+                                        <li><strong>Or upload it here</strong> (max 4 MB){payment.stage === 'verifying' ? '; a new upload replaces the previous receipt' : ''}:</li>
+                                    </ul>
                                     <form onSubmit={upload} className="exo-upload">
                                         <input ref={fileInput} type="file" accept="application/pdf,image/jpeg,image/png" />
                                         <button type="submit" className="evm-cta" disabled={uploading}>{uploading ? 'Uploading…' : 'Upload receipt'}</button>
