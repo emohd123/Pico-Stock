@@ -13,8 +13,10 @@ export async function generateMetadata({ params }) {
     };
 }
 
-export default async function EventMarketplacePage({ params }) {
+export default async function EventMarketplacePage({ params, searchParams }) {
     const config = await getEventMarketplace(params.slug).catch(() => null);
     if (!config) notFound();
-    return <EventMarketplace slug={config.id} />;
+    const editKey = String(searchParams?.edit || '').slice(0, 40);
+    const fromKey = String(searchParams?.from || '').slice(0, 40);
+    return <EventMarketplace slug={config.id} editKey={editKey} fromKey={fromKey} />;
 }

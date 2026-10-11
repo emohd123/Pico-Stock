@@ -140,7 +140,11 @@ function storageKey(slug) {
     return `pico-event-basket:${slug}`;
 }
 
-export default function EventMarketplace({ slug }) {
+/**
+ * editKey: change an existing order (from its order page, ?edit=<key>).
+ * fromKey: start a new order with the details of an earlier one (?from=<key>).
+ */
+export default function EventMarketplace({ slug, editKey = '', fromKey = '' }) {
     const narrow = useDesktopModeOnPhone();
     const [event, setEvent] = useState(null);
     const [items, setItems] = useState([]);
@@ -161,6 +165,9 @@ export default function EventMarketplace({ slug }) {
     const [submitError, setSubmitError] = useState('');
     const [result, setResult] = useState(null);
     const [downloading, setDownloading] = useState(false);
+    // The order being changed: { key, reference } once loaded; editNotice explains when it can't be.
+    const [editing, setEditing] = useState(null);
+    const [editNotice, setEditNotice] = useState('');
 
     const showToast = useCallback((message) => {
         setToast(message);
@@ -192,7 +199,7 @@ export default function EventMarketplace({ slug }) {
 
     // Restore the basket once items are known so stale ids are dropped.
     useEffect(() => {
-        if (items.length === 0) return;
+        if (items.length === 0 || editKey) return;
         try {
             const saved = JSON.parse(localStorage.getItem(storageKey(slug)) || '{}');
             const valid = {};
@@ -201,13 +208,51 @@ export default function EventMarketplace({ slug }) {
             }
             setBasket(valid);
         } catch {}
-    }, [items, slug]);
+    }, [items, slug, editKey]);
 
     useEffect(() => {
+        if (editKey) return;
         try {
             localStorage.setItem(storageKey(slug), JSON.stringify(basket));
         } catch {}
-    }, [basket, slug]);
+    }, [basket, slug, editKey]);
+
+    // Load the earlier order: into the basket and form (edit), or just the form (from).
+    useEffect(() => {
+        const key = editKey || fromKey;
+        if (!key || items.length === 0) return;
+        let cancelled = false;
+        (async () => {
+            try {
+                const response = await fetch(`/api/event-orders/${encodeURIComponent(key)}`, { cache: 'no-store' });
+                const data = await response.json();
+                if (!response.ok || cancelled) return;
+                const contact = data.order.contact || {};
+                setForm({
+                    company: data.order.company || '',
+                    name: contact.name || '',
+                    email: contact.email || '',
+                    phone: contact.phone || '',
+                    stand: contact.stand || '',
+                    notes: editKey ? contact.notes || '' : '',
+                });
+                if (!editKey) return;
+                if (!data.editable) {
+                    setEditNotice(`Order ${data.order.reference} can no longer be changed online because a payment receipt was already uploaded or it is confirmed. Please contact Pico, or add the extra items below as a new order.`);
+                    return;
+                }
+                const known = new Set(items.map((item) => item.id));
+                const next = {};
+                for (const line of data.order.items || []) {
+                    if (!known.has(line.id)) continue;
+                    next[line.id] = { quantity: (next[line.id]?.quantity || 0) + line.quantity, comment: line.comment || '' };
+                }
+                setBasket(next);
+                setEditing({ key, reference: data.order.reference });
+            } catch {}
+        })();
+        return () => { cancelled = true; };
+    }, [editKey, fromKey, items]);
 
     const itemsById = useMemo(() => new Map(items.map((item) => [item.id, item])), [items]);
 
@@ -298,6 +343,26 @@ export default function EventMarketplace({ slug }) {
         }
 
         setSubmitting(true);
+        if (editing) {
+            try {
+                const response = await fetch(`/api/event-orders/${encodeURIComponent(editing.key)}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        company: form.company,
+                        contact: { name: form.name, email: form.email, phone: form.phone, stand: form.stand, notes: form.notes },
+                        items: basketLines.map((line) => ({ id: line.id, quantity: line.quantity, comment: line.comment })),
+                    }),
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) throw new Error(data?.error || 'We could not save your changes. Please try again.');
+                window.location.href = `/o/${editing.key}`;
+            } catch (error) {
+                setSubmitError(error.message || 'We could not save your changes. Please try again.');
+                setSubmitting(false);
+            }
+            return;
+        }
         try {
             const response = await fetch(`/api/events/${encodeURIComponent(slug)}/requests`, {
                 method: 'POST',
@@ -459,7 +524,18 @@ export default function EventMarketplace({ slug }) {
                         ) : (
                             <div className="evm-layout">
                                 <div className="evm-catalogue">
+                                    {editing && (
+                                        <div className="evm-edit-banner">
+                                            <strong>Changing order {editing.reference}.</strong> Add, remove or change items, then save. Your order number stays the same. <a href={`/o/${editing.key}`}>Cancel</a>
+                                        </div>
+                                    )}
+                                    {editNotice && <div className="evm-edit-banner">{editNotice}</div>}
                                     {event.description && <p className="evm-intro">{event.description}</p>}
+                                    {!editing && (
+                                        <p className="evm-intro" style={{ marginTop: '-0.6rem' }}>
+                                            <a className="evm-find-link" href="/order">Already ordered? Find your order to pay, upload your receipt or make changes →</a>
+                                        </p>
+                                    )}
 
                                     <div className="evm-filters">
                                         <input
@@ -582,7 +658,7 @@ export default function EventMarketplace({ slug }) {
 
                                             {!showForm ? (
                                                 <button type="button" className="evm-cta" onClick={() => setShowForm(true)}>
-                                                    Continue to order
+                                                    {editing ? 'Continue to save changes' : 'Continue to order'}
                                                 </button>
                                             ) : (
                                                 <form className="evm-form" onSubmit={submitRequest}>
@@ -615,7 +691,7 @@ export default function EventMarketplace({ slug }) {
                                                         <textarea rows={3} value={form.notes} onChange={handleFormChange('notes')} placeholder="Delivery timing, branding, colours, anything else we should know" />
                                                     </label>
                                                     <button type="submit" className="evm-cta" disabled={submitting || downloading}>
-                                                        {submitting ? 'Sending…' : `Place order · ${formatMoney(totals.total, currency)}`}
+                                                        {submitting ? 'Sending…' : editing ? `Save changes · ${formatMoney(totals.total, currency)}` : `Place order · ${formatMoney(totals.total, currency)}`}
                                                     </button>
                                                     <button type="button" className="evm-cta secondary" disabled={submitting || downloading} onClick={() => downloadRequestForm()}>
                                                         {downloading ? 'Preparing PDF…' : 'Download order summary (PDF)'}

@@ -5,7 +5,7 @@ import {
     getEventMarketplace,
     listEventRequests,
 } from '@/lib/eventMarketplaceStore';
-import { buildEventCatalogue } from '@/lib/eventMarketplacePricing';
+import { buildEventCatalogue, resolveOrderLines } from '@/lib/eventMarketplacePricing';
 import { getProducts } from '@/lib/store';
 import { sendEventRequestEmail } from '@/lib/email';
 import { eventRequestPdfFilename, generateEventRequestPdf } from '@/lib/eventRequestPdf';
@@ -54,24 +54,7 @@ export async function POST(request, { params }) {
         }
 
         const products = await getProducts();
-        const catalogue = buildEventCatalogue(products, config);
-        const byId = new Map(catalogue.map((item) => [item.id, item]));
-
-        const items = [];
-        for (const line of requestedLines) {
-            const match = line && line.id ? byId.get(String(line.id)) : null;
-            if (!match) continue;
-            items.push({
-                id: match.id,
-                source: match.source,
-                name: match.name,
-                category: match.category,
-                image: match.image,
-                eventPrice: match.eventPrice,
-                quantity: line.quantity,
-                comment: line.comment,
-            });
-        }
+        const items = resolveOrderLines(buildEventCatalogue(products, config), requestedLines, MAX_LINES);
         if (items.length === 0) {
             return NextResponse.json({ error: 'The selected items are no longer available for this event.' }, { status: 400 });
         }

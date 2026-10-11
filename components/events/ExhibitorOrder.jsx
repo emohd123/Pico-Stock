@@ -173,6 +173,18 @@ export default function ExhibitorOrder({ orderKey }) {
                             <div className="exo-grand"><span>Total to pay</span><strong>{formatMoney(order.total, currency)}</strong></div>
                         </div>
                         <a className="evm-link-btn" href={`${endpoint}/pdf`}>Download order summary (PDF)</a>
+                        {payment.stage !== 'declined' && event.slug && (
+                            <div className="exo-actions">
+                                {data.editable ? (
+                                    <a className="evm-cta secondary" href={`/events/${event.slug}?edit=${encodeURIComponent(orderKey)}`}>Change order (add or remove items)</a>
+                                ) : (
+                                    <a className="evm-cta secondary" href={`/events/${event.slug}?from=${encodeURIComponent(orderKey)}`}>Order more items</a>
+                                )}
+                            </div>
+                        )}
+                        {!data.editable && payment.stage !== 'declined' && payment.stage !== 'confirmed' && (
+                            <p className="exo-hint" style={{ marginTop: '0.6rem' }}>Your receipt is with us, so this order can no longer be changed online. Need changes? Contact Pico, or order more items as a new order.</p>
+                        )}
                     </section>
 
                     {payment.stage !== 'confirmed' && payment.stage !== 'declined' && (
