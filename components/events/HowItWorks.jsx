@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-const STEPS = [
+export const EVENT_ORDER_STEPS = [
     { image: '/how-it-works/1-order.webp', title: 'Choose & order', text: 'Pick your items and place your order. You receive an order number by email.' },
     { image: '/how-it-works/2-confirm.webp', title: 'We confirm', text: 'We check availability and email you the payment details (our bank account).' },
     { image: '/how-it-works/3-pay.webp', title: 'Pay & send the receipt', text: 'Pay by bank transfer, then reply to our email with the receipt or upload it on your order page.' },
@@ -11,8 +11,11 @@ const STEPS = [
     { image: '/how-it-works/5-check.webp', title: 'Check or change', text: 'Use your order number under "My order" to check your order any time, or change it before we confirm.' },
 ];
 
-/** "?" button that opens a short, picture-led explanation of the ordering steps. */
-export default function HowItWorks({ className = '' }) {
+/**
+ * "?" button that opens a short, picture-led explanation of the ordering steps.
+ * Pass `steps` ([{ image, title, text }]) for another flow, e.g. the electricity form.
+ */
+export default function HowItWorks({ className = '', steps = EVENT_ORDER_STEPS }) {
     const [open, setOpen] = useState(false);
 
     useEffect(() => {
@@ -38,7 +41,7 @@ export default function HowItWorks({ className = '' }) {
                         <div className="hiw-body">
                             <h2>How it works</h2>
                             <ol className="hiw-steps">
-                                {STEPS.map((step, index) => (
+                                {steps.map((step, index) => (
                                     <li key={step.title}>
                                         <img src={step.image} alt="" loading="lazy" />
                                         <div>

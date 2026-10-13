@@ -19,6 +19,7 @@
   white-space: nowrap;
 }
 .elx-topbtn:hover { background: rgba(0, 199, 177, 0.1); }
+.hiw-btn + .elx-topbtn { margin-left: 0.5rem; }
 
 .elx-preview { border-color: rgba(234, 179, 8, 0.4); color: #fde68a; }
 
