@@ -5,22 +5,18 @@ import ElectricityTopbar from './ElectricityTopbar';
 import { formatMoney } from '@/lib/eventMarketplacePricing';
 
 const EMPTY_VENDOR = {
-    company: '', restaurantEn: '', restaurantAr: '', booth: '', contactPerson: '', designation: '',
-    mobile: '', tel: '', fax: '', email: '', crNo: '', cprNo: '', notes: '',
+    company: '', restaurant: '', booth: '', contactPerson: '',
+    mobile: '', tel: '', email: '', crNo: '', notes: '',
 };
 
 const FIELDS = [
     { key: 'company', label: 'Company name', required: true, wide: true, autoComplete: 'organization' },
-    { key: 'restaurantEn', label: 'Restaurant name (English)' },
-    { key: 'restaurantAr', label: 'Restaurant name (Arabic)', dir: 'rtl', placeholder: 'اسم المطعم' },
+    { key: 'restaurant', label: 'Restaurant name (English & Arabic)', wide: true, dir: 'auto', placeholder: 'e.g. Sio Specialty Coffee / سيو' },
     { key: 'contactPerson', label: 'Contact person', required: true, autoComplete: 'name' },
-    { key: 'designation', label: 'Designation', placeholder: 'e.g. Owner, Manager' },
     { key: 'mobile', label: 'Mobile no.', required: true, type: 'tel', autoComplete: 'tel', placeholder: '+973 …' },
     { key: 'email', label: 'Email', required: true, type: 'email', autoComplete: 'email', hint: 'We send your order number and the payment details here.' },
     { key: 'tel', label: 'Tel', type: 'tel' },
-    { key: 'fax', label: 'Fax', type: 'tel' },
     { key: 'crNo', label: 'C.R. No.' },
-    { key: 'cprNo', label: 'CPR No.' },
     { key: 'booth', label: 'Booth / unit no.', placeholder: 'If you know it' },
 ];
 

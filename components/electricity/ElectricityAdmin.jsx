@@ -23,9 +23,8 @@ const FILTERS = [
 ];
 
 const VENDOR_ROWS = [
-    ['restaurantEn', 'Restaurant'], ['restaurantAr', 'Restaurant (AR)'], ['booth', 'Booth / unit'],
-    ['contactPerson', 'Contact'], ['designation', 'Designation'], ['mobile', 'Mobile'], ['tel', 'Tel'],
-    ['fax', 'Fax'], ['email', 'Email'], ['crNo', 'C.R. No.'], ['cprNo', 'CPR No.'],
+    ['restaurant', 'Restaurant'], ['booth', 'Booth / unit'], ['contactPerson', 'Contact'],
+    ['mobile', 'Mobile'], ['tel', 'Tel'], ['email', 'Email'], ['crNo', 'C.R. No.'],
 ];
 
 function stageOf(order) {
@@ -51,7 +50,7 @@ function OrderCard({ order, busy, onAction, onSaveNotes, onDelete }) {
             <div className="eva-request-head" onClick={() => setOpen((value) => !value)}>
                 <span className="eva-request-ref">{order.reference}</span>
                 <div>
-                    <div className="eva-request-company">{v.company}{v.restaurantEn && v.restaurantEn !== v.company ? ` · ${v.restaurantEn}` : ''}</div>
+                    <div className="eva-request-company">{v.company}{v.restaurant && v.restaurant !== v.company ? ` · ${v.restaurant}` : ''}</div>
                     <div className="eva-request-meta">{v.contactPerson} · {v.mobile} · {formatDate(order.createdAt)}</div>
                 </div>
                 <span className={stage === 'declined' ? 'eva-status declined' : `eva-pay ${pay.status}`}>{stage === 'declined' ? 'Declined' : PAY_LABEL[pay.status]}</span>
@@ -100,7 +99,7 @@ function OrderCard({ order, busy, onAction, onSaveNotes, onDelete }) {
                         <div className="eva-kv">
                             <span>Company</span><strong>{v.company}</strong>
                             {VENDOR_ROWS.filter(([key]) => v[key]).map(([key, label]) => (
-                                <FragmentRow key={key} label={label} value={v[key]} rtl={key === 'restaurantAr'} />
+                                <FragmentRow key={key} label={label} value={v[key]} rtl={false} />
                             ))}
                         </div>
                         <h4 style={{ marginTop: '1rem' }}>Notes &amp; history</h4>
@@ -199,7 +198,7 @@ function FormSetup({ form, onSave, saving }) {
                 </div>
                 <div className="eva-actions">
                     <button type="button" className="btn btn-secondary btn-sm" onClick={() => set('items', [...draft.items, { id: `item-${Date.now().toString(36)}`, name: '', price: 0, visible: true }])}>+ Add option</button>
-                    <span className="eva-hint">Untick to hide an option from vendors. Set a price before showing the extra 13 amp power point.</span>
+                    <span className="eva-hint">Untick to hide an option from vendors.</span>
                 </div>
             </section>
 
@@ -367,7 +366,7 @@ export default function ElectricityAdmin() {
         const q = search.trim().toLowerCase();
         if (!q) return true;
         const v = order.vendor || {};
-        return [order.reference, v.company, v.restaurantEn, v.restaurantAr, v.contactPerson, v.email, v.mobile, v.booth]
+        return [order.reference, v.company, v.restaurant, v.contactPerson, v.email, v.mobile, v.booth]
             .some((value) => String(value || '').toLowerCase().includes(q));
     });
 

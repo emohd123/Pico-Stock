@@ -62,7 +62,26 @@
 .elx-field input:focus, .elx-field textarea:focus { outline: none; border-color: var(--pico-teal); }
 
 /* Power options table */
-.elx-intro { margin: 0.2rem 0 0.9rem; padding: 0.7rem 0.9rem; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--bg-glass); color: var(--text-secondary); font-size: 0.86rem; line-height: 1.55; }
+.elx-intro {
+  position: relative;
+  margin: 0.3rem 0 1rem;
+  padding: 0.9rem 1rem 0.9rem 3.1rem;
+  border: 1px solid rgba(234, 179, 8, 0.55);
+  border-left: 4px solid #eab308;
+  border-radius: var(--radius-md);
+  background: linear-gradient(90deg, rgba(234, 179, 8, 0.16), rgba(234, 179, 8, 0.06));
+  color: #fef3c7;
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.55;
+}
+.elx-intro::before {
+  content: '⚡';
+  position: absolute;
+  left: 0.95rem;
+  top: 0.8rem;
+  font-size: 1.25rem;
+}
 .elx-table { border: 1px solid var(--border-subtle); border-radius: var(--radius-md); overflow: hidden; }
 .elx-row { display: grid; grid-template-columns: 42px minmax(0, 1fr) 110px 128px 110px; gap: 0.6rem; align-items: center; padding: 0.65rem 0.8rem; border-bottom: 1px solid var(--border-subtle); font-size: 0.9rem; }
 .elx-row:last-child { border-bottom: none; }

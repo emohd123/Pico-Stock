@@ -37,9 +37,8 @@ function CopyRow({ label, value }) {
 }
 
 const DETAIL_LABELS = [
-    ['company', 'Company'], ['restaurantEn', 'Restaurant (English)'], ['restaurantAr', 'Restaurant (Arabic)'],
-    ['booth', 'Booth / unit'], ['contactPerson', 'Contact person'], ['designation', 'Designation'],
-    ['mobile', 'Mobile'], ['tel', 'Tel'], ['fax', 'Fax'], ['email', 'Email'], ['crNo', 'C.R. No.'], ['cprNo', 'CPR No.'],
+    ['company', 'Company'], ['restaurant', 'Restaurant'], ['booth', 'Booth / unit'], ['contactPerson', 'Contact person'],
+    ['mobile', 'Mobile'], ['tel', 'Tel'], ['email', 'Email'], ['crNo', 'C.R. No.'],
 ];
 
 export default function ElectricityOrderView({ orderKey, updated = false }) {
@@ -166,7 +165,7 @@ export default function ElectricityOrderView({ orderKey, updated = false }) {
                             <summary>Your details</summary>
                             <div className="eva-kv">
                                 {DETAIL_LABELS.filter(([key]) => vendor[key]).map(([key, label]) => (
-                                    <Fragment key={key}><span>{label}</span><strong dir={key === 'restaurantAr' ? 'rtl' : undefined}>{vendor[key]}</strong></Fragment>
+                                    <Fragment key={key}><span>{label}</span><strong dir={key === 'restaurant' ? 'auto' : undefined}>{vendor[key]}</strong></Fragment>
                                 ))}
                             </div>
                         </details>
