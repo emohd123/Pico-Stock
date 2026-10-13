@@ -18,6 +18,15 @@ function isProtectedApiRequest(pathname, method) {
         const organizerReview = /^\/api\/events\/[^/]+\/review\//.test(pathname);
         return !(publicCatalogue || publicRequest || publicRequestForm || organizerReview);
     }
+    if (pathname === '/api/electricity' || pathname.startsWith('/api/electricity/')) {
+        // Vendors read the form, submit an order and look theirs up; the order
+        // page (/api/electricity/my/<key>) carries its own secret key.
+        const publicForm = method === 'GET' && /^\/api\/electricity\/?$/.test(pathname);
+        const publicOrder = method === 'POST' && /^\/api\/electricity\/orders\/?$/.test(pathname);
+        const publicFind = method === 'POST' && /^\/api\/electricity\/find\/?$/.test(pathname);
+        const ownOrder = /^\/api\/electricity\/my\//.test(pathname);
+        return !(publicForm || publicOrder || publicFind || ownOrder);
+    }
     if (pathname.startsWith('/api/pico-ai/admin')) return true;
     if (pathname.startsWith('/api/reports')) return true;
     if (pathname.startsWith('/api/quotations')) return true;

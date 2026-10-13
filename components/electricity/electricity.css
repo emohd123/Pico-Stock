@@ -1,0 +1,129 @@
+/* ==========================================================================
+   Additional electricity order form (/electricity) + admin (/admin/electricity)
+   Prefix: elx-. Builds on the event marketplace styles (evm-, exo-, eva-).
+   ========================================================================== */
+
+.elx-wrap { max-width: 860px; display: flex; flex-direction: column; gap: 1rem; }
+.elx-form { display: flex; flex-direction: column; gap: 1rem; }
+
+.elx-topbtn {
+  padding: 0.45rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-teal);
+  color: var(--pico-teal-light);
+  background: transparent;
+  font-weight: 700;
+  font-size: 0.82rem;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.elx-topbtn:hover { background: rgba(0, 199, 177, 0.1); }
+
+.elx-preview { border-color: rgba(234, 179, 8, 0.4); color: #fde68a; }
+
+/* Header card, styled after the paper Form B */
+.elx-hero { position: relative; padding-top: 1.6rem; }
+.elx-hero-tag {
+  display: inline-block;
+  padding: 0.25rem 0.8rem;
+  background: var(--pico-teal);
+  color: #04221f;
+  font-weight: 800;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  border-radius: 4px;
+  margin-bottom: 0.6rem;
+}
+.elx-hero h1 { font-size: clamp(1.3rem, 3.5vw, 1.8rem); text-transform: uppercase; letter-spacing: 0.03em; }
+.elx-event { margin: 0.5rem 0 0; font-size: 1.05rem; font-weight: 700; color: var(--pico-teal-light); }
+.elx-meta { margin: 0.2rem 0 0; color: var(--text-secondary); font-size: 0.9rem; }
+.elx-deadline { margin: 0.9rem 0 0; padding: 0.55rem 0.8rem; border-radius: var(--radius-md); background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.35); color: #fde68a; font-size: 0.88rem; }
+.elx-editing { margin: 0.9rem 0 0; }
+
+/* Vendor details */
+.elx-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem 1rem; margin-top: 0.6rem; }
+.elx-field { display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
+.elx-field.wide { grid-column: 1 / -1; }
+.elx-field > span { font-size: 0.78rem; font-weight: 600; color: var(--text-secondary); }
+.elx-field em { color: var(--pico-teal); font-style: normal; }
+.elx-field small { font-size: 0.72rem; color: var(--text-muted); }
+.elx-field input, .elx-field textarea {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-glass);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 1rem;
+}
+.elx-field textarea { resize: vertical; }
+.elx-field input:focus, .elx-field textarea:focus { outline: none; border-color: var(--pico-teal); }
+
+/* Power options table */
+.elx-intro { margin: 0.2rem 0 0.9rem; padding: 0.7rem 0.9rem; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--bg-glass); color: var(--text-secondary); font-size: 0.86rem; line-height: 1.55; }
+.elx-table { border: 1px solid var(--border-subtle); border-radius: var(--radius-md); overflow: hidden; }
+.elx-row { display: grid; grid-template-columns: 42px minmax(0, 1fr) 110px 128px 110px; gap: 0.6rem; align-items: center; padding: 0.65rem 0.8rem; border-bottom: 1px solid var(--border-subtle); font-size: 0.9rem; }
+.elx-row:last-child { border-bottom: none; }
+.elx-row.head { background: var(--bg-glass-strong); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary); }
+.elx-row.on { background: rgba(0, 199, 177, 0.06); }
+.elx-row.total { font-weight: 800; background: var(--bg-glass); }
+.elx-row.total .num { color: var(--pico-teal); font-size: 1.05rem; }
+.elx-row .num { text-align: right; white-space: nowrap; }
+.elx-no { color: var(--text-muted); font-weight: 700; }
+.elx-desc { font-weight: 600; }
+.elx-cost { font-weight: 700; }
+.elx-qty { display: inline-flex; align-items: center; border: 1px solid var(--border-subtle); border-radius: 999px; overflow: hidden; }
+.elx-qty button { width: 34px; height: 34px; border: none; background: var(--bg-glass-strong); color: var(--text-primary); font-size: 1.1rem; cursor: pointer; }
+.elx-qty button:hover { background: rgba(0, 199, 177, 0.18); }
+.elx-qty input { width: 40px; height: 34px; border: none; background: transparent; color: var(--text-primary); text-align: center; font-size: 0.95rem; font-weight: 700; font-family: inherit; }
+.elx-qty input:focus { outline: none; }
+.elx-vat { margin: 0.5rem 0 0; text-align: center; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+
+/* Terms and submit */
+.elx-terms { margin: 0.3rem 0 0.9rem 1.1rem; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; color: var(--text-secondary); font-size: 0.88rem; }
+.elx-agree { display: flex; gap: 0.6rem; align-items: flex-start; font-size: 0.92rem; cursor: pointer; }
+.elx-agree input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--pico-teal); flex-shrink: 0; }
+.elx-submit { padding: 0.9rem 1.1rem; border-radius: var(--radius-lg); border: 1px solid var(--border-teal); background: rgba(11, 17, 32, 0.95); backdrop-filter: blur(10px); display: flex; flex-direction: column; gap: 0.2rem; }
+.elx-submit > div { display: flex; justify-content: space-between; align-items: baseline; }
+.elx-submit > div span { color: var(--text-secondary); font-size: 0.85rem; }
+.elx-submit > div strong { font-size: 1.3rem; color: var(--pico-teal); }
+.elx-submit .exo-alert { margin: 0.4rem 0 0; }
+.elx-submit .evm-link-btn { align-self: center; }
+
+/* After sending */
+.elx-done { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+.elx-done h1 { margin-bottom: 0.6rem; }
+.elx-ref { font-family: monospace; font-size: clamp(1.4rem, 5vw, 2rem); font-weight: 800; letter-spacing: 0.06em; color: var(--pico-teal-light); padding: 0.4rem 1rem; border: 1px dashed var(--border-teal); border-radius: var(--radius-md); margin: 0.2rem 0 0.6rem; overflow-wrap: anywhere; }
+.elx-ref.small { font-size: 1.15rem; padding: 0.1rem 0.6rem; margin: 0.15rem 0 0.4rem; display: inline-block; }
+.elx-next { text-align: left; margin: 0.6rem 0 0.4rem 1.2rem; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; color: var(--text-secondary); font-size: 0.9rem; max-width: 520px; }
+.elx-cta-link { text-decoration: none; text-align: center; display: inline-block; max-width: 360px; }
+
+.elx-details { margin-top: 0.6rem; }
+.elx-details summary { cursor: pointer; color: var(--text-secondary); font-size: 0.88rem; font-weight: 600; margin-bottom: 0.6rem; }
+
+/* Admin */
+.elx-admin-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+.elx-admin-head h1 { font-size: 1.5rem; font-weight: 800; margin: 0; }
+.elx-admin-head .eva-hint { margin: 0.35rem 0 0; color: var(--text-secondary); font-size: 0.9rem; }
+.elx-admin-setup { display: flex; flex-direction: column; gap: 1.2rem; }
+.elx-admin-hint { margin: 0.6rem 0 0; color: var(--text-muted); font-size: 0.8rem; }
+.elx-danger { color: #f87171 !important; border-color: rgba(239, 68, 68, 0.4) !important; }
+
+@media (max-width: 640px) {
+  .elx-grid { grid-template-columns: 1fr; }
+  .elx-row { grid-template-columns: 26px minmax(0, 1fr) auto; row-gap: 0.4rem; }
+  .elx-row.head { display: none; }
+  .elx-row .elx-unit { grid-column: 2; text-align: left; color: var(--text-muted); font-size: 0.8rem; }
+  .elx-row > .num:nth-child(4) { grid-column: 3; grid-row: 1 / span 2; }
+  .elx-row .elx-cost { grid-column: 2 / -1; font-size: 0.85rem; }
+  .elx-row.total { grid-template-columns: 1fr auto; }
+  .elx-row.total > span:empty { display: none; }
+}
+
+@media print {
+  .evm-topbar, .elx-noprint, .elx-submit { display: none !important; }
+  .evm-page { background: #fff; color: #000; }
+  .exo-card { border-color: #ccc; background: #fff; }
+}

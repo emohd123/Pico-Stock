@@ -13,7 +13,9 @@ export default function AppChrome({ children }) {
     // render them bare, without the site navbar/footer.
     // Event marketplace pages (/events/[slug]) are shared with clients for a
     // specific event and carry their own branded header and footer.
-    if (pathname && (pathname.startsWith('/q/') || pathname.startsWith('/pico-ai/photo/') || pathname.startsWith('/events/'))) {
+    // The vendor electricity order form (/electricity...) works the same way.
+    if (pathname && (pathname.startsWith('/q/') || pathname.startsWith('/pico-ai/photo/') || pathname.startsWith('/events/')
+        || pathname === '/electricity' || pathname.startsWith('/electricity/'))) {
         return <main style={{ position: 'relative', zIndex: 1 }}>{children}</main>;
     }
     return (
