@@ -458,9 +458,9 @@ function SetupTab({ config, updateConfig, save, saving, dirty }) {
                     <input className="form-input" {...field('contactPhone')} />
                 </label>
                 <label className="eva-field">
-                    <span>Extra notification email</span>
-                    <input className="form-input" type="email" {...field('notifyEmail')} placeholder="Optional" />
-                    <small>New requests always go to the admin email; add another recipient here.</small>
+                    <span>Extra notification emails</span>
+                    <input className="form-input" type="email" multiple {...field('notifyEmail')} placeholder="Optional, e.g. a@x.com, b@y.com" />
+                    <small>Every order email always goes to the admin email; add more recipients here, separated by commas.</small>
                 </label>
             </div>
 
