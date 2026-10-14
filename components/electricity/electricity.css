@@ -154,3 +154,16 @@
   .evm-page { background: #fff; color: #000; }
   .exo-card { border-color: #ccc; background: #fff; }
 }
+
+/* Required equipment list upload */
+.elx-equipment { margin-top: 1rem; padding: 0.9rem 1rem; border: 1px dashed rgba(234, 179, 8, 0.6); border-radius: var(--radius-md); background: rgba(234, 179, 8, 0.06); }
+.elx-equipment.ok { border-style: solid; border-color: var(--border-teal); background: rgba(0, 199, 177, 0.07); }
+.elx-equipment-label { display: block; font-size: 0.9rem; font-weight: 700; color: var(--text-primary); }
+.elx-equipment-label em { color: var(--pico-teal); font-style: normal; }
+.elx-equipment p { margin: 0.3rem 0 0.7rem; color: var(--text-secondary); font-size: 0.84rem; line-height: 1.5; }
+.elx-file { display: flex; flex-wrap: wrap; align-items: center; gap: 0.7rem; cursor: pointer; }
+.elx-file input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.elx-file-btn { padding: 0.55rem 1.1rem; border-radius: 999px; background: var(--pico-teal); color: #04221f; font-weight: 700; font-size: 0.85rem; }
+.elx-file:focus-within .elx-file-btn { outline: 2px solid var(--pico-teal-light); outline-offset: 2px; }
+.elx-file-name { color: var(--text-secondary); font-size: 0.86rem; overflow-wrap: anywhere; }
+.elx-equipment.ok .elx-file-name { color: var(--pico-teal-light); font-weight: 600; }

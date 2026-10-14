@@ -21,6 +21,9 @@ const FIELDS = [
     { key: 'booth', label: 'Booth / unit no.', placeholder: 'If you know it' },
 ];
 
+const EQUIPMENT_EXTENSIONS = ['pdf', 'jpg', 'jpeg', 'png', 'xlsx', 'xls', 'docx', 'doc'];
+const EQUIPMENT_ACCEPT = `${EQUIPMENT_EXTENSIONS.map((ext) => `.${ext}`).join(',')},application/pdf,image/jpeg,image/png`;
+
 export function formatDay(value) {
     if (!value) return '';
     const date = new Date(`${value}T12:00:00`);
@@ -39,6 +42,8 @@ export default function ElectricityForm({ editKey = '' }) {
     const [done, setDone] = useState(null);
     const [editBlocked, setEditBlocked] = useState('');
     const [editRef, setEditRef] = useState('');
+    const [equipmentFile, setEquipmentFile] = useState(null);
+    const [existingEquipment, setExistingEquipment] = useState(null);
 
     useEffect(() => {
         let cancelled = false;
@@ -54,6 +59,7 @@ export default function ElectricityForm({ editKey = '' }) {
                     setQty(Object.fromEntries(data.order.items.map((item) => [item.id, item.quantity])));
                     setAgree(true);
                     setEditRef(data.order.reference);
+                    setExistingEquipment(data.equipment || null);
                     if (!data.editable) setEditBlocked('This order is already approved, so it can no longer be changed online. Please contact Pico.');
                     return;
                 }
@@ -87,6 +93,24 @@ export default function ElectricityForm({ editKey = '' }) {
         setQty((current) => ({ ...current, [id]: next }));
     }
 
+    function pickEquipment(input) {
+        const file = input.files?.[0] || null;
+        setError('');
+        if (!file) return;
+        const ext = (file.name.split('.').pop() || '').toLowerCase();
+        if (!EQUIPMENT_EXTENSIONS.includes(ext)) {
+            setError('The equipment list must be a PDF, photo (JPG/PNG), Excel or Word file.');
+            input.value = '';
+            return;
+        }
+        if (file.size > 4 * 1024 * 1024) {
+            setError('The equipment list is larger than 4 MB. Please choose a smaller file.');
+            input.value = '';
+            return;
+        }
+        setEquipmentFile(file);
+    }
+
     function step(id, delta) {
         setQty((current) => ({ ...current, [id]: Math.max(0, Math.min(99, (Number(current[id]) || 0) + delta)) }));
     }
@@ -98,6 +122,10 @@ export default function ElectricityForm({ editKey = '' }) {
             setError('Enter a quantity for at least one power option.');
             return;
         }
+        if (!equipmentFile && !existingEquipment) {
+            setError('Upload your equipment list (PDF, photo, Excel or Word) before sending.');
+            return;
+        }
         if (!agree) {
             setError('Please accept the terms and conditions.');
             return;
@@ -105,10 +133,12 @@ export default function ElectricityForm({ editKey = '' }) {
         setBusy(true);
         try {
             const payload = { vendor, items: chosen.map((line) => ({ id: line.id, quantity: line.quantity })) };
+            const body = new FormData();
+            body.append('payload', JSON.stringify(payload));
+            if (equipmentFile) body.append('equipment', equipmentFile);
             const response = await fetch(editKey ? `/api/electricity/my/${encodeURIComponent(editKey)}` : '/api/electricity/orders', {
                 method: editKey ? 'PUT' : 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
+                body,
             });
             const data = await response.json();
             if (!response.ok) throw new Error(data?.error || 'The order could not be sent.');
@@ -239,6 +269,17 @@ export default function ElectricityForm({ editKey = '' }) {
                                     </div>
                                 </div>
                                 <p className="elx-vat">All prices are inclusive of VAT</p>
+                                <div className={`elx-equipment${equipmentFile || existingEquipment ? ' ok' : ''}`}>
+                                    <span className="elx-equipment-label">Equipment list <em>*</em></span>
+                                    <p>List every item you will plug in, with its power (watts or amps) and phase, e.g. &ldquo;Coffee machine, 3 kW, single-phase&rdquo;. PDF, photo, Excel or Word, max 4 MB.</p>
+                                    <label className="elx-file">
+                                        <input type="file" accept={EQUIPMENT_ACCEPT} onChange={(e) => pickEquipment(e.target)} />
+                                        <span className="elx-file-btn">{equipmentFile || existingEquipment ? 'Replace file' : 'Choose file'}</span>
+                                        <span className="elx-file-name">
+                                            {equipmentFile ? `✓ ${equipmentFile.name}` : existingEquipment ? `✓ ${existingEquipment.name} (uploaded)` : 'No file chosen'}
+                                        </span>
+                                    </label>
+                                </div>
                                 <label className="elx-field wide" style={{ marginTop: '1rem' }}>
                                     <span>Anything not listed? Tell us here</span>
                                     <textarea rows={3} value={vendor.notes} onChange={(e) => setField('notes', e.target.value)} placeholder="e.g. 2 extra 13 amp power points for each booth" />

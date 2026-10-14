@@ -7,6 +7,7 @@ import {
     resolveLines,
 } from '@/lib/electricityOrderStore';
 import { sendNewOrderEmails } from '@/lib/electricityOrderEmails';
+import { equipmentAttachment, readOrderRequest, storeEquipmentFile } from '@/lib/electricityFiles';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,8 +22,9 @@ export async function GET() {
 }
 
 /**
- * Public: a vendor submits the form. Body: { vendor, items: [{ id, quantity }] }.
- * Prices always come from the live form.
+ * Public: a vendor submits the form, as multipart form data: "payload" (JSON
+ * { vendor, items: [{ id, quantity }] }) and "equipment" (the required
+ * equipment list file). Prices always come from the live form.
  */
 export async function POST(request) {
     try {
@@ -30,15 +32,20 @@ export async function POST(request) {
         if (form.status !== 'open') {
             return NextResponse.json({ error: 'This form is not accepting orders at the moment. Please contact Pico.' }, { status: 403 });
         }
-        const body = await request.json().catch(() => ({}));
+        const { body, file } = await readOrderRequest(request);
         const lines = resolveLines(form, body.items);
-        const order = await createElectricityOrder(form, { vendor: body.vendor, lines });
+        const order = await createElectricityOrder(form, {
+            vendor: body.vendor,
+            lines,
+            storeEquipment: file ? (draft) => storeEquipmentFile(draft, file) : null,
+        });
 
         const origin = new URL(request.url).origin;
         const orderUrl = `${origin}/electricity/order/${order.orderKey}`;
         let warning = null;
         try {
-            const sent = await sendNewOrderEmails({ form, order, orderUrl, adminUrl: `${origin}/admin/electricity` });
+            const attachment = await equipmentAttachment(order.equipment).catch(() => null);
+            const sent = await sendNewOrderEmails({ form, order, orderUrl, adminUrl: `${origin}/admin/electricity`, equipmentAttachment: attachment });
             if (!sent.vendor.success) warning = 'Your order is saved, but we could not email you the confirmation. Keep your order number.';
             else if (!sent.pico.success) console.error('[electricity] Pico notification failed:', sent.pico.error);
         } catch (error) {

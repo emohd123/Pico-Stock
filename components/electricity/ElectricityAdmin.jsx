@@ -70,6 +70,7 @@ function OrderCard({ order, busy, onAction, onSaveNotes, onDelete }) {
                             ))}
                         </div>
                         {v.notes && <p className="eva-request-notes"><strong>Other requirements:</strong> {v.notes}</p>}
+                        <p className="eva-request-notes"><strong>Equipment list:</strong> {order.equipment?.name || 'not uploaded'}</p>
 
                         <div className="eva-request-tools">
                             {stage === 'review' && (
@@ -77,6 +78,9 @@ function OrderCard({ order, busy, onAction, onSaveNotes, onDelete }) {
                             )}
                             {['awaiting', 'submitted', 'rejected'].includes(stage) && (
                                 <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={() => onAction(order, 'verify')}>Verify payment &amp; confirm</button>
+                            )}
+                            {order.equipment?.path && (
+                                <a className="btn btn-secondary btn-sm" href={`/api/electricity/orders/${encodeURIComponent(order.id)}/equipment`} target="_blank" rel="noreferrer">Equipment list</a>
                             )}
                             {pay.proofPath && (
                                 <a className="btn btn-secondary btn-sm" href={`/api/electricity/orders/${encodeURIComponent(order.id)}/payment`} target="_blank" rel="noreferrer">Open receipt</a>

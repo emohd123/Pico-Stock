@@ -160,6 +160,12 @@ export default function ElectricityOrderView({ orderKey, updated = false }) {
                             <div className="exo-grand"><span>Total to pay (VAT inclusive)</span><strong>{formatMoney(order.total, currency)}</strong></div>
                         </div>
                         {vendor.notes && <p className="exo-hint"><strong>Other requirements:</strong> {vendor.notes}</p>}
+                        {data.equipment && (
+                            <p className="exo-hint">
+                                <strong>Equipment list:</strong>{' '}
+                                <a href={`${endpoint}/equipment`} target="_blank" rel="noreferrer">{data.equipment.name}</a>
+                            </p>
+                        )}
 
                         <details className="elx-details">
                             <summary>Your details</summary>

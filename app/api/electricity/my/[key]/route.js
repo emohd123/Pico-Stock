@@ -18,14 +18,16 @@ import {
     storePaymentProof,
 } from '@/lib/eventPayments';
 import { sendElectricityProofReceived, sendNewOrderEmails } from '@/lib/electricityOrderEmails';
+import { equipmentAttachment, readOrderRequest, storeEquipmentFile } from '@/lib/electricityFiles';
 
 export const dynamic = 'force-dynamic';
 
 // Public, secured by the order key in the link: the vendor's own order page.
 
 function forVendor(order, form) {
-    const { adminNotes, id, payment, eventId, contact, company, ...rest } = order;
+    const { adminNotes, id, payment, eventId, contact, company, equipment, ...rest } = order;
     return {
+        equipment: equipment?.path ? { name: equipment.name, size: equipment.size, uploadedAt: equipment.uploadedAt } : null,
         form: publicForm(form),
         order: rest,
         editable: isOrderEditable(order) && form.status === 'open',
@@ -54,7 +56,7 @@ export async function GET(_request, { params }) {
     return NextResponse.json(forVendor(order, form), { headers: { 'Cache-Control': 'no-store' } });
 }
 
-/** Change the order while Pico is still reviewing it. Body: { vendor, items }. */
+/** Change the order while Pico is still reviewing it: { vendor, items } plus an optional new "equipment" file. */
 export async function PUT(request, { params }) {
     try {
         const { order, form } = await load(params.key);
@@ -62,14 +64,18 @@ export async function PUT(request, { params }) {
         if (!isOrderEditable(order) || form.status !== 'open') {
             return NextResponse.json({ error: 'This order is already approved, so it can no longer be changed online. Please contact Pico.' }, { status: 409 });
         }
-        const body = await request.json().catch(() => ({}));
+        const { body, file } = await readOrderRequest(request);
         const before = `${order.items.map((item) => `${item.quantity}× ${item.name}`).join(', ')}; ${order.total.toFixed(3)} ${order.currency}`;
-        const updated = await replaceElectricityOrder(order, { vendor: body.vendor, lines: resolveLines(form, body.items) },
-            `Order changed by the vendor, ${bahrainStamp()} (was ${before}).`);
+        const updated = await replaceElectricityOrder(order, {
+            vendor: body.vendor,
+            lines: resolveLines(form, body.items),
+            storeEquipment: file ? (current) => storeEquipmentFile(current, file) : null,
+        }, `Order changed by the vendor, ${bahrainStamp()} (was ${before})${file ? `; new equipment list ${file.name}` : ''}.`);
 
         const origin = new URL(request.url).origin;
+        const attachment = await equipmentAttachment(updated.equipment).catch(() => null);
         const sent = await sendNewOrderEmails({
-            form, order: updated, updated: true,
+            form, order: updated, updated: true, equipmentAttachment: attachment,
             orderUrl: `${origin}/electricity/order/${updated.orderKey}`,
             adminUrl: `${origin}/admin/electricity`,
         }).catch((error) => ({ success: false, error }));
