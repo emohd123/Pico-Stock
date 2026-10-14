@@ -103,6 +103,13 @@
 
 /* Terms and submit */
 .elx-terms { margin: 0.3rem 0 0.9rem 1.1rem; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; color: var(--text-secondary); font-size: 0.88rem; }
+.elx-terms-doc { max-height: 420px; overflow-y: auto; margin: 0.3rem 0 0.9rem; padding: 0.9rem 1rem; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--bg-glass); color: var(--text-secondary); font-size: 0.86rem; line-height: 1.55; }
+.elx-terms-title { margin: 0; color: var(--text-primary); font-weight: 700; font-size: 0.95rem; }
+.elx-terms-sub { margin: 0.15rem 0 0; color: var(--text-muted); font-size: 0.82rem; }
+.elx-terms-section { margin: 1rem 0 0.35rem; color: var(--text-primary); font-size: 0.9rem; font-weight: 700; }
+.elx-terms-clause { margin: 0 0 0.4rem; padding-left: 2.3rem; text-indent: -2.3rem; }
+.elx-terms-clause span { display: inline-block; width: 2.3rem; text-indent: 0; color: var(--pico-teal-light); font-weight: 700; }
+.elx-terms-clause.plain { padding-left: 0; text-indent: 0; }
 .elx-agree { display: flex; gap: 0.6rem; align-items: flex-start; font-size: 0.92rem; cursor: pointer; }
 .elx-agree input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--pico-teal); flex-shrink: 0; }
 .elx-submit { padding: 0.9rem 1.1rem; border-radius: var(--radius-lg); border: 1px solid var(--border-teal); background: rgba(11, 17, 32, 0.95); backdrop-filter: blur(10px); display: flex; flex-direction: column; gap: 0.2rem; }

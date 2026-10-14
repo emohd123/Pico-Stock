@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import ElectricityTopbar from './ElectricityTopbar';
+import ElectricityTerms from './ElectricityTerms';
 import { formatMoney } from '@/lib/eventMarketplacePricing';
 
 const EMPTY_VENDOR = {
@@ -246,9 +247,7 @@ export default function ElectricityForm({ editKey = '' }) {
 
                             <section className="exo-card">
                                 <h2>3. Terms &amp; conditions</h2>
-                                <ol className="elx-terms">
-                                    {form.terms.split('\n').filter((line) => line.trim()).map((line) => <li key={line}>{line}</li>)}
-                                </ol>
+                                <ElectricityTerms text={form.terms} />
                                 <p className="exo-hint">
                                     <strong>Payment:</strong> nothing to pay now. Once Pico approves your order, we email you the bank details. Full payment in favour of
                                     {' '}&ldquo;Pico International (Bahrain)&rdquo; by bank transfer confirms the order.
