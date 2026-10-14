@@ -167,3 +167,15 @@
 .elx-file:focus-within .elx-file-btn { outline: 2px solid var(--pico-teal-light); outline-offset: 2px; }
 .elx-file-name { color: var(--text-secondary); font-size: 0.86rem; overflow-wrap: anywhere; }
 .elx-equipment.ok .elx-file-name { color: var(--pico-teal-light); font-weight: 600; }
+
+/* Organised "please read" note (one point per line from Form setup) */
+.elx-notice { margin: 0.3rem 0 1rem; border: 1px solid rgba(234, 179, 8, 0.55); border-left: 4px solid #eab308; border-radius: var(--radius-md); background: rgba(234, 179, 8, 0.07); overflow: hidden; }
+.elx-notice-head { display: flex; align-items: center; gap: 0.55rem; padding: 0.7rem 1rem; background: rgba(234, 179, 8, 0.18); color: #fde68a; font-weight: 800; font-size: 0.9rem; letter-spacing: 0.03em; }
+.elx-notice-head span { font-size: 1.1rem; }
+.elx-notice > ul { list-style: none; margin: 0; padding: 0.4rem 1rem 0.6rem; }
+.elx-notice > ul > li { position: relative; padding: 0.55rem 0 0.55rem 1.3rem; border-bottom: 1px solid rgba(234, 179, 8, 0.18); color: #fef3c7; font-size: 0.9rem; line-height: 1.55; }
+.elx-notice > ul > li:last-child { border-bottom: none; }
+.elx-notice > ul > li::before { content: ''; position: absolute; left: 0.1rem; top: 1.05rem; width: 7px; height: 7px; border-radius: 50%; background: #eab308; }
+.elx-notice strong { color: #fde68a; }
+.elx-notice li ul { margin: 0.35rem 0 0; padding-left: 1.1rem; color: #fde68a; }
+.elx-notice li ul li { margin: 0.2rem 0; font-weight: 600; }

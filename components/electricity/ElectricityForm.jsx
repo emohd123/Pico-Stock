@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import ElectricityTopbar from './ElectricityTopbar';
 import ElectricityTerms from './ElectricityTerms';
+import ElectricityNotice from './ElectricityNotice';
 import { formatMoney } from '@/lib/eventMarketplacePricing';
 
 const EMPTY_VENDOR = {
@@ -244,7 +245,7 @@ export default function ElectricityForm({ editKey = '' }) {
 
                             <section className="exo-card">
                                 <h2>2. Additional electricity</h2>
-                                {form.intro && <p className="elx-intro">{form.intro}</p>}
+                                <ElectricityNotice text={form.intro} />
                                 <div className="elx-table" role="table">
                                     <div className="elx-row head" role="row">
                                         <span>No.</span><span>Description</span><span className="num">Unit cost</span><span className="num">Qty</span><span className="num">Cost</span>
