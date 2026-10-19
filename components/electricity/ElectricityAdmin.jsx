@@ -176,6 +176,15 @@ function FormSetup({ form, onSave, saving }) {
                         <span>Contact phone</span>
                         <input className="form-input" value={draft.contactPhone} onChange={(e) => set('contactPhone', e.target.value)} />
                     </label>
+                    <label className="eva-field">
+                        <span>Contact name (Important note box)</span>
+                        <input className="form-input" value={draft.contactName} onChange={(e) => set('contactName', e.target.value)} />
+                        <small>Shown with the contact phone and the &ldquo;Send new orders to&rdquo; email.</small>
+                    </label>
+                    <label className="eva-field">
+                        <span>Important note box (right of the form)</span>
+                        <textarea className="form-textarea" rows={2} value={draft.sideNote} onChange={(e) => set('sideNote', e.target.value)} />
+                    </label>
                     <label className="eva-field eva-span-2">
                         <span>Note above the power options</span>
                         <textarea className="form-textarea" rows={3} value={draft.intro} onChange={(e) => set('intro', e.target.value)} />

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import ElectricityTopbar from './ElectricityTopbar';
 import ElectricityTerms from './ElectricityTerms';
 import ElectricityNotice from './ElectricityNotice';
+import ElectricityContactBox from './ElectricityContactBox';
 import { formatMoney } from '@/lib/eventMarketplacePricing';
 
 const EMPTY_VENDOR = {
@@ -202,7 +203,8 @@ export default function ElectricityForm({ editKey = '' }) {
         <div className="evm-page">
             <ElectricityTopbar>{findLink}</ElectricityTopbar>
             <main className="evm-main">
-                <div className="evm-container elx-wrap">
+                <div className="evm-container elx-layout">
+                <div className="elx-wrap elx-main">
                     {preview && <div className="evm-notice elx-preview">Admin preview: this form is <strong>{form.status}</strong>, so vendors cannot submit it yet. Open it from the admin page.</div>}
 
                     <section className="exo-card elx-hero">
@@ -215,6 +217,8 @@ export default function ElectricityForm({ editKey = '' }) {
                         {form.submitBy && <p className="elx-deadline">Please submit this form by <strong>{formatDay(form.submitBy)}</strong></p>}
                         {editKey && <div className="exo-info elx-editing">You are changing order <strong>{editRef}</strong>. Saving keeps the same order number.</div>}
                     </section>
+
+                    <ElectricityContactBox form={form} className="elx-side-inline" />
 
                     {closed ? (
                         <div className="evm-notice">This form is not accepting orders at the moment. Please contact Pico at {form.receiptEmail}{form.contactPhone ? ` or ${form.contactPhone}` : ''}.</div>
@@ -317,6 +321,8 @@ export default function ElectricityForm({ editKey = '' }) {
                     <p className="exo-hint" style={{ textAlign: 'center' }}>
                         Questions? {form.contactPhone} · {form.receiptEmail}
                     </p>
+                </div>
+                <ElectricityContactBox form={form} className="elx-side-column" />
                 </div>
             </main>
         </div>
