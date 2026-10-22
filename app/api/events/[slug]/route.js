@@ -61,6 +61,7 @@ export async function GET(_request, { params }) {
                 currency: config.currency,
                 vatPercent: config.vatPercent,
                 paymentTerms: config.paymentTerms,
+                sideNote: config.sideNote,
                 contactEmail: config.contactEmail,
                 contactPhone: config.contactPhone,
                 heroImage: config.heroImage,

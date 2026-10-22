@@ -445,6 +445,11 @@ function SetupTab({ config, updateConfig, save, saving, dirty }) {
                     <span>Payment terms shown to clients</span>
                     <textarea className="form-textarea" rows={4} {...field('paymentTerms')} />
                 </label>
+                <label className="eva-field eva-span-2" style={{ gridColumn: '1 / -1' }}>
+                    <span>Note beside the order (deadline, late fees)</span>
+                    <textarea className="form-textarea" rows={4} {...field('sideNote')} placeholder={'Deadline: Saturday 24 October 2026.\n* Late orders … are charged +25%.'} />
+                    <small>The first line is shown in bold; lines starting with * or - become bullet points. Leave empty to hide.</small>
+                </label>
             </div>
 
             <h3 style={{ marginTop: '1.6rem' }}>Contact &amp; notifications</h3>

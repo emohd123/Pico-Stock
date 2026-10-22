@@ -137,6 +137,33 @@ function useDesktopModeOnPhone() {
     return zoom > 1;
 }
 
+// The event's side note: first line bold, "* " / "- " lines as bullets.
+function SideNote({ text, className = '' }) {
+    const lines = String(text || '').split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    if (lines.length === 0) return null;
+    const blocks = [];
+    lines.forEach((line, index) => {
+        const bullet = line.match(/^[*\-•]\s+(.*)$/);
+        if (bullet) {
+            const last = blocks[blocks.length - 1];
+            if (last?.type === 'list') last.items.push(bullet[1]);
+            else blocks.push({ type: 'list', items: [bullet[1]] });
+        } else {
+            blocks.push({ type: index === 0 ? 'lead' : 'text', text: line });
+        }
+    });
+    return (
+        <section className={`evm-note ${className}`.trim()} aria-label="Note">
+            <h3>Note</h3>
+            {blocks.map((block, index) => (block.type === 'list' ? (
+                <ul key={index}>{block.items.map((item, i) => <li key={i}>{item}</li>)}</ul>
+            ) : (
+                <p key={index} className={block.type === 'lead' ? 'evm-note-lead' : undefined}>{block.text}</p>
+            )))}
+        </section>
+    );
+}
+
 function storageKey(slug) {
     return `pico-event-basket:${slug}`;
 }
@@ -541,6 +568,7 @@ export default function EventMarketplace({ slug, editKey = '', fromKey = '' }) {
                         ) : (
                             <div className="evm-layout">
                                 <div className="evm-catalogue" id="catalogue">
+                                    <SideNote text={event.sideNote} className="evm-note-inline" />
                                     {editing && (
                                         <div className="evm-edit-banner">
                                             <strong>Changing order {editing.reference}.</strong> Add, remove or change items, then save. Your order number stays the same. <a href={`/o/${editing.key}`}>Cancel</a>
@@ -620,6 +648,7 @@ export default function EventMarketplace({ slug, editKey = '', fromKey = '' }) {
                                         <h2>Your request</h2>
                                         <button type="button" className="evm-summary-close" onClick={() => setBasketOpen(false)} aria-label="Close">×</button>
                                     </div>
+                                    <SideNote text={event.sideNote} />
 
                                     {basketLines.length === 0 ? (
                                         <p className="evm-summary-empty">Add items from the catalogue to see how much you would pay for the {event.days}-day event.</p>

@@ -949,3 +949,21 @@
   .evm-page:has(.hiw-btn) .evm-topbar-title { display: none; }
 }
 .evm-narrow .evm-topbar-title { display: none; }
+
+/* Side note: order deadline and late-order surcharges. */
+.evm-note {
+  margin: 0 0 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  border-left: 4px solid #f59e0b;
+  border-radius: var(--radius-md, 10px);
+  background: rgba(245, 158, 11, 0.08);
+}
+.evm-note h3 { margin: 0 0 0.35rem; font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: #fbbf24; }
+.evm-note p { margin: 0 0 0.3rem; color: var(--text-secondary); font-size: 0.86rem; line-height: 1.5; }
+.evm-note .evm-note-lead { color: var(--text-primary, #fff); font-weight: 700; }
+.evm-note ul { margin: 0.2rem 0 0; padding-left: 1.1rem; }
+.evm-note li { color: var(--text-secondary); font-size: 0.84rem; line-height: 1.5; margin: 0.15rem 0; }
+.evm-note-inline { display: none; }
+@media (max-width: 960px) { .evm-note-inline { display: block; } }
+.evm-narrow .evm-note-inline { display: block; }
