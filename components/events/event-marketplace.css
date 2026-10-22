@@ -967,3 +967,18 @@
 .evm-note-inline { display: none; }
 @media (max-width: 960px) { .evm-note-inline { display: block; } }
 .evm-narrow .evm-note-inline { display: block; }
+
+/* Margin report: % under amounts, client share setting. */
+.mr-pct { display: block; font-size: 0.72rem; font-weight: 600; color: var(--text-muted); margin-top: 0.1rem; }
+.eva-stat .mr-pct { font-size: 0.78rem; }
+.mr-stat-net { border-color: rgba(0, 169, 157, 0.5); }
+.mr-stat-net strong { color: var(--pico-teal); }
+.eva-table tfoot td { font-weight: 700; border-top: 2px solid var(--border-subtle); }
+.mr-share-card { display: grid; gap: 0.8rem; }
+.mr-share { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.6rem 1rem; }
+.mr-share label { display: grid; gap: 0.3rem; }
+.mr-share label > span:first-child { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+.mr-share-input { display: inline-flex; align-items: center; gap: 0.4rem; }
+.mr-share-input input { width: 6.5rem; }
+.mr-share small { flex-basis: 100%; color: var(--text-muted); font-size: 0.78rem; }
+.mr-share .mr-share-err { color: #f87171; }
