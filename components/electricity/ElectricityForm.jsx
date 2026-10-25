@@ -46,6 +46,8 @@ export default function ElectricityForm({ editKey = '' }) {
     const [editRef, setEditRef] = useState('');
     const [equipmentFile, setEquipmentFile] = useState(null);
     const [existingEquipment, setExistingEquipment] = useState(null);
+    // Editing keeps the rate of the day the order was first placed.
+    const [orderSurcharge, setOrderSurcharge] = useState(undefined);
 
     useEffect(() => {
         let cancelled = false;
@@ -62,6 +64,7 @@ export default function ElectricityForm({ editKey = '' }) {
                     setAgree(true);
                     setEditRef(data.order.reference);
                     setExistingEquipment(data.equipment || null);
+                    setOrderSurcharge(data.order.surcharge || null);
                     if (!data.editable) setEditBlocked('This order is already approved, so it can no longer be changed online. Please contact Pico.');
                     return;
                 }
@@ -83,7 +86,10 @@ export default function ElectricityForm({ editKey = '' }) {
         const quantity = Number(qty[item.id]) || 0;
         return { ...item, quantity, lineTotal: item.price * quantity };
     }), [form, qty]);
-    const total = lines.reduce((sum, line) => sum + line.lineTotal, 0);
+    const subtotal = lines.reduce((sum, line) => sum + line.lineTotal, 0);
+    const surcharge = (editKey ? orderSurcharge : form?.activeSurcharge) || null;
+    const surchargeAmount = surcharge ? Math.round(subtotal * surcharge.percent * 10) / 1000 : 0;
+    const total = subtotal + surchargeAmount;
     const chosen = lines.filter((line) => line.quantity > 0);
 
     function setField(key, value) {
@@ -214,7 +220,21 @@ export default function ElectricityForm({ editKey = '' }) {
                         <p className="elx-meta">
                             {[form.eventDates && `Event dates: ${form.eventDates}`, form.venue].filter(Boolean).join(' · ')}
                         </p>
-                        {form.submitBy && <p className="elx-deadline">Please submit this form by <strong>{formatDay(form.submitBy)}</strong></p>}
+                        {form.submitBy && !surcharge && (
+                            <p className="elx-deadline">
+                                Please submit this form by <strong>{formatDay(form.submitBy)}</strong>.
+                                {!editKey && form.nextSurcharge && <> From {formatDay(form.nextSurcharge.from)} a +{form.nextSurcharge.percent}% late surcharge is added.</>}
+                            </p>
+                        )}
+                        {!editKey && form.activeSurcharge && (
+                            <p className="elx-surcharge-note">
+                                <strong>{form.activeSurcharge.label}: +{form.activeSurcharge.percent}%</strong> is added to orders placed from {formatDay(form.activeSurcharge.from)}.
+                                {form.nextSurcharge && <> From {formatDay(form.nextSurcharge.from)} it becomes +{form.nextSurcharge.percent}%.</>}
+                            </p>
+                        )}
+                        {!editKey && !form.activeSurcharge && form.nextSurcharge && !form.submitBy && (
+                            <p className="elx-deadline">Order before <strong>{formatDay(form.nextSurcharge.from)}</strong> to avoid the +{form.nextSurcharge.percent}% late surcharge.</p>
+                        )}
                         {editKey && <div className="exo-info elx-editing">You are changing order <strong>{editRef}</strong>. Saving keeps the same order number.</div>}
                     </section>
 
@@ -269,6 +289,16 @@ export default function ElectricityForm({ editKey = '' }) {
                                             <span className="num elx-cost">{line.quantity ? formatMoney(line.lineTotal, currency) : '—'}</span>
                                         </div>
                                     ))}
+                                    {surcharge && (
+                                        <>
+                                            <div className="elx-row sub" role="row">
+                                                <span /><span>Subtotal</span><span /><span /><span className="num">{formatMoney(subtotal, currency)}</span>
+                                            </div>
+                                            <div className="elx-row surcharge" role="row">
+                                                <span /><span>{surcharge.label} +{surcharge.percent}%</span><span /><span /><span className="num">{formatMoney(surchargeAmount, currency)}</span>
+                                            </div>
+                                        </>
+                                    )}
                                     <div className="elx-row total" role="row">
                                         <span /><span>Total cost</span><span /><span /><span className="num">{formatMoney(total, currency)}</span>
                                     </div>
@@ -306,7 +336,7 @@ export default function ElectricityForm({ editKey = '' }) {
 
                             <div className="elx-submit">
                                 <div>
-                                    <span>Total cost</span>
+                                    <span>Total cost{surcharge ? ` (incl. +${surcharge.percent}% late surcharge)` : ''}</span>
                                     <strong>{formatMoney(total, currency)}</strong>
                                 </div>
                                 {error && <div className="exo-alert">{error}</div>}

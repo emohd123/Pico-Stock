@@ -70,6 +70,11 @@ function OrderCard({ order, busy, onAction, onSaveNotes, onDelete }) {
                             ))}
                         </div>
                         {v.notes && <p className="eva-request-notes"><strong>Other requirements:</strong> {v.notes}</p>}
+                        {order.surcharge && (
+                            <p className="eva-request-notes elx-admin-surcharge">
+                                Subtotal {formatMoney(order.subtotal, order.currency)} + {order.surcharge.label} {order.surcharge.percent}% ({formatMoney(order.surcharge.amount, order.currency)}) = <strong>{formatMoney(order.total, order.currency)}</strong>
+                            </p>
+                        )}
                         <p className="eva-request-notes"><strong>Equipment list:</strong> {order.equipment?.name || 'not uploaded'}</p>
 
                         <div className="eva-request-tools">
@@ -131,6 +136,10 @@ function FormSetup({ form, onSave, saving }) {
     const setItem = (index, key, value) => setDraft((current) => ({
         ...current,
         items: current.items.map((item, i) => (i === index ? { ...item, [key]: value } : item)),
+    }));
+    const setSurcharge = (index, key, value) => setDraft((current) => ({
+        ...current,
+        surcharges: current.surcharges.map((rule, i) => (i === index ? { ...rule, [key]: value } : rule)),
     }));
     const dirty = JSON.stringify(draft) !== JSON.stringify(form);
 
@@ -212,6 +221,30 @@ function FormSetup({ form, onSave, saving }) {
                 <div className="eva-actions">
                     <button type="button" className="btn btn-secondary btn-sm" onClick={() => set('items', [...draft.items, { id: `item-${Date.now().toString(36)}`, name: '', price: 0, visible: true }])}>+ Add option</button>
                     <span className="eva-hint">Untick to hide an option from vendors.</span>
+                </div>
+            </section>
+
+            <section className="eva-card">
+                <h3>Late-order surcharges (automatic)</h3>
+                <p className="eva-hint" style={{ margin: '0 0 0.8rem' }}>Added on top of the total for orders placed on or after the date (Bahrain time). The latest date that has started applies. Orders keep the rate of the day they were placed.</p>
+                <div className="eva-table-wrap">
+                    <table className="eva-table">
+                        <thead><tr><th>From</th><th className="num">Surcharge %</th><th>Label vendors see</th><th /></tr></thead>
+                        <tbody>
+                            {(draft.surcharges || []).map((rule, index) => (
+                                <tr key={index}>
+                                    <td><input type="date" className="form-input" value={rule.from} onChange={(e) => setSurcharge(index, 'from', e.target.value)} /></td>
+                                    <td className="num"><input type="number" min="0" max="200" step="1" value={rule.percent} onChange={(e) => setSurcharge(index, 'percent', e.target.value)} /></td>
+                                    <td><input type="text" value={rule.label} onChange={(e) => setSurcharge(index, 'label', e.target.value)} /></td>
+                                    <td><button type="button" className="btn btn-secondary btn-sm" onClick={() => set('surcharges', draft.surcharges.filter((_, i) => i !== index))}>Remove</button></td>
+                                </tr>
+                            ))}
+                            {!(draft.surcharges || []).length && <tr><td colSpan={4} className="eva-hint">No surcharges: every order is charged the normal price.</td></tr>}
+                        </tbody>
+                    </table>
+                </div>
+                <div className="eva-actions">
+                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => set('surcharges', [...(draft.surcharges || []), { from: '', percent: 25, label: 'Late order surcharge' }])}>+ Add surcharge</button>
                 </div>
             </section>
 
