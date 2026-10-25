@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { extractCleanName } from '@/lib/nameHelpers';
-import { computeRequestTotals, formatMoney } from '@/lib/eventMarketplacePricing';
+import { computeRequestTotals, formatMoney, surchargeFor } from '@/lib/eventMarketplacePricing';
 import HowItWorks from './HowItWorks';
 import './event-marketplace.css';
 
@@ -276,7 +276,12 @@ export default function EventMarketplace({ slug, editKey = '', fromKey = '' }) {
                     next[line.id] = { quantity: (next[line.id]?.quantity || 0) + line.quantity, comment: line.comment || '' };
                 }
                 setBasket(next);
-                setEditing({ key, reference: data.order.reference });
+                setEditing({
+                    key,
+                    reference: data.order.reference,
+                    // A changed order keeps the surcharge it was placed with.
+                    surcharge: { percent: data.order.surchargePercent || 0, label: data.order.surchargeLabel || '' },
+                });
             } catch {}
         })();
         return () => { cancelled = true; };
@@ -313,7 +318,9 @@ export default function EventMarketplace({ slug, editKey = '', fromKey = '' }) {
         })
         .filter(Boolean), [basket, itemsById]);
 
-    const totals = useMemo(() => computeRequestTotals(basketLines, event), [basketLines, event]);
+    // Late-order surcharge in force today (Bahrain time), or the one an order being changed was placed with.
+    const surcharge = useMemo(() => (editing ? editing.surcharge : surchargeFor(event)), [editing, event]);
+    const totals = useMemo(() => computeRequestTotals(basketLines, event, surcharge), [basketLines, event, surcharge]);
     const basketCount = basketLines.reduce((sum, line) => sum + line.quantity, 0);
     const currency = event?.currency || 'BHD';
 
@@ -690,6 +697,9 @@ export default function EventMarketplace({ slug, editKey = '', fromKey = '' }) {
 
                                             <div className="evm-totals">
                                                 <div><span>Subtotal ({event.days} days)</span><span>{formatMoney(totals.subtotal, currency)}</span></div>
+                                                {totals.surchargeAmount > 0 && (
+                                                    <div className="evm-surcharge-row"><span>{totals.surchargeLabel || 'Late-order surcharge'} (+{totals.surchargePercent}%)</span><span>{formatMoney(totals.surchargeAmount, currency)}</span></div>
+                                                )}
                                                 <div><span>VAT {totals.vatPercent}%</span><span>{formatMoney(totals.vatAmount, currency)}</span></div>
                                                 <div className="evm-total-row"><span>Total to pay</span><span>{formatMoney(totals.total, currency)}</span></div>
                                                 {totals.hasPriceOnRequest && (
@@ -889,6 +899,9 @@ function SuccessPanel({ event, result, currency, downloading, downloadError, onD
                     </tbody>
                     <tfoot>
                         <tr><td colSpan={2}>Subtotal</td><td>{formatMoney(request.subtotal, currency)}</td></tr>
+                        {request.surchargeAmount > 0 && (
+                            <tr className="evm-surcharge-row"><td colSpan={2}>{request.surchargeLabel || 'Late-order surcharge'} (+{request.surchargePercent}%)</td><td>{formatMoney(request.surchargeAmount, currency)}</td></tr>
+                        )}
                         <tr><td colSpan={2}>VAT {request.vatPercent}%</td><td>{formatMoney(request.vatAmount, currency)}</td></tr>
                         <tr className="evm-success-total"><td colSpan={2}>Total to pay</td><td>{formatMoney(request.total, currency)}</td></tr>
                     </tfoot>

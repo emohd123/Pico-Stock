@@ -176,6 +176,9 @@ export default function ExhibitorOrder({ orderKey }) {
                         </div>
                         <div className="exo-totals">
                             <div><span>Subtotal</span><span>{formatMoney(order.subtotal, currency)}</span></div>
+                            {order.surchargeAmount > 0 && (
+                                <div className="evm-surcharge-row"><span>{order.surchargeLabel || 'Late-order surcharge'} (+{order.surchargePercent}%)</span><span>{formatMoney(order.surchargeAmount, currency)}</span></div>
+                            )}
                             <div><span>VAT {order.vatPercent}%</span><span>{formatMoney(order.vatAmount, currency)}</span></div>
                             <div className="exo-grand"><span>Total to pay</span><strong>{formatMoney(order.total, currency)}</strong></div>
                         </div>

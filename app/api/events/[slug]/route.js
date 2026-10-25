@@ -62,6 +62,7 @@ export async function GET(_request, { params }) {
                 vatPercent: config.vatPercent,
                 paymentTerms: config.paymentTerms,
                 sideNote: config.sideNote,
+                surcharges: config.surcharges,
                 contactEmail: config.contactEmail,
                 contactPhone: config.contactPhone,
                 heroImage: config.heroImage,

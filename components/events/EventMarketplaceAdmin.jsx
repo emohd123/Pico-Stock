@@ -249,7 +249,7 @@ export default function EventMarketplaceAdmin({ slug }) {
     }
 
     function exportCsv() {
-        const rows = [['Reference', 'Date', 'Status', 'Company', 'Contact', 'Email', 'Phone', 'Stand', 'Items', 'Subtotal', 'VAT', 'Total', 'Currency', 'Client notes', 'Admin notes']];
+        const rows = [['Reference', 'Date', 'Status', 'Company', 'Contact', 'Email', 'Phone', 'Stand', 'Items', 'Subtotal', 'Late surcharge %', 'Late surcharge', 'VAT', 'Total', 'Currency', 'Client notes', 'Admin notes']];
         for (const request of requests) {
             rows.push([
                 request.reference,
@@ -262,6 +262,8 @@ export default function EventMarketplaceAdmin({ slug }) {
                 request.contact?.stand,
                 (request.items || []).map((line) => `${line.quantity} × ${cleanName(line)}`).join('; '),
                 request.subtotal,
+                request.surchargePercent || 0,
+                request.surchargeAmount || 0,
                 request.vatAmount,
                 request.total,
                 request.currency,
@@ -372,6 +374,42 @@ export default function EventMarketplaceAdmin({ slug }) {
     );
 }
 
+// Late-order surcharge steps, one per line: "2026-10-25, 25, Late order".
+function surchargesToText(steps) {
+    return (Array.isArray(steps) ? steps : [])
+        .map((step) => [step.from, step.percent, step.label].filter((value) => value !== '' && value !== undefined).join(', '))
+        .join('\n');
+}
+
+function textToSurcharges(text) {
+    return String(text || '').split(/\r?\n/).map((line) => {
+        const [from = '', percent = '', ...label] = line.split(',').map((part) => part.trim());
+        return { from, percent: Number(percent), label: label.join(', ') };
+    }).filter((step) => /^\d{4}-\d{2}-\d{2}$/.test(step.from) && step.percent > 0);
+}
+
+function SurchargeField({ config, updateConfig }) {
+    const [text, setText] = useState(() => surchargesToText(config.surcharges));
+    const steps = textToSurcharges(text);
+    const summary = steps.map((step) => `from ${step.from} +${step.percent}%`).join(', ');
+    return (
+        <label className="eva-field eva-span-2" style={{ gridColumn: '1 / -1' }}>
+            <span>Late-order surcharge (added at checkout, item prices unchanged)</span>
+            <textarea
+                className="form-textarea"
+                rows={3}
+                value={text}
+                placeholder={'2026-10-25, 25, Late order\n2026-11-05, 50, Late / onsite order'}
+                onChange={(e) => { setText(e.target.value); updateConfig({ surcharges: textToSurcharges(e.target.value) }); }}
+            />
+            <small>
+                One step per line: start date (YYYY-MM-DD), %, label. Orders placed on or after the date (Bahrain time) pay that % on the items subtotal, as a separate line before VAT.
+                {summary ? ` Now: ${summary}.` : ' Empty = no surcharge.'}
+            </small>
+        </label>
+    );
+}
+
 function SetupTab({ config, updateConfig, save, saving, dirty }) {
     const field = (key, extra = {}) => ({
         value: config[key] ?? '',
@@ -450,6 +488,7 @@ function SetupTab({ config, updateConfig, save, saving, dirty }) {
                     <textarea className="form-textarea" rows={4} {...field('sideNote')} placeholder={'Deadline: Saturday 24 October 2026.\n* Late orders … are charged +25%.'} />
                     <small>The first line is shown in bold; lines starting with * or - become bullet points. Leave empty to hide.</small>
                 </label>
+                <SurchargeField config={config} updateConfig={updateConfig} />
             </div>
 
             <h3 style={{ marginTop: '1.6rem' }}>Contact &amp; notifications</h3>
@@ -766,6 +805,9 @@ function RequestsTab({ slug, config, requests, onReload, onUpdate, onDelete, onE
                                             </tbody>
                                             <tfoot>
                                                 <tr><td colSpan={3} className="num">Subtotal</td><td className="num">{formatMoney(request.subtotal, currency)}</td></tr>
+                                                {request.surchargeAmount > 0 && (
+                                                    <tr className="evm-surcharge-row"><td colSpan={3} className="num">{request.surchargeLabel || 'Late-order surcharge'} (+{request.surchargePercent}%)</td><td className="num">{formatMoney(request.surchargeAmount, currency)}</td></tr>
+                                                )}
                                                 <tr><td colSpan={3} className="num">VAT {request.vatPercent}%</td><td className="num">{formatMoney(request.vatAmount, currency)}</td></tr>
                                                 <tr><td colSpan={3} className="num" style={{ fontWeight: 800 }}>Total to pay</td><td className="num" style={{ fontWeight: 800, color: 'var(--pico-teal-light)' }}>{formatMoney(request.total, currency)}</td></tr>
                                             </tfoot>

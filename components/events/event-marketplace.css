@@ -982,3 +982,6 @@
 .mr-share-input input { width: 6.5rem; }
 .mr-share small { flex-basis: 100%; color: var(--text-muted); font-size: 0.78rem; }
 .mr-share .mr-share-err { color: #f87171; }
+
+/* Late-order surcharge line in totals. */
+.evm-surcharge-row, .evm-surcharge-row td, .evm-surcharge-row span { color: #fbbf24 !important; font-weight: 600; }

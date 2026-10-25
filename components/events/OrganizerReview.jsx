@@ -181,7 +181,7 @@ export default function OrganizerReview({ slug, reviewKey }) {
 
                                         <div className="orv-foot">
                                             <div className="orv-total">
-                                                <span>Subtotal {formatMoney(request.subtotal, currency)} · VAT {request.vatPercent}% {formatMoney(request.vatAmount, currency)}</span>
+                                                <span>Subtotal {formatMoney(request.subtotal, currency)}{request.surchargeAmount > 0 ? ` · ${request.surchargeLabel || 'Late-order surcharge'} +${request.surchargePercent}% ${formatMoney(request.surchargeAmount, currency)}` : ''} · VAT {request.vatPercent}% {formatMoney(request.vatAmount, currency)}</span>
                                                 <strong>{formatMoney(request.total, currency)}</strong>
                                             </div>
                                             <div className="orv-actions">

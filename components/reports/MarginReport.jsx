@@ -192,7 +192,7 @@ export default function MarginReport() {
                                                     <td>{row.supplierName}</td>
                                                     <td className="num">{row.quantity}</td>
                                                     <td className="num">{money(row.clientTotal)}</td>
-                                                    <td className="num">{row.supplier === 'pico' ? '— (own stock)' : <MoneyPct value={row.supplierCost} total={row.clientTotal} />}</td>
+                                                    <td className="num">{row.supplier === 'pico' ? '— (own stock)' : row.supplier === 'surcharge' ? '—' : <MoneyPct value={row.supplierCost} total={row.clientTotal} />}</td>
                                                     <td className="num"><MoneyPct value={row.clientShare} total={row.clientTotal} /></td>
                                                     <td className="num"><MoneyPct value={row.ourNet} total={row.clientTotal} /></td>
                                                 </tr>
@@ -258,8 +258,8 @@ export default function MarginReport() {
                                                     <td className="num">{line.quantity}</td>
                                                     <td className="num">{money(line.clientUnit)}</td>
                                                     <td className="num">{money(line.clientTotal)}</td>
-                                                    <td className="num">{line.supplier === 'pico' ? '—' : money(line.supplierUnitCost)}</td>
-                                                    <td className="num">{line.supplier === 'pico' ? '—' : <MoneyPct value={line.supplierCost} total={line.clientTotal} />}</td>
+                                                    <td className="num">{line.supplier === 'pico' || line.supplier === 'surcharge' ? '—' : money(line.supplierUnitCost)}</td>
+                                                    <td className="num">{line.supplier === 'pico' || line.supplier === 'surcharge' ? '—' : <MoneyPct value={line.supplierCost} total={line.clientTotal} />}</td>
                                                     <td className="num"><MoneyPct value={line.clientShare} total={line.clientTotal} /></td>
                                                     <td className="num"><MoneyPct value={line.ourNet} total={line.clientTotal} /></td>
                                                 </tr>
