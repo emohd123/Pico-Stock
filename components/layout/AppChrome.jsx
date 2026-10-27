@@ -15,7 +15,9 @@ export default function AppChrome({ children }) {
     // specific event and carry their own branded header and footer.
     // The vendor electricity order form (/electricity...) works the same way.
     if (pathname && (pathname.startsWith('/q/') || pathname.startsWith('/pico-ai/photo/') || pathname.startsWith('/events/')
-        || pathname === '/electricity' || pathname.startsWith('/electricity/'))) {
+        || pathname === '/electricity' || pathname.startsWith('/electricity/')
+        // Printable admin sheets (e.g. supplier lists) are plain white pages.
+        || pathname.startsWith('/admin/print/'))) {
         return <main style={{ position: 'relative', zIndex: 1 }}>{children}</main>;
     }
     return (

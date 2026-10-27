@@ -985,3 +985,22 @@
 
 /* Late-order surcharge line in totals. */
 .evm-surcharge-row, .evm-surcharge-row td, .evm-surcharge-row span { color: #fbbf24 !important; font-weight: 600; }
+
+/* ==========================================================================
+   Supplier list tab (event admin) — prefix: sl-
+   ========================================================================== */
+.sl-toggle { display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.85rem; color: var(--text-secondary); cursor: pointer; }
+.sl-toggle input { width: 16px; height: 16px; accent-color: var(--pico-teal); }
+.sl-group { margin-bottom: 1rem; }
+.sl-group-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 0.8rem; margin-bottom: 0.9rem; }
+.sl-group-head h3 { margin: 0; }
+.sl-group-sub { margin: 0.25rem 0 0; color: var(--text-secondary); font-size: 0.85rem; }
+.sl-group-sub strong { color: var(--pico-teal-light); }
+.sl-group-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.sl-thumb { width: 56px; height: 48px; object-fit: contain; background: #fff; border-radius: 6px; display: block; }
+.sl-noimg { background: var(--bg-glass-strong); }
+.sl-qty { display: inline-block; min-width: 2.2rem; padding: 0.2rem 0.55rem; border-radius: 999px; background: rgba(0, 199, 177, 0.15); color: var(--pico-teal-light); font-weight: 800; font-size: 0.95rem; text-align: center; }
+.sl-clients { font-size: 0.8rem; color: var(--text-secondary); }
+.sl-clients span { display: block; padding: 0.1rem 0; }
+.sl-clients b { color: var(--text-primary); }
+.sl-clients em { font-style: normal; font-family: monospace; color: var(--text-muted); font-size: 0.72rem; margin-left: 0.25rem; }

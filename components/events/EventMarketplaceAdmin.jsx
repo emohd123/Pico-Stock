@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { extractCleanName, getProductSpecs } from '@/lib/nameHelpers';
 import { formatMoney, getEventDays, roundMoney } from '@/lib/eventMarketplacePricing';
+import SupplierListTab from './SupplierListTab';
 import './event-marketplace.css';
 
 const EVENT_STATUS_OPTIONS = [
@@ -337,6 +338,9 @@ export default function EventMarketplaceAdmin({ slug }) {
                 <button type="button" className={`eva-tab${tab === 'requests' ? ' active' : ''}`} onClick={() => setTab('requests')}>
                     Client requests <span className="eva-pill">{requests.length}{newRequests ? ` · ${newRequests} new` : ''}</span>
                 </button>
+                <button type="button" className={`eva-tab${tab === 'suppliers' ? ' active' : ''}`} onClick={() => setTab('suppliers')}>
+                    Supplier list
+                </button>
             </div>
 
             {tab === 'setup' && (
@@ -369,6 +373,10 @@ export default function EventMarketplaceAdmin({ slug }) {
                     onDelete={deleteRequest}
                     onExport={exportCsv}
                 />
+            )}
+
+            {tab === 'suppliers' && (
+                <SupplierListTab slug={slug} config={config} requests={requests} />
             )}
         </div>
     );

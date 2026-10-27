@@ -1,0 +1,38 @@
+/* Printable supplier requirement list (/admin/print/supplier-list/<slug>) — prefix: slp- */
+.slp-page { min-height: 100vh; background: #e5e7eb; color: #111827; padding: 1rem 0 2rem; font-family: Arial, Helvetica, sans-serif; }
+.slp-toolbar { max-width: 210mm; margin: 0 auto 1rem; display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; padding: 0 12px; font-size: 0.85rem; color: #374151; }
+.slp-toolbar button { padding: 0.55rem 1.1rem; border: none; border-radius: 999px; background: #00a5a5; color: #fff; font-weight: 700; cursor: pointer; }
+.slp-toolbar label { display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer; }
+.slp-toolbar span { margin-left: auto; color: #6b7280; }
+.slp-msg { max-width: 210mm; margin: 2rem auto; text-align: center; color: #374151; }
+
+.slp-sheet { max-width: 210mm; margin: 0 auto 1rem; padding: 14mm 14mm 12mm; background: #fff; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12); box-sizing: border-box; }
+.slp-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding-bottom: 0.8rem; border-bottom: 3px solid #00a5a5; }
+.slp-logo { height: 42px; width: auto; }
+.slp-head-text { text-align: right; }
+.slp-head-text span { display: block; font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: #00a5a5; font-weight: 700; }
+.slp-head-text h1 { margin: 0.15rem 0 0; font-size: 1.35rem; }
+.slp-meta { display: flex; flex-wrap: wrap; gap: 0.4rem 1.6rem; margin: 0.9rem 0 1rem; font-size: 0.85rem; }
+.slp-meta span { display: block; font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase; color: #6b7280; }
+
+.slp-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.slp-table th { text-align: left; padding: 0.45rem 0.5rem; background: #f1f5f9; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: #475569; }
+.slp-table td { padding: 0.45rem 0.5rem; border-bottom: 1px solid #e5e7eb; vertical-align: middle; }
+.slp-table tr { break-inside: avoid; page-break-inside: avoid; }
+.slp-table .num { text-align: right; }
+.slp-table td strong { display: block; }
+.slp-table td small { display: block; margin-top: 0.15rem; color: #6b7280; font-size: 0.74rem; }
+.slp-no { color: #9ca3af; width: 1.6rem; }
+.slp-img { width: 70px; height: 58px; object-fit: contain; display: block; background: #fff; border: 1px solid #e5e7eb; border-radius: 4px; }
+.slp-qty { font-size: 1.15rem; font-weight: 800; color: #007f7f; width: 5rem; }
+.slp-table tfoot td { font-weight: 800; border-bottom: none; border-top: 2px solid #111827; font-size: 0.95rem; }
+.slp-clients { margin: 0.3rem 0 0; padding-left: 1rem; font-size: 0.74rem; color: #4b5563; }
+.slp-foot { margin: 1rem 0 0; font-size: 0.75rem; color: #6b7280; }
+
+@media print {
+  @page { size: A4; margin: 10mm; }
+  .slp-page { background: #fff; padding: 0; }
+  .slp-toolbar { display: none; }
+  .slp-sheet { box-shadow: none; margin: 0; padding: 0; max-width: none; page-break-after: always; break-after: page; }
+  .slp-sheet:last-child { page-break-after: auto; break-after: auto; }
+}
