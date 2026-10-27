@@ -157,13 +157,12 @@ export default function ElectricityOrderView({ orderKey, updated = false }) {
                             ))}
                         </div>
                         <div className="exo-totals">
+                            {(order.surcharge || order.vat) && <div><span>Subtotal</span><span>{formatMoney(order.subtotal, currency)}</span></div>}
                             {order.surcharge && (
-                                <>
-                                    <div><span>Subtotal</span><span>{formatMoney(order.subtotal, currency)}</span></div>
-                                    <div className="elx-total-surcharge"><span>{order.surcharge.label} +{order.surcharge.percent}%</span><span>{formatMoney(order.surcharge.amount, currency)}</span></div>
-                                </>
+                                <div className="elx-total-surcharge"><span>{order.surcharge.label} +{order.surcharge.percent}%</span><span>{formatMoney(order.surcharge.amount, currency)}</span></div>
                             )}
-                            <div className="exo-grand"><span>Total to pay (VAT inclusive)</span><strong>{formatMoney(order.total, currency)}</strong></div>
+                            {order.vat && <div><span>VAT {order.vat.percent}%</span><span>{formatMoney(order.vat.amount, currency)}</span></div>}
+                            <div className="exo-grand"><span>Total to pay{order.vat ? ' (incl. VAT)' : ''}</span><strong>{formatMoney(order.total, currency)}</strong></div>
                         </div>
                         {vendor.notes && <p className="exo-hint"><strong>Other requirements:</strong> {vendor.notes}</p>}
                         {data.equipment && (

@@ -48,6 +48,7 @@ export default function ElectricityForm({ editKey = '' }) {
     const [existingEquipment, setExistingEquipment] = useState(null);
     // Editing keeps the rate of the day the order was first placed.
     const [orderSurcharge, setOrderSurcharge] = useState(undefined);
+    const [orderVat, setOrderVat] = useState(null);
 
     useEffect(() => {
         let cancelled = false;
@@ -65,6 +66,7 @@ export default function ElectricityForm({ editKey = '' }) {
                     setEditRef(data.order.reference);
                     setExistingEquipment(data.equipment || null);
                     setOrderSurcharge(data.order.surcharge || null);
+                    setOrderVat(data.order.vat || null);
                     if (!data.editable) setEditBlocked('This order is already approved, so it can no longer be changed online. Please contact Pico.');
                     return;
                 }
@@ -89,7 +91,11 @@ export default function ElectricityForm({ editKey = '' }) {
     const subtotal = lines.reduce((sum, line) => sum + line.lineTotal, 0);
     const surcharge = (editKey ? orderSurcharge : form?.activeSurcharge) || null;
     const surchargeAmount = surcharge ? Math.round(subtotal * surcharge.percent * 10) / 1000 : 0;
-    const total = subtotal + surchargeAmount;
+    // Same rule as the server: VAT on the subtotal plus surcharge. A change keeps the order's own rate.
+    const vatPercent = (editKey ? orderVat?.percent : form?.vatPercent) || 0;
+    const vatAmount = Math.round((subtotal + surchargeAmount) * vatPercent * 10) / 1000;
+    const total = subtotal + surchargeAmount + vatAmount;
+    const totalIncludes = [surcharge && `+${surcharge.percent}% late surcharge`, vatPercent > 0 && `${vatPercent}% VAT`].filter(Boolean);
     const chosen = lines.filter((line) => line.quantity > 0);
 
     function setField(key, value) {
@@ -289,21 +295,26 @@ export default function ElectricityForm({ editKey = '' }) {
                                             <span className="num elx-cost">{line.quantity ? formatMoney(line.lineTotal, currency) : '—'}</span>
                                         </div>
                                     ))}
+                                    {(surcharge || vatPercent > 0) && (
+                                        <div className="elx-row sub" role="row">
+                                            <span /><span>Subtotal</span><span /><span /><span className="num">{formatMoney(subtotal, currency)}</span>
+                                        </div>
+                                    )}
                                     {surcharge && (
-                                        <>
-                                            <div className="elx-row sub" role="row">
-                                                <span /><span>Subtotal</span><span /><span /><span className="num">{formatMoney(subtotal, currency)}</span>
-                                            </div>
-                                            <div className="elx-row surcharge" role="row">
-                                                <span /><span>{surcharge.label} +{surcharge.percent}%</span><span /><span /><span className="num">{formatMoney(surchargeAmount, currency)}</span>
-                                            </div>
-                                        </>
+                                        <div className="elx-row surcharge" role="row">
+                                            <span /><span>{surcharge.label} +{surcharge.percent}%</span><span /><span /><span className="num">{formatMoney(surchargeAmount, currency)}</span>
+                                        </div>
+                                    )}
+                                    {vatPercent > 0 && (
+                                        <div className="elx-row sub" role="row">
+                                            <span /><span>VAT {vatPercent}%</span><span /><span /><span className="num">{formatMoney(vatAmount, currency)}</span>
+                                        </div>
                                     )}
                                     <div className="elx-row total" role="row">
-                                        <span /><span>Total cost</span><span /><span /><span className="num">{formatMoney(total, currency)}</span>
+                                        <span /><span>Total cost{vatPercent > 0 ? ' (incl. VAT)' : ''}</span><span /><span /><span className="num">{formatMoney(total, currency)}</span>
                                     </div>
                                 </div>
-                                <p className="elx-vat">All prices are inclusive of VAT</p>
+                                {vatPercent > 0 && <p className="elx-vat">Prices exclude VAT · {vatPercent}% VAT is added to the total</p>}
                                 <div className={`elx-equipment${equipmentFile || existingEquipment ? ' ok' : ''}`}>
                                     <span className="elx-equipment-label">Equipment list <em>*</em></span>
                                     <p>List every item you will plug in, with its power (watts or amps) and phase, e.g. &ldquo;Coffee machine, 3 kW, single-phase&rdquo;. PDF, photo, Excel or Word, max 4 MB.</p>
@@ -336,7 +347,7 @@ export default function ElectricityForm({ editKey = '' }) {
 
                             <div className="elx-submit">
                                 <div>
-                                    <span>Total cost{surcharge ? ` (incl. +${surcharge.percent}% late surcharge)` : ''}</span>
+                                    <span>Total cost{totalIncludes.length ? ` (incl. ${totalIncludes.join(' and ')})` : ''}</span>
                                     <strong>{formatMoney(total, currency)}</strong>
                                 </div>
                                 {error && <div className="exo-alert">{error}</div>}

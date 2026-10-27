@@ -70,11 +70,15 @@ function OrderCard({ order, busy, onAction, onSaveNotes, onDelete }) {
                             ))}
                         </div>
                         {v.notes && <p className="eva-request-notes"><strong>Other requirements:</strong> {v.notes}</p>}
-                        {order.surcharge && (
+                        {(order.surcharge || order.vat) && (
                             <p className="eva-request-notes elx-admin-surcharge">
-                                Subtotal {formatMoney(order.subtotal, order.currency)} + {order.surcharge.label} {order.surcharge.percent}% ({formatMoney(order.surcharge.amount, order.currency)}) = <strong>{formatMoney(order.total, order.currency)}</strong>
+                                Subtotal {formatMoney(order.subtotal, order.currency)}
+                                {order.surcharge && <> + {order.surcharge.label} {order.surcharge.percent}% ({formatMoney(order.surcharge.amount, order.currency)})</>}
+                                {order.vat && <> + VAT {order.vat.percent}% ({formatMoney(order.vat.amount, order.currency)})</>}
+                                {' '}= <strong>{formatMoney(order.total, order.currency)}</strong>
                             </p>
                         )}
+                        {!order.vat && <p className="eva-request-notes"><strong>No VAT:</strong> placed before VAT was added to orders.</p>}
                         <p className="eva-request-notes"><strong>Equipment list:</strong> {order.equipment?.name || 'not uploaded'}</p>
 
                         <div className="eva-request-tools">
@@ -202,7 +206,7 @@ function FormSetup({ form, onSave, saving }) {
             </section>
 
             <section className="eva-card">
-                <h3>Power options &amp; prices (VAT inclusive)</h3>
+                <h3>Power options &amp; prices (excluding VAT)</h3>
                 <div className="eva-table-wrap">
                     <table className="eva-table">
                         <thead><tr><th>Show</th><th>Description</th><th className="num">Unit cost (BHD)</th><th /></tr></thead>
@@ -222,6 +226,11 @@ function FormSetup({ form, onSave, saving }) {
                     <button type="button" className="btn btn-secondary btn-sm" onClick={() => set('items', [...draft.items, { id: `item-${Date.now().toString(36)}`, name: '', price: 0, visible: true }])}>+ Add option</button>
                     <span className="eva-hint">Untick to hide an option from vendors.</span>
                 </div>
+                <label className="eva-field" style={{ maxWidth: 260, marginTop: '1rem' }}>
+                    <span>VAT added on top of the total (%)</span>
+                    <input type="number" className="form-input" min="0" max="100" step="1" value={draft.vatPercent ?? 10} onChange={(e) => set('vatPercent', e.target.value)} />
+                </label>
+                <p className="eva-hint" style={{ margin: '0.4rem 0 0' }}>Charged on the subtotal plus any late surcharge. 0 = no VAT. Orders keep the rate they were placed with.</p>
             </section>
 
             <section className="eva-card">
