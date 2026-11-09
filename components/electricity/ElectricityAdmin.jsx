@@ -120,6 +120,7 @@ function OrderCard({ order, busy, onAction, onSaveNotes, onDiscount, onDelete })
                                 <button type="button" className="btn btn-secondary btn-sm" disabled={busy} onClick={() => onAction(order, 'reopen')}>Reopen</button>
                             )}
                             <a className="btn btn-secondary btn-sm" href={`/api/electricity/orders/${encodeURIComponent(order.id)}/quotation`} target="_blank" rel="noreferrer">Quotation PDF</a>
+                            <a className="btn btn-secondary btn-sm" href={`/api/electricity/orders/${encodeURIComponent(order.id)}/quotation?kind=invoice`} target="_blank" rel="noreferrer">Invoice PDF</a>
                             <a className="btn btn-secondary btn-sm" href={`/electricity/order/${order.orderKey}`} target="_blank" rel="noreferrer">Vendor&apos;s page</a>
                         </div>
                         {stage === 'awaiting' && <p className="eva-hint elx-admin-hint">Receipt came by email? Click Verify payment &amp; confirm once the money is in the account.</p>}

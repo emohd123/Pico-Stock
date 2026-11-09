@@ -15,16 +15,17 @@ async function load(request, id) {
     return { order, form, orderUrl };
 }
 
-/** The quotation PDF. */
+/** The quotation PDF, or the invoice with ?kind=invoice. */
 export async function GET(request, { params }) {
     const { order, form, orderUrl } = await load(request, params.id);
     if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     try {
-        const pdf = await generateElectricityQuotationPdf(form, order, { orderUrl });
+        const kind = new URL(request.url).searchParams.get('kind') === 'invoice' ? 'invoice' : 'quotation';
+        const pdf = await generateElectricityQuotationPdf(form, order, { orderUrl, kind });
         return new NextResponse(pdf, {
             headers: {
                 'Content-Type': 'application/pdf',
-                'Content-Disposition': `inline; filename="${electricityQuotationFilename(order)}"`,
+                'Content-Disposition': `inline; filename="${electricityQuotationFilename(order, kind)}"`,
                 'Cache-Control': 'no-store',
             },
         });
