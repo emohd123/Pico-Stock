@@ -210,4 +210,11 @@
   .elx-row.sub > span:empty, .elx-row.surcharge > span:empty { display: none; }
 }
 .elx-total-surcharge { color: #fca5a5 !important; font-weight: 700; }
+.elx-total-discount { color: #6ee7b7 !important; font-weight: 700; }
 .elx-admin-surcharge { color: #fca5a5; }
+
+/* Admin: agreed discount on an order */
+.elx-discount-row { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: flex-end; margin: 0.6rem 0; }
+.elx-discount-row label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.78rem; color: var(--text-secondary, #94a3b8); }
+.elx-discount-row label:first-child .form-input { width: 90px; }
+.elx-discount-row label:nth-child(2) { flex: 1; min-width: 180px; }

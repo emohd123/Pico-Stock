@@ -37,10 +37,12 @@ function formatDate(value) {
     return Number.isNaN(date.getTime()) ? '' : date.toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
-function OrderCard({ order, busy, onAction, onSaveNotes, onDelete }) {
+function OrderCard({ order, busy, onAction, onSaveNotes, onDiscount, onDelete }) {
     const [open, setOpen] = useState(false);
     const [notes, setNotes] = useState(order.adminNotes || '');
+    const [discount, setDiscount] = useState({ percent: order.discount?.percent || 0, note: order.discount?.note || '' });
     useEffect(() => { setNotes(order.adminNotes || ''); }, [order.adminNotes]);
+    useEffect(() => { setDiscount({ percent: order.discount?.percent || 0, note: order.discount?.note || '' }); }, [order.discount]);
     const stage = stageOf(order);
     const v = order.vendor || {};
     const pay = order.payment || {};
@@ -70,16 +72,30 @@ function OrderCard({ order, busy, onAction, onSaveNotes, onDelete }) {
                             ))}
                         </div>
                         {v.notes && <p className="eva-request-notes"><strong>Other requirements:</strong> {v.notes}</p>}
-                        {(order.surcharge || order.vat) && (
+                        {(order.surcharge || order.discount || order.vat) && (
                             <p className="eva-request-notes elx-admin-surcharge">
                                 Subtotal {formatMoney(order.subtotal, order.currency)}
                                 {order.surcharge && <> + {order.surcharge.label} {order.surcharge.percent}% ({formatMoney(order.surcharge.amount, order.currency)})</>}
+                                {order.discount && <> − Discount {order.discount.percent}% ({formatMoney(order.discount.amount, order.currency)})</>}
                                 {order.vat && <> + VAT {order.vat.percent}% ({formatMoney(order.vat.amount, order.currency)})</>}
                                 {' '}= <strong>{formatMoney(order.total, order.currency)}</strong>
                             </p>
                         )}
                         {!order.vat && <p className="eva-request-notes"><strong>No VAT:</strong> placed before VAT was added to orders.</p>}
                         <p className="eva-request-notes"><strong>Equipment list:</strong> {order.equipment?.name || 'not uploaded'}</p>
+                        {!['declined', 'verified'].includes(stage) && (
+                            <div className="elx-discount-row">
+                                <label>Discount %
+                                    <input type="number" className="form-input" min="0" max="100" step="1" value={discount.percent} onChange={(e) => setDiscount({ ...discount, percent: e.target.value })} />
+                                </label>
+                                <label>Reason (shown to the vendor)
+                                    <input type="text" className="form-input" maxLength={200} placeholder="e.g. as agreed with Ms. Perri" value={discount.note} onChange={(e) => setDiscount({ ...discount, note: e.target.value })} />
+                                </label>
+                                <button type="button" className="btn btn-secondary btn-sm" disabled={busy || (Number(discount.percent) === (order.discount?.percent || 0) && discount.note === (order.discount?.note || ''))} onClick={() => onDiscount(order, discount)}>
+                                    {Number(discount.percent) ? 'Apply discount' : 'Remove discount'}
+                                </button>
+                            </div>
+                        )}
 
                         <div className="eva-request-tools">
                             {stage === 'review' && (
@@ -103,6 +119,7 @@ function OrderCard({ order, busy, onAction, onSaveNotes, onDelete }) {
                             {stage === 'declined' && (
                                 <button type="button" className="btn btn-secondary btn-sm" disabled={busy} onClick={() => onAction(order, 'reopen')}>Reopen</button>
                             )}
+                            <a className="btn btn-secondary btn-sm" href={`/api/electricity/orders/${encodeURIComponent(order.id)}/quotation`} target="_blank" rel="noreferrer">Quotation PDF</a>
                             <a className="btn btn-secondary btn-sm" href={`/electricity/order/${order.orderKey}`} target="_blank" rel="noreferrer">Vendor&apos;s page</a>
                         </div>
                         {stage === 'awaiting' && <p className="eva-hint elx-admin-hint">Receipt came by email? Click Verify payment &amp; confirm once the money is in the account.</p>}
@@ -369,6 +386,27 @@ export default function ElectricityAdmin() {
         }
     }
 
+    async function applyDiscount(order, discount) {
+        const percent = Number(discount.percent) || 0;
+        if (!window.confirm(percent
+            ? `Give ${order.reference} a ${percent}% discount? The total is recalculated (VAT on the discounted amount). No email is sent.`
+            : `Remove the discount from ${order.reference}?`)) return;
+        setBusy(true);
+        try {
+            const response = await fetch(`/api/electricity/orders/${encodeURIComponent(order.id)}`, {
+                method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ discount: { percent, note: discount.note } }),
+            });
+            const json = await response.json();
+            if (!response.ok) throw new Error(json?.error || 'Failed');
+            replaceOrder(json.order);
+            setFlash({ type: 'ok', text: `${order.reference}: new total ${formatMoney(json.order.total, json.order.currency)}.` });
+        } catch (error) {
+            setFlash({ type: 'err', text: error.message });
+        } finally {
+            setBusy(false);
+        }
+    }
+
     async function remove(order) {
         if (!window.confirm(`Delete order ${order.reference} from ${order.vendor.company}? This cannot be undone.`)) return;
         setBusy(true);
@@ -489,7 +527,7 @@ export default function ElectricityAdmin() {
                     {visible.length === 0 ? (
                         <div className="eva-empty">{orders.length ? 'No orders match.' : 'No electricity orders yet. Share the vendor link to start receiving them.'}</div>
                     ) : visible.map((order) => (
-                        <OrderCard key={order.id} order={order} busy={busy} onAction={action} onSaveNotes={saveNotes} onDelete={remove} />
+                        <OrderCard key={order.id} order={order} busy={busy} onAction={action} onSaveNotes={saveNotes} onDiscount={applyDiscount} onDelete={remove} />
                     ))}
                 </div>
             ) : (
